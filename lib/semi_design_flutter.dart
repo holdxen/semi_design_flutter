@@ -18,6 +18,10 @@ export 'src/tokens/tooltip_tokens.dart';
 export 'src/theme/semi_component_themes.dart';
 export 'src/theme/semi_typography_theme_data.dart';
 export 'src/theme/semi_typography_theme.dart';
+export 'src/components/icon/semi_icon.dart';
+export 'src/components/icon/semi_icon_data.dart';
+export 'src/components/icon/semi_icons.dart';
+export 'src/theme/semi_icon_theme.dart';
 
 /// A Calculator.
 class Calculator {

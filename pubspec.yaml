@@ -5,9 +5,10 @@ homepage:
 
 environment:
   sdk: ^3.13.5
-  flutter: ">=1.17.0"
+  flutter: ">=3.41.0"
 
 dependencies:
+  flutter_svg: ^2.3.2
   flutter:
     sdk: flutter
 
@@ -21,7 +22,8 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
+  assets:
+    - assets/icons/
   # To add assets to your package, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

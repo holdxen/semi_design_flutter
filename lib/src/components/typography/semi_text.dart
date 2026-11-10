@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../../theme/semi_theme.dart';
+import '../../theme/semi_icon_theme.dart';
 import '../../theme/semi_typography_theme.dart';
 import 'paragraph_defaults.dart';
 
@@ -194,7 +195,15 @@ class _SemiTextState extends State<SemiText> {
         mainAxisSize: MainAxisSize.min,
         textDirection: w.textDirection,
         children: [
-          ExcludeSemantics(child: w.icon!),
+          ExcludeSemantics(
+            child: DefaultTextStyle(
+              style: resolved,
+              child: SemiIconTheme(
+                data: SemiIconThemeData(color: resolved.color),
+                child: w.icon!,
+              ),
+            ),
+          ),
           SizedBox(width: colors.iconPrefixMarginRight),
           Flexible(child: child),
         ],
