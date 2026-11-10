@@ -1,3 +1,6 @@
+export 'src/components/semi_progress.dart';
+export 'src/theme/semi_progress_theme.dart';
+export 'src/theme/semi_progress_theme_data.dart';
 export 'src/components/semi_spin.dart';
 export 'src/theme/semi_spin_theme.dart';
 export 'src/theme/semi_spin_theme_data.dart';
