@@ -18,6 +18,9 @@ class SemiButtonTokens {
     SemiColors colors = const SemiColors(),
     SemiPalette palette = const SemiPalette(),
   }) : _dark = dark,
+       _defaults = dark
+           ? const _DarkSemiButtonTokensDefaults()
+           : const _LightSemiButtonTokensDefaults(),
        _buttonColorfulMultipleFill0 = buttonColorfulMultipleFill0,
        _buttonColorfulMultipleFill1 = buttonColorfulMultipleFill1,
        _buttonColorfulMultipleFill2 = buttonColorfulMultipleFill2,
@@ -28,43 +31,49 @@ class SemiButtonTokens {
        colors = colors,
        palette = palette;
   final bool _dark;
+  final _SemiButtonTokensDefaults _defaults;
   final SemiColors colors;
   final SemiPalette palette;
   final Color? _buttonColorfulMultipleFill0;
 
   /// `--semi-button-colorful-multiple-fill-0` — `packages/semi-foundation/button/cssVariables.scss` (line 4).
   Color get buttonColorfulMultipleFill0 =>
-      _buttonColorfulMultipleFill0 ?? (palette.aiGeneral53.toColor());
+      _buttonColorfulMultipleFill0 ??
+      _defaults.buttonColorfulMultipleFill0(this);
   final Color? _buttonColorfulMultipleFill1;
 
   /// `--semi-button-colorful-multiple-fill-1` — `packages/semi-foundation/button/cssVariables.scss` (line 5).
   Color get buttonColorfulMultipleFill1 =>
-      _buttonColorfulMultipleFill1 ?? (palette.aiGeneral52.toColor());
+      _buttonColorfulMultipleFill1 ??
+      _defaults.buttonColorfulMultipleFill1(this);
   final Color? _buttonColorfulMultipleFill2;
 
   /// `--semi-button-colorful-multiple-fill-2` — `packages/semi-foundation/button/cssVariables.scss` (line 6).
   Color get buttonColorfulMultipleFill2 =>
-      _buttonColorfulMultipleFill2 ?? (palette.aiGeneral51.toColor());
+      _buttonColorfulMultipleFill2 ??
+      _defaults.buttonColorfulMultipleFill2(this);
   final Color? _buttonColorfulMultipleFill3;
 
   /// `--semi-button-colorful-multiple-fill-3` — `packages/semi-foundation/button/cssVariables.scss` (line 7).
   Color get buttonColorfulMultipleFill3 =>
-      _buttonColorfulMultipleFill3 ?? (palette.aiGeneral50.toColor());
+      _buttonColorfulMultipleFill3 ??
+      _defaults.buttonColorfulMultipleFill3(this);
   final Color? _buttonColorfulDisabledFill;
 
   /// `--semi-button-colorful-disabled-fill` — `packages/semi-foundation/button/cssVariables.scss` (line 8).
   Color get buttonColorfulDisabledFill =>
-      _buttonColorfulDisabledFill ?? (colors.colorDisabledText);
+      _buttonColorfulDisabledFill ?? _defaults.buttonColorfulDisabledFill(this);
   final Color? _buttonColorfulFillPrimary;
 
   /// `--semi-button-colorful-fill-primary` — `packages/semi-foundation/button/cssVariables.scss` (line 9).
   Color get buttonColorfulFillPrimary =>
-      _buttonColorfulFillPrimary ?? (colors.colorAiPurple);
+      _buttonColorfulFillPrimary ?? _defaults.buttonColorfulFillPrimary(this);
   final Color? _buttonColorfulFillSecondary;
 
   /// `--semi-button-colorful-fill-secondary` — `packages/semi-foundation/button/cssVariables.scss` (line 10).
   Color get buttonColorfulFillSecondary =>
-      _buttonColorfulFillSecondary ?? (colors.colorText0);
+      _buttonColorfulFillSecondary ??
+      _defaults.buttonColorfulFillSecondary(this);
   SemiButtonTokens copyWith({
     bool? dark,
     Color? buttonColorfulMultipleFill0,
@@ -116,4 +125,30 @@ class SemiButtonTokens {
     buttonColorfulFillPrimary,
     buttonColorfulFillSecondary,
   ]);
+}
+
+abstract class _SemiButtonTokensDefaults {
+  const _SemiButtonTokensDefaults();
+  Color buttonColorfulMultipleFill0(SemiButtonTokens tokens) =>
+      tokens.palette.aiGeneral53.toColor();
+  Color buttonColorfulMultipleFill1(SemiButtonTokens tokens) =>
+      tokens.palette.aiGeneral52.toColor();
+  Color buttonColorfulMultipleFill2(SemiButtonTokens tokens) =>
+      tokens.palette.aiGeneral51.toColor();
+  Color buttonColorfulMultipleFill3(SemiButtonTokens tokens) =>
+      tokens.palette.aiGeneral50.toColor();
+  Color buttonColorfulDisabledFill(SemiButtonTokens tokens) =>
+      tokens.colors.colorDisabledText;
+  Color buttonColorfulFillPrimary(SemiButtonTokens tokens) =>
+      tokens.colors.colorAiPurple;
+  Color buttonColorfulFillSecondary(SemiButtonTokens tokens) =>
+      tokens.colors.colorText0;
+}
+
+class _LightSemiButtonTokensDefaults extends _SemiButtonTokensDefaults {
+  const _LightSemiButtonTokensDefaults();
+}
+
+class _DarkSemiButtonTokensDefaults extends _SemiButtonTokensDefaults {
+  const _DarkSemiButtonTokensDefaults();
 }

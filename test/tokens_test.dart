@@ -43,6 +43,25 @@ void main() {
     expect(light, const SemiThemeData.light());
     expect(light.hashCode, const SemiThemeData.light().hashCode);
   });
+  test('mode strategies rebind defaults without losing overrides', () {
+    final custom = light.copyWith(
+      palette: light.palette.copyWith(blue5: const SemiChannels(1, 2, 3, 1)),
+      colors: light.colors.copyWith(colorText0: const Color(0xff123456)),
+    );
+    final switched = custom.copyWith(dark: true);
+    expect(switched.palette.grey9, dark.palette.grey9);
+    expect(switched.palette.grey9, isNot(light.palette.grey9));
+    expect(switched.colors.colorPrimary, const Color(0xff010203));
+    expect(
+      switched.button.buttonColorfulFillSecondary,
+      const Color(0xff123456),
+    );
+    expect(switched.shadows, dark.shadows);
+    expect(switched.copyWith(dark: false), custom);
+    expect(switched.copyWith(dark: false).hashCode, custom.hashCode);
+    expect(const SemiPalette(dark: true), dark.palette);
+    expect(const SemiShadowTokens(dark: true), dark.shadows);
+  });
   test('models have structural equality and defensive collections', () {
     final colors = [const Color(0xff123456)];
     final stops = [0.0];

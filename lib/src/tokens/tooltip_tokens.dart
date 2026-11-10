@@ -8,19 +8,23 @@ class SemiTooltipTokens {
     SemiLength? tooltipArrowOffsetX,
     SemiLength? tooltipArrowOffsetY,
   }) : _dark = dark,
+       _defaults = dark
+           ? const _DarkSemiTooltipTokensDefaults()
+           : const _LightSemiTooltipTokensDefaults(),
        _tooltipArrowOffsetX = tooltipArrowOffsetX,
        _tooltipArrowOffsetY = tooltipArrowOffsetY;
   final bool _dark;
+  final _SemiTooltipTokensDefaults _defaults;
   final SemiLength? _tooltipArrowOffsetX;
 
   /// `--semi-tooltip-arrow-offset-x` — `packages/semi-foundation/tooltip/arrow.scss` (line 26). Runtime fallback, not a theme declaration.
   SemiLength get tooltipArrowOffsetX =>
-      _tooltipArrowOffsetX ?? (SemiLength.percent(50.0));
+      _tooltipArrowOffsetX ?? _defaults.tooltipArrowOffsetX(this);
   final SemiLength? _tooltipArrowOffsetY;
 
   /// `--semi-tooltip-arrow-offset-y` — `packages/semi-foundation/tooltip/arrow.scss` (line 64). Runtime fallback, not a theme declaration.
   SemiLength get tooltipArrowOffsetY =>
-      _tooltipArrowOffsetY ?? (SemiLength.percent(50.0));
+      _tooltipArrowOffsetY ?? _defaults.tooltipArrowOffsetY(this);
   SemiTooltipTokens copyWith({
     bool? dark,
     SemiLength? tooltipArrowOffsetX,
@@ -39,4 +43,20 @@ class SemiTooltipTokens {
   @override
   int get hashCode =>
       Object.hashAll([tooltipArrowOffsetX, tooltipArrowOffsetY]);
+}
+
+abstract class _SemiTooltipTokensDefaults {
+  const _SemiTooltipTokensDefaults();
+  SemiLength tooltipArrowOffsetX(SemiTooltipTokens tokens) =>
+      SemiLength.percent(50.0);
+  SemiLength tooltipArrowOffsetY(SemiTooltipTokens tokens) =>
+      SemiLength.percent(50.0);
+}
+
+class _LightSemiTooltipTokensDefaults extends _SemiTooltipTokensDefaults {
+  const _LightSemiTooltipTokensDefaults();
+}
+
+class _DarkSemiTooltipTokensDefaults extends _SemiTooltipTokensDefaults {
+  const _DarkSemiTooltipTokensDefaults();
 }

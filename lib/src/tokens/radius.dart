@@ -12,6 +12,9 @@ class SemiRadius {
     SemiLength? borderRadiusCircle,
     SemiLength? borderRadiusFull,
   }) : _dark = dark,
+       _defaults = dark
+           ? const _DarkSemiRadiusDefaults()
+           : const _LightSemiRadiusDefaults(),
        _borderRadiusExtraSmall = borderRadiusExtraSmall,
        _borderRadiusSmall = borderRadiusSmall,
        _borderRadiusMedium = borderRadiusMedium,
@@ -19,36 +22,37 @@ class SemiRadius {
        _borderRadiusCircle = borderRadiusCircle,
        _borderRadiusFull = borderRadiusFull;
   final bool _dark;
+  final _SemiRadiusDefaults _defaults;
   final SemiLength? _borderRadiusExtraSmall;
 
   /// `--semi-border-radius-extra-small` — `packages/semi-theme-default/scss/global.scss` (line 97).
   SemiLength get borderRadiusExtraSmall =>
-      _borderRadiusExtraSmall ?? (SemiLength.pixels(3.0));
+      _borderRadiusExtraSmall ?? _defaults.borderRadiusExtraSmall(this);
   final SemiLength? _borderRadiusSmall;
 
   /// `--semi-border-radius-small` — `packages/semi-theme-default/scss/global.scss` (line 98).
   SemiLength get borderRadiusSmall =>
-      _borderRadiusSmall ?? (SemiLength.pixels(3.0));
+      _borderRadiusSmall ?? _defaults.borderRadiusSmall(this);
   final SemiLength? _borderRadiusMedium;
 
   /// `--semi-border-radius-medium` — `packages/semi-theme-default/scss/global.scss` (line 99).
   SemiLength get borderRadiusMedium =>
-      _borderRadiusMedium ?? (SemiLength.pixels(6.0));
+      _borderRadiusMedium ?? _defaults.borderRadiusMedium(this);
   final SemiLength? _borderRadiusLarge;
 
   /// `--semi-border-radius-large` — `packages/semi-theme-default/scss/global.scss` (line 100).
   SemiLength get borderRadiusLarge =>
-      _borderRadiusLarge ?? (SemiLength.pixels(12.0));
+      _borderRadiusLarge ?? _defaults.borderRadiusLarge(this);
   final SemiLength? _borderRadiusCircle;
 
   /// `--semi-border-radius-circle` — `packages/semi-theme-default/scss/global.scss` (line 101).
   SemiLength get borderRadiusCircle =>
-      _borderRadiusCircle ?? (SemiLength.percent(50.0));
+      _borderRadiusCircle ?? _defaults.borderRadiusCircle(this);
   final SemiLength? _borderRadiusFull;
 
   /// `--semi-border-radius-full` — `packages/semi-theme-default/scss/global.scss` (line 102).
   SemiLength get borderRadiusFull =>
-      _borderRadiusFull ?? (SemiLength.pixels(9999.0));
+      _borderRadiusFull ?? _defaults.borderRadiusFull(this);
   SemiRadius copyWith({
     bool? dark,
     SemiLength? borderRadiusExtraSmall,
@@ -85,4 +89,23 @@ class SemiRadius {
     borderRadiusCircle,
     borderRadiusFull,
   ]);
+}
+
+abstract class _SemiRadiusDefaults {
+  const _SemiRadiusDefaults();
+  SemiLength borderRadiusExtraSmall(SemiRadius tokens) =>
+      SemiLength.pixels(3.0);
+  SemiLength borderRadiusSmall(SemiRadius tokens) => SemiLength.pixels(3.0);
+  SemiLength borderRadiusMedium(SemiRadius tokens) => SemiLength.pixels(6.0);
+  SemiLength borderRadiusLarge(SemiRadius tokens) => SemiLength.pixels(12.0);
+  SemiLength borderRadiusCircle(SemiRadius tokens) => SemiLength.percent(50.0);
+  SemiLength borderRadiusFull(SemiRadius tokens) => SemiLength.pixels(9999.0);
+}
+
+class _LightSemiRadiusDefaults extends _SemiRadiusDefaults {
+  const _LightSemiRadiusDefaults();
+}
+
+class _DarkSemiRadiusDefaults extends _SemiRadiusDefaults {
+  const _DarkSemiRadiusDefaults();
 }

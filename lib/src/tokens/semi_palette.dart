@@ -228,6 +228,9 @@ class SemiPalette {
     SemiGradient? aiGeneral8,
     SemiGradient? aiGeneral9,
   }) : _dark = dark,
+       _defaults = dark
+           ? const _DarkSemiPaletteDefaults()
+           : const _LightSemiPaletteDefaults(),
        _amber0 = amber0,
        _amber1 = amber1,
        _amber2 = amber2,
@@ -451,1798 +454,895 @@ class SemiPalette {
        _aiGeneral8 = aiGeneral8,
        _aiGeneral9 = aiGeneral9;
   final bool _dark;
+  final _SemiPaletteDefaults _defaults;
   final SemiChannels? _amber0;
 
   /// `--semi-amber-0` — `packages/semi-theme-default/scss/_palette.scss` (line 2).
-  SemiChannels get amber0 =>
-      _amber0 ??
-      (_dark ? SemiChannels(81, 46, 9, 1.0) : SemiChannels(254, 251, 235, 1.0));
+  SemiChannels get amber0 => _amber0 ?? _defaults.amber0(this);
   final SemiChannels? _amber1;
 
   /// `--semi-amber-1` — `packages/semi-theme-default/scss/_palette.scss` (line 3).
-  SemiChannels get amber1 =>
-      _amber1 ??
-      (_dark
-          ? SemiChannels(121, 75, 15, 1.0)
-          : SemiChannels(252, 245, 206, 1.0));
+  SemiChannels get amber1 => _amber1 ?? _defaults.amber1(this);
   final SemiChannels? _amber2;
 
   /// `--semi-amber-2` — `packages/semi-theme-default/scss/_palette.scss` (line 4).
-  SemiChannels get amber2 =>
-      _amber2 ??
-      (_dark
-          ? SemiChannels(161, 107, 22, 1.0)
-          : SemiChannels(249, 232, 158, 1.0));
+  SemiChannels get amber2 => _amber2 ?? _defaults.amber2(this);
   final SemiChannels? _amber3;
 
   /// `--semi-amber-3` — `packages/semi-theme-default/scss/_palette.scss` (line 5).
-  SemiChannels get amber3 =>
-      _amber3 ??
-      (_dark
-          ? SemiChannels(202, 143, 30, 1.0)
-          : SemiChannels(246, 216, 111, 1.0));
+  SemiChannels get amber3 => _amber3 ?? _defaults.amber3(this);
   final SemiChannels? _amber4;
 
   /// `--semi-amber-4` — `packages/semi-theme-default/scss/_palette.scss` (line 6).
-  SemiChannels get amber4 =>
-      _amber4 ??
-      (_dark
-          ? SemiChannels(242, 183, 38, 1.0)
-          : SemiChannels(243, 198, 65, 1.0));
+  SemiChannels get amber4 => _amber4 ?? _defaults.amber4(this);
   final SemiChannels? _amber5;
 
   /// `--semi-amber-5` — `packages/semi-theme-default/scss/_palette.scss` (line 7).
-  SemiChannels get amber5 =>
-      _amber5 ??
-      (_dark
-          ? SemiChannels(245, 202, 80, 1.0)
-          : SemiChannels(240, 177, 20, 1.0));
+  SemiChannels get amber5 => _amber5 ?? _defaults.amber5(this);
   final SemiChannels? _amber6;
 
   /// `--semi-amber-6` — `packages/semi-theme-default/scss/_palette.scss` (line 8).
-  SemiChannels get amber6 =>
-      _amber6 ??
-      (_dark
-          ? SemiChannels(247, 219, 122, 1.0)
-          : SemiChannels(200, 138, 15, 1.0));
+  SemiChannels get amber6 => _amber6 ?? _defaults.amber6(this);
   final SemiChannels? _amber7;
 
   /// `--semi-amber-7` — `packages/semi-theme-default/scss/_palette.scss` (line 9).
-  SemiChannels get amber7 =>
-      _amber7 ??
-      (_dark
-          ? SemiChannels(250, 234, 166, 1.0)
-          : SemiChannels(160, 102, 10, 1.0));
+  SemiChannels get amber7 => _amber7 ?? _defaults.amber7(this);
   final SemiChannels? _amber8;
 
   /// `--semi-amber-8` — `packages/semi-theme-default/scss/_palette.scss` (line 10).
-  SemiChannels get amber8 =>
-      _amber8 ??
-      (_dark
-          ? SemiChannels(252, 246, 210, 1.0)
-          : SemiChannels(120, 70, 6, 1.0));
+  SemiChannels get amber8 => _amber8 ?? _defaults.amber8(this);
   final SemiChannels? _amber9;
 
   /// `--semi-amber-9` — `packages/semi-theme-default/scss/_palette.scss` (line 11).
-  SemiChannels get amber9 =>
-      _amber9 ??
-      (_dark ? SemiChannels(254, 251, 237, 1.0) : SemiChannels(80, 43, 3, 1.0));
+  SemiChannels get amber9 => _amber9 ?? _defaults.amber9(this);
   final SemiChannels? _black;
 
   /// `--semi-black` — `packages/semi-theme-default/scss/_palette.scss` (line 12).
-  SemiChannels get black => _black ?? (SemiChannels(0, 0, 0, 1.0));
+  SemiChannels get black => _black ?? _defaults.black(this);
   final SemiChannels? _blue0;
 
   /// `--semi-blue-0` — `packages/semi-theme-default/scss/_palette.scss` (line 13).
-  SemiChannels get blue0 =>
-      _blue0 ??
-      (_dark
-          ? SemiChannels(5, 49, 112, 1.0)
-          : SemiChannels(234, 245, 255, 1.0));
+  SemiChannels get blue0 => _blue0 ?? _defaults.blue0(this);
   final SemiChannels? _blue1;
 
   /// `--semi-blue-1` — `packages/semi-theme-default/scss/_palette.scss` (line 14).
-  SemiChannels get blue1 =>
-      _blue1 ??
-      (_dark
-          ? SemiChannels(10, 70, 148, 1.0)
-          : SemiChannels(203, 231, 254, 1.0));
+  SemiChannels get blue1 => _blue1 ?? _defaults.blue1(this);
   final SemiChannels? _blue2;
 
   /// `--semi-blue-2` — `packages/semi-theme-default/scss/_palette.scss` (line 15).
-  SemiChannels get blue2 =>
-      _blue2 ??
-      (_dark
-          ? SemiChannels(19, 92, 184, 1.0)
-          : SemiChannels(152, 205, 253, 1.0));
+  SemiChannels get blue2 => _blue2 ?? _defaults.blue2(this);
   final SemiChannels? _blue3;
 
   /// `--semi-blue-3` — `packages/semi-theme-default/scss/_palette.scss` (line 16).
-  SemiChannels get blue3 =>
-      _blue3 ??
-      (_dark
-          ? SemiChannels(29, 117, 219, 1.0)
-          : SemiChannels(101, 178, 252, 1.0));
+  SemiChannels get blue3 => _blue3 ?? _defaults.blue3(this);
   final SemiChannels? _blue4;
 
   /// `--semi-blue-4` — `packages/semi-theme-default/scss/_palette.scss` (line 17).
-  SemiChannels get blue4 =>
-      _blue4 ??
-      (_dark
-          ? SemiChannels(41, 144, 255, 1.0)
-          : SemiChannels(50, 149, 251, 1.0));
+  SemiChannels get blue4 => _blue4 ?? _defaults.blue4(this);
   final SemiChannels? _blue5;
 
   /// `--semi-blue-5` — `packages/semi-theme-default/scss/_palette.scss` (line 18).
-  SemiChannels get blue5 =>
-      _blue5 ??
-      (_dark
-          ? SemiChannels(84, 169, 255, 1.0)
-          : SemiChannels(0, 100, 250, 1.0));
+  SemiChannels get blue5 => _blue5 ?? _defaults.blue5(this);
   final SemiChannels? _blue6;
 
   /// `--semi-blue-6` — `packages/semi-theme-default/scss/_palette.scss` (line 19).
-  SemiChannels get blue6 =>
-      _blue6 ??
-      (_dark
-          ? SemiChannels(127, 193, 255, 1.0)
-          : SemiChannels(0, 98, 214, 1.0));
+  SemiChannels get blue6 => _blue6 ?? _defaults.blue6(this);
   final SemiChannels? _blue7;
 
   /// `--semi-blue-7` — `packages/semi-theme-default/scss/_palette.scss` (line 20).
-  SemiChannels get blue7 =>
-      _blue7 ??
-      (_dark
-          ? SemiChannels(169, 215, 255, 1.0)
-          : SemiChannels(0, 79, 179, 1.0));
+  SemiChannels get blue7 => _blue7 ?? _defaults.blue7(this);
   final SemiChannels? _blue8;
 
   /// `--semi-blue-8` — `packages/semi-theme-default/scss/_palette.scss` (line 21).
-  SemiChannels get blue8 =>
-      _blue8 ??
-      (_dark
-          ? SemiChannels(212, 236, 255, 1.0)
-          : SemiChannels(0, 61, 143, 1.0));
+  SemiChannels get blue8 => _blue8 ?? _defaults.blue8(this);
   final SemiChannels? _blue9;
 
   /// `--semi-blue-9` — `packages/semi-theme-default/scss/_palette.scss` (line 22).
-  SemiChannels get blue9 =>
-      _blue9 ??
-      (_dark
-          ? SemiChannels(239, 248, 255, 1.0)
-          : SemiChannels(0, 44, 107, 1.0));
+  SemiChannels get blue9 => _blue9 ?? _defaults.blue9(this);
   final SemiChannels? _cyan0;
 
   /// `--semi-cyan-0` — `packages/semi-theme-default/scss/_palette.scss` (line 23).
-  SemiChannels get cyan0 =>
-      _cyan0 ??
-      (_dark ? SemiChannels(4, 52, 61, 1.0) : SemiChannels(229, 247, 248, 1.0));
+  SemiChannels get cyan0 => _cyan0 ?? _defaults.cyan0(this);
   final SemiChannels? _cyan1;
 
   /// `--semi-cyan-1` — `packages/semi-theme-default/scss/_palette.scss` (line 24).
-  SemiChannels get cyan1 =>
-      _cyan1 ??
-      (_dark ? SemiChannels(7, 79, 92, 1.0) : SemiChannels(194, 239, 240, 1.0));
+  SemiChannels get cyan1 => _cyan1 ?? _defaults.cyan1(this);
   final SemiChannels? _cyan2;
 
   /// `--semi-cyan-2` — `packages/semi-theme-default/scss/_palette.scss` (line 25).
-  SemiChannels get cyan2 =>
-      _cyan2 ??
-      (_dark
-          ? SemiChannels(10, 108, 123, 1.0)
-          : SemiChannels(138, 221, 226, 1.0));
+  SemiChannels get cyan2 => _cyan2 ?? _defaults.cyan2(this);
   final SemiChannels? _cyan3;
 
   /// `--semi-cyan-3` — `packages/semi-theme-default/scss/_palette.scss` (line 26).
-  SemiChannels get cyan3 =>
-      _cyan3 ??
-      (_dark
-          ? SemiChannels(14, 137, 153, 1.0)
-          : SemiChannels(88, 203, 211, 1.0));
+  SemiChannels get cyan3 => _cyan3 ?? _defaults.cyan3(this);
   final SemiChannels? _cyan4;
 
   /// `--semi-cyan-4` — `packages/semi-theme-default/scss/_palette.scss` (line 27).
-  SemiChannels get cyan4 =>
-      _cyan4 ??
-      (_dark
-          ? SemiChannels(19, 168, 184, 1.0)
-          : SemiChannels(44, 184, 197, 1.0));
+  SemiChannels get cyan4 => _cyan4 ?? _defaults.cyan4(this);
   final SemiChannels? _cyan5;
 
   /// `--semi-cyan-5` — `packages/semi-theme-default/scss/_palette.scss` (line 28).
-  SemiChannels get cyan5 =>
-      _cyan5 ??
-      (_dark
-          ? SemiChannels(56, 187, 198, 1.0)
-          : SemiChannels(5, 164, 182, 1.0));
+  SemiChannels get cyan5 => _cyan5 ?? _defaults.cyan5(this);
   final SemiChannels? _cyan6;
 
   /// `--semi-cyan-6` — `packages/semi-theme-default/scss/_palette.scss` (line 29).
-  SemiChannels get cyan6 =>
-      _cyan6 ??
-      (_dark
-          ? SemiChannels(98, 205, 212, 1.0)
-          : SemiChannels(3, 134, 152, 1.0));
+  SemiChannels get cyan6 => _cyan6 ?? _defaults.cyan6(this);
   final SemiChannels? _cyan7;
 
   /// `--semi-cyan-7` — `packages/semi-theme-default/scss/_palette.scss` (line 30).
-  SemiChannels get cyan7 =>
-      _cyan7 ??
-      (_dark
-          ? SemiChannels(145, 223, 227, 1.0)
-          : SemiChannels(1, 105, 121, 1.0));
+  SemiChannels get cyan7 => _cyan7 ?? _defaults.cyan7(this);
   final SemiChannels? _cyan8;
 
   /// `--semi-cyan-8` — `packages/semi-theme-default/scss/_palette.scss` (line 31).
-  SemiChannels get cyan8 =>
-      _cyan8 ??
-      (_dark ? SemiChannels(198, 239, 241, 1.0) : SemiChannels(0, 77, 91, 1.0));
+  SemiChannels get cyan8 => _cyan8 ?? _defaults.cyan8(this);
   final SemiChannels? _cyan9;
 
   /// `--semi-cyan-9` — `packages/semi-theme-default/scss/_palette.scss` (line 32).
-  SemiChannels get cyan9 =>
-      _cyan9 ??
-      (_dark ? SemiChannels(231, 247, 248, 1.0) : SemiChannels(0, 50, 61, 1.0));
+  SemiChannels get cyan9 => _cyan9 ?? _defaults.cyan9(this);
   final SemiChannels? _green0;
 
   /// `--semi-green-0` — `packages/semi-theme-default/scss/_palette.scss` (line 33).
-  SemiChannels get green0 =>
-      _green0 ??
-      (_dark
-          ? SemiChannels(18, 60, 25, 1.0)
-          : SemiChannels(236, 247, 236, 1.0));
+  SemiChannels get green0 => _green0 ?? _defaults.green0(this);
   final SemiChannels? _green1;
 
   /// `--semi-green-1` — `packages/semi-theme-default/scss/_palette.scss` (line 34).
-  SemiChannels get green1 =>
-      _green1 ??
-      (_dark
-          ? SemiChannels(28, 90, 37, 1.0)
-          : SemiChannels(208, 240, 209, 1.0));
+  SemiChannels get green1 => _green1 ?? _defaults.green1(this);
   final SemiChannels? _green2;
 
   /// `--semi-green-2` — `packages/semi-theme-default/scss/_palette.scss` (line 35).
-  SemiChannels get green2 =>
-      _green2 ??
-      (_dark
-          ? SemiChannels(39, 119, 49, 1.0)
-          : SemiChannels(164, 224, 167, 1.0));
+  SemiChannels get green2 => _green2 ?? _defaults.green2(this);
   final SemiChannels? _green3;
 
   /// `--semi-green-3` — `packages/semi-theme-default/scss/_palette.scss` (line 36).
-  SemiChannels get green3 =>
-      _green3 ??
-      (_dark
-          ? SemiChannels(50, 149, 61, 1.0)
-          : SemiChannels(125, 209, 130, 1.0));
+  SemiChannels get green3 => _green3 ?? _defaults.green3(this);
   final SemiChannels? _green4;
 
   /// `--semi-green-4` — `packages/semi-theme-default/scss/_palette.scss` (line 37).
-  SemiChannels get green4 =>
-      _green4 ??
-      (_dark ? SemiChannels(62, 179, 73, 1.0) : SemiChannels(90, 194, 98, 1.0));
+  SemiChannels get green4 => _green4 ?? _defaults.green4(this);
   final SemiChannels? _green5;
 
   /// `--semi-green-5` — `packages/semi-theme-default/scss/_palette.scss` (line 38).
-  SemiChannels get green5 =>
-      _green5 ??
-      (_dark
-          ? SemiChannels(93, 194, 100, 1.0)
-          : SemiChannels(59, 179, 70, 1.0));
+  SemiChannels get green5 => _green5 ?? _defaults.green5(this);
   final SemiChannels? _green6;
 
   /// `--semi-green-6` — `packages/semi-theme-default/scss/_palette.scss` (line 39).
-  SemiChannels get green6 =>
-      _green6 ??
-      (_dark
-          ? SemiChannels(127, 209, 132, 1.0)
-          : SemiChannels(48, 149, 59, 1.0));
+  SemiChannels get green6 => _green6 ?? _defaults.green6(this);
   final SemiChannels? _green7;
 
   /// `--semi-green-7` — `packages/semi-theme-default/scss/_palette.scss` (line 40).
-  SemiChannels get green7 =>
-      _green7 ??
-      (_dark
-          ? SemiChannels(166, 225, 168, 1.0)
-          : SemiChannels(37, 119, 47, 1.0));
+  SemiChannels get green7 => _green7 ?? _defaults.green7(this);
   final SemiChannels? _green8;
 
   /// `--semi-green-8` — `packages/semi-theme-default/scss/_palette.scss` (line 41).
-  SemiChannels get green8 =>
-      _green8 ??
-      (_dark
-          ? SemiChannels(208, 240, 209, 1.0)
-          : SemiChannels(27, 89, 36, 1.0));
+  SemiChannels get green8 => _green8 ?? _defaults.green8(this);
   final SemiChannels? _green9;
 
   /// `--semi-green-9` — `packages/semi-theme-default/scss/_palette.scss` (line 42).
-  SemiChannels get green9 =>
-      _green9 ??
-      (_dark
-          ? SemiChannels(236, 247, 236, 1.0)
-          : SemiChannels(17, 60, 24, 1.0));
+  SemiChannels get green9 => _green9 ?? _defaults.green9(this);
   final SemiChannels? _grey0;
 
   /// `--semi-grey-0` — `packages/semi-theme-default/scss/_palette.scss` (line 43).
-  SemiChannels get grey0 =>
-      _grey0 ??
-      (_dark
-          ? SemiChannels(28, 31, 35, 1.0)
-          : SemiChannels(249, 249, 249, 1.0));
+  SemiChannels get grey0 => _grey0 ?? _defaults.grey0(this);
   final SemiChannels? _grey1;
 
   /// `--semi-grey-1` — `packages/semi-theme-default/scss/_palette.scss` (line 44).
-  SemiChannels get grey1 =>
-      _grey1 ??
-      (_dark
-          ? SemiChannels(46, 50, 56, 1.0)
-          : SemiChannels(230, 232, 234, 1.0));
+  SemiChannels get grey1 => _grey1 ?? _defaults.grey1(this);
   final SemiChannels? _grey2;
 
   /// `--semi-grey-2` — `packages/semi-theme-default/scss/_palette.scss` (line 45).
-  SemiChannels get grey2 =>
-      _grey2 ??
-      (_dark
-          ? SemiChannels(65, 70, 76, 1.0)
-          : SemiChannels(198, 202, 205, 1.0));
+  SemiChannels get grey2 => _grey2 ?? _defaults.grey2(this);
   final SemiChannels? _grey3;
 
   /// `--semi-grey-3` — `packages/semi-theme-default/scss/_palette.scss` (line 46).
-  SemiChannels get grey3 =>
-      _grey3 ??
-      (_dark
-          ? SemiChannels(85, 91, 97, 1.0)
-          : SemiChannels(167, 171, 176, 1.0));
+  SemiChannels get grey3 => _grey3 ?? _defaults.grey3(this);
   final SemiChannels? _grey4;
 
   /// `--semi-grey-4` — `packages/semi-theme-default/scss/_palette.scss` (line 47).
-  SemiChannels get grey4 =>
-      _grey4 ??
-      (_dark
-          ? SemiChannels(107, 112, 117, 1.0)
-          : SemiChannels(136, 141, 146, 1.0));
+  SemiChannels get grey4 => _grey4 ?? _defaults.grey4(this);
   final SemiChannels? _grey5;
 
   /// `--semi-grey-5` — `packages/semi-theme-default/scss/_palette.scss` (line 48).
-  SemiChannels get grey5 =>
-      _grey5 ??
-      (_dark
-          ? SemiChannels(136, 141, 146, 1.0)
-          : SemiChannels(107, 112, 117, 1.0));
+  SemiChannels get grey5 => _grey5 ?? _defaults.grey5(this);
   final SemiChannels? _grey6;
 
   /// `--semi-grey-6` — `packages/semi-theme-default/scss/_palette.scss` (line 49).
-  SemiChannels get grey6 =>
-      _grey6 ??
-      (_dark
-          ? SemiChannels(167, 171, 176, 1.0)
-          : SemiChannels(85, 91, 97, 1.0));
+  SemiChannels get grey6 => _grey6 ?? _defaults.grey6(this);
   final SemiChannels? _grey7;
 
   /// `--semi-grey-7` — `packages/semi-theme-default/scss/_palette.scss` (line 50).
-  SemiChannels get grey7 =>
-      _grey7 ??
-      (_dark
-          ? SemiChannels(198, 202, 205, 1.0)
-          : SemiChannels(65, 70, 76, 1.0));
+  SemiChannels get grey7 => _grey7 ?? _defaults.grey7(this);
   final SemiChannels? _grey8;
 
   /// `--semi-grey-8` — `packages/semi-theme-default/scss/_palette.scss` (line 51).
-  SemiChannels get grey8 =>
-      _grey8 ??
-      (_dark
-          ? SemiChannels(230, 232, 234, 1.0)
-          : SemiChannels(46, 50, 56, 1.0));
+  SemiChannels get grey8 => _grey8 ?? _defaults.grey8(this);
   final SemiChannels? _grey9;
 
   /// `--semi-grey-9` — `packages/semi-theme-default/scss/_palette.scss` (line 52).
-  SemiChannels get grey9 =>
-      _grey9 ??
-      (_dark
-          ? SemiChannels(249, 249, 249, 1.0)
-          : SemiChannels(28, 31, 35, 1.0));
+  SemiChannels get grey9 => _grey9 ?? _defaults.grey9(this);
   final SemiChannels? _indigo0;
 
   /// `--semi-indigo-0` — `packages/semi-theme-default/scss/_palette.scss` (line 53).
-  SemiChannels get indigo0 =>
-      _indigo0 ??
-      (_dark
-          ? SemiChannels(23, 30, 101, 1.0)
-          : SemiChannels(236, 239, 248, 1.0));
+  SemiChannels get indigo0 => _indigo0 ?? _defaults.indigo0(this);
   final SemiChannels? _indigo1;
 
   /// `--semi-indigo-1` — `packages/semi-theme-default/scss/_palette.scss` (line 54).
-  SemiChannels get indigo1 =>
-      _indigo1 ??
-      (_dark
-          ? SemiChannels(32, 41, 122, 1.0)
-          : SemiChannels(209, 216, 240, 1.0));
+  SemiChannels get indigo1 => _indigo1 ?? _defaults.indigo1(this);
   final SemiChannels? _indigo2;
 
   /// `--semi-indigo-2` — `packages/semi-theme-default/scss/_palette.scss` (line 55).
-  SemiChannels get indigo2 =>
-      _indigo2 ??
-      (_dark
-          ? SemiChannels(41, 54, 142, 1.0)
-          : SemiChannels(167, 179, 225, 1.0));
+  SemiChannels get indigo2 => _indigo2 ?? _defaults.indigo2(this);
   final SemiChannels? _indigo3;
 
   /// `--semi-indigo-3` — `packages/semi-theme-default/scss/_palette.scss` (line 56).
-  SemiChannels get indigo3 =>
-      _indigo3 ??
-      (_dark
-          ? SemiChannels(52, 68, 163, 1.0)
-          : SemiChannels(128, 144, 211, 1.0));
+  SemiChannels get indigo3 => _indigo3 ?? _defaults.indigo3(this);
   final SemiChannels? _indigo4;
 
   /// `--semi-indigo-4` — `packages/semi-theme-default/scss/_palette.scss` (line 57).
-  SemiChannels get indigo4 =>
-      _indigo4 ??
-      (_dark
-          ? SemiChannels(64, 83, 183, 1.0)
-          : SemiChannels(94, 111, 196, 1.0));
+  SemiChannels get indigo4 => _indigo4 ?? _defaults.indigo4(this);
   final SemiChannels? _indigo5;
 
   /// `--semi-indigo-5` — `packages/semi-theme-default/scss/_palette.scss` (line 58).
-  SemiChannels get indigo5 =>
-      _indigo5 ??
-      (_dark
-          ? SemiChannels(95, 113, 197, 1.0)
-          : SemiChannels(63, 81, 181, 1.0));
+  SemiChannels get indigo5 => _indigo5 ?? _defaults.indigo5(this);
   final SemiChannels? _indigo6;
 
   /// `--semi-indigo-6` — `packages/semi-theme-default/scss/_palette.scss` (line 59).
-  SemiChannels get indigo6 =>
-      _indigo6 ??
-      (_dark
-          ? SemiChannels(129, 145, 212, 1.0)
-          : SemiChannels(51, 66, 161, 1.0));
+  SemiChannels get indigo6 => _indigo6 ?? _defaults.indigo6(this);
   final SemiChannels? _indigo7;
 
   /// `--semi-indigo-7` — `packages/semi-theme-default/scss/_palette.scss` (line 60).
-  SemiChannels get indigo7 =>
-      _indigo7 ??
-      (_dark
-          ? SemiChannels(167, 180, 226, 1.0)
-          : SemiChannels(40, 52, 140, 1.0));
+  SemiChannels get indigo7 => _indigo7 ?? _defaults.indigo7(this);
   final SemiChannels? _indigo8;
 
   /// `--semi-indigo-8` — `packages/semi-theme-default/scss/_palette.scss` (line 61).
-  SemiChannels get indigo8 =>
-      _indigo8 ??
-      (_dark
-          ? SemiChannels(209, 216, 241, 1.0)
-          : SemiChannels(31, 40, 120, 1.0));
+  SemiChannels get indigo8 => _indigo8 ?? _defaults.indigo8(this);
   final SemiChannels? _indigo9;
 
   /// `--semi-indigo-9` — `packages/semi-theme-default/scss/_palette.scss` (line 62).
-  SemiChannels get indigo9 =>
-      _indigo9 ??
-      (_dark
-          ? SemiChannels(237, 239, 248, 1.0)
-          : SemiChannels(23, 29, 99, 1.0));
+  SemiChannels get indigo9 => _indigo9 ?? _defaults.indigo9(this);
   final SemiChannels? _lightBlue0;
 
   /// `--semi-light-blue-0` — `packages/semi-theme-default/scss/_palette.scss` (line 63).
-  SemiChannels get lightBlue0 =>
-      _lightBlue0 ??
-      (_dark ? SemiChannels(0, 55, 97, 1.0) : SemiChannels(233, 247, 253, 1.0));
+  SemiChannels get lightBlue0 => _lightBlue0 ?? _defaults.lightBlue0(this);
   final SemiChannels? _lightBlue1;
 
   /// `--semi-light-blue-1` — `packages/semi-theme-default/scss/_palette.scss` (line 64).
-  SemiChannels get lightBlue1 =>
-      _lightBlue1 ??
-      (_dark
-          ? SemiChannels(0, 77, 133, 1.0)
-          : SemiChannels(201, 236, 252, 1.0));
+  SemiChannels get lightBlue1 => _lightBlue1 ?? _defaults.lightBlue1(this);
   final SemiChannels? _lightBlue2;
 
   /// `--semi-light-blue-2` — `packages/semi-theme-default/scss/_palette.scss` (line 65).
-  SemiChannels get lightBlue2 =>
-      _lightBlue2 ??
-      (_dark
-          ? SemiChannels(3, 102, 169, 1.0)
-          : SemiChannels(149, 216, 248, 1.0));
+  SemiChannels get lightBlue2 => _lightBlue2 ?? _defaults.lightBlue2(this);
   final SemiChannels? _lightBlue3;
 
   /// `--semi-light-blue-3` — `packages/semi-theme-default/scss/_palette.scss` (line 66).
-  SemiChannels get lightBlue3 =>
-      _lightBlue3 ??
-      (_dark
-          ? SemiChannels(10, 129, 204, 1.0)
-          : SemiChannels(98, 195, 245, 1.0));
+  SemiChannels get lightBlue3 => _lightBlue3 ?? _defaults.lightBlue3(this);
   final SemiChannels? _lightBlue4;
 
   /// `--semi-light-blue-4` — `packages/semi-theme-default/scss/_palette.scss` (line 67).
-  SemiChannels get lightBlue4 =>
-      _lightBlue4 ??
-      (_dark
-          ? SemiChannels(19, 159, 240, 1.0)
-          : SemiChannels(48, 172, 241, 1.0));
+  SemiChannels get lightBlue4 => _lightBlue4 ?? _defaults.lightBlue4(this);
   final SemiChannels? _lightBlue5;
 
   /// `--semi-light-blue-5` — `packages/semi-theme-default/scss/_palette.scss` (line 68).
-  SemiChannels get lightBlue5 =>
-      _lightBlue5 ??
-      (_dark
-          ? SemiChannels(64, 180, 243, 1.0)
-          : SemiChannels(0, 149, 238, 1.0));
+  SemiChannels get lightBlue5 => _lightBlue5 ?? _defaults.lightBlue5(this);
   final SemiChannels? _lightBlue6;
 
   /// `--semi-light-blue-6` — `packages/semi-theme-default/scss/_palette.scss` (line 69).
-  SemiChannels get lightBlue6 =>
-      _lightBlue6 ??
-      (_dark
-          ? SemiChannels(110, 200, 246, 1.0)
-          : SemiChannels(0, 123, 202, 1.0));
+  SemiChannels get lightBlue6 => _lightBlue6 ?? _defaults.lightBlue6(this);
   final SemiChannels? _lightBlue7;
 
   /// `--semi-light-blue-7` — `packages/semi-theme-default/scss/_palette.scss` (line 70).
-  SemiChannels get lightBlue7 =>
-      _lightBlue7 ??
-      (_dark
-          ? SemiChannels(157, 220, 249, 1.0)
-          : SemiChannels(0, 99, 167, 1.0));
+  SemiChannels get lightBlue7 => _lightBlue7 ?? _defaults.lightBlue7(this);
   final SemiChannels? _lightBlue8;
 
   /// `--semi-light-blue-8` — `packages/semi-theme-default/scss/_palette.scss` (line 71).
-  SemiChannels get lightBlue8 =>
-      _lightBlue8 ??
-      (_dark
-          ? SemiChannels(206, 238, 252, 1.0)
-          : SemiChannels(0, 75, 131, 1.0));
+  SemiChannels get lightBlue8 => _lightBlue8 ?? _defaults.lightBlue8(this);
   final SemiChannels? _lightBlue9;
 
   /// `--semi-light-blue-9` — `packages/semi-theme-default/scss/_palette.scss` (line 72).
-  SemiChannels get lightBlue9 =>
-      _lightBlue9 ??
-      (_dark ? SemiChannels(235, 248, 254, 1.0) : SemiChannels(0, 53, 95, 1.0));
+  SemiChannels get lightBlue9 => _lightBlue9 ?? _defaults.lightBlue9(this);
   final SemiChannels? _lightGreen0;
 
   /// `--semi-light-green-0` — `packages/semi-theme-default/scss/_palette.scss` (line 73).
-  SemiChannels get lightGreen0 =>
-      _lightGreen0 ??
-      (_dark
-          ? SemiChannels(38, 61, 19, 1.0)
-          : SemiChannels(243, 248, 236, 1.0));
+  SemiChannels get lightGreen0 => _lightGreen0 ?? _defaults.lightGreen0(this);
   final SemiChannels? _lightGreen1;
 
   /// `--semi-light-green-1` — `packages/semi-theme-default/scss/_palette.scss` (line 74).
-  SemiChannels get lightGreen1 =>
-      _lightGreen1 ??
-      (_dark
-          ? SemiChannels(59, 92, 29, 1.0)
-          : SemiChannels(227, 240, 208, 1.0));
+  SemiChannels get lightGreen1 => _lightGreen1 ?? _defaults.lightGreen1(this);
   final SemiChannels? _lightGreen2;
 
   /// `--semi-light-green-2` — `packages/semi-theme-default/scss/_palette.scss` (line 75).
-  SemiChannels get lightGreen2 =>
-      _lightGreen2 ??
-      (_dark
-          ? SemiChannels(81, 123, 40, 1.0)
-          : SemiChannels(200, 226, 165, 1.0));
+  SemiChannels get lightGreen2 => _lightGreen2 ?? _defaults.lightGreen2(this);
   final SemiChannels? _lightGreen3;
 
   /// `--semi-light-green-3` — `packages/semi-theme-default/scss/_palette.scss` (line 76).
-  SemiChannels get lightGreen3 =>
-      _lightGreen3 ??
-      (_dark
-          ? SemiChannels(103, 153, 52, 1.0)
-          : SemiChannels(173, 211, 126, 1.0));
+  SemiChannels get lightGreen3 => _lightGreen3 ?? _defaults.lightGreen3(this);
   final SemiChannels? _lightGreen4;
 
   /// `--semi-light-green-4` — `packages/semi-theme-default/scss/_palette.scss` (line 77).
-  SemiChannels get lightGreen4 =>
-      _lightGreen4 ??
-      (_dark
-          ? SemiChannels(127, 184, 64, 1.0)
-          : SemiChannels(147, 197, 91, 1.0));
+  SemiChannels get lightGreen4 => _lightGreen4 ?? _defaults.lightGreen4(this);
   final SemiChannels? _lightGreen5;
 
   /// `--semi-light-green-5` — `packages/semi-theme-default/scss/_palette.scss` (line 78).
-  SemiChannels get lightGreen5 =>
-      _lightGreen5 ??
-      (_dark
-          ? SemiChannels(151, 198, 95, 1.0)
-          : SemiChannels(123, 182, 60, 1.0));
+  SemiChannels get lightGreen5 => _lightGreen5 ?? _defaults.lightGreen5(this);
   final SemiChannels? _lightGreen6;
 
   /// `--semi-light-green-6` — `packages/semi-theme-default/scss/_palette.scss` (line 79).
-  SemiChannels get lightGreen6 =>
-      _lightGreen6 ??
-      (_dark
-          ? SemiChannels(176, 212, 129, 1.0)
-          : SemiChannels(100, 152, 48, 1.0));
+  SemiChannels get lightGreen6 => _lightGreen6 ?? _defaults.lightGreen6(this);
   final SemiChannels? _lightGreen7;
 
   /// `--semi-light-green-7` — `packages/semi-theme-default/scss/_palette.scss` (line 80).
-  SemiChannels get lightGreen7 =>
-      _lightGreen7 ??
-      (_dark
-          ? SemiChannels(201, 227, 167, 1.0)
-          : SemiChannels(78, 121, 38, 1.0));
+  SemiChannels get lightGreen7 => _lightGreen7 ?? _defaults.lightGreen7(this);
   final SemiChannels? _lightGreen8;
 
   /// `--semi-light-green-8` — `packages/semi-theme-default/scss/_palette.scss` (line 81).
-  SemiChannels get lightGreen8 =>
-      _lightGreen8 ??
-      (_dark
-          ? SemiChannels(228, 241, 209, 1.0)
-          : SemiChannels(57, 91, 27, 1.0));
+  SemiChannels get lightGreen8 => _lightGreen8 ?? _defaults.lightGreen8(this);
   final SemiChannels? _lightGreen9;
 
   /// `--semi-light-green-9` — `packages/semi-theme-default/scss/_palette.scss` (line 82).
-  SemiChannels get lightGreen9 =>
-      _lightGreen9 ??
-      (_dark
-          ? SemiChannels(243, 248, 237, 1.0)
-          : SemiChannels(37, 61, 18, 1.0));
+  SemiChannels get lightGreen9 => _lightGreen9 ?? _defaults.lightGreen9(this);
   final SemiChannels? _lime0;
 
   /// `--semi-lime-0` — `packages/semi-theme-default/scss/_palette.scss` (line 83).
-  SemiChannels get lime0 =>
-      _lime0 ??
-      (_dark ? SemiChannels(49, 70, 3, 1.0) : SemiChannels(242, 250, 230, 1.0));
+  SemiChannels get lime0 => _lime0 ?? _defaults.lime0(this);
   final SemiChannels? _lime1;
 
   /// `--semi-lime-1` — `packages/semi-theme-default/scss/_palette.scss` (line 84).
-  SemiChannels get lime1 =>
-      _lime1 ??
-      (_dark
-          ? SemiChannels(75, 105, 5, 1.0)
-          : SemiChannels(227, 246, 197, 1.0));
+  SemiChannels get lime1 => _lime1 ?? _defaults.lime1(this);
   final SemiChannels? _lime2;
 
   /// `--semi-lime-2` — `packages/semi-theme-default/scss/_palette.scss` (line 85).
-  SemiChannels get lime2 =>
-      _lime2 ??
-      (_dark
-          ? SemiChannels(103, 141, 9, 1.0)
-          : SemiChannels(203, 237, 142, 1.0));
+  SemiChannels get lime2 => _lime2 ?? _defaults.lime2(this);
   final SemiChannels? _lime3;
 
   /// `--semi-lime-3` — `packages/semi-theme-default/scss/_palette.scss` (line 86).
-  SemiChannels get lime3 =>
-      _lime3 ??
-      (_dark
-          ? SemiChannels(132, 176, 12, 1.0)
-          : SemiChannels(183, 227, 91, 1.0));
+  SemiChannels get lime3 => _lime3 ?? _defaults.lime3(this);
   final SemiChannels? _lime4;
 
   /// `--semi-lime-4` — `packages/semi-theme-default/scss/_palette.scss` (line 87).
-  SemiChannels get lime4 =>
-      _lime4 ??
-      (_dark
-          ? SemiChannels(162, 211, 17, 1.0)
-          : SemiChannels(167, 218, 44, 1.0));
+  SemiChannels get lime4 => _lime4 ?? _defaults.lime4(this);
   final SemiChannels? _lime5;
 
   /// `--semi-lime-5` — `packages/semi-theme-default/scss/_palette.scss` (line 88).
-  SemiChannels get lime5 =>
-      _lime5 ??
-      (_dark
-          ? SemiChannels(174, 220, 58, 1.0)
-          : SemiChannels(155, 209, 0, 1.0));
+  SemiChannels get lime5 => _lime5 ?? _defaults.lime5(this);
   final SemiChannels? _lime6;
 
   /// `--semi-lime-6` — `packages/semi-theme-default/scss/_palette.scss` (line 89).
-  SemiChannels get lime6 =>
-      _lime6 ??
-      (_dark
-          ? SemiChannels(189, 229, 102, 1.0)
-          : SemiChannels(126, 174, 0, 1.0));
+  SemiChannels get lime6 => _lime6 ?? _defaults.lime6(this);
   final SemiChannels? _lime7;
 
   /// `--semi-lime-7` — `packages/semi-theme-default/scss/_palette.scss` (line 90).
-  SemiChannels get lime7 =>
-      _lime7 ??
-      (_dark
-          ? SemiChannels(207, 237, 150, 1.0)
-          : SemiChannels(99, 139, 0, 1.0));
+  SemiChannels get lime7 => _lime7 ?? _defaults.lime7(this);
   final SemiChannels? _lime8;
 
   /// `--semi-lime-8` — `packages/semi-theme-default/scss/_palette.scss` (line 91).
-  SemiChannels get lime8 =>
-      _lime8 ??
-      (_dark
-          ? SemiChannels(229, 246, 201, 1.0)
-          : SemiChannels(72, 104, 0, 1.0));
+  SemiChannels get lime8 => _lime8 ?? _defaults.lime8(this);
   final SemiChannels? _lime9;
 
   /// `--semi-lime-9` — `packages/semi-theme-default/scss/_palette.scss` (line 92).
-  SemiChannels get lime9 =>
-      _lime9 ??
-      (_dark ? SemiChannels(243, 251, 233, 1.0) : SemiChannels(47, 70, 0, 1.0));
+  SemiChannels get lime9 => _lime9 ?? _defaults.lime9(this);
   final SemiChannels? _orange0;
 
   /// `--semi-orange-0` — `packages/semi-theme-default/scss/_palette.scss` (line 93).
-  SemiChannels get orange0 =>
-      _orange0 ??
-      (_dark ? SemiChannels(85, 31, 3, 1.0) : SemiChannels(255, 248, 234, 1.0));
+  SemiChannels get orange0 => _orange0 ?? _defaults.orange0(this);
   final SemiChannels? _orange1;
 
   /// `--semi-orange-1` — `packages/semi-theme-default/scss/_palette.scss` (line 94).
-  SemiChannels get orange1 =>
-      _orange1 ??
-      (_dark
-          ? SemiChannels(128, 53, 6, 1.0)
-          : SemiChannels(254, 238, 204, 1.0));
+  SemiChannels get orange1 => _orange1 ?? _defaults.orange1(this);
   final SemiChannels? _orange2;
 
   /// `--semi-orange-2` — `packages/semi-theme-default/scss/_palette.scss` (line 95).
-  SemiChannels get orange2 =>
-      _orange2 ??
-      (_dark
-          ? SemiChannels(170, 80, 10, 1.0)
-          : SemiChannels(254, 217, 152, 1.0));
+  SemiChannels get orange2 => _orange2 ?? _defaults.orange2(this);
   final SemiChannels? _orange3;
 
   /// `--semi-orange-3` — `packages/semi-theme-default/scss/_palette.scss` (line 96).
-  SemiChannels get orange3 =>
-      _orange3 ??
-      (_dark
-          ? SemiChannels(213, 111, 15, 1.0)
-          : SemiChannels(253, 193, 101, 1.0));
+  SemiChannels get orange3 => _orange3 ?? _defaults.orange3(this);
   final SemiChannels? _orange4;
 
   /// `--semi-orange-4` — `packages/semi-theme-default/scss/_palette.scss` (line 97).
-  SemiChannels get orange4 =>
-      _orange4 ??
-      (_dark
-          ? SemiChannels(255, 146, 20, 1.0)
-          : SemiChannels(253, 166, 51, 1.0));
+  SemiChannels get orange4 => _orange4 ?? _defaults.orange4(this);
   final SemiChannels? _orange5;
 
   /// `--semi-orange-5` — `packages/semi-theme-default/scss/_palette.scss` (line 98).
-  SemiChannels get orange5 =>
-      _orange5 ??
-      (_dark
-          ? SemiChannels(255, 174, 67, 1.0)
-          : SemiChannels(252, 136, 0, 1.0));
+  SemiChannels get orange5 => _orange5 ?? _defaults.orange5(this);
   final SemiChannels? _orange6;
 
   /// `--semi-orange-6` — `packages/semi-theme-default/scss/_palette.scss` (line 99).
-  SemiChannels get orange6 =>
-      _orange6 ??
-      (_dark
-          ? SemiChannels(255, 199, 114, 1.0)
-          : SemiChannels(210, 103, 0, 1.0));
+  SemiChannels get orange6 => _orange6 ?? _defaults.orange6(this);
   final SemiChannels? _orange7;
 
   /// `--semi-orange-7` — `packages/semi-theme-default/scss/_palette.scss` (line 100).
-  SemiChannels get orange7 =>
-      _orange7 ??
-      (_dark
-          ? SemiChannels(255, 221, 161, 1.0)
-          : SemiChannels(168, 74, 0, 1.0));
+  SemiChannels get orange7 => _orange7 ?? _defaults.orange7(this);
   final SemiChannels? _orange8;
 
   /// `--semi-orange-8` — `packages/semi-theme-default/scss/_palette.scss` (line 101).
-  SemiChannels get orange8 =>
-      _orange8 ??
-      (_dark
-          ? SemiChannels(255, 239, 208, 1.0)
-          : SemiChannels(126, 49, 0, 1.0));
+  SemiChannels get orange8 => _orange8 ?? _defaults.orange8(this);
   final SemiChannels? _orange9;
 
   /// `--semi-orange-9` — `packages/semi-theme-default/scss/_palette.scss` (line 102).
-  SemiChannels get orange9 =>
-      _orange9 ??
-      (_dark ? SemiChannels(255, 249, 237, 1.0) : SemiChannels(84, 29, 0, 1.0));
+  SemiChannels get orange9 => _orange9 ?? _defaults.orange9(this);
   final SemiChannels? _pink0;
 
   /// `--semi-pink-0` — `packages/semi-theme-default/scss/_palette.scss` (line 103).
-  SemiChannels get pink0 =>
-      _pink0 ??
-      (_dark ? SemiChannels(92, 7, 48, 1.0) : SemiChannels(253, 236, 239, 1.0));
+  SemiChannels get pink0 => _pink0 ?? _defaults.pink0(this);
   final SemiChannels? _pink1;
 
   /// `--semi-pink-1` — `packages/semi-theme-default/scss/_palette.scss` (line 104).
-  SemiChannels get pink1 =>
-      _pink1 ??
-      (_dark
-          ? SemiChannels(128, 14, 65, 1.0)
-          : SemiChannels(251, 207, 216, 1.0));
+  SemiChannels get pink1 => _pink1 ?? _defaults.pink1(this);
   final SemiChannels? _pink2;
 
   /// `--semi-pink-2` — `packages/semi-theme-default/scss/_palette.scss` (line 105).
-  SemiChannels get pink2 =>
-      _pink2 ??
-      (_dark
-          ? SemiChannels(164, 23, 81, 1.0)
-          : SemiChannels(246, 160, 181, 1.0));
+  SemiChannels get pink2 => _pink2 ?? _defaults.pink2(this);
   final SemiChannels? _pink3;
 
   /// `--semi-pink-3` — `packages/semi-theme-default/scss/_palette.scss` (line 106).
-  SemiChannels get pink3 =>
-      _pink3 ??
-      (_dark
-          ? SemiChannels(199, 34, 97, 1.0)
-          : SemiChannels(242, 115, 150, 1.0));
+  SemiChannels get pink3 => _pink3 ?? _defaults.pink3(this);
   final SemiChannels? _pink4;
 
   /// `--semi-pink-4` — `packages/semi-theme-default/scss/_palette.scss` (line 107).
-  SemiChannels get pink4 =>
-      _pink4 ??
-      (_dark
-          ? SemiChannels(235, 47, 113, 1.0)
-          : SemiChannels(237, 72, 123, 1.0));
+  SemiChannels get pink4 => _pink4 ?? _defaults.pink4(this);
   final SemiChannels? _pink5;
 
   /// `--semi-pink-5` — `packages/semi-theme-default/scss/_palette.scss` (line 108).
-  SemiChannels get pink5 =>
-      _pink5 ??
-      (_dark
-          ? SemiChannels(239, 86, 134, 1.0)
-          : SemiChannels(233, 30, 99, 1.0));
+  SemiChannels get pink5 => _pink5 ?? _defaults.pink5(this);
   final SemiChannels? _pink6;
 
   /// `--semi-pink-6` — `packages/semi-theme-default/scss/_palette.scss` (line 109).
-  SemiChannels get pink6 =>
-      _pink6 ??
-      (_dark
-          ? SemiChannels(243, 126, 159, 1.0)
-          : SemiChannels(197, 19, 86, 1.0));
+  SemiChannels get pink6 => _pink6 ?? _defaults.pink6(this);
   final SemiChannels? _pink7;
 
   /// `--semi-pink-7` — `packages/semi-theme-default/scss/_palette.scss` (line 110).
-  SemiChannels get pink7 =>
-      _pink7 ??
-      (_dark
-          ? SemiChannels(247, 168, 188, 1.0)
-          : SemiChannels(162, 11, 72, 1.0));
+  SemiChannels get pink7 => _pink7 ?? _defaults.pink7(this);
   final SemiChannels? _pink8;
 
   /// `--semi-pink-8` — `packages/semi-theme-default/scss/_palette.scss` (line 111).
-  SemiChannels get pink8 =>
-      _pink8 ??
-      (_dark
-          ? SemiChannels(251, 211, 220, 1.0)
-          : SemiChannels(126, 5, 58, 1.0));
+  SemiChannels get pink8 => _pink8 ?? _defaults.pink8(this);
   final SemiChannels? _pink9;
 
   /// `--semi-pink-9` — `packages/semi-theme-default/scss/_palette.scss` (line 112).
-  SemiChannels get pink9 =>
-      _pink9 ??
-      (_dark ? SemiChannels(253, 238, 241, 1.0) : SemiChannels(90, 1, 43, 1.0));
+  SemiChannels get pink9 => _pink9 ?? _defaults.pink9(this);
   final SemiChannels? _purple0;
 
   /// `--semi-purple-0` — `packages/semi-theme-default/scss/_palette.scss` (line 113).
-  SemiChannels get purple0 =>
-      _purple0 ??
-      (_dark
-          ? SemiChannels(74, 16, 97, 1.0)
-          : SemiChannels(247, 233, 247, 1.0));
+  SemiChannels get purple0 => _purple0 ?? _defaults.purple0(this);
   final SemiChannels? _purple1;
 
   /// `--semi-purple-1` — `packages/semi-theme-default/scss/_palette.scss` (line 114).
-  SemiChannels get purple1 =>
-      _purple1 ??
-      (_dark
-          ? SemiChannels(94, 23, 118, 1.0)
-          : SemiChannels(239, 202, 240, 1.0));
+  SemiChannels get purple1 => _purple1 ?? _defaults.purple1(this);
   final SemiChannels? _purple2;
 
   /// `--semi-purple-2` — `packages/semi-theme-default/scss/_palette.scss` (line 115).
-  SemiChannels get purple2 =>
-      _purple2 ??
-      (_dark
-          ? SemiChannels(115, 31, 138, 1.0)
-          : SemiChannels(221, 155, 224, 1.0));
+  SemiChannels get purple2 => _purple2 ?? _defaults.purple2(this);
   final SemiChannels? _purple3;
 
   /// `--semi-purple-3` — `packages/semi-theme-default/scss/_palette.scss` (line 116).
-  SemiChannels get purple3 =>
-      _purple3 ??
-      (_dark
-          ? SemiChannels(137, 40, 159, 1.0)
-          : SemiChannels(201, 111, 209, 1.0));
+  SemiChannels get purple3 => _purple3 ?? _defaults.purple3(this);
   final SemiChannels? _purple4;
 
   /// `--semi-purple-4` — `packages/semi-theme-default/scss/_palette.scss` (line 117).
-  SemiChannels get purple4 =>
-      _purple4 ??
-      (_dark
-          ? SemiChannels(160, 51, 179, 1.0)
-          : SemiChannels(180, 73, 194, 1.0));
+  SemiChannels get purple4 => _purple4 ?? _defaults.purple4(this);
   final SemiChannels? _purple5;
 
   /// `--semi-purple-5` — `packages/semi-theme-default/scss/_palette.scss` (line 118).
-  SemiChannels get purple5 =>
-      _purple5 ??
-      (_dark
-          ? SemiChannels(181, 83, 194, 1.0)
-          : SemiChannels(158, 40, 179, 1.0));
+  SemiChannels get purple5 => _purple5 ?? _defaults.purple5(this);
   final SemiChannels? _purple6;
 
   /// `--semi-purple-6` — `packages/semi-theme-default/scss/_palette.scss` (line 119).
-  SemiChannels get purple6 =>
-      _purple6 ??
-      (_dark
-          ? SemiChannels(202, 120, 209, 1.0)
-          : SemiChannels(135, 30, 158, 1.0));
+  SemiChannels get purple6 => _purple6 ?? _defaults.purple6(this);
   final SemiChannels? _purple7;
 
   /// `--semi-purple-7` — `packages/semi-theme-default/scss/_palette.scss` (line 120).
-  SemiChannels get purple7 =>
-      _purple7 ??
-      (_dark
-          ? SemiChannels(221, 160, 225, 1.0)
-          : SemiChannels(113, 22, 138, 1.0));
+  SemiChannels get purple7 => _purple7 ?? _defaults.purple7(this);
   final SemiChannels? _purple8;
 
   /// `--semi-purple-8` — `packages/semi-theme-default/scss/_palette.scss` (line 121).
-  SemiChannels get purple8 =>
-      _purple8 ??
-      (_dark
-          ? SemiChannels(239, 206, 240, 1.0)
-          : SemiChannels(92, 15, 117, 1.0));
+  SemiChannels get purple8 => _purple8 ?? _defaults.purple8(this);
   final SemiChannels? _purple9;
 
   /// `--semi-purple-9` — `packages/semi-theme-default/scss/_palette.scss` (line 122).
-  SemiChannels get purple9 =>
-      _purple9 ??
-      (_dark
-          ? SemiChannels(247, 235, 247, 1.0)
-          : SemiChannels(73, 10, 97, 1.0));
+  SemiChannels get purple9 => _purple9 ?? _defaults.purple9(this);
   final SemiChannels? _red0;
 
   /// `--semi-red-0` — `packages/semi-theme-default/scss/_palette.scss` (line 123).
-  SemiChannels get red0 =>
-      _red0 ??
-      (_dark
-          ? SemiChannels(108, 9, 11, 1.0)
-          : SemiChannels(254, 242, 237, 1.0));
+  SemiChannels get red0 => _red0 ?? _defaults.red0(this);
   final SemiChannels? _red1;
 
   /// `--semi-red-1` — `packages/semi-theme-default/scss/_palette.scss` (line 124).
-  SemiChannels get red1 =>
-      _red1 ??
-      (_dark
-          ? SemiChannels(144, 17, 16, 1.0)
-          : SemiChannels(254, 221, 210, 1.0));
+  SemiChannels get red1 => _red1 ?? _defaults.red1(this);
   final SemiChannels? _red2;
 
   /// `--semi-red-2` — `packages/semi-theme-default/scss/_palette.scss` (line 125).
-  SemiChannels get red2 =>
-      _red2 ??
-      (_dark
-          ? SemiChannels(180, 32, 25, 1.0)
-          : SemiChannels(253, 183, 165, 1.0));
+  SemiChannels get red2 => _red2 ?? _defaults.red2(this);
   final SemiChannels? _red3;
 
   /// `--semi-red-3` — `packages/semi-theme-default/scss/_palette.scss` (line 126).
-  SemiChannels get red3 =>
-      _red3 ??
-      (_dark
-          ? SemiChannels(215, 51, 36, 1.0)
-          : SemiChannels(251, 144, 120, 1.0));
+  SemiChannels get red3 => _red3 ?? _defaults.red3(this);
   final SemiChannels? _red4;
 
   /// `--semi-red-4` — `packages/semi-theme-default/scss/_palette.scss` (line 127).
-  SemiChannels get red4 =>
-      _red4 ??
-      (_dark
-          ? SemiChannels(251, 73, 50, 1.0)
-          : SemiChannels(250, 102, 76, 1.0));
+  SemiChannels get red4 => _red4 ?? _defaults.red4(this);
   final SemiChannels? _red5;
 
   /// `--semi-red-5` — `packages/semi-theme-default/scss/_palette.scss` (line 128).
-  SemiChannels get red5 =>
-      _red5 ??
-      (_dark
-          ? SemiChannels(252, 114, 90, 1.0)
-          : SemiChannels(249, 57, 32, 1.0));
+  SemiChannels get red5 => _red5 ?? _defaults.red5(this);
   final SemiChannels? _red6;
 
   /// `--semi-red-6` — `packages/semi-theme-default/scss/_palette.scss` (line 129).
-  SemiChannels get red6 =>
-      _red6 ??
-      (_dark
-          ? SemiChannels(253, 153, 131, 1.0)
-          : SemiChannels(213, 37, 21, 1.0));
+  SemiChannels get red6 => _red6 ?? _defaults.red6(this);
   final SemiChannels? _red7;
 
   /// `--semi-red-7` — `packages/semi-theme-default/scss/_palette.scss` (line 130).
-  SemiChannels get red7 =>
-      _red7 ??
-      (_dark
-          ? SemiChannels(253, 190, 172, 1.0)
-          : SemiChannels(178, 20, 12, 1.0));
+  SemiChannels get red7 => _red7 ?? _defaults.red7(this);
   final SemiChannels? _red8;
 
   /// `--semi-red-8` — `packages/semi-theme-default/scss/_palette.scss` (line 131).
-  SemiChannels get red8 =>
-      _red8 ??
-      (_dark ? SemiChannels(254, 224, 213, 1.0) : SemiChannels(142, 8, 5, 1.0));
+  SemiChannels get red8 => _red8 ?? _defaults.red8(this);
   final SemiChannels? _red9;
 
   /// `--semi-red-9` — `packages/semi-theme-default/scss/_palette.scss` (line 132).
-  SemiChannels get red9 =>
-      _red9 ??
-      (_dark ? SemiChannels(255, 243, 239, 1.0) : SemiChannels(106, 1, 3, 1.0));
+  SemiChannels get red9 => _red9 ?? _defaults.red9(this);
   final SemiChannels? _teal0;
 
   /// `--semi-teal-0` — `packages/semi-theme-default/scss/_palette.scss` (line 133).
-  SemiChannels get teal0 =>
-      _teal0 ??
-      (_dark ? SemiChannels(2, 60, 57, 1.0) : SemiChannels(228, 247, 244, 1.0));
+  SemiChannels get teal0 => _teal0 ?? _defaults.teal0(this);
   final SemiChannels? _teal1;
 
   /// `--semi-teal-1` — `packages/semi-theme-default/scss/_palette.scss` (line 134).
-  SemiChannels get teal1 =>
-      _teal1 ??
-      (_dark ? SemiChannels(4, 90, 85, 1.0) : SemiChannels(192, 240, 232, 1.0));
+  SemiChannels get teal1 => _teal1 ?? _defaults.teal1(this);
   final SemiChannels? _teal2;
 
   /// `--semi-teal-2` — `packages/semi-theme-default/scss/_palette.scss` (line 135).
-  SemiChannels get teal2 =>
-      _teal2 ??
-      (_dark
-          ? SemiChannels(7, 119, 111, 1.0)
-          : SemiChannels(135, 224, 211, 1.0));
+  SemiChannels get teal2 => _teal2 ?? _defaults.teal2(this);
   final SemiChannels? _teal3;
 
   /// `--semi-teal-3` — `packages/semi-theme-default/scss/_palette.scss` (line 136).
-  SemiChannels get teal3 =>
-      _teal3 ??
-      (_dark
-          ? SemiChannels(10, 149, 136, 1.0)
-          : SemiChannels(84, 209, 193, 1.0));
+  SemiChannels get teal3 => _teal3 ?? _defaults.teal3(this);
   final SemiChannels? _teal4;
 
   /// `--semi-teal-4` — `packages/semi-theme-default/scss/_palette.scss` (line 137).
-  SemiChannels get teal4 =>
-      _teal4 ??
-      (_dark
-          ? SemiChannels(14, 179, 161, 1.0)
-          : SemiChannels(39, 194, 176, 1.0));
+  SemiChannels get teal4 => _teal4 ?? _defaults.teal4(this);
   final SemiChannels? _teal5;
 
   /// `--semi-teal-5` — `packages/semi-theme-default/scss/_palette.scss` (line 138).
-  SemiChannels get teal5 =>
-      _teal5 ??
-      (_dark
-          ? SemiChannels(51, 194, 176, 1.0)
-          : SemiChannels(0, 179, 161, 1.0));
+  SemiChannels get teal5 => _teal5 ?? _defaults.teal5(this);
   final SemiChannels? _teal6;
 
   /// `--semi-teal-6` — `packages/semi-theme-default/scss/_palette.scss` (line 139).
-  SemiChannels get teal6 =>
-      _teal6 ??
-      (_dark
-          ? SemiChannels(94, 209, 193, 1.0)
-          : SemiChannels(0, 149, 137, 1.0));
+  SemiChannels get teal6 => _teal6 ?? _defaults.teal6(this);
   final SemiChannels? _teal7;
 
   /// `--semi-teal-7` — `packages/semi-theme-default/scss/_palette.scss` (line 140).
-  SemiChannels get teal7 =>
-      _teal7 ??
-      (_dark
-          ? SemiChannels(142, 225, 211, 1.0)
-          : SemiChannels(0, 119, 111, 1.0));
+  SemiChannels get teal7 => _teal7 ?? _defaults.teal7(this);
   final SemiChannels? _teal8;
 
   /// `--semi-teal-8` — `packages/semi-theme-default/scss/_palette.scss` (line 141).
-  SemiChannels get teal8 =>
-      _teal8 ??
-      (_dark ? SemiChannels(196, 240, 232, 1.0) : SemiChannels(0, 89, 85, 1.0));
+  SemiChannels get teal8 => _teal8 ?? _defaults.teal8(this);
   final SemiChannels? _teal9;
 
   /// `--semi-teal-9` — `packages/semi-theme-default/scss/_palette.scss` (line 142).
-  SemiChannels get teal9 =>
-      _teal9 ??
-      (_dark ? SemiChannels(230, 247, 244, 1.0) : SemiChannels(0, 60, 58, 1.0));
+  SemiChannels get teal9 => _teal9 ?? _defaults.teal9(this);
   final SemiChannels? _violet0;
 
   /// `--semi-violet-0` — `packages/semi-theme-default/scss/_palette.scss` (line 143).
-  SemiChannels get violet0 =>
-      _violet0 ??
-      (_dark
-          ? SemiChannels(64, 27, 119, 1.0)
-          : SemiChannels(243, 237, 249, 1.0));
+  SemiChannels get violet0 => _violet0 ?? _defaults.violet0(this);
   final SemiChannels? _violet1;
 
   /// `--semi-violet-1` — `packages/semi-theme-default/scss/_palette.scss` (line 144).
-  SemiChannels get violet1 =>
-      _violet1 ??
-      (_dark
-          ? SemiChannels(76, 36, 140, 1.0)
-          : SemiChannels(226, 209, 244, 1.0));
+  SemiChannels get violet1 => _violet1 ?? _defaults.violet1(this);
   final SemiChannels? _violet2;
 
   /// `--semi-violet-2` — `packages/semi-theme-default/scss/_palette.scss` (line 145).
-  SemiChannels get violet2 =>
-      _violet2 ??
-      (_dark
-          ? SemiChannels(88, 46, 160, 1.0)
-          : SemiChannels(196, 167, 233, 1.0));
+  SemiChannels get violet2 => _violet2 ?? _defaults.violet2(this);
   final SemiChannels? _violet3;
 
   /// `--semi-violet-3` — `packages/semi-theme-default/scss/_palette.scss` (line 146).
-  SemiChannels get violet3 =>
-      _violet3 ??
-      (_dark
-          ? SemiChannels(100, 57, 181, 1.0)
-          : SemiChannels(166, 127, 221, 1.0));
+  SemiChannels get violet3 => _violet3 ?? _defaults.violet3(this);
   final SemiChannels? _violet4;
 
   /// `--semi-violet-4` — `packages/semi-theme-default/scss/_palette.scss` (line 147).
-  SemiChannels get violet4 =>
-      _violet4 ??
-      (_dark
-          ? SemiChannels(114, 70, 201, 1.0)
-          : SemiChannels(136, 91, 210, 1.0));
+  SemiChannels get violet4 => _violet4 ?? _defaults.violet4(this);
   final SemiChannels? _violet5;
 
   /// `--semi-violet-5` — `packages/semi-theme-default/scss/_palette.scss` (line 148).
-  SemiChannels get violet5 =>
-      _violet5 ??
-      (_dark
-          ? SemiChannels(136, 101, 212, 1.0)
-          : SemiChannels(106, 58, 199, 1.0));
+  SemiChannels get violet5 => _violet5 ?? _defaults.violet5(this);
   final SemiChannels? _violet6;
 
   /// `--semi-violet-6` — `packages/semi-theme-default/scss/_palette.scss` (line 149).
-  SemiChannels get violet6 =>
-      _violet6 ??
-      (_dark
-          ? SemiChannels(162, 136, 223, 1.0)
-          : SemiChannels(87, 47, 179, 1.0));
+  SemiChannels get violet6 => _violet6 ?? _defaults.violet6(this);
   final SemiChannels? _violet7;
 
   /// `--semi-violet-7` — `packages/semi-theme-default/scss/_palette.scss` (line 150).
-  SemiChannels get violet7 =>
-      _violet7 ??
-      (_dark
-          ? SemiChannels(190, 173, 233, 1.0)
-          : SemiChannels(70, 37, 158, 1.0));
+  SemiChannels get violet7 => _violet7 ?? _defaults.violet7(this);
   final SemiChannels? _violet8;
 
   /// `--semi-violet-8` — `packages/semi-theme-default/scss/_palette.scss` (line 151).
-  SemiChannels get violet8 =>
-      _violet8 ??
-      (_dark
-          ? SemiChannels(221, 212, 244, 1.0)
-          : SemiChannels(54, 28, 138, 1.0));
+  SemiChannels get violet8 => _violet8 ?? _defaults.violet8(this);
   final SemiChannels? _violet9;
 
   /// `--semi-violet-9` — `packages/semi-theme-default/scss/_palette.scss` (line 152).
-  SemiChannels get violet9 =>
-      _violet9 ??
-      (_dark
-          ? SemiChannels(241, 238, 250, 1.0)
-          : SemiChannels(40, 20, 117, 1.0));
+  SemiChannels get violet9 => _violet9 ?? _defaults.violet9(this);
   final SemiChannels? _white;
 
   /// `--semi-white` — `packages/semi-theme-default/scss/_palette.scss` (line 153).
-  SemiChannels get white => _white ?? (SemiChannels(255, 255, 255, 1.0));
+  SemiChannels get white => _white ?? _defaults.white(this);
   final SemiChannels? _yellow0;
 
   /// `--semi-yellow-0` — `packages/semi-theme-default/scss/_palette.scss` (line 154).
-  SemiChannels get yellow0 =>
-      _yellow0 ??
-      (_dark ? SemiChannels(84, 73, 3, 1.0) : SemiChannels(255, 253, 234, 1.0));
+  SemiChannels get yellow0 => _yellow0 ?? _defaults.yellow0(this);
   final SemiChannels? _yellow1;
 
   /// `--semi-yellow-1` — `packages/semi-theme-default/scss/_palette.scss` (line 155).
-  SemiChannels get yellow1 =>
-      _yellow1 ??
-      (_dark
-          ? SemiChannels(126, 108, 6, 1.0)
-          : SemiChannels(254, 251, 203, 1.0));
+  SemiChannels get yellow1 => _yellow1 ?? _defaults.yellow1(this);
   final SemiChannels? _yellow2;
 
   /// `--semi-yellow-2` — `packages/semi-theme-default/scss/_palette.scss` (line 156).
-  SemiChannels get yellow2 =>
-      _yellow2 ??
-      (_dark
-          ? SemiChannels(168, 142, 10, 1.0)
-          : SemiChannels(253, 243, 152, 1.0));
+  SemiChannels get yellow2 => _yellow2 ?? _defaults.yellow2(this);
   final SemiChannels? _yellow3;
 
   /// `--semi-yellow-3` — `packages/semi-theme-default/scss/_palette.scss` (line 157).
-  SemiChannels get yellow3 =>
-      _yellow3 ??
-      (_dark
-          ? SemiChannels(210, 175, 15, 1.0)
-          : SemiChannels(252, 232, 101, 1.0));
+  SemiChannels get yellow3 => _yellow3 ?? _defaults.yellow3(this);
   final SemiChannels? _yellow4;
 
   /// `--semi-yellow-4` — `packages/semi-theme-default/scss/_palette.scss` (line 158).
-  SemiChannels get yellow4 =>
-      _yellow4 ??
-      (_dark
-          ? SemiChannels(252, 206, 20, 1.0)
-          : SemiChannels(251, 218, 50, 1.0));
+  SemiChannels get yellow4 => _yellow4 ?? _defaults.yellow4(this);
   final SemiChannels? _yellow5;
 
   /// `--semi-yellow-5` — `packages/semi-theme-default/scss/_palette.scss` (line 159).
-  SemiChannels get yellow5 =>
-      _yellow5 ??
-      (_dark
-          ? SemiChannels(253, 222, 67, 1.0)
-          : SemiChannels(250, 200, 0, 1.0));
+  SemiChannels get yellow5 => _yellow5 ?? _defaults.yellow5(this);
   final SemiChannels? _yellow6;
 
   /// `--semi-yellow-6` — `packages/semi-theme-default/scss/_palette.scss` (line 160).
-  SemiChannels get yellow6 =>
-      _yellow6 ??
-      (_dark
-          ? SemiChannels(253, 235, 113, 1.0)
-          : SemiChannels(208, 170, 0, 1.0));
+  SemiChannels get yellow6 => _yellow6 ?? _defaults.yellow6(this);
   final SemiChannels? _yellow7;
 
   /// `--semi-yellow-7` — `packages/semi-theme-default/scss/_palette.scss` (line 161).
-  SemiChannels get yellow7 =>
-      _yellow7 ??
-      (_dark
-          ? SemiChannels(254, 245, 160, 1.0)
-          : SemiChannels(167, 139, 0, 1.0));
+  SemiChannels get yellow7 => _yellow7 ?? _defaults.yellow7(this);
   final SemiChannels? _yellow8;
 
   /// `--semi-yellow-8` — `packages/semi-theme-default/scss/_palette.scss` (line 162).
-  SemiChannels get yellow8 =>
-      _yellow8 ??
-      (_dark
-          ? SemiChannels(254, 251, 208, 1.0)
-          : SemiChannels(125, 106, 0, 1.0));
+  SemiChannels get yellow8 => _yellow8 ?? _defaults.yellow8(this);
   final SemiChannels? _yellow9;
 
   /// `--semi-yellow-9` — `packages/semi-theme-default/scss/_palette.scss` (line 163).
-  SemiChannels get yellow9 =>
-      _yellow9 ??
-      (_dark ? SemiChannels(255, 254, 236, 1.0) : SemiChannels(83, 72, 0, 1.0));
+  SemiChannels get yellow9 => _yellow9 ?? _defaults.yellow9(this);
   final SemiChannels? _aiPurple0;
 
   /// `--semi-ai-purple-0` — `packages/semi-theme-default/scss/_palette.scss` (line 166).
-  SemiChannels get aiPurple0 =>
-      _aiPurple0 ??
-      (_dark
-          ? SemiChannels(58, 23, 112, 1.0)
-          : SemiChannels(248, 237, 255, 1.0));
+  SemiChannels get aiPurple0 => _aiPurple0 ?? _defaults.aiPurple0(this);
   final SemiChannels? _aiPurple1;
 
   /// `--semi-ai-purple-1` — `packages/semi-theme-default/scss/_palette.scss` (line 167).
-  SemiChannels get aiPurple1 =>
-      _aiPurple1 ??
-      (_dark
-          ? SemiChannels(83, 35, 148, 1.0)
-          : SemiChannels(242, 218, 255, 1.0));
+  SemiChannels get aiPurple1 => _aiPurple1 ?? _defaults.aiPurple1(this);
   final SemiChannels? _aiPurple2;
 
   /// `--semi-ai-purple-2` — `packages/semi-theme-default/scss/_palette.scss` (line 168).
-  SemiChannels get aiPurple2 =>
-      _aiPurple2 ??
-      (_dark
-          ? SemiChannels(111, 49, 184, 1.0)
-          : SemiChannels(227, 181, 255, 1.0));
+  SemiChannels get aiPurple2 => _aiPurple2 ?? _defaults.aiPurple2(this);
   final SemiChannels? _aiPurple3;
 
   /// `--semi-ai-purple-3` — `packages/semi-theme-default/scss/_palette.scss` (line 169).
-  SemiChannels get aiPurple3 =>
-      _aiPurple3 ??
-      (_dark
-          ? SemiChannels(141, 65, 219, 1.0)
-          : SemiChannels(209, 145, 255, 1.0));
+  SemiChannels get aiPurple3 => _aiPurple3 ?? _defaults.aiPurple3(this);
   final SemiChannels? _aiPurple4;
 
   /// `--semi-ai-purple-4` — `packages/semi-theme-default/scss/_palette.scss` (line 170).
-  SemiChannels get aiPurple4 =>
-      _aiPurple4 ??
-      (_dark
-          ? SemiChannels(167, 68, 255, 1.0)
-          : SemiChannels(189, 108, 255, 1.0));
+  SemiChannels get aiPurple4 => _aiPurple4 ?? _defaults.aiPurple4(this);
   final SemiChannels? _aiPurple5;
 
   /// `--semi-ai-purple-5` — `packages/semi-theme-default/scss/_palette.scss` (line 171).
-  SemiChannels get aiPurple5 =>
-      _aiPurple5 ??
-      (_dark
-          ? SemiChannels(195, 117, 255, 1.0)
-          : SemiChannels(166, 71, 255, 1.0));
+  SemiChannels get aiPurple5 => _aiPurple5 ?? _defaults.aiPurple5(this);
   final SemiChannels? _aiPurple6;
 
   /// `--semi-ai-purple-6` — `packages/semi-theme-default/scss/_palette.scss` (line 172).
-  SemiChannels get aiPurple6 =>
-      _aiPurple6 ??
-      (_dark
-          ? SemiChannels(213, 152, 255, 1.0)
-          : SemiChannels(134, 54, 219, 1.0));
+  SemiChannels get aiPurple6 => _aiPurple6 ?? _defaults.aiPurple6(this);
   final SemiChannels? _aiPurple7;
 
   /// `--semi-ai-purple-7` — `packages/semi-theme-default/scss/_palette.scss` (line 173).
-  SemiChannels get aiPurple7 =>
-      _aiPurple7 ??
-      (_dark
-          ? SemiChannels(229, 186, 255, 1.0)
-          : SemiChannels(105, 40, 184, 1.0));
+  SemiChannels get aiPurple7 => _aiPurple7 ?? _defaults.aiPurple7(this);
   final SemiChannels? _aiPurple8;
 
   /// `--semi-ai-purple-8` — `packages/semi-theme-default/scss/_palette.scss` (line 174).
-  SemiChannels get aiPurple8 =>
-      _aiPurple8 ??
-      (_dark
-          ? SemiChannels(243, 221, 255, 1.0)
-          : SemiChannels(78, 28, 148, 1.0));
+  SemiChannels get aiPurple8 => _aiPurple8 ?? _defaults.aiPurple8(this);
   final SemiChannels? _aiPurple9;
 
   /// `--semi-ai-purple-9` — `packages/semi-theme-default/scss/_palette.scss` (line 175).
-  SemiChannels get aiPurple9 =>
-      _aiPurple9 ??
-      (_dark
-          ? SemiChannels(251, 243, 255, 1.0)
-          : SemiChannels(54, 18, 112, 1.0));
+  SemiChannels get aiPurple9 => _aiPurple9 ?? _defaults.aiPurple9(this);
   final SemiChannels? _aiGeneral03;
 
   /// `--semi-ai-general-0-3` — `packages/semi-theme-default/scss/_palette.scss` (line 177).
-  SemiChannels get aiGeneral03 =>
-      _aiGeneral03 ??
-      (_dark
-          ? SemiChannels(80, 18, 101, 1.0)
-          : SemiChannels(239, 247, 255, 1.0));
+  SemiChannels get aiGeneral03 => _aiGeneral03 ?? _defaults.aiGeneral03(this);
   final SemiChannels? _aiGeneral02;
 
   /// `--semi-ai-general-0-2` — `packages/semi-theme-default/scss/_palette.scss` (line 178).
-  SemiChannels get aiGeneral02 =>
-      _aiGeneral02 ??
-      (_dark
-          ? SemiChannels(58, 23, 112, 1.0)
-          : SemiChannels(244, 244, 255, 1.0));
+  SemiChannels get aiGeneral02 => _aiGeneral02 ?? _defaults.aiGeneral02(this);
   final SemiChannels? _aiGeneral01;
 
   /// `--semi-ai-general-0-1` — `packages/semi-theme-default/scss/_palette.scss` (line 179).
-  SemiChannels get aiGeneral01 =>
-      _aiGeneral01 ??
-      (_dark
-          ? SemiChannels(39, 29, 108, 1.0)
-          : SemiChannels(248, 237, 255, 1.0));
+  SemiChannels get aiGeneral01 => _aiGeneral01 ?? _defaults.aiGeneral01(this);
   final SemiChannels? _aiGeneral00;
 
   /// `--semi-ai-general-0-0` — `packages/semi-theme-default/scss/_palette.scss` (line 180).
-  SemiChannels get aiGeneral00 =>
-      _aiGeneral00 ??
-      (_dark
-          ? SemiChannels(9, 44, 100, 1.0)
-          : SemiChannels(255, 242, 255, 1.0));
+  SemiChannels get aiGeneral00 => _aiGeneral00 ?? _defaults.aiGeneral00(this);
   final SemiChannels? _aiGeneral13;
 
   /// `--semi-ai-general-1-3` — `packages/semi-theme-default/scss/_palette.scss` (line 182).
-  SemiChannels get aiGeneral13 =>
-      _aiGeneral13 ??
-      (_dark
-          ? SemiChannels(113, 28, 137, 1.0)
-          : SemiChannels(213, 235, 255, 1.0));
+  SemiChannels get aiGeneral13 => _aiGeneral13 ?? _defaults.aiGeneral13(this);
   final SemiChannels? _aiGeneral12;
 
   /// `--semi-ai-general-1-2` — `packages/semi-theme-default/scss/_palette.scss` (line 183).
-  SemiChannels get aiGeneral12 =>
-      _aiGeneral12 ??
-      (_dark
-          ? SemiChannels(83, 35, 148, 1.0)
-          : SemiChannels(223, 224, 255, 1.0));
+  SemiChannels get aiGeneral12 => _aiGeneral12 ?? _defaults.aiGeneral12(this);
   final SemiChannels? _aiGeneral11;
 
   /// `--semi-ai-general-1-1` — `packages/semi-theme-default/scss/_palette.scss` (line 184).
-  SemiChannels get aiGeneral11 =>
-      _aiGeneral11 ??
-      (_dark
-          ? SemiChannels(54, 43, 144, 1.0)
-          : SemiChannels(242, 218, 255, 1.0));
+  SemiChannels get aiGeneral11 => _aiGeneral11 ?? _defaults.aiGeneral11(this);
   final SemiChannels? _aiGeneral10;
 
   /// `--semi-ai-general-1-0` — `packages/semi-theme-default/scss/_palette.scss` (line 185).
-  SemiChannels get aiGeneral10 =>
-      _aiGeneral10 ??
-      (_dark
-          ? SemiChannels(17, 64, 136, 1.0)
-          : SemiChannels(255, 218, 254, 1.0));
+  SemiChannels get aiGeneral10 => _aiGeneral10 ?? _defaults.aiGeneral10(this);
   final SemiChannels? _aiGeneral23;
 
   /// `--semi-ai-general-2-3` — `packages/semi-theme-default/scss/_palette.scss` (line 187).
-  SemiChannels get aiGeneral23 =>
-      _aiGeneral23 ??
-      (_dark
-          ? SemiChannels(148, 41, 173, 1.0)
-          : SemiChannels(171, 213, 255, 1.0));
+  SemiChannels get aiGeneral23 => _aiGeneral23 ?? _defaults.aiGeneral23(this);
   final SemiChannels? _aiGeneral22;
 
   /// `--semi-ai-general-2-2` — `packages/semi-theme-default/scss/_palette.scss` (line 188).
-  SemiChannels get aiGeneral22 =>
-      _aiGeneral22 ??
-      (_dark
-          ? SemiChannels(111, 49, 184, 1.0)
-          : SemiChannels(193, 192, 255, 1.0));
+  SemiChannels get aiGeneral22 => _aiGeneral22 ?? _defaults.aiGeneral22(this);
   final SemiChannels? _aiGeneral21;
 
   /// `--semi-ai-general-2-1` — `packages/semi-theme-default/scss/_palette.scss` (line 189).
-  SemiChannels get aiGeneral21 =>
-      _aiGeneral21 ??
-      (_dark
-          ? SemiChannels(70, 59, 180, 1.0)
-          : SemiChannels(227, 181, 255, 1.0));
+  SemiChannels get aiGeneral21 => _aiGeneral21 ?? _defaults.aiGeneral21(this);
   final SemiChannels? _aiGeneral20;
 
   /// `--semi-ai-general-2-0` — `packages/semi-theme-default/scss/_palette.scss` (line 190).
-  SemiChannels get aiGeneral20 =>
-      _aiGeneral20 ??
-      (_dark
-          ? SemiChannels(26, 86, 172, 1.0)
-          : SemiChannels(254, 181, 255, 1.0));
+  SemiChannels get aiGeneral20 => _aiGeneral20 ?? _defaults.aiGeneral20(this);
   final SemiChannels? _aiGeneral33;
 
   /// `--semi-ai-general-3-3` — `packages/semi-theme-default/scss/_palette.scss` (line 192).
-  SemiChannels get aiGeneral33 =>
-      _aiGeneral33 ??
-      (_dark
-          ? SemiChannels(185, 55, 208, 1.0)
-          : SemiChannels(130, 190, 255, 1.0));
+  SemiChannels get aiGeneral33 => _aiGeneral33 ?? _defaults.aiGeneral33(this);
   final SemiChannels? _aiGeneral32;
 
   /// `--semi-ai-general-3-2` — `packages/semi-theme-default/scss/_palette.scss` (line 193).
-  SemiChannels get aiGeneral32 =>
-      _aiGeneral32 ??
-      (_dark
-          ? SemiChannels(141, 65, 219, 1.0)
-          : SemiChannels(163, 160, 255, 1.0));
+  SemiChannels get aiGeneral32 => _aiGeneral32 ?? _defaults.aiGeneral32(this);
   final SemiChannels? _aiGeneral31;
 
   /// `--semi-ai-general-3-1` — `packages/semi-theme-default/scss/_palette.scss` (line 194).
-  SemiChannels get aiGeneral31 =>
-      _aiGeneral31 ??
-      (_dark
-          ? SemiChannels(88, 78, 215, 1.0)
-          : SemiChannels(209, 145, 255, 1.0));
+  SemiChannels get aiGeneral31 => _aiGeneral31 ?? _defaults.aiGeneral31(this);
   final SemiChannels? _aiGeneral30;
 
   /// `--semi-ai-general-3-0` — `packages/semi-theme-default/scss/_palette.scss` (line 195).
-  SemiChannels get aiGeneral30 =>
-      _aiGeneral30 ??
-      (_dark
-          ? SemiChannels(38, 111, 207, 1.0)
-          : SemiChannels(249, 143, 255, 1.0));
+  SemiChannels get aiGeneral30 => _aiGeneral30 ?? _defaults.aiGeneral30(this);
   final SemiChannels? _aiGeneral43;
 
   /// `--semi-ai-general-4-3` — `packages/semi-theme-default/scss/_palette.scss` (line 197).
-  SemiChannels get aiGeneral43 =>
-      _aiGeneral43 ??
-      (_dark
-          ? SemiChannels(219, 56, 241, 1.0)
-          : SemiChannels(88, 166, 255, 1.0));
+  SemiChannels get aiGeneral43 => _aiGeneral43 ?? _defaults.aiGeneral43(this);
   final SemiChannels? _aiGeneral42;
 
   /// `--semi-ai-general-4-2` — `packages/semi-theme-default/scss/_palette.scss` (line 198).
-  SemiChannels get aiGeneral42 =>
-      _aiGeneral42 ??
-      (_dark
-          ? SemiChannels(167, 68, 255, 1.0)
-          : SemiChannels(134, 129, 255, 1.0));
+  SemiChannels get aiGeneral42 => _aiGeneral42 ?? _defaults.aiGeneral42(this);
   final SemiChannels? _aiGeneral41;
 
   /// `--semi-ai-general-4-1` — `packages/semi-theme-default/scss/_palette.scss` (line 199).
-  SemiChannels get aiGeneral41 =>
-      _aiGeneral41 ??
-      (_dark
-          ? SemiChannels(94, 84, 248, 1.0)
-          : SemiChannels(189, 108, 255, 1.0));
+  SemiChannels get aiGeneral41 => _aiGeneral41 ?? _defaults.aiGeneral41(this);
   final SemiChannels? _aiGeneral40;
 
   /// `--semi-ai-general-4-0` — `packages/semi-theme-default/scss/_palette.scss` (line 200).
-  SemiChannels get aiGeneral40 =>
-      _aiGeneral40 ??
-      (_dark
-          ? SemiChannels(35, 127, 240, 1.0)
-          : SemiChannels(242, 106, 255, 1.0));
+  SemiChannels get aiGeneral40 => _aiGeneral40 ?? _defaults.aiGeneral40(this);
   final SemiChannels? _aiGeneral53;
 
   /// `--semi-ai-general-5-3` — `packages/semi-theme-default/scss/_palette.scss` (line 202).
-  SemiChannels get aiGeneral53 =>
-      _aiGeneral53 ??
-      (_dark
-          ? SemiChannels(234, 107, 246, 1.0)
-          : SemiChannels(46, 140, 255, 1.0));
+  SemiChannels get aiGeneral53 => _aiGeneral53 ?? _defaults.aiGeneral53(this);
   final SemiChannels? _aiGeneral52;
 
   /// `--semi-ai-general-5-2` — `packages/semi-theme-default/scss/_palette.scss` (line 203).
-  SemiChannels get aiGeneral52 =>
-      _aiGeneral52 ??
-      (_dark
-          ? SemiChannels(195, 117, 255, 1.0)
-          : SemiChannels(107, 97, 255, 1.0));
+  SemiChannels get aiGeneral52 => _aiGeneral52 ?? _defaults.aiGeneral52(this);
   final SemiChannels? _aiGeneral51;
 
   /// `--semi-ai-general-5-1` — `packages/semi-theme-default/scss/_palette.scss` (line 204).
-  SemiChannels get aiGeneral51 =>
-      _aiGeneral51 ??
-      (_dark
-          ? SemiChannels(134, 129, 252, 1.0)
-          : SemiChannels(166, 71, 255, 1.0));
+  SemiChannels get aiGeneral51 => _aiGeneral51 ?? _defaults.aiGeneral51(this);
   final SemiChannels? _aiGeneral50;
 
   /// `--semi-ai-general-5-0` — `packages/semi-theme-default/scss/_palette.scss` (line 205).
-  SemiChannels get aiGeneral50 =>
-      _aiGeneral50 ??
-      (_dark
-          ? SemiChannels(91, 162, 245, 1.0)
-          : SemiChannels(233, 69, 255, 1.0));
+  SemiChannels get aiGeneral50 => _aiGeneral50 ?? _defaults.aiGeneral50(this);
   final SemiChannels? _aiGeneral63;
 
   /// `--semi-ai-general-6-3` — `packages/semi-theme-default/scss/_palette.scss` (line 207).
-  SemiChannels get aiGeneral63 =>
-      _aiGeneral63 ??
-      (_dark
-          ? SemiChannels(243, 143, 248, 1.0)
-          : SemiChannels(33, 114, 219, 1.0));
+  SemiChannels get aiGeneral63 => _aiGeneral63 ?? _defaults.aiGeneral63(this);
   final SemiChannels? _aiGeneral62;
 
   /// `--semi-ai-general-6-2` — `packages/semi-theme-default/scss/_palette.scss` (line 208).
-  SemiChannels get aiGeneral62 =>
-      _aiGeneral62 ??
-      (_dark
-          ? SemiChannels(213, 152, 255, 1.0)
-          : SemiChannels(88, 77, 219, 1.0));
+  SemiChannels get aiGeneral62 => _aiGeneral62 ?? _defaults.aiGeneral62(this);
   final SemiChannels? _aiGeneral61;
 
   /// `--semi-ai-general-6-1` — `packages/semi-theme-default/scss/_palette.scss` (line 209).
-  SemiChannels get aiGeneral61 =>
-      _aiGeneral61 ??
-      (_dark
-          ? SemiChannels(163, 160, 253, 1.0)
-          : SemiChannels(134, 54, 219, 1.0));
+  SemiChannels get aiGeneral61 => _aiGeneral61 ?? _defaults.aiGeneral61(this);
   final SemiChannels? _aiGeneral60;
 
   /// `--semi-ai-general-6-0` — `packages/semi-theme-default/scss/_palette.scss` (line 210).
-  SemiChannels get aiGeneral60 =>
-      _aiGeneral60 ??
-      (_dark
-          ? SemiChannels(131, 187, 248, 1.0)
-          : SemiChannels(194, 53, 219, 1.0));
+  SemiChannels get aiGeneral60 => _aiGeneral60 ?? _defaults.aiGeneral60(this);
   final SemiChannels? _aiGeneral73;
 
   /// `--semi-ai-general-7-3` — `packages/semi-theme-default/scss/_palette.scss` (line 212).
-  SemiChannels get aiGeneral73 =>
-      _aiGeneral73 ??
-      (_dark
-          ? SemiChannels(249, 180, 251, 1.0)
-          : SemiChannels(22, 89, 184, 1.0));
+  SemiChannels get aiGeneral73 => _aiGeneral73 ?? _defaults.aiGeneral73(this);
   final SemiChannels? _aiGeneral72;
 
   /// `--semi-ai-general-7-2` — `packages/semi-theme-default/scss/_palette.scss` (line 213).
-  SemiChannels get aiGeneral72 =>
-      _aiGeneral72 ??
-      (_dark
-          ? SemiChannels(229, 186, 255, 1.0)
-          : SemiChannels(71, 59, 184, 1.0));
+  SemiChannels get aiGeneral72 => _aiGeneral72 ?? _defaults.aiGeneral72(this);
   final SemiChannels? _aiGeneral71;
 
   /// `--semi-ai-general-7-1` — `packages/semi-theme-default/scss/_palette.scss` (line 214).
-  SemiChannels get aiGeneral71 =>
-      _aiGeneral71 ??
-      (_dark
-          ? SemiChannels(192, 192, 253, 1.0)
-          : SemiChannels(105, 40, 184, 1.0));
+  SemiChannels get aiGeneral71 => _aiGeneral71 ?? _defaults.aiGeneral71(this);
   final SemiChannels? _aiGeneral70;
 
   /// `--semi-ai-general-7-0` — `packages/semi-theme-default/scss/_palette.scss` (line 215).
-  SemiChannels get aiGeneral70 =>
-      _aiGeneral70 ??
-      (_dark
-          ? SemiChannels(172, 210, 250, 1.0)
-          : SemiChannels(157, 39, 184, 1.0));
+  SemiChannels get aiGeneral70 => _aiGeneral70 ?? _defaults.aiGeneral70(this);
   final SemiChannels? _aiGeneral83;
 
   /// `--semi-ai-general-8-3` — `packages/semi-theme-default/scss/_palette.scss` (line 217).
-  SemiChannels get aiGeneral83 =>
-      _aiGeneral83 ??
-      (_dark
-          ? SemiChannels(253, 217, 252, 1.0)
-          : SemiChannels(13, 67, 148, 1.0));
+  SemiChannels get aiGeneral83 => _aiGeneral83 ?? _defaults.aiGeneral83(this);
   final SemiChannels? _aiGeneral82;
 
   /// `--semi-ai-general-8-2` — `packages/semi-theme-default/scss/_palette.scss` (line 218).
-  SemiChannels get aiGeneral82 =>
-      _aiGeneral82 ??
-      (_dark
-          ? SemiChannels(243, 221, 255, 1.0)
-          : SemiChannels(55, 43, 148, 1.0));
+  SemiChannels get aiGeneral82 => _aiGeneral82 ?? _defaults.aiGeneral82(this);
   final SemiChannels? _aiGeneral81;
 
   /// `--semi-ai-general-8-1` — `packages/semi-theme-default/scss/_palette.scss` (line 219).
-  SemiChannels get aiGeneral81 =>
-      _aiGeneral81 ??
-      (_dark
-          ? SemiChannels(223, 223, 254, 1.0)
-          : SemiChannels(78, 28, 148, 1.0));
+  SemiChannels get aiGeneral81 => _aiGeneral81 ?? _defaults.aiGeneral81(this);
   final SemiChannels? _aiGeneral80;
 
   /// `--semi-ai-general-8-0` — `packages/semi-theme-default/scss/_palette.scss` (line 220).
-  SemiChannels get aiGeneral80 =>
-      _aiGeneral80 ??
-      (_dark
-          ? SemiChannels(213, 233, 253, 1.0)
-          : SemiChannels(121, 27, 148, 1.0));
+  SemiChannels get aiGeneral80 => _aiGeneral80 ?? _defaults.aiGeneral80(this);
   final SemiChannels? _aiGeneral93;
 
   /// `--semi-ai-general-9-3` — `packages/semi-theme-default/scss/_palette.scss` (line 222).
-  SemiChannels get aiGeneral93 =>
-      _aiGeneral93 ??
-      (_dark
-          ? SemiChannels(254, 241, 254, 1.0)
-          : SemiChannels(7, 47, 112, 1.0));
+  SemiChannels get aiGeneral93 => _aiGeneral93 ?? _defaults.aiGeneral93(this);
   final SemiChannels? _aiGeneral92;
 
   /// `--semi-ai-general-9-2` — `packages/semi-theme-default/scss/_palette.scss` (line 223).
-  SemiChannels get aiGeneral92 =>
-      _aiGeneral92 ??
-      (_dark
-          ? SemiChannels(251, 243, 255, 1.0)
-          : SemiChannels(40, 29, 112, 1.0));
+  SemiChannels get aiGeneral92 => _aiGeneral92 ?? _defaults.aiGeneral92(this);
   final SemiChannels? _aiGeneral91;
 
   /// `--semi-ai-general-9-1` — `packages/semi-theme-default/scss/_palette.scss` (line 224).
-  SemiChannels get aiGeneral91 =>
-      _aiGeneral91 ??
-      (_dark
-          ? SemiChannels(244, 244, 255, 1.0)
-          : SemiChannels(54, 18, 112, 1.0));
+  SemiChannels get aiGeneral91 => _aiGeneral91 ?? _defaults.aiGeneral91(this);
   final SemiChannels? _aiGeneral90;
 
   /// `--semi-ai-general-9-0` — `packages/semi-theme-default/scss/_palette.scss` (line 225).
-  SemiChannels get aiGeneral90 =>
-      _aiGeneral90 ??
-      (_dark
-          ? SemiChannels(239, 247, 254, 1.0)
-          : SemiChannels(88, 17, 112, 1.0));
+  SemiChannels get aiGeneral90 => _aiGeneral90 ?? _defaults.aiGeneral90(this);
   final SemiGradient? _aiGeneral0;
 
   /// `--semi-ai-general-0` — `packages/semi-theme-default/scss/_palette.scss` (line 227).
-  SemiGradient get aiGeneral0 =>
-      _aiGeneral0 ??
-      (SemiGradient(
-        278.0,
-        [
-          aiGeneral00.toColor(),
-          aiGeneral01.toColor(),
-          aiGeneral02.toColor(),
-          aiGeneral03.toColor(),
-        ],
-        [0.0, 0.3, 0.6, 1.0],
-      ));
+  SemiGradient get aiGeneral0 => _aiGeneral0 ?? _defaults.aiGeneral0(this);
   final SemiGradient? _aiGeneral1;
 
   /// `--semi-ai-general-1` — `packages/semi-theme-default/scss/_palette.scss` (line 228).
-  SemiGradient get aiGeneral1 =>
-      _aiGeneral1 ??
-      (SemiGradient(
-        278.0,
-        [
-          aiGeneral10.toColor(),
-          aiGeneral11.toColor(),
-          aiGeneral12.toColor(),
-          aiGeneral13.toColor(),
-        ],
-        [0.0, 0.3, 0.6, 1.0],
-      ));
+  SemiGradient get aiGeneral1 => _aiGeneral1 ?? _defaults.aiGeneral1(this);
   final SemiGradient? _aiGeneral2;
 
   /// `--semi-ai-general-2` — `packages/semi-theme-default/scss/_palette.scss` (line 229).
-  SemiGradient get aiGeneral2 =>
-      _aiGeneral2 ??
-      (SemiGradient(
-        278.0,
-        [
-          aiGeneral20.toColor(),
-          aiGeneral21.toColor(),
-          aiGeneral22.toColor(),
-          aiGeneral23.toColor(),
-        ],
-        [0.0, 0.3, 0.6, 1.0],
-      ));
+  SemiGradient get aiGeneral2 => _aiGeneral2 ?? _defaults.aiGeneral2(this);
   final SemiGradient? _aiGeneral3;
 
   /// `--semi-ai-general-3` — `packages/semi-theme-default/scss/_palette.scss` (line 230).
-  SemiGradient get aiGeneral3 =>
-      _aiGeneral3 ??
-      (SemiGradient(
-        278.0,
-        [
-          aiGeneral30.toColor(),
-          aiGeneral31.toColor(),
-          aiGeneral32.toColor(),
-          aiGeneral33.toColor(),
-        ],
-        [0.0, 0.3, 0.6, 1.0],
-      ));
+  SemiGradient get aiGeneral3 => _aiGeneral3 ?? _defaults.aiGeneral3(this);
   final SemiGradient? _aiGeneral4;
 
   /// `--semi-ai-general-4` — `packages/semi-theme-default/scss/_palette.scss` (line 231).
-  SemiGradient get aiGeneral4 =>
-      _aiGeneral4 ??
-      (SemiGradient(
-        278.0,
-        [
-          aiGeneral40.toColor(),
-          aiGeneral41.toColor(),
-          aiGeneral42.toColor(),
-          aiGeneral43.toColor(),
-        ],
-        [0.0, 0.3, 0.6, 1.0],
-      ));
+  SemiGradient get aiGeneral4 => _aiGeneral4 ?? _defaults.aiGeneral4(this);
   final SemiGradient? _aiGeneral5;
 
   /// `--semi-ai-general-5` — `packages/semi-theme-default/scss/_palette.scss` (line 232).
-  SemiGradient get aiGeneral5 =>
-      _aiGeneral5 ??
-      (SemiGradient(
-        278.0,
-        [
-          aiGeneral50.toColor(),
-          aiGeneral51.toColor(),
-          aiGeneral52.toColor(),
-          aiGeneral53.toColor(),
-        ],
-        [0.0, 0.3, 0.6, 1.0],
-      ));
+  SemiGradient get aiGeneral5 => _aiGeneral5 ?? _defaults.aiGeneral5(this);
   final SemiGradient? _aiGeneral6;
 
   /// `--semi-ai-general-6` — `packages/semi-theme-default/scss/_palette.scss` (line 233).
-  SemiGradient get aiGeneral6 =>
-      _aiGeneral6 ??
-      (SemiGradient(
-        278.0,
-        [
-          aiGeneral60.toColor(),
-          aiGeneral61.toColor(),
-          aiGeneral62.toColor(),
-          aiGeneral63.toColor(),
-        ],
-        [0.0, 0.3, 0.6, 1.0],
-      ));
+  SemiGradient get aiGeneral6 => _aiGeneral6 ?? _defaults.aiGeneral6(this);
   final SemiGradient? _aiGeneral7;
 
   /// `--semi-ai-general-7` — `packages/semi-theme-default/scss/_palette.scss` (line 234).
-  SemiGradient get aiGeneral7 =>
-      _aiGeneral7 ??
-      (SemiGradient(
-        278.0,
-        [
-          aiGeneral70.toColor(),
-          aiGeneral71.toColor(),
-          aiGeneral72.toColor(),
-          aiGeneral73.toColor(),
-        ],
-        [0.0, 0.3, 0.6, 1.0],
-      ));
+  SemiGradient get aiGeneral7 => _aiGeneral7 ?? _defaults.aiGeneral7(this);
   final SemiGradient? _aiGeneral8;
 
   /// `--semi-ai-general-8` — `packages/semi-theme-default/scss/_palette.scss` (line 235).
-  SemiGradient get aiGeneral8 =>
-      _aiGeneral8 ??
-      (SemiGradient(
-        278.0,
-        [
-          aiGeneral80.toColor(),
-          aiGeneral81.toColor(),
-          aiGeneral82.toColor(),
-          aiGeneral83.toColor(),
-        ],
-        [0.0, 0.3, 0.6, 1.0],
-      ));
+  SemiGradient get aiGeneral8 => _aiGeneral8 ?? _defaults.aiGeneral8(this);
   final SemiGradient? _aiGeneral9;
 
   /// `--semi-ai-general-9` — `packages/semi-theme-default/scss/_palette.scss` (line 236).
-  SemiGradient get aiGeneral9 =>
-      _aiGeneral9 ??
-      (SemiGradient(
-        278.0,
-        [
-          aiGeneral90.toColor(),
-          aiGeneral91.toColor(),
-          aiGeneral92.toColor(),
-          aiGeneral93.toColor(),
-        ],
-        [0.0, 0.3, 0.6, 1.0],
-      ));
+  SemiGradient get aiGeneral9 => _aiGeneral9 ?? _defaults.aiGeneral9(this);
   SemiPalette copyWith({
     bool? dark,
     SemiChannels? amber0,
@@ -3143,4 +2243,1284 @@ class SemiPalette {
     aiGeneral8,
     aiGeneral9,
   ]);
+}
+
+abstract class _SemiPaletteDefaults {
+  const _SemiPaletteDefaults();
+  SemiChannels amber0(SemiPalette tokens);
+  SemiChannels amber1(SemiPalette tokens);
+  SemiChannels amber2(SemiPalette tokens);
+  SemiChannels amber3(SemiPalette tokens);
+  SemiChannels amber4(SemiPalette tokens);
+  SemiChannels amber5(SemiPalette tokens);
+  SemiChannels amber6(SemiPalette tokens);
+  SemiChannels amber7(SemiPalette tokens);
+  SemiChannels amber8(SemiPalette tokens);
+  SemiChannels amber9(SemiPalette tokens);
+  SemiChannels black(SemiPalette tokens) => SemiChannels(0, 0, 0, 1.0);
+  SemiChannels blue0(SemiPalette tokens);
+  SemiChannels blue1(SemiPalette tokens);
+  SemiChannels blue2(SemiPalette tokens);
+  SemiChannels blue3(SemiPalette tokens);
+  SemiChannels blue4(SemiPalette tokens);
+  SemiChannels blue5(SemiPalette tokens);
+  SemiChannels blue6(SemiPalette tokens);
+  SemiChannels blue7(SemiPalette tokens);
+  SemiChannels blue8(SemiPalette tokens);
+  SemiChannels blue9(SemiPalette tokens);
+  SemiChannels cyan0(SemiPalette tokens);
+  SemiChannels cyan1(SemiPalette tokens);
+  SemiChannels cyan2(SemiPalette tokens);
+  SemiChannels cyan3(SemiPalette tokens);
+  SemiChannels cyan4(SemiPalette tokens);
+  SemiChannels cyan5(SemiPalette tokens);
+  SemiChannels cyan6(SemiPalette tokens);
+  SemiChannels cyan7(SemiPalette tokens);
+  SemiChannels cyan8(SemiPalette tokens);
+  SemiChannels cyan9(SemiPalette tokens);
+  SemiChannels green0(SemiPalette tokens);
+  SemiChannels green1(SemiPalette tokens);
+  SemiChannels green2(SemiPalette tokens);
+  SemiChannels green3(SemiPalette tokens);
+  SemiChannels green4(SemiPalette tokens);
+  SemiChannels green5(SemiPalette tokens);
+  SemiChannels green6(SemiPalette tokens);
+  SemiChannels green7(SemiPalette tokens);
+  SemiChannels green8(SemiPalette tokens);
+  SemiChannels green9(SemiPalette tokens);
+  SemiChannels grey0(SemiPalette tokens);
+  SemiChannels grey1(SemiPalette tokens);
+  SemiChannels grey2(SemiPalette tokens);
+  SemiChannels grey3(SemiPalette tokens);
+  SemiChannels grey4(SemiPalette tokens);
+  SemiChannels grey5(SemiPalette tokens);
+  SemiChannels grey6(SemiPalette tokens);
+  SemiChannels grey7(SemiPalette tokens);
+  SemiChannels grey8(SemiPalette tokens);
+  SemiChannels grey9(SemiPalette tokens);
+  SemiChannels indigo0(SemiPalette tokens);
+  SemiChannels indigo1(SemiPalette tokens);
+  SemiChannels indigo2(SemiPalette tokens);
+  SemiChannels indigo3(SemiPalette tokens);
+  SemiChannels indigo4(SemiPalette tokens);
+  SemiChannels indigo5(SemiPalette tokens);
+  SemiChannels indigo6(SemiPalette tokens);
+  SemiChannels indigo7(SemiPalette tokens);
+  SemiChannels indigo8(SemiPalette tokens);
+  SemiChannels indigo9(SemiPalette tokens);
+  SemiChannels lightBlue0(SemiPalette tokens);
+  SemiChannels lightBlue1(SemiPalette tokens);
+  SemiChannels lightBlue2(SemiPalette tokens);
+  SemiChannels lightBlue3(SemiPalette tokens);
+  SemiChannels lightBlue4(SemiPalette tokens);
+  SemiChannels lightBlue5(SemiPalette tokens);
+  SemiChannels lightBlue6(SemiPalette tokens);
+  SemiChannels lightBlue7(SemiPalette tokens);
+  SemiChannels lightBlue8(SemiPalette tokens);
+  SemiChannels lightBlue9(SemiPalette tokens);
+  SemiChannels lightGreen0(SemiPalette tokens);
+  SemiChannels lightGreen1(SemiPalette tokens);
+  SemiChannels lightGreen2(SemiPalette tokens);
+  SemiChannels lightGreen3(SemiPalette tokens);
+  SemiChannels lightGreen4(SemiPalette tokens);
+  SemiChannels lightGreen5(SemiPalette tokens);
+  SemiChannels lightGreen6(SemiPalette tokens);
+  SemiChannels lightGreen7(SemiPalette tokens);
+  SemiChannels lightGreen8(SemiPalette tokens);
+  SemiChannels lightGreen9(SemiPalette tokens);
+  SemiChannels lime0(SemiPalette tokens);
+  SemiChannels lime1(SemiPalette tokens);
+  SemiChannels lime2(SemiPalette tokens);
+  SemiChannels lime3(SemiPalette tokens);
+  SemiChannels lime4(SemiPalette tokens);
+  SemiChannels lime5(SemiPalette tokens);
+  SemiChannels lime6(SemiPalette tokens);
+  SemiChannels lime7(SemiPalette tokens);
+  SemiChannels lime8(SemiPalette tokens);
+  SemiChannels lime9(SemiPalette tokens);
+  SemiChannels orange0(SemiPalette tokens);
+  SemiChannels orange1(SemiPalette tokens);
+  SemiChannels orange2(SemiPalette tokens);
+  SemiChannels orange3(SemiPalette tokens);
+  SemiChannels orange4(SemiPalette tokens);
+  SemiChannels orange5(SemiPalette tokens);
+  SemiChannels orange6(SemiPalette tokens);
+  SemiChannels orange7(SemiPalette tokens);
+  SemiChannels orange8(SemiPalette tokens);
+  SemiChannels orange9(SemiPalette tokens);
+  SemiChannels pink0(SemiPalette tokens);
+  SemiChannels pink1(SemiPalette tokens);
+  SemiChannels pink2(SemiPalette tokens);
+  SemiChannels pink3(SemiPalette tokens);
+  SemiChannels pink4(SemiPalette tokens);
+  SemiChannels pink5(SemiPalette tokens);
+  SemiChannels pink6(SemiPalette tokens);
+  SemiChannels pink7(SemiPalette tokens);
+  SemiChannels pink8(SemiPalette tokens);
+  SemiChannels pink9(SemiPalette tokens);
+  SemiChannels purple0(SemiPalette tokens);
+  SemiChannels purple1(SemiPalette tokens);
+  SemiChannels purple2(SemiPalette tokens);
+  SemiChannels purple3(SemiPalette tokens);
+  SemiChannels purple4(SemiPalette tokens);
+  SemiChannels purple5(SemiPalette tokens);
+  SemiChannels purple6(SemiPalette tokens);
+  SemiChannels purple7(SemiPalette tokens);
+  SemiChannels purple8(SemiPalette tokens);
+  SemiChannels purple9(SemiPalette tokens);
+  SemiChannels red0(SemiPalette tokens);
+  SemiChannels red1(SemiPalette tokens);
+  SemiChannels red2(SemiPalette tokens);
+  SemiChannels red3(SemiPalette tokens);
+  SemiChannels red4(SemiPalette tokens);
+  SemiChannels red5(SemiPalette tokens);
+  SemiChannels red6(SemiPalette tokens);
+  SemiChannels red7(SemiPalette tokens);
+  SemiChannels red8(SemiPalette tokens);
+  SemiChannels red9(SemiPalette tokens);
+  SemiChannels teal0(SemiPalette tokens);
+  SemiChannels teal1(SemiPalette tokens);
+  SemiChannels teal2(SemiPalette tokens);
+  SemiChannels teal3(SemiPalette tokens);
+  SemiChannels teal4(SemiPalette tokens);
+  SemiChannels teal5(SemiPalette tokens);
+  SemiChannels teal6(SemiPalette tokens);
+  SemiChannels teal7(SemiPalette tokens);
+  SemiChannels teal8(SemiPalette tokens);
+  SemiChannels teal9(SemiPalette tokens);
+  SemiChannels violet0(SemiPalette tokens);
+  SemiChannels violet1(SemiPalette tokens);
+  SemiChannels violet2(SemiPalette tokens);
+  SemiChannels violet3(SemiPalette tokens);
+  SemiChannels violet4(SemiPalette tokens);
+  SemiChannels violet5(SemiPalette tokens);
+  SemiChannels violet6(SemiPalette tokens);
+  SemiChannels violet7(SemiPalette tokens);
+  SemiChannels violet8(SemiPalette tokens);
+  SemiChannels violet9(SemiPalette tokens);
+  SemiChannels white(SemiPalette tokens) => SemiChannels(255, 255, 255, 1.0);
+  SemiChannels yellow0(SemiPalette tokens);
+  SemiChannels yellow1(SemiPalette tokens);
+  SemiChannels yellow2(SemiPalette tokens);
+  SemiChannels yellow3(SemiPalette tokens);
+  SemiChannels yellow4(SemiPalette tokens);
+  SemiChannels yellow5(SemiPalette tokens);
+  SemiChannels yellow6(SemiPalette tokens);
+  SemiChannels yellow7(SemiPalette tokens);
+  SemiChannels yellow8(SemiPalette tokens);
+  SemiChannels yellow9(SemiPalette tokens);
+  SemiChannels aiPurple0(SemiPalette tokens);
+  SemiChannels aiPurple1(SemiPalette tokens);
+  SemiChannels aiPurple2(SemiPalette tokens);
+  SemiChannels aiPurple3(SemiPalette tokens);
+  SemiChannels aiPurple4(SemiPalette tokens);
+  SemiChannels aiPurple5(SemiPalette tokens);
+  SemiChannels aiPurple6(SemiPalette tokens);
+  SemiChannels aiPurple7(SemiPalette tokens);
+  SemiChannels aiPurple8(SemiPalette tokens);
+  SemiChannels aiPurple9(SemiPalette tokens);
+  SemiChannels aiGeneral03(SemiPalette tokens);
+  SemiChannels aiGeneral02(SemiPalette tokens);
+  SemiChannels aiGeneral01(SemiPalette tokens);
+  SemiChannels aiGeneral00(SemiPalette tokens);
+  SemiChannels aiGeneral13(SemiPalette tokens);
+  SemiChannels aiGeneral12(SemiPalette tokens);
+  SemiChannels aiGeneral11(SemiPalette tokens);
+  SemiChannels aiGeneral10(SemiPalette tokens);
+  SemiChannels aiGeneral23(SemiPalette tokens);
+  SemiChannels aiGeneral22(SemiPalette tokens);
+  SemiChannels aiGeneral21(SemiPalette tokens);
+  SemiChannels aiGeneral20(SemiPalette tokens);
+  SemiChannels aiGeneral33(SemiPalette tokens);
+  SemiChannels aiGeneral32(SemiPalette tokens);
+  SemiChannels aiGeneral31(SemiPalette tokens);
+  SemiChannels aiGeneral30(SemiPalette tokens);
+  SemiChannels aiGeneral43(SemiPalette tokens);
+  SemiChannels aiGeneral42(SemiPalette tokens);
+  SemiChannels aiGeneral41(SemiPalette tokens);
+  SemiChannels aiGeneral40(SemiPalette tokens);
+  SemiChannels aiGeneral53(SemiPalette tokens);
+  SemiChannels aiGeneral52(SemiPalette tokens);
+  SemiChannels aiGeneral51(SemiPalette tokens);
+  SemiChannels aiGeneral50(SemiPalette tokens);
+  SemiChannels aiGeneral63(SemiPalette tokens);
+  SemiChannels aiGeneral62(SemiPalette tokens);
+  SemiChannels aiGeneral61(SemiPalette tokens);
+  SemiChannels aiGeneral60(SemiPalette tokens);
+  SemiChannels aiGeneral73(SemiPalette tokens);
+  SemiChannels aiGeneral72(SemiPalette tokens);
+  SemiChannels aiGeneral71(SemiPalette tokens);
+  SemiChannels aiGeneral70(SemiPalette tokens);
+  SemiChannels aiGeneral83(SemiPalette tokens);
+  SemiChannels aiGeneral82(SemiPalette tokens);
+  SemiChannels aiGeneral81(SemiPalette tokens);
+  SemiChannels aiGeneral80(SemiPalette tokens);
+  SemiChannels aiGeneral93(SemiPalette tokens);
+  SemiChannels aiGeneral92(SemiPalette tokens);
+  SemiChannels aiGeneral91(SemiPalette tokens);
+  SemiChannels aiGeneral90(SemiPalette tokens);
+  SemiGradient aiGeneral0(SemiPalette tokens) => SemiGradient(
+    278.0,
+    [
+      tokens.aiGeneral00.toColor(),
+      tokens.aiGeneral01.toColor(),
+      tokens.aiGeneral02.toColor(),
+      tokens.aiGeneral03.toColor(),
+    ],
+    [0.0, 0.3, 0.6, 1.0],
+  );
+  SemiGradient aiGeneral1(SemiPalette tokens) => SemiGradient(
+    278.0,
+    [
+      tokens.aiGeneral10.toColor(),
+      tokens.aiGeneral11.toColor(),
+      tokens.aiGeneral12.toColor(),
+      tokens.aiGeneral13.toColor(),
+    ],
+    [0.0, 0.3, 0.6, 1.0],
+  );
+  SemiGradient aiGeneral2(SemiPalette tokens) => SemiGradient(
+    278.0,
+    [
+      tokens.aiGeneral20.toColor(),
+      tokens.aiGeneral21.toColor(),
+      tokens.aiGeneral22.toColor(),
+      tokens.aiGeneral23.toColor(),
+    ],
+    [0.0, 0.3, 0.6, 1.0],
+  );
+  SemiGradient aiGeneral3(SemiPalette tokens) => SemiGradient(
+    278.0,
+    [
+      tokens.aiGeneral30.toColor(),
+      tokens.aiGeneral31.toColor(),
+      tokens.aiGeneral32.toColor(),
+      tokens.aiGeneral33.toColor(),
+    ],
+    [0.0, 0.3, 0.6, 1.0],
+  );
+  SemiGradient aiGeneral4(SemiPalette tokens) => SemiGradient(
+    278.0,
+    [
+      tokens.aiGeneral40.toColor(),
+      tokens.aiGeneral41.toColor(),
+      tokens.aiGeneral42.toColor(),
+      tokens.aiGeneral43.toColor(),
+    ],
+    [0.0, 0.3, 0.6, 1.0],
+  );
+  SemiGradient aiGeneral5(SemiPalette tokens) => SemiGradient(
+    278.0,
+    [
+      tokens.aiGeneral50.toColor(),
+      tokens.aiGeneral51.toColor(),
+      tokens.aiGeneral52.toColor(),
+      tokens.aiGeneral53.toColor(),
+    ],
+    [0.0, 0.3, 0.6, 1.0],
+  );
+  SemiGradient aiGeneral6(SemiPalette tokens) => SemiGradient(
+    278.0,
+    [
+      tokens.aiGeneral60.toColor(),
+      tokens.aiGeneral61.toColor(),
+      tokens.aiGeneral62.toColor(),
+      tokens.aiGeneral63.toColor(),
+    ],
+    [0.0, 0.3, 0.6, 1.0],
+  );
+  SemiGradient aiGeneral7(SemiPalette tokens) => SemiGradient(
+    278.0,
+    [
+      tokens.aiGeneral70.toColor(),
+      tokens.aiGeneral71.toColor(),
+      tokens.aiGeneral72.toColor(),
+      tokens.aiGeneral73.toColor(),
+    ],
+    [0.0, 0.3, 0.6, 1.0],
+  );
+  SemiGradient aiGeneral8(SemiPalette tokens) => SemiGradient(
+    278.0,
+    [
+      tokens.aiGeneral80.toColor(),
+      tokens.aiGeneral81.toColor(),
+      tokens.aiGeneral82.toColor(),
+      tokens.aiGeneral83.toColor(),
+    ],
+    [0.0, 0.3, 0.6, 1.0],
+  );
+  SemiGradient aiGeneral9(SemiPalette tokens) => SemiGradient(
+    278.0,
+    [
+      tokens.aiGeneral90.toColor(),
+      tokens.aiGeneral91.toColor(),
+      tokens.aiGeneral92.toColor(),
+      tokens.aiGeneral93.toColor(),
+    ],
+    [0.0, 0.3, 0.6, 1.0],
+  );
+}
+
+class _LightSemiPaletteDefaults extends _SemiPaletteDefaults {
+  const _LightSemiPaletteDefaults();
+  @override
+  SemiChannels amber0(SemiPalette tokens) => SemiChannels(254, 251, 235, 1.0);
+  @override
+  SemiChannels amber1(SemiPalette tokens) => SemiChannels(252, 245, 206, 1.0);
+  @override
+  SemiChannels amber2(SemiPalette tokens) => SemiChannels(249, 232, 158, 1.0);
+  @override
+  SemiChannels amber3(SemiPalette tokens) => SemiChannels(246, 216, 111, 1.0);
+  @override
+  SemiChannels amber4(SemiPalette tokens) => SemiChannels(243, 198, 65, 1.0);
+  @override
+  SemiChannels amber5(SemiPalette tokens) => SemiChannels(240, 177, 20, 1.0);
+  @override
+  SemiChannels amber6(SemiPalette tokens) => SemiChannels(200, 138, 15, 1.0);
+  @override
+  SemiChannels amber7(SemiPalette tokens) => SemiChannels(160, 102, 10, 1.0);
+  @override
+  SemiChannels amber8(SemiPalette tokens) => SemiChannels(120, 70, 6, 1.0);
+  @override
+  SemiChannels amber9(SemiPalette tokens) => SemiChannels(80, 43, 3, 1.0);
+  @override
+  SemiChannels blue0(SemiPalette tokens) => SemiChannels(234, 245, 255, 1.0);
+  @override
+  SemiChannels blue1(SemiPalette tokens) => SemiChannels(203, 231, 254, 1.0);
+  @override
+  SemiChannels blue2(SemiPalette tokens) => SemiChannels(152, 205, 253, 1.0);
+  @override
+  SemiChannels blue3(SemiPalette tokens) => SemiChannels(101, 178, 252, 1.0);
+  @override
+  SemiChannels blue4(SemiPalette tokens) => SemiChannels(50, 149, 251, 1.0);
+  @override
+  SemiChannels blue5(SemiPalette tokens) => SemiChannels(0, 100, 250, 1.0);
+  @override
+  SemiChannels blue6(SemiPalette tokens) => SemiChannels(0, 98, 214, 1.0);
+  @override
+  SemiChannels blue7(SemiPalette tokens) => SemiChannels(0, 79, 179, 1.0);
+  @override
+  SemiChannels blue8(SemiPalette tokens) => SemiChannels(0, 61, 143, 1.0);
+  @override
+  SemiChannels blue9(SemiPalette tokens) => SemiChannels(0, 44, 107, 1.0);
+  @override
+  SemiChannels cyan0(SemiPalette tokens) => SemiChannels(229, 247, 248, 1.0);
+  @override
+  SemiChannels cyan1(SemiPalette tokens) => SemiChannels(194, 239, 240, 1.0);
+  @override
+  SemiChannels cyan2(SemiPalette tokens) => SemiChannels(138, 221, 226, 1.0);
+  @override
+  SemiChannels cyan3(SemiPalette tokens) => SemiChannels(88, 203, 211, 1.0);
+  @override
+  SemiChannels cyan4(SemiPalette tokens) => SemiChannels(44, 184, 197, 1.0);
+  @override
+  SemiChannels cyan5(SemiPalette tokens) => SemiChannels(5, 164, 182, 1.0);
+  @override
+  SemiChannels cyan6(SemiPalette tokens) => SemiChannels(3, 134, 152, 1.0);
+  @override
+  SemiChannels cyan7(SemiPalette tokens) => SemiChannels(1, 105, 121, 1.0);
+  @override
+  SemiChannels cyan8(SemiPalette tokens) => SemiChannels(0, 77, 91, 1.0);
+  @override
+  SemiChannels cyan9(SemiPalette tokens) => SemiChannels(0, 50, 61, 1.0);
+  @override
+  SemiChannels green0(SemiPalette tokens) => SemiChannels(236, 247, 236, 1.0);
+  @override
+  SemiChannels green1(SemiPalette tokens) => SemiChannels(208, 240, 209, 1.0);
+  @override
+  SemiChannels green2(SemiPalette tokens) => SemiChannels(164, 224, 167, 1.0);
+  @override
+  SemiChannels green3(SemiPalette tokens) => SemiChannels(125, 209, 130, 1.0);
+  @override
+  SemiChannels green4(SemiPalette tokens) => SemiChannels(90, 194, 98, 1.0);
+  @override
+  SemiChannels green5(SemiPalette tokens) => SemiChannels(59, 179, 70, 1.0);
+  @override
+  SemiChannels green6(SemiPalette tokens) => SemiChannels(48, 149, 59, 1.0);
+  @override
+  SemiChannels green7(SemiPalette tokens) => SemiChannels(37, 119, 47, 1.0);
+  @override
+  SemiChannels green8(SemiPalette tokens) => SemiChannels(27, 89, 36, 1.0);
+  @override
+  SemiChannels green9(SemiPalette tokens) => SemiChannels(17, 60, 24, 1.0);
+  @override
+  SemiChannels grey0(SemiPalette tokens) => SemiChannels(249, 249, 249, 1.0);
+  @override
+  SemiChannels grey1(SemiPalette tokens) => SemiChannels(230, 232, 234, 1.0);
+  @override
+  SemiChannels grey2(SemiPalette tokens) => SemiChannels(198, 202, 205, 1.0);
+  @override
+  SemiChannels grey3(SemiPalette tokens) => SemiChannels(167, 171, 176, 1.0);
+  @override
+  SemiChannels grey4(SemiPalette tokens) => SemiChannels(136, 141, 146, 1.0);
+  @override
+  SemiChannels grey5(SemiPalette tokens) => SemiChannels(107, 112, 117, 1.0);
+  @override
+  SemiChannels grey6(SemiPalette tokens) => SemiChannels(85, 91, 97, 1.0);
+  @override
+  SemiChannels grey7(SemiPalette tokens) => SemiChannels(65, 70, 76, 1.0);
+  @override
+  SemiChannels grey8(SemiPalette tokens) => SemiChannels(46, 50, 56, 1.0);
+  @override
+  SemiChannels grey9(SemiPalette tokens) => SemiChannels(28, 31, 35, 1.0);
+  @override
+  SemiChannels indigo0(SemiPalette tokens) => SemiChannels(236, 239, 248, 1.0);
+  @override
+  SemiChannels indigo1(SemiPalette tokens) => SemiChannels(209, 216, 240, 1.0);
+  @override
+  SemiChannels indigo2(SemiPalette tokens) => SemiChannels(167, 179, 225, 1.0);
+  @override
+  SemiChannels indigo3(SemiPalette tokens) => SemiChannels(128, 144, 211, 1.0);
+  @override
+  SemiChannels indigo4(SemiPalette tokens) => SemiChannels(94, 111, 196, 1.0);
+  @override
+  SemiChannels indigo5(SemiPalette tokens) => SemiChannels(63, 81, 181, 1.0);
+  @override
+  SemiChannels indigo6(SemiPalette tokens) => SemiChannels(51, 66, 161, 1.0);
+  @override
+  SemiChannels indigo7(SemiPalette tokens) => SemiChannels(40, 52, 140, 1.0);
+  @override
+  SemiChannels indigo8(SemiPalette tokens) => SemiChannels(31, 40, 120, 1.0);
+  @override
+  SemiChannels indigo9(SemiPalette tokens) => SemiChannels(23, 29, 99, 1.0);
+  @override
+  SemiChannels lightBlue0(SemiPalette tokens) =>
+      SemiChannels(233, 247, 253, 1.0);
+  @override
+  SemiChannels lightBlue1(SemiPalette tokens) =>
+      SemiChannels(201, 236, 252, 1.0);
+  @override
+  SemiChannels lightBlue2(SemiPalette tokens) =>
+      SemiChannels(149, 216, 248, 1.0);
+  @override
+  SemiChannels lightBlue3(SemiPalette tokens) =>
+      SemiChannels(98, 195, 245, 1.0);
+  @override
+  SemiChannels lightBlue4(SemiPalette tokens) =>
+      SemiChannels(48, 172, 241, 1.0);
+  @override
+  SemiChannels lightBlue5(SemiPalette tokens) => SemiChannels(0, 149, 238, 1.0);
+  @override
+  SemiChannels lightBlue6(SemiPalette tokens) => SemiChannels(0, 123, 202, 1.0);
+  @override
+  SemiChannels lightBlue7(SemiPalette tokens) => SemiChannels(0, 99, 167, 1.0);
+  @override
+  SemiChannels lightBlue8(SemiPalette tokens) => SemiChannels(0, 75, 131, 1.0);
+  @override
+  SemiChannels lightBlue9(SemiPalette tokens) => SemiChannels(0, 53, 95, 1.0);
+  @override
+  SemiChannels lightGreen0(SemiPalette tokens) =>
+      SemiChannels(243, 248, 236, 1.0);
+  @override
+  SemiChannels lightGreen1(SemiPalette tokens) =>
+      SemiChannels(227, 240, 208, 1.0);
+  @override
+  SemiChannels lightGreen2(SemiPalette tokens) =>
+      SemiChannels(200, 226, 165, 1.0);
+  @override
+  SemiChannels lightGreen3(SemiPalette tokens) =>
+      SemiChannels(173, 211, 126, 1.0);
+  @override
+  SemiChannels lightGreen4(SemiPalette tokens) =>
+      SemiChannels(147, 197, 91, 1.0);
+  @override
+  SemiChannels lightGreen5(SemiPalette tokens) =>
+      SemiChannels(123, 182, 60, 1.0);
+  @override
+  SemiChannels lightGreen6(SemiPalette tokens) =>
+      SemiChannels(100, 152, 48, 1.0);
+  @override
+  SemiChannels lightGreen7(SemiPalette tokens) =>
+      SemiChannels(78, 121, 38, 1.0);
+  @override
+  SemiChannels lightGreen8(SemiPalette tokens) => SemiChannels(57, 91, 27, 1.0);
+  @override
+  SemiChannels lightGreen9(SemiPalette tokens) => SemiChannels(37, 61, 18, 1.0);
+  @override
+  SemiChannels lime0(SemiPalette tokens) => SemiChannels(242, 250, 230, 1.0);
+  @override
+  SemiChannels lime1(SemiPalette tokens) => SemiChannels(227, 246, 197, 1.0);
+  @override
+  SemiChannels lime2(SemiPalette tokens) => SemiChannels(203, 237, 142, 1.0);
+  @override
+  SemiChannels lime3(SemiPalette tokens) => SemiChannels(183, 227, 91, 1.0);
+  @override
+  SemiChannels lime4(SemiPalette tokens) => SemiChannels(167, 218, 44, 1.0);
+  @override
+  SemiChannels lime5(SemiPalette tokens) => SemiChannels(155, 209, 0, 1.0);
+  @override
+  SemiChannels lime6(SemiPalette tokens) => SemiChannels(126, 174, 0, 1.0);
+  @override
+  SemiChannels lime7(SemiPalette tokens) => SemiChannels(99, 139, 0, 1.0);
+  @override
+  SemiChannels lime8(SemiPalette tokens) => SemiChannels(72, 104, 0, 1.0);
+  @override
+  SemiChannels lime9(SemiPalette tokens) => SemiChannels(47, 70, 0, 1.0);
+  @override
+  SemiChannels orange0(SemiPalette tokens) => SemiChannels(255, 248, 234, 1.0);
+  @override
+  SemiChannels orange1(SemiPalette tokens) => SemiChannels(254, 238, 204, 1.0);
+  @override
+  SemiChannels orange2(SemiPalette tokens) => SemiChannels(254, 217, 152, 1.0);
+  @override
+  SemiChannels orange3(SemiPalette tokens) => SemiChannels(253, 193, 101, 1.0);
+  @override
+  SemiChannels orange4(SemiPalette tokens) => SemiChannels(253, 166, 51, 1.0);
+  @override
+  SemiChannels orange5(SemiPalette tokens) => SemiChannels(252, 136, 0, 1.0);
+  @override
+  SemiChannels orange6(SemiPalette tokens) => SemiChannels(210, 103, 0, 1.0);
+  @override
+  SemiChannels orange7(SemiPalette tokens) => SemiChannels(168, 74, 0, 1.0);
+  @override
+  SemiChannels orange8(SemiPalette tokens) => SemiChannels(126, 49, 0, 1.0);
+  @override
+  SemiChannels orange9(SemiPalette tokens) => SemiChannels(84, 29, 0, 1.0);
+  @override
+  SemiChannels pink0(SemiPalette tokens) => SemiChannels(253, 236, 239, 1.0);
+  @override
+  SemiChannels pink1(SemiPalette tokens) => SemiChannels(251, 207, 216, 1.0);
+  @override
+  SemiChannels pink2(SemiPalette tokens) => SemiChannels(246, 160, 181, 1.0);
+  @override
+  SemiChannels pink3(SemiPalette tokens) => SemiChannels(242, 115, 150, 1.0);
+  @override
+  SemiChannels pink4(SemiPalette tokens) => SemiChannels(237, 72, 123, 1.0);
+  @override
+  SemiChannels pink5(SemiPalette tokens) => SemiChannels(233, 30, 99, 1.0);
+  @override
+  SemiChannels pink6(SemiPalette tokens) => SemiChannels(197, 19, 86, 1.0);
+  @override
+  SemiChannels pink7(SemiPalette tokens) => SemiChannels(162, 11, 72, 1.0);
+  @override
+  SemiChannels pink8(SemiPalette tokens) => SemiChannels(126, 5, 58, 1.0);
+  @override
+  SemiChannels pink9(SemiPalette tokens) => SemiChannels(90, 1, 43, 1.0);
+  @override
+  SemiChannels purple0(SemiPalette tokens) => SemiChannels(247, 233, 247, 1.0);
+  @override
+  SemiChannels purple1(SemiPalette tokens) => SemiChannels(239, 202, 240, 1.0);
+  @override
+  SemiChannels purple2(SemiPalette tokens) => SemiChannels(221, 155, 224, 1.0);
+  @override
+  SemiChannels purple3(SemiPalette tokens) => SemiChannels(201, 111, 209, 1.0);
+  @override
+  SemiChannels purple4(SemiPalette tokens) => SemiChannels(180, 73, 194, 1.0);
+  @override
+  SemiChannels purple5(SemiPalette tokens) => SemiChannels(158, 40, 179, 1.0);
+  @override
+  SemiChannels purple6(SemiPalette tokens) => SemiChannels(135, 30, 158, 1.0);
+  @override
+  SemiChannels purple7(SemiPalette tokens) => SemiChannels(113, 22, 138, 1.0);
+  @override
+  SemiChannels purple8(SemiPalette tokens) => SemiChannels(92, 15, 117, 1.0);
+  @override
+  SemiChannels purple9(SemiPalette tokens) => SemiChannels(73, 10, 97, 1.0);
+  @override
+  SemiChannels red0(SemiPalette tokens) => SemiChannels(254, 242, 237, 1.0);
+  @override
+  SemiChannels red1(SemiPalette tokens) => SemiChannels(254, 221, 210, 1.0);
+  @override
+  SemiChannels red2(SemiPalette tokens) => SemiChannels(253, 183, 165, 1.0);
+  @override
+  SemiChannels red3(SemiPalette tokens) => SemiChannels(251, 144, 120, 1.0);
+  @override
+  SemiChannels red4(SemiPalette tokens) => SemiChannels(250, 102, 76, 1.0);
+  @override
+  SemiChannels red5(SemiPalette tokens) => SemiChannels(249, 57, 32, 1.0);
+  @override
+  SemiChannels red6(SemiPalette tokens) => SemiChannels(213, 37, 21, 1.0);
+  @override
+  SemiChannels red7(SemiPalette tokens) => SemiChannels(178, 20, 12, 1.0);
+  @override
+  SemiChannels red8(SemiPalette tokens) => SemiChannels(142, 8, 5, 1.0);
+  @override
+  SemiChannels red9(SemiPalette tokens) => SemiChannels(106, 1, 3, 1.0);
+  @override
+  SemiChannels teal0(SemiPalette tokens) => SemiChannels(228, 247, 244, 1.0);
+  @override
+  SemiChannels teal1(SemiPalette tokens) => SemiChannels(192, 240, 232, 1.0);
+  @override
+  SemiChannels teal2(SemiPalette tokens) => SemiChannels(135, 224, 211, 1.0);
+  @override
+  SemiChannels teal3(SemiPalette tokens) => SemiChannels(84, 209, 193, 1.0);
+  @override
+  SemiChannels teal4(SemiPalette tokens) => SemiChannels(39, 194, 176, 1.0);
+  @override
+  SemiChannels teal5(SemiPalette tokens) => SemiChannels(0, 179, 161, 1.0);
+  @override
+  SemiChannels teal6(SemiPalette tokens) => SemiChannels(0, 149, 137, 1.0);
+  @override
+  SemiChannels teal7(SemiPalette tokens) => SemiChannels(0, 119, 111, 1.0);
+  @override
+  SemiChannels teal8(SemiPalette tokens) => SemiChannels(0, 89, 85, 1.0);
+  @override
+  SemiChannels teal9(SemiPalette tokens) => SemiChannels(0, 60, 58, 1.0);
+  @override
+  SemiChannels violet0(SemiPalette tokens) => SemiChannels(243, 237, 249, 1.0);
+  @override
+  SemiChannels violet1(SemiPalette tokens) => SemiChannels(226, 209, 244, 1.0);
+  @override
+  SemiChannels violet2(SemiPalette tokens) => SemiChannels(196, 167, 233, 1.0);
+  @override
+  SemiChannels violet3(SemiPalette tokens) => SemiChannels(166, 127, 221, 1.0);
+  @override
+  SemiChannels violet4(SemiPalette tokens) => SemiChannels(136, 91, 210, 1.0);
+  @override
+  SemiChannels violet5(SemiPalette tokens) => SemiChannels(106, 58, 199, 1.0);
+  @override
+  SemiChannels violet6(SemiPalette tokens) => SemiChannels(87, 47, 179, 1.0);
+  @override
+  SemiChannels violet7(SemiPalette tokens) => SemiChannels(70, 37, 158, 1.0);
+  @override
+  SemiChannels violet8(SemiPalette tokens) => SemiChannels(54, 28, 138, 1.0);
+  @override
+  SemiChannels violet9(SemiPalette tokens) => SemiChannels(40, 20, 117, 1.0);
+  @override
+  SemiChannels yellow0(SemiPalette tokens) => SemiChannels(255, 253, 234, 1.0);
+  @override
+  SemiChannels yellow1(SemiPalette tokens) => SemiChannels(254, 251, 203, 1.0);
+  @override
+  SemiChannels yellow2(SemiPalette tokens) => SemiChannels(253, 243, 152, 1.0);
+  @override
+  SemiChannels yellow3(SemiPalette tokens) => SemiChannels(252, 232, 101, 1.0);
+  @override
+  SemiChannels yellow4(SemiPalette tokens) => SemiChannels(251, 218, 50, 1.0);
+  @override
+  SemiChannels yellow5(SemiPalette tokens) => SemiChannels(250, 200, 0, 1.0);
+  @override
+  SemiChannels yellow6(SemiPalette tokens) => SemiChannels(208, 170, 0, 1.0);
+  @override
+  SemiChannels yellow7(SemiPalette tokens) => SemiChannels(167, 139, 0, 1.0);
+  @override
+  SemiChannels yellow8(SemiPalette tokens) => SemiChannels(125, 106, 0, 1.0);
+  @override
+  SemiChannels yellow9(SemiPalette tokens) => SemiChannels(83, 72, 0, 1.0);
+  @override
+  SemiChannels aiPurple0(SemiPalette tokens) =>
+      SemiChannels(248, 237, 255, 1.0);
+  @override
+  SemiChannels aiPurple1(SemiPalette tokens) =>
+      SemiChannels(242, 218, 255, 1.0);
+  @override
+  SemiChannels aiPurple2(SemiPalette tokens) =>
+      SemiChannels(227, 181, 255, 1.0);
+  @override
+  SemiChannels aiPurple3(SemiPalette tokens) =>
+      SemiChannels(209, 145, 255, 1.0);
+  @override
+  SemiChannels aiPurple4(SemiPalette tokens) =>
+      SemiChannels(189, 108, 255, 1.0);
+  @override
+  SemiChannels aiPurple5(SemiPalette tokens) => SemiChannels(166, 71, 255, 1.0);
+  @override
+  SemiChannels aiPurple6(SemiPalette tokens) => SemiChannels(134, 54, 219, 1.0);
+  @override
+  SemiChannels aiPurple7(SemiPalette tokens) => SemiChannels(105, 40, 184, 1.0);
+  @override
+  SemiChannels aiPurple8(SemiPalette tokens) => SemiChannels(78, 28, 148, 1.0);
+  @override
+  SemiChannels aiPurple9(SemiPalette tokens) => SemiChannels(54, 18, 112, 1.0);
+  @override
+  SemiChannels aiGeneral03(SemiPalette tokens) =>
+      SemiChannels(239, 247, 255, 1.0);
+  @override
+  SemiChannels aiGeneral02(SemiPalette tokens) =>
+      SemiChannels(244, 244, 255, 1.0);
+  @override
+  SemiChannels aiGeneral01(SemiPalette tokens) =>
+      SemiChannels(248, 237, 255, 1.0);
+  @override
+  SemiChannels aiGeneral00(SemiPalette tokens) =>
+      SemiChannels(255, 242, 255, 1.0);
+  @override
+  SemiChannels aiGeneral13(SemiPalette tokens) =>
+      SemiChannels(213, 235, 255, 1.0);
+  @override
+  SemiChannels aiGeneral12(SemiPalette tokens) =>
+      SemiChannels(223, 224, 255, 1.0);
+  @override
+  SemiChannels aiGeneral11(SemiPalette tokens) =>
+      SemiChannels(242, 218, 255, 1.0);
+  @override
+  SemiChannels aiGeneral10(SemiPalette tokens) =>
+      SemiChannels(255, 218, 254, 1.0);
+  @override
+  SemiChannels aiGeneral23(SemiPalette tokens) =>
+      SemiChannels(171, 213, 255, 1.0);
+  @override
+  SemiChannels aiGeneral22(SemiPalette tokens) =>
+      SemiChannels(193, 192, 255, 1.0);
+  @override
+  SemiChannels aiGeneral21(SemiPalette tokens) =>
+      SemiChannels(227, 181, 255, 1.0);
+  @override
+  SemiChannels aiGeneral20(SemiPalette tokens) =>
+      SemiChannels(254, 181, 255, 1.0);
+  @override
+  SemiChannels aiGeneral33(SemiPalette tokens) =>
+      SemiChannels(130, 190, 255, 1.0);
+  @override
+  SemiChannels aiGeneral32(SemiPalette tokens) =>
+      SemiChannels(163, 160, 255, 1.0);
+  @override
+  SemiChannels aiGeneral31(SemiPalette tokens) =>
+      SemiChannels(209, 145, 255, 1.0);
+  @override
+  SemiChannels aiGeneral30(SemiPalette tokens) =>
+      SemiChannels(249, 143, 255, 1.0);
+  @override
+  SemiChannels aiGeneral43(SemiPalette tokens) =>
+      SemiChannels(88, 166, 255, 1.0);
+  @override
+  SemiChannels aiGeneral42(SemiPalette tokens) =>
+      SemiChannels(134, 129, 255, 1.0);
+  @override
+  SemiChannels aiGeneral41(SemiPalette tokens) =>
+      SemiChannels(189, 108, 255, 1.0);
+  @override
+  SemiChannels aiGeneral40(SemiPalette tokens) =>
+      SemiChannels(242, 106, 255, 1.0);
+  @override
+  SemiChannels aiGeneral53(SemiPalette tokens) =>
+      SemiChannels(46, 140, 255, 1.0);
+  @override
+  SemiChannels aiGeneral52(SemiPalette tokens) =>
+      SemiChannels(107, 97, 255, 1.0);
+  @override
+  SemiChannels aiGeneral51(SemiPalette tokens) =>
+      SemiChannels(166, 71, 255, 1.0);
+  @override
+  SemiChannels aiGeneral50(SemiPalette tokens) =>
+      SemiChannels(233, 69, 255, 1.0);
+  @override
+  SemiChannels aiGeneral63(SemiPalette tokens) =>
+      SemiChannels(33, 114, 219, 1.0);
+  @override
+  SemiChannels aiGeneral62(SemiPalette tokens) =>
+      SemiChannels(88, 77, 219, 1.0);
+  @override
+  SemiChannels aiGeneral61(SemiPalette tokens) =>
+      SemiChannels(134, 54, 219, 1.0);
+  @override
+  SemiChannels aiGeneral60(SemiPalette tokens) =>
+      SemiChannels(194, 53, 219, 1.0);
+  @override
+  SemiChannels aiGeneral73(SemiPalette tokens) =>
+      SemiChannels(22, 89, 184, 1.0);
+  @override
+  SemiChannels aiGeneral72(SemiPalette tokens) =>
+      SemiChannels(71, 59, 184, 1.0);
+  @override
+  SemiChannels aiGeneral71(SemiPalette tokens) =>
+      SemiChannels(105, 40, 184, 1.0);
+  @override
+  SemiChannels aiGeneral70(SemiPalette tokens) =>
+      SemiChannels(157, 39, 184, 1.0);
+  @override
+  SemiChannels aiGeneral83(SemiPalette tokens) =>
+      SemiChannels(13, 67, 148, 1.0);
+  @override
+  SemiChannels aiGeneral82(SemiPalette tokens) =>
+      SemiChannels(55, 43, 148, 1.0);
+  @override
+  SemiChannels aiGeneral81(SemiPalette tokens) =>
+      SemiChannels(78, 28, 148, 1.0);
+  @override
+  SemiChannels aiGeneral80(SemiPalette tokens) =>
+      SemiChannels(121, 27, 148, 1.0);
+  @override
+  SemiChannels aiGeneral93(SemiPalette tokens) => SemiChannels(7, 47, 112, 1.0);
+  @override
+  SemiChannels aiGeneral92(SemiPalette tokens) =>
+      SemiChannels(40, 29, 112, 1.0);
+  @override
+  SemiChannels aiGeneral91(SemiPalette tokens) =>
+      SemiChannels(54, 18, 112, 1.0);
+  @override
+  SemiChannels aiGeneral90(SemiPalette tokens) =>
+      SemiChannels(88, 17, 112, 1.0);
+}
+
+class _DarkSemiPaletteDefaults extends _SemiPaletteDefaults {
+  const _DarkSemiPaletteDefaults();
+  @override
+  SemiChannels amber0(SemiPalette tokens) => SemiChannels(81, 46, 9, 1.0);
+  @override
+  SemiChannels amber1(SemiPalette tokens) => SemiChannels(121, 75, 15, 1.0);
+  @override
+  SemiChannels amber2(SemiPalette tokens) => SemiChannels(161, 107, 22, 1.0);
+  @override
+  SemiChannels amber3(SemiPalette tokens) => SemiChannels(202, 143, 30, 1.0);
+  @override
+  SemiChannels amber4(SemiPalette tokens) => SemiChannels(242, 183, 38, 1.0);
+  @override
+  SemiChannels amber5(SemiPalette tokens) => SemiChannels(245, 202, 80, 1.0);
+  @override
+  SemiChannels amber6(SemiPalette tokens) => SemiChannels(247, 219, 122, 1.0);
+  @override
+  SemiChannels amber7(SemiPalette tokens) => SemiChannels(250, 234, 166, 1.0);
+  @override
+  SemiChannels amber8(SemiPalette tokens) => SemiChannels(252, 246, 210, 1.0);
+  @override
+  SemiChannels amber9(SemiPalette tokens) => SemiChannels(254, 251, 237, 1.0);
+  @override
+  SemiChannels blue0(SemiPalette tokens) => SemiChannels(5, 49, 112, 1.0);
+  @override
+  SemiChannels blue1(SemiPalette tokens) => SemiChannels(10, 70, 148, 1.0);
+  @override
+  SemiChannels blue2(SemiPalette tokens) => SemiChannels(19, 92, 184, 1.0);
+  @override
+  SemiChannels blue3(SemiPalette tokens) => SemiChannels(29, 117, 219, 1.0);
+  @override
+  SemiChannels blue4(SemiPalette tokens) => SemiChannels(41, 144, 255, 1.0);
+  @override
+  SemiChannels blue5(SemiPalette tokens) => SemiChannels(84, 169, 255, 1.0);
+  @override
+  SemiChannels blue6(SemiPalette tokens) => SemiChannels(127, 193, 255, 1.0);
+  @override
+  SemiChannels blue7(SemiPalette tokens) => SemiChannels(169, 215, 255, 1.0);
+  @override
+  SemiChannels blue8(SemiPalette tokens) => SemiChannels(212, 236, 255, 1.0);
+  @override
+  SemiChannels blue9(SemiPalette tokens) => SemiChannels(239, 248, 255, 1.0);
+  @override
+  SemiChannels cyan0(SemiPalette tokens) => SemiChannels(4, 52, 61, 1.0);
+  @override
+  SemiChannels cyan1(SemiPalette tokens) => SemiChannels(7, 79, 92, 1.0);
+  @override
+  SemiChannels cyan2(SemiPalette tokens) => SemiChannels(10, 108, 123, 1.0);
+  @override
+  SemiChannels cyan3(SemiPalette tokens) => SemiChannels(14, 137, 153, 1.0);
+  @override
+  SemiChannels cyan4(SemiPalette tokens) => SemiChannels(19, 168, 184, 1.0);
+  @override
+  SemiChannels cyan5(SemiPalette tokens) => SemiChannels(56, 187, 198, 1.0);
+  @override
+  SemiChannels cyan6(SemiPalette tokens) => SemiChannels(98, 205, 212, 1.0);
+  @override
+  SemiChannels cyan7(SemiPalette tokens) => SemiChannels(145, 223, 227, 1.0);
+  @override
+  SemiChannels cyan8(SemiPalette tokens) => SemiChannels(198, 239, 241, 1.0);
+  @override
+  SemiChannels cyan9(SemiPalette tokens) => SemiChannels(231, 247, 248, 1.0);
+  @override
+  SemiChannels green0(SemiPalette tokens) => SemiChannels(18, 60, 25, 1.0);
+  @override
+  SemiChannels green1(SemiPalette tokens) => SemiChannels(28, 90, 37, 1.0);
+  @override
+  SemiChannels green2(SemiPalette tokens) => SemiChannels(39, 119, 49, 1.0);
+  @override
+  SemiChannels green3(SemiPalette tokens) => SemiChannels(50, 149, 61, 1.0);
+  @override
+  SemiChannels green4(SemiPalette tokens) => SemiChannels(62, 179, 73, 1.0);
+  @override
+  SemiChannels green5(SemiPalette tokens) => SemiChannels(93, 194, 100, 1.0);
+  @override
+  SemiChannels green6(SemiPalette tokens) => SemiChannels(127, 209, 132, 1.0);
+  @override
+  SemiChannels green7(SemiPalette tokens) => SemiChannels(166, 225, 168, 1.0);
+  @override
+  SemiChannels green8(SemiPalette tokens) => SemiChannels(208, 240, 209, 1.0);
+  @override
+  SemiChannels green9(SemiPalette tokens) => SemiChannels(236, 247, 236, 1.0);
+  @override
+  SemiChannels grey0(SemiPalette tokens) => SemiChannels(28, 31, 35, 1.0);
+  @override
+  SemiChannels grey1(SemiPalette tokens) => SemiChannels(46, 50, 56, 1.0);
+  @override
+  SemiChannels grey2(SemiPalette tokens) => SemiChannels(65, 70, 76, 1.0);
+  @override
+  SemiChannels grey3(SemiPalette tokens) => SemiChannels(85, 91, 97, 1.0);
+  @override
+  SemiChannels grey4(SemiPalette tokens) => SemiChannels(107, 112, 117, 1.0);
+  @override
+  SemiChannels grey5(SemiPalette tokens) => SemiChannels(136, 141, 146, 1.0);
+  @override
+  SemiChannels grey6(SemiPalette tokens) => SemiChannels(167, 171, 176, 1.0);
+  @override
+  SemiChannels grey7(SemiPalette tokens) => SemiChannels(198, 202, 205, 1.0);
+  @override
+  SemiChannels grey8(SemiPalette tokens) => SemiChannels(230, 232, 234, 1.0);
+  @override
+  SemiChannels grey9(SemiPalette tokens) => SemiChannels(249, 249, 249, 1.0);
+  @override
+  SemiChannels indigo0(SemiPalette tokens) => SemiChannels(23, 30, 101, 1.0);
+  @override
+  SemiChannels indigo1(SemiPalette tokens) => SemiChannels(32, 41, 122, 1.0);
+  @override
+  SemiChannels indigo2(SemiPalette tokens) => SemiChannels(41, 54, 142, 1.0);
+  @override
+  SemiChannels indigo3(SemiPalette tokens) => SemiChannels(52, 68, 163, 1.0);
+  @override
+  SemiChannels indigo4(SemiPalette tokens) => SemiChannels(64, 83, 183, 1.0);
+  @override
+  SemiChannels indigo5(SemiPalette tokens) => SemiChannels(95, 113, 197, 1.0);
+  @override
+  SemiChannels indigo6(SemiPalette tokens) => SemiChannels(129, 145, 212, 1.0);
+  @override
+  SemiChannels indigo7(SemiPalette tokens) => SemiChannels(167, 180, 226, 1.0);
+  @override
+  SemiChannels indigo8(SemiPalette tokens) => SemiChannels(209, 216, 241, 1.0);
+  @override
+  SemiChannels indigo9(SemiPalette tokens) => SemiChannels(237, 239, 248, 1.0);
+  @override
+  SemiChannels lightBlue0(SemiPalette tokens) => SemiChannels(0, 55, 97, 1.0);
+  @override
+  SemiChannels lightBlue1(SemiPalette tokens) => SemiChannels(0, 77, 133, 1.0);
+  @override
+  SemiChannels lightBlue2(SemiPalette tokens) => SemiChannels(3, 102, 169, 1.0);
+  @override
+  SemiChannels lightBlue3(SemiPalette tokens) =>
+      SemiChannels(10, 129, 204, 1.0);
+  @override
+  SemiChannels lightBlue4(SemiPalette tokens) =>
+      SemiChannels(19, 159, 240, 1.0);
+  @override
+  SemiChannels lightBlue5(SemiPalette tokens) =>
+      SemiChannels(64, 180, 243, 1.0);
+  @override
+  SemiChannels lightBlue6(SemiPalette tokens) =>
+      SemiChannels(110, 200, 246, 1.0);
+  @override
+  SemiChannels lightBlue7(SemiPalette tokens) =>
+      SemiChannels(157, 220, 249, 1.0);
+  @override
+  SemiChannels lightBlue8(SemiPalette tokens) =>
+      SemiChannels(206, 238, 252, 1.0);
+  @override
+  SemiChannels lightBlue9(SemiPalette tokens) =>
+      SemiChannels(235, 248, 254, 1.0);
+  @override
+  SemiChannels lightGreen0(SemiPalette tokens) => SemiChannels(38, 61, 19, 1.0);
+  @override
+  SemiChannels lightGreen1(SemiPalette tokens) => SemiChannels(59, 92, 29, 1.0);
+  @override
+  SemiChannels lightGreen2(SemiPalette tokens) =>
+      SemiChannels(81, 123, 40, 1.0);
+  @override
+  SemiChannels lightGreen3(SemiPalette tokens) =>
+      SemiChannels(103, 153, 52, 1.0);
+  @override
+  SemiChannels lightGreen4(SemiPalette tokens) =>
+      SemiChannels(127, 184, 64, 1.0);
+  @override
+  SemiChannels lightGreen5(SemiPalette tokens) =>
+      SemiChannels(151, 198, 95, 1.0);
+  @override
+  SemiChannels lightGreen6(SemiPalette tokens) =>
+      SemiChannels(176, 212, 129, 1.0);
+  @override
+  SemiChannels lightGreen7(SemiPalette tokens) =>
+      SemiChannels(201, 227, 167, 1.0);
+  @override
+  SemiChannels lightGreen8(SemiPalette tokens) =>
+      SemiChannels(228, 241, 209, 1.0);
+  @override
+  SemiChannels lightGreen9(SemiPalette tokens) =>
+      SemiChannels(243, 248, 237, 1.0);
+  @override
+  SemiChannels lime0(SemiPalette tokens) => SemiChannels(49, 70, 3, 1.0);
+  @override
+  SemiChannels lime1(SemiPalette tokens) => SemiChannels(75, 105, 5, 1.0);
+  @override
+  SemiChannels lime2(SemiPalette tokens) => SemiChannels(103, 141, 9, 1.0);
+  @override
+  SemiChannels lime3(SemiPalette tokens) => SemiChannels(132, 176, 12, 1.0);
+  @override
+  SemiChannels lime4(SemiPalette tokens) => SemiChannels(162, 211, 17, 1.0);
+  @override
+  SemiChannels lime5(SemiPalette tokens) => SemiChannels(174, 220, 58, 1.0);
+  @override
+  SemiChannels lime6(SemiPalette tokens) => SemiChannels(189, 229, 102, 1.0);
+  @override
+  SemiChannels lime7(SemiPalette tokens) => SemiChannels(207, 237, 150, 1.0);
+  @override
+  SemiChannels lime8(SemiPalette tokens) => SemiChannels(229, 246, 201, 1.0);
+  @override
+  SemiChannels lime9(SemiPalette tokens) => SemiChannels(243, 251, 233, 1.0);
+  @override
+  SemiChannels orange0(SemiPalette tokens) => SemiChannels(85, 31, 3, 1.0);
+  @override
+  SemiChannels orange1(SemiPalette tokens) => SemiChannels(128, 53, 6, 1.0);
+  @override
+  SemiChannels orange2(SemiPalette tokens) => SemiChannels(170, 80, 10, 1.0);
+  @override
+  SemiChannels orange3(SemiPalette tokens) => SemiChannels(213, 111, 15, 1.0);
+  @override
+  SemiChannels orange4(SemiPalette tokens) => SemiChannels(255, 146, 20, 1.0);
+  @override
+  SemiChannels orange5(SemiPalette tokens) => SemiChannels(255, 174, 67, 1.0);
+  @override
+  SemiChannels orange6(SemiPalette tokens) => SemiChannels(255, 199, 114, 1.0);
+  @override
+  SemiChannels orange7(SemiPalette tokens) => SemiChannels(255, 221, 161, 1.0);
+  @override
+  SemiChannels orange8(SemiPalette tokens) => SemiChannels(255, 239, 208, 1.0);
+  @override
+  SemiChannels orange9(SemiPalette tokens) => SemiChannels(255, 249, 237, 1.0);
+  @override
+  SemiChannels pink0(SemiPalette tokens) => SemiChannels(92, 7, 48, 1.0);
+  @override
+  SemiChannels pink1(SemiPalette tokens) => SemiChannels(128, 14, 65, 1.0);
+  @override
+  SemiChannels pink2(SemiPalette tokens) => SemiChannels(164, 23, 81, 1.0);
+  @override
+  SemiChannels pink3(SemiPalette tokens) => SemiChannels(199, 34, 97, 1.0);
+  @override
+  SemiChannels pink4(SemiPalette tokens) => SemiChannels(235, 47, 113, 1.0);
+  @override
+  SemiChannels pink5(SemiPalette tokens) => SemiChannels(239, 86, 134, 1.0);
+  @override
+  SemiChannels pink6(SemiPalette tokens) => SemiChannels(243, 126, 159, 1.0);
+  @override
+  SemiChannels pink7(SemiPalette tokens) => SemiChannels(247, 168, 188, 1.0);
+  @override
+  SemiChannels pink8(SemiPalette tokens) => SemiChannels(251, 211, 220, 1.0);
+  @override
+  SemiChannels pink9(SemiPalette tokens) => SemiChannels(253, 238, 241, 1.0);
+  @override
+  SemiChannels purple0(SemiPalette tokens) => SemiChannels(74, 16, 97, 1.0);
+  @override
+  SemiChannels purple1(SemiPalette tokens) => SemiChannels(94, 23, 118, 1.0);
+  @override
+  SemiChannels purple2(SemiPalette tokens) => SemiChannels(115, 31, 138, 1.0);
+  @override
+  SemiChannels purple3(SemiPalette tokens) => SemiChannels(137, 40, 159, 1.0);
+  @override
+  SemiChannels purple4(SemiPalette tokens) => SemiChannels(160, 51, 179, 1.0);
+  @override
+  SemiChannels purple5(SemiPalette tokens) => SemiChannels(181, 83, 194, 1.0);
+  @override
+  SemiChannels purple6(SemiPalette tokens) => SemiChannels(202, 120, 209, 1.0);
+  @override
+  SemiChannels purple7(SemiPalette tokens) => SemiChannels(221, 160, 225, 1.0);
+  @override
+  SemiChannels purple8(SemiPalette tokens) => SemiChannels(239, 206, 240, 1.0);
+  @override
+  SemiChannels purple9(SemiPalette tokens) => SemiChannels(247, 235, 247, 1.0);
+  @override
+  SemiChannels red0(SemiPalette tokens) => SemiChannels(108, 9, 11, 1.0);
+  @override
+  SemiChannels red1(SemiPalette tokens) => SemiChannels(144, 17, 16, 1.0);
+  @override
+  SemiChannels red2(SemiPalette tokens) => SemiChannels(180, 32, 25, 1.0);
+  @override
+  SemiChannels red3(SemiPalette tokens) => SemiChannels(215, 51, 36, 1.0);
+  @override
+  SemiChannels red4(SemiPalette tokens) => SemiChannels(251, 73, 50, 1.0);
+  @override
+  SemiChannels red5(SemiPalette tokens) => SemiChannels(252, 114, 90, 1.0);
+  @override
+  SemiChannels red6(SemiPalette tokens) => SemiChannels(253, 153, 131, 1.0);
+  @override
+  SemiChannels red7(SemiPalette tokens) => SemiChannels(253, 190, 172, 1.0);
+  @override
+  SemiChannels red8(SemiPalette tokens) => SemiChannels(254, 224, 213, 1.0);
+  @override
+  SemiChannels red9(SemiPalette tokens) => SemiChannels(255, 243, 239, 1.0);
+  @override
+  SemiChannels teal0(SemiPalette tokens) => SemiChannels(2, 60, 57, 1.0);
+  @override
+  SemiChannels teal1(SemiPalette tokens) => SemiChannels(4, 90, 85, 1.0);
+  @override
+  SemiChannels teal2(SemiPalette tokens) => SemiChannels(7, 119, 111, 1.0);
+  @override
+  SemiChannels teal3(SemiPalette tokens) => SemiChannels(10, 149, 136, 1.0);
+  @override
+  SemiChannels teal4(SemiPalette tokens) => SemiChannels(14, 179, 161, 1.0);
+  @override
+  SemiChannels teal5(SemiPalette tokens) => SemiChannels(51, 194, 176, 1.0);
+  @override
+  SemiChannels teal6(SemiPalette tokens) => SemiChannels(94, 209, 193, 1.0);
+  @override
+  SemiChannels teal7(SemiPalette tokens) => SemiChannels(142, 225, 211, 1.0);
+  @override
+  SemiChannels teal8(SemiPalette tokens) => SemiChannels(196, 240, 232, 1.0);
+  @override
+  SemiChannels teal9(SemiPalette tokens) => SemiChannels(230, 247, 244, 1.0);
+  @override
+  SemiChannels violet0(SemiPalette tokens) => SemiChannels(64, 27, 119, 1.0);
+  @override
+  SemiChannels violet1(SemiPalette tokens) => SemiChannels(76, 36, 140, 1.0);
+  @override
+  SemiChannels violet2(SemiPalette tokens) => SemiChannels(88, 46, 160, 1.0);
+  @override
+  SemiChannels violet3(SemiPalette tokens) => SemiChannels(100, 57, 181, 1.0);
+  @override
+  SemiChannels violet4(SemiPalette tokens) => SemiChannels(114, 70, 201, 1.0);
+  @override
+  SemiChannels violet5(SemiPalette tokens) => SemiChannels(136, 101, 212, 1.0);
+  @override
+  SemiChannels violet6(SemiPalette tokens) => SemiChannels(162, 136, 223, 1.0);
+  @override
+  SemiChannels violet7(SemiPalette tokens) => SemiChannels(190, 173, 233, 1.0);
+  @override
+  SemiChannels violet8(SemiPalette tokens) => SemiChannels(221, 212, 244, 1.0);
+  @override
+  SemiChannels violet9(SemiPalette tokens) => SemiChannels(241, 238, 250, 1.0);
+  @override
+  SemiChannels yellow0(SemiPalette tokens) => SemiChannels(84, 73, 3, 1.0);
+  @override
+  SemiChannels yellow1(SemiPalette tokens) => SemiChannels(126, 108, 6, 1.0);
+  @override
+  SemiChannels yellow2(SemiPalette tokens) => SemiChannels(168, 142, 10, 1.0);
+  @override
+  SemiChannels yellow3(SemiPalette tokens) => SemiChannels(210, 175, 15, 1.0);
+  @override
+  SemiChannels yellow4(SemiPalette tokens) => SemiChannels(252, 206, 20, 1.0);
+  @override
+  SemiChannels yellow5(SemiPalette tokens) => SemiChannels(253, 222, 67, 1.0);
+  @override
+  SemiChannels yellow6(SemiPalette tokens) => SemiChannels(253, 235, 113, 1.0);
+  @override
+  SemiChannels yellow7(SemiPalette tokens) => SemiChannels(254, 245, 160, 1.0);
+  @override
+  SemiChannels yellow8(SemiPalette tokens) => SemiChannels(254, 251, 208, 1.0);
+  @override
+  SemiChannels yellow9(SemiPalette tokens) => SemiChannels(255, 254, 236, 1.0);
+  @override
+  SemiChannels aiPurple0(SemiPalette tokens) => SemiChannels(58, 23, 112, 1.0);
+  @override
+  SemiChannels aiPurple1(SemiPalette tokens) => SemiChannels(83, 35, 148, 1.0);
+  @override
+  SemiChannels aiPurple2(SemiPalette tokens) => SemiChannels(111, 49, 184, 1.0);
+  @override
+  SemiChannels aiPurple3(SemiPalette tokens) => SemiChannels(141, 65, 219, 1.0);
+  @override
+  SemiChannels aiPurple4(SemiPalette tokens) => SemiChannels(167, 68, 255, 1.0);
+  @override
+  SemiChannels aiPurple5(SemiPalette tokens) =>
+      SemiChannels(195, 117, 255, 1.0);
+  @override
+  SemiChannels aiPurple6(SemiPalette tokens) =>
+      SemiChannels(213, 152, 255, 1.0);
+  @override
+  SemiChannels aiPurple7(SemiPalette tokens) =>
+      SemiChannels(229, 186, 255, 1.0);
+  @override
+  SemiChannels aiPurple8(SemiPalette tokens) =>
+      SemiChannels(243, 221, 255, 1.0);
+  @override
+  SemiChannels aiPurple9(SemiPalette tokens) =>
+      SemiChannels(251, 243, 255, 1.0);
+  @override
+  SemiChannels aiGeneral03(SemiPalette tokens) =>
+      SemiChannels(80, 18, 101, 1.0);
+  @override
+  SemiChannels aiGeneral02(SemiPalette tokens) =>
+      SemiChannels(58, 23, 112, 1.0);
+  @override
+  SemiChannels aiGeneral01(SemiPalette tokens) =>
+      SemiChannels(39, 29, 108, 1.0);
+  @override
+  SemiChannels aiGeneral00(SemiPalette tokens) => SemiChannels(9, 44, 100, 1.0);
+  @override
+  SemiChannels aiGeneral13(SemiPalette tokens) =>
+      SemiChannels(113, 28, 137, 1.0);
+  @override
+  SemiChannels aiGeneral12(SemiPalette tokens) =>
+      SemiChannels(83, 35, 148, 1.0);
+  @override
+  SemiChannels aiGeneral11(SemiPalette tokens) =>
+      SemiChannels(54, 43, 144, 1.0);
+  @override
+  SemiChannels aiGeneral10(SemiPalette tokens) =>
+      SemiChannels(17, 64, 136, 1.0);
+  @override
+  SemiChannels aiGeneral23(SemiPalette tokens) =>
+      SemiChannels(148, 41, 173, 1.0);
+  @override
+  SemiChannels aiGeneral22(SemiPalette tokens) =>
+      SemiChannels(111, 49, 184, 1.0);
+  @override
+  SemiChannels aiGeneral21(SemiPalette tokens) =>
+      SemiChannels(70, 59, 180, 1.0);
+  @override
+  SemiChannels aiGeneral20(SemiPalette tokens) =>
+      SemiChannels(26, 86, 172, 1.0);
+  @override
+  SemiChannels aiGeneral33(SemiPalette tokens) =>
+      SemiChannels(185, 55, 208, 1.0);
+  @override
+  SemiChannels aiGeneral32(SemiPalette tokens) =>
+      SemiChannels(141, 65, 219, 1.0);
+  @override
+  SemiChannels aiGeneral31(SemiPalette tokens) =>
+      SemiChannels(88, 78, 215, 1.0);
+  @override
+  SemiChannels aiGeneral30(SemiPalette tokens) =>
+      SemiChannels(38, 111, 207, 1.0);
+  @override
+  SemiChannels aiGeneral43(SemiPalette tokens) =>
+      SemiChannels(219, 56, 241, 1.0);
+  @override
+  SemiChannels aiGeneral42(SemiPalette tokens) =>
+      SemiChannels(167, 68, 255, 1.0);
+  @override
+  SemiChannels aiGeneral41(SemiPalette tokens) =>
+      SemiChannels(94, 84, 248, 1.0);
+  @override
+  SemiChannels aiGeneral40(SemiPalette tokens) =>
+      SemiChannels(35, 127, 240, 1.0);
+  @override
+  SemiChannels aiGeneral53(SemiPalette tokens) =>
+      SemiChannels(234, 107, 246, 1.0);
+  @override
+  SemiChannels aiGeneral52(SemiPalette tokens) =>
+      SemiChannels(195, 117, 255, 1.0);
+  @override
+  SemiChannels aiGeneral51(SemiPalette tokens) =>
+      SemiChannels(134, 129, 252, 1.0);
+  @override
+  SemiChannels aiGeneral50(SemiPalette tokens) =>
+      SemiChannels(91, 162, 245, 1.0);
+  @override
+  SemiChannels aiGeneral63(SemiPalette tokens) =>
+      SemiChannels(243, 143, 248, 1.0);
+  @override
+  SemiChannels aiGeneral62(SemiPalette tokens) =>
+      SemiChannels(213, 152, 255, 1.0);
+  @override
+  SemiChannels aiGeneral61(SemiPalette tokens) =>
+      SemiChannels(163, 160, 253, 1.0);
+  @override
+  SemiChannels aiGeneral60(SemiPalette tokens) =>
+      SemiChannels(131, 187, 248, 1.0);
+  @override
+  SemiChannels aiGeneral73(SemiPalette tokens) =>
+      SemiChannels(249, 180, 251, 1.0);
+  @override
+  SemiChannels aiGeneral72(SemiPalette tokens) =>
+      SemiChannels(229, 186, 255, 1.0);
+  @override
+  SemiChannels aiGeneral71(SemiPalette tokens) =>
+      SemiChannels(192, 192, 253, 1.0);
+  @override
+  SemiChannels aiGeneral70(SemiPalette tokens) =>
+      SemiChannels(172, 210, 250, 1.0);
+  @override
+  SemiChannels aiGeneral83(SemiPalette tokens) =>
+      SemiChannels(253, 217, 252, 1.0);
+  @override
+  SemiChannels aiGeneral82(SemiPalette tokens) =>
+      SemiChannels(243, 221, 255, 1.0);
+  @override
+  SemiChannels aiGeneral81(SemiPalette tokens) =>
+      SemiChannels(223, 223, 254, 1.0);
+  @override
+  SemiChannels aiGeneral80(SemiPalette tokens) =>
+      SemiChannels(213, 233, 253, 1.0);
+  @override
+  SemiChannels aiGeneral93(SemiPalette tokens) =>
+      SemiChannels(254, 241, 254, 1.0);
+  @override
+  SemiChannels aiGeneral92(SemiPalette tokens) =>
+      SemiChannels(251, 243, 255, 1.0);
+  @override
+  SemiChannels aiGeneral91(SemiPalette tokens) =>
+      SemiChannels(244, 244, 255, 1.0);
+  @override
+  SemiChannels aiGeneral90(SemiPalette tokens) =>
+      SemiChannels(239, 247, 254, 1.0);
 }

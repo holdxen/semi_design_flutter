@@ -17,6 +17,12 @@ flutter test --no-pub
 
 上游两处 `--semi-color-ai-background-top-hover` 重复，保留最后声明并记录诊断；不将其擅自重命名为 active。动画的有效默认 duration/delay 全为 0ms，注释内动画配置不生效。所有生成公开 token getter 都通过 `///` 标出原始 CSS 名及相对源路径。
 
+## 内部默认值分层
+
+每组 token 在构造（包括主题绑定时的 `copyWith`）时统一选择私有、无状态的 const 亮/暗 defaults 策略；公开构造参数和 `const SemiThemeData.light/dark` 保持兼容。公开 getter 只执行 `override ?? defaults.field(this)`，不逐字段判断亮暗，也不在 getter 内创建 defaults 对象。共享默认表达式放在 defaults 基类，只有模式不同的表达式由亮/暗实现分别提供；实现与所属组同文件，不增加公开 API。
+
+默认方法接收当前 token 组，直接读取其当前 palette/colors 和同组 getter，不提前解析或保存引用结果，因此显式覆盖、主题切换和跨组引用仍保持联动。覆盖存储、`copyWith`、值相等及 hashCode 只在 token 组中实现一份。字段 CSS 来源注释和 manifest 保留；生成回归测试检查全部 383 getter 的委托结构和构造时唯一模式选择，字段覆盖测试同时检查亮暗往返保留覆盖。
+
 ## 使用
 
 ```dart

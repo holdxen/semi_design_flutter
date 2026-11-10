@@ -7,50 +7,17 @@ import 'token_types.dart';
 class SemiShadowTokens {
   const SemiShadowTokens({bool dark = false, SemiShadows? shadowElevated})
     : _dark = dark,
+      _defaults = dark
+          ? const _DarkSemiShadowTokensDefaults()
+          : const _LightSemiShadowTokensDefaults(),
       _shadowElevated = shadowElevated;
   final bool _dark;
+  final _SemiShadowTokensDefaults _defaults;
   final SemiShadows? _shadowElevated;
 
   /// `--semi-shadow-elevated` — `packages/semi-theme-default/scss/global.scss` (line 96).
   SemiShadows get shadowElevated =>
-      _shadowElevated ??
-      (_dark
-          ? SemiShadows([
-              SemiShadowLayer(
-                true,
-                0.0,
-                0.0,
-                0.0,
-                1.0,
-                Color.fromRGBO(255, 255, 255, 0.1),
-              ),
-              SemiShadowLayer(
-                false,
-                0.0,
-                4.0,
-                14.0,
-                0.0,
-                Color.fromRGBO(0, 0, 0, 0.25),
-              ),
-            ])
-          : SemiShadows([
-              SemiShadowLayer(
-                false,
-                0.0,
-                0.0,
-                1.0,
-                0.0,
-                Color.fromRGBO(0, 0, 0, 0.3),
-              ),
-              SemiShadowLayer(
-                false,
-                0.0,
-                4.0,
-                14.0,
-                0.0,
-                Color.fromRGBO(0, 0, 0, 0.1),
-              ),
-            ]));
+      _shadowElevated ?? _defaults.shadowElevated(this);
   SemiShadowTokens copyWith({bool? dark, SemiShadows? shadowElevated}) =>
       SemiShadowTokens(
         dark: dark ?? _dark,
@@ -62,4 +29,34 @@ class SemiShadowTokens {
       other is SemiShadowTokens && shadowElevated == other.shadowElevated;
   @override
   int get hashCode => Object.hashAll([shadowElevated]);
+}
+
+abstract class _SemiShadowTokensDefaults {
+  const _SemiShadowTokensDefaults();
+  SemiShadows shadowElevated(SemiShadowTokens tokens);
+}
+
+class _LightSemiShadowTokensDefaults extends _SemiShadowTokensDefaults {
+  const _LightSemiShadowTokensDefaults();
+  @override
+  SemiShadows shadowElevated(SemiShadowTokens tokens) => SemiShadows([
+    SemiShadowLayer(false, 0.0, 0.0, 1.0, 0.0, Color.fromRGBO(0, 0, 0, 0.3)),
+    SemiShadowLayer(false, 0.0, 4.0, 14.0, 0.0, Color.fromRGBO(0, 0, 0, 0.1)),
+  ]);
+}
+
+class _DarkSemiShadowTokensDefaults extends _SemiShadowTokensDefaults {
+  const _DarkSemiShadowTokensDefaults();
+  @override
+  SemiShadows shadowElevated(SemiShadowTokens tokens) => SemiShadows([
+    SemiShadowLayer(
+      true,
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+      Color.fromRGBO(255, 255, 255, 0.1),
+    ),
+    SemiShadowLayer(false, 0.0, 4.0, 14.0, 0.0, Color.fromRGBO(0, 0, 0, 0.25)),
+  ]);
 }

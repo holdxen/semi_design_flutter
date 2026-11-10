@@ -13,6 +13,8 @@ void main() {
     expect(copied.copyWith().amber0, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).amber0, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).amber0, value);
   });
   test('--semi-amber-1 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -23,6 +25,8 @@ void main() {
     expect(copied.copyWith().amber1, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).amber1, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).amber1, value);
   });
   test('--semi-amber-2 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -33,6 +37,8 @@ void main() {
     expect(copied.copyWith().amber2, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).amber2, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).amber2, value);
   });
   test('--semi-amber-3 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -43,6 +49,8 @@ void main() {
     expect(copied.copyWith().amber3, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).amber3, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).amber3, value);
   });
   test('--semi-amber-4 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -53,6 +61,8 @@ void main() {
     expect(copied.copyWith().amber4, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).amber4, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).amber4, value);
   });
   test('--semi-amber-5 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -63,6 +73,8 @@ void main() {
     expect(copied.copyWith().amber5, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).amber5, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).amber5, value);
   });
   test('--semi-amber-6 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -73,6 +85,8 @@ void main() {
     expect(copied.copyWith().amber6, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).amber6, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).amber6, value);
   });
   test('--semi-amber-7 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -83,6 +97,8 @@ void main() {
     expect(copied.copyWith().amber7, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).amber7, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).amber7, value);
   });
   test('--semi-amber-8 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -93,6 +109,8 @@ void main() {
     expect(copied.copyWith().amber8, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).amber8, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).amber8, value);
   });
   test('--semi-amber-9 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -103,6 +121,8 @@ void main() {
     expect(copied.copyWith().amber9, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).amber9, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).amber9, value);
   });
   test('--semi-black constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -113,6 +133,8 @@ void main() {
     expect(copied.copyWith().black, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).black, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).black, value);
   });
   test('--semi-blue-0 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -123,6 +145,8 @@ void main() {
     expect(copied.copyWith().blue0, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).blue0, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).blue0, value);
   });
   test('--semi-blue-1 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -133,6 +157,8 @@ void main() {
     expect(copied.copyWith().blue1, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).blue1, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).blue1, value);
   });
   test('--semi-blue-2 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -143,6 +169,8 @@ void main() {
     expect(copied.copyWith().blue2, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).blue2, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).blue2, value);
   });
   test('--semi-blue-3 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -153,6 +181,8 @@ void main() {
     expect(copied.copyWith().blue3, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).blue3, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).blue3, value);
   });
   test('--semi-blue-4 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -163,6 +193,8 @@ void main() {
     expect(copied.copyWith().blue4, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).blue4, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).blue4, value);
   });
   test('--semi-blue-5 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -173,6 +205,8 @@ void main() {
     expect(copied.copyWith().blue5, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).blue5, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).blue5, value);
   });
   test('--semi-blue-6 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -183,6 +217,8 @@ void main() {
     expect(copied.copyWith().blue6, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).blue6, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).blue6, value);
   });
   test('--semi-blue-7 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -193,6 +229,8 @@ void main() {
     expect(copied.copyWith().blue7, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).blue7, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).blue7, value);
   });
   test('--semi-blue-8 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -203,6 +241,8 @@ void main() {
     expect(copied.copyWith().blue8, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).blue8, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).blue8, value);
   });
   test('--semi-blue-9 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -213,6 +253,8 @@ void main() {
     expect(copied.copyWith().blue9, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).blue9, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).blue9, value);
   });
   test('--semi-cyan-0 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -223,6 +265,8 @@ void main() {
     expect(copied.copyWith().cyan0, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).cyan0, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).cyan0, value);
   });
   test('--semi-cyan-1 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -233,6 +277,8 @@ void main() {
     expect(copied.copyWith().cyan1, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).cyan1, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).cyan1, value);
   });
   test('--semi-cyan-2 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -243,6 +289,8 @@ void main() {
     expect(copied.copyWith().cyan2, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).cyan2, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).cyan2, value);
   });
   test('--semi-cyan-3 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -253,6 +301,8 @@ void main() {
     expect(copied.copyWith().cyan3, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).cyan3, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).cyan3, value);
   });
   test('--semi-cyan-4 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -263,6 +313,8 @@ void main() {
     expect(copied.copyWith().cyan4, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).cyan4, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).cyan4, value);
   });
   test('--semi-cyan-5 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -273,6 +325,8 @@ void main() {
     expect(copied.copyWith().cyan5, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).cyan5, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).cyan5, value);
   });
   test('--semi-cyan-6 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -283,6 +337,8 @@ void main() {
     expect(copied.copyWith().cyan6, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).cyan6, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).cyan6, value);
   });
   test('--semi-cyan-7 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -293,6 +349,8 @@ void main() {
     expect(copied.copyWith().cyan7, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).cyan7, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).cyan7, value);
   });
   test('--semi-cyan-8 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -303,6 +361,8 @@ void main() {
     expect(copied.copyWith().cyan8, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).cyan8, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).cyan8, value);
   });
   test('--semi-cyan-9 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -313,6 +373,8 @@ void main() {
     expect(copied.copyWith().cyan9, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).cyan9, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).cyan9, value);
   });
   test('--semi-green-0 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -323,6 +385,8 @@ void main() {
     expect(copied.copyWith().green0, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).green0, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).green0, value);
   });
   test('--semi-green-1 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -333,6 +397,8 @@ void main() {
     expect(copied.copyWith().green1, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).green1, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).green1, value);
   });
   test('--semi-green-2 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -343,6 +409,8 @@ void main() {
     expect(copied.copyWith().green2, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).green2, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).green2, value);
   });
   test('--semi-green-3 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -353,6 +421,8 @@ void main() {
     expect(copied.copyWith().green3, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).green3, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).green3, value);
   });
   test('--semi-green-4 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -363,6 +433,8 @@ void main() {
     expect(copied.copyWith().green4, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).green4, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).green4, value);
   });
   test('--semi-green-5 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -373,6 +445,8 @@ void main() {
     expect(copied.copyWith().green5, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).green5, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).green5, value);
   });
   test('--semi-green-6 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -383,6 +457,8 @@ void main() {
     expect(copied.copyWith().green6, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).green6, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).green6, value);
   });
   test('--semi-green-7 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -393,6 +469,8 @@ void main() {
     expect(copied.copyWith().green7, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).green7, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).green7, value);
   });
   test('--semi-green-8 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -403,6 +481,8 @@ void main() {
     expect(copied.copyWith().green8, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).green8, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).green8, value);
   });
   test('--semi-green-9 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -413,6 +493,8 @@ void main() {
     expect(copied.copyWith().green9, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).green9, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).green9, value);
   });
   test('--semi-grey-0 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -423,6 +505,8 @@ void main() {
     expect(copied.copyWith().grey0, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).grey0, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).grey0, value);
   });
   test('--semi-grey-1 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -433,6 +517,8 @@ void main() {
     expect(copied.copyWith().grey1, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).grey1, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).grey1, value);
   });
   test('--semi-grey-2 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -443,6 +529,8 @@ void main() {
     expect(copied.copyWith().grey2, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).grey2, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).grey2, value);
   });
   test('--semi-grey-3 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -453,6 +541,8 @@ void main() {
     expect(copied.copyWith().grey3, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).grey3, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).grey3, value);
   });
   test('--semi-grey-4 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -463,6 +553,8 @@ void main() {
     expect(copied.copyWith().grey4, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).grey4, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).grey4, value);
   });
   test('--semi-grey-5 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -473,6 +565,8 @@ void main() {
     expect(copied.copyWith().grey5, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).grey5, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).grey5, value);
   });
   test('--semi-grey-6 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -483,6 +577,8 @@ void main() {
     expect(copied.copyWith().grey6, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).grey6, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).grey6, value);
   });
   test('--semi-grey-7 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -493,6 +589,8 @@ void main() {
     expect(copied.copyWith().grey7, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).grey7, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).grey7, value);
   });
   test('--semi-grey-8 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -503,6 +601,8 @@ void main() {
     expect(copied.copyWith().grey8, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).grey8, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).grey8, value);
   });
   test('--semi-grey-9 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -513,6 +613,8 @@ void main() {
     expect(copied.copyWith().grey9, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).grey9, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).grey9, value);
   });
   test('--semi-indigo-0 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -523,6 +625,8 @@ void main() {
     expect(copied.copyWith().indigo0, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).indigo0, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).indigo0, value);
   });
   test('--semi-indigo-1 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -533,6 +637,8 @@ void main() {
     expect(copied.copyWith().indigo1, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).indigo1, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).indigo1, value);
   });
   test('--semi-indigo-2 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -543,6 +649,8 @@ void main() {
     expect(copied.copyWith().indigo2, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).indigo2, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).indigo2, value);
   });
   test('--semi-indigo-3 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -553,6 +661,8 @@ void main() {
     expect(copied.copyWith().indigo3, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).indigo3, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).indigo3, value);
   });
   test('--semi-indigo-4 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -563,6 +673,8 @@ void main() {
     expect(copied.copyWith().indigo4, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).indigo4, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).indigo4, value);
   });
   test('--semi-indigo-5 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -573,6 +685,8 @@ void main() {
     expect(copied.copyWith().indigo5, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).indigo5, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).indigo5, value);
   });
   test('--semi-indigo-6 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -583,6 +697,8 @@ void main() {
     expect(copied.copyWith().indigo6, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).indigo6, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).indigo6, value);
   });
   test('--semi-indigo-7 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -593,6 +709,8 @@ void main() {
     expect(copied.copyWith().indigo7, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).indigo7, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).indigo7, value);
   });
   test('--semi-indigo-8 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -603,6 +721,8 @@ void main() {
     expect(copied.copyWith().indigo8, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).indigo8, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).indigo8, value);
   });
   test('--semi-indigo-9 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -613,6 +733,8 @@ void main() {
     expect(copied.copyWith().indigo9, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).indigo9, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).indigo9, value);
   });
   test('--semi-light-blue-0 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -623,6 +745,8 @@ void main() {
     expect(copied.copyWith().lightBlue0, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lightBlue0, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).lightBlue0, value);
   });
   test('--semi-light-blue-1 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -633,6 +757,8 @@ void main() {
     expect(copied.copyWith().lightBlue1, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lightBlue1, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).lightBlue1, value);
   });
   test('--semi-light-blue-2 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -643,6 +769,8 @@ void main() {
     expect(copied.copyWith().lightBlue2, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lightBlue2, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).lightBlue2, value);
   });
   test('--semi-light-blue-3 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -653,6 +781,8 @@ void main() {
     expect(copied.copyWith().lightBlue3, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lightBlue3, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).lightBlue3, value);
   });
   test('--semi-light-blue-4 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -663,6 +793,8 @@ void main() {
     expect(copied.copyWith().lightBlue4, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lightBlue4, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).lightBlue4, value);
   });
   test('--semi-light-blue-5 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -673,6 +805,8 @@ void main() {
     expect(copied.copyWith().lightBlue5, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lightBlue5, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).lightBlue5, value);
   });
   test('--semi-light-blue-6 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -683,6 +817,8 @@ void main() {
     expect(copied.copyWith().lightBlue6, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lightBlue6, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).lightBlue6, value);
   });
   test('--semi-light-blue-7 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -693,6 +829,8 @@ void main() {
     expect(copied.copyWith().lightBlue7, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lightBlue7, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).lightBlue7, value);
   });
   test('--semi-light-blue-8 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -703,6 +841,8 @@ void main() {
     expect(copied.copyWith().lightBlue8, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lightBlue8, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).lightBlue8, value);
   });
   test('--semi-light-blue-9 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -713,6 +853,8 @@ void main() {
     expect(copied.copyWith().lightBlue9, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lightBlue9, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).lightBlue9, value);
   });
   test('--semi-light-green-0 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -723,6 +865,11 @@ void main() {
     expect(copied.copyWith().lightGreen0, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lightGreen0, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).lightGreen0,
+      value,
+    );
   });
   test('--semi-light-green-1 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -733,6 +880,11 @@ void main() {
     expect(copied.copyWith().lightGreen1, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lightGreen1, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).lightGreen1,
+      value,
+    );
   });
   test('--semi-light-green-2 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -743,6 +895,11 @@ void main() {
     expect(copied.copyWith().lightGreen2, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lightGreen2, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).lightGreen2,
+      value,
+    );
   });
   test('--semi-light-green-3 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -753,6 +910,11 @@ void main() {
     expect(copied.copyWith().lightGreen3, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lightGreen3, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).lightGreen3,
+      value,
+    );
   });
   test('--semi-light-green-4 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -763,6 +925,11 @@ void main() {
     expect(copied.copyWith().lightGreen4, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lightGreen4, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).lightGreen4,
+      value,
+    );
   });
   test('--semi-light-green-5 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -773,6 +940,11 @@ void main() {
     expect(copied.copyWith().lightGreen5, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lightGreen5, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).lightGreen5,
+      value,
+    );
   });
   test('--semi-light-green-6 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -783,6 +955,11 @@ void main() {
     expect(copied.copyWith().lightGreen6, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lightGreen6, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).lightGreen6,
+      value,
+    );
   });
   test('--semi-light-green-7 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -793,6 +970,11 @@ void main() {
     expect(copied.copyWith().lightGreen7, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lightGreen7, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).lightGreen7,
+      value,
+    );
   });
   test('--semi-light-green-8 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -803,6 +985,11 @@ void main() {
     expect(copied.copyWith().lightGreen8, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lightGreen8, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).lightGreen8,
+      value,
+    );
   });
   test('--semi-light-green-9 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -813,6 +1000,11 @@ void main() {
     expect(copied.copyWith().lightGreen9, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lightGreen9, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).lightGreen9,
+      value,
+    );
   });
   test('--semi-lime-0 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -823,6 +1015,8 @@ void main() {
     expect(copied.copyWith().lime0, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lime0, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).lime0, value);
   });
   test('--semi-lime-1 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -833,6 +1027,8 @@ void main() {
     expect(copied.copyWith().lime1, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lime1, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).lime1, value);
   });
   test('--semi-lime-2 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -843,6 +1039,8 @@ void main() {
     expect(copied.copyWith().lime2, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lime2, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).lime2, value);
   });
   test('--semi-lime-3 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -853,6 +1051,8 @@ void main() {
     expect(copied.copyWith().lime3, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lime3, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).lime3, value);
   });
   test('--semi-lime-4 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -863,6 +1063,8 @@ void main() {
     expect(copied.copyWith().lime4, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lime4, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).lime4, value);
   });
   test('--semi-lime-5 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -873,6 +1075,8 @@ void main() {
     expect(copied.copyWith().lime5, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lime5, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).lime5, value);
   });
   test('--semi-lime-6 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -883,6 +1087,8 @@ void main() {
     expect(copied.copyWith().lime6, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lime6, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).lime6, value);
   });
   test('--semi-lime-7 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -893,6 +1099,8 @@ void main() {
     expect(copied.copyWith().lime7, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lime7, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).lime7, value);
   });
   test('--semi-lime-8 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -903,6 +1111,8 @@ void main() {
     expect(copied.copyWith().lime8, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lime8, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).lime8, value);
   });
   test('--semi-lime-9 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -913,6 +1123,8 @@ void main() {
     expect(copied.copyWith().lime9, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).lime9, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).lime9, value);
   });
   test('--semi-orange-0 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -923,6 +1135,8 @@ void main() {
     expect(copied.copyWith().orange0, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).orange0, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).orange0, value);
   });
   test('--semi-orange-1 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -933,6 +1147,8 @@ void main() {
     expect(copied.copyWith().orange1, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).orange1, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).orange1, value);
   });
   test('--semi-orange-2 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -943,6 +1159,8 @@ void main() {
     expect(copied.copyWith().orange2, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).orange2, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).orange2, value);
   });
   test('--semi-orange-3 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -953,6 +1171,8 @@ void main() {
     expect(copied.copyWith().orange3, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).orange3, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).orange3, value);
   });
   test('--semi-orange-4 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -963,6 +1183,8 @@ void main() {
     expect(copied.copyWith().orange4, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).orange4, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).orange4, value);
   });
   test('--semi-orange-5 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -973,6 +1195,8 @@ void main() {
     expect(copied.copyWith().orange5, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).orange5, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).orange5, value);
   });
   test('--semi-orange-6 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -983,6 +1207,8 @@ void main() {
     expect(copied.copyWith().orange6, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).orange6, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).orange6, value);
   });
   test('--semi-orange-7 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -993,6 +1219,8 @@ void main() {
     expect(copied.copyWith().orange7, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).orange7, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).orange7, value);
   });
   test('--semi-orange-8 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1003,6 +1231,8 @@ void main() {
     expect(copied.copyWith().orange8, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).orange8, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).orange8, value);
   });
   test('--semi-orange-9 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1013,6 +1243,8 @@ void main() {
     expect(copied.copyWith().orange9, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).orange9, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).orange9, value);
   });
   test('--semi-pink-0 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1023,6 +1255,8 @@ void main() {
     expect(copied.copyWith().pink0, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).pink0, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).pink0, value);
   });
   test('--semi-pink-1 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1033,6 +1267,8 @@ void main() {
     expect(copied.copyWith().pink1, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).pink1, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).pink1, value);
   });
   test('--semi-pink-2 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1043,6 +1279,8 @@ void main() {
     expect(copied.copyWith().pink2, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).pink2, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).pink2, value);
   });
   test('--semi-pink-3 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1053,6 +1291,8 @@ void main() {
     expect(copied.copyWith().pink3, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).pink3, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).pink3, value);
   });
   test('--semi-pink-4 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1063,6 +1303,8 @@ void main() {
     expect(copied.copyWith().pink4, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).pink4, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).pink4, value);
   });
   test('--semi-pink-5 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1073,6 +1315,8 @@ void main() {
     expect(copied.copyWith().pink5, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).pink5, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).pink5, value);
   });
   test('--semi-pink-6 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1083,6 +1327,8 @@ void main() {
     expect(copied.copyWith().pink6, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).pink6, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).pink6, value);
   });
   test('--semi-pink-7 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1093,6 +1339,8 @@ void main() {
     expect(copied.copyWith().pink7, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).pink7, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).pink7, value);
   });
   test('--semi-pink-8 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1103,6 +1351,8 @@ void main() {
     expect(copied.copyWith().pink8, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).pink8, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).pink8, value);
   });
   test('--semi-pink-9 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1113,6 +1363,8 @@ void main() {
     expect(copied.copyWith().pink9, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).pink9, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).pink9, value);
   });
   test('--semi-purple-0 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1123,6 +1375,8 @@ void main() {
     expect(copied.copyWith().purple0, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).purple0, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).purple0, value);
   });
   test('--semi-purple-1 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1133,6 +1387,8 @@ void main() {
     expect(copied.copyWith().purple1, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).purple1, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).purple1, value);
   });
   test('--semi-purple-2 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1143,6 +1399,8 @@ void main() {
     expect(copied.copyWith().purple2, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).purple2, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).purple2, value);
   });
   test('--semi-purple-3 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1153,6 +1411,8 @@ void main() {
     expect(copied.copyWith().purple3, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).purple3, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).purple3, value);
   });
   test('--semi-purple-4 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1163,6 +1423,8 @@ void main() {
     expect(copied.copyWith().purple4, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).purple4, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).purple4, value);
   });
   test('--semi-purple-5 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1173,6 +1435,8 @@ void main() {
     expect(copied.copyWith().purple5, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).purple5, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).purple5, value);
   });
   test('--semi-purple-6 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1183,6 +1447,8 @@ void main() {
     expect(copied.copyWith().purple6, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).purple6, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).purple6, value);
   });
   test('--semi-purple-7 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1193,6 +1459,8 @@ void main() {
     expect(copied.copyWith().purple7, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).purple7, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).purple7, value);
   });
   test('--semi-purple-8 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1203,6 +1471,8 @@ void main() {
     expect(copied.copyWith().purple8, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).purple8, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).purple8, value);
   });
   test('--semi-purple-9 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1213,6 +1483,8 @@ void main() {
     expect(copied.copyWith().purple9, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).purple9, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).purple9, value);
   });
   test('--semi-red-0 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1223,6 +1495,8 @@ void main() {
     expect(copied.copyWith().red0, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).red0, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).red0, value);
   });
   test('--semi-red-1 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1233,6 +1507,8 @@ void main() {
     expect(copied.copyWith().red1, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).red1, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).red1, value);
   });
   test('--semi-red-2 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1243,6 +1519,8 @@ void main() {
     expect(copied.copyWith().red2, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).red2, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).red2, value);
   });
   test('--semi-red-3 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1253,6 +1531,8 @@ void main() {
     expect(copied.copyWith().red3, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).red3, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).red3, value);
   });
   test('--semi-red-4 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1263,6 +1543,8 @@ void main() {
     expect(copied.copyWith().red4, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).red4, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).red4, value);
   });
   test('--semi-red-5 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1273,6 +1555,8 @@ void main() {
     expect(copied.copyWith().red5, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).red5, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).red5, value);
   });
   test('--semi-red-6 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1283,6 +1567,8 @@ void main() {
     expect(copied.copyWith().red6, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).red6, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).red6, value);
   });
   test('--semi-red-7 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1293,6 +1579,8 @@ void main() {
     expect(copied.copyWith().red7, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).red7, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).red7, value);
   });
   test('--semi-red-8 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1303,6 +1591,8 @@ void main() {
     expect(copied.copyWith().red8, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).red8, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).red8, value);
   });
   test('--semi-red-9 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1313,6 +1603,8 @@ void main() {
     expect(copied.copyWith().red9, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).red9, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).red9, value);
   });
   test('--semi-teal-0 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1323,6 +1615,8 @@ void main() {
     expect(copied.copyWith().teal0, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).teal0, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).teal0, value);
   });
   test('--semi-teal-1 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1333,6 +1627,8 @@ void main() {
     expect(copied.copyWith().teal1, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).teal1, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).teal1, value);
   });
   test('--semi-teal-2 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1343,6 +1639,8 @@ void main() {
     expect(copied.copyWith().teal2, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).teal2, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).teal2, value);
   });
   test('--semi-teal-3 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1353,6 +1651,8 @@ void main() {
     expect(copied.copyWith().teal3, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).teal3, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).teal3, value);
   });
   test('--semi-teal-4 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1363,6 +1663,8 @@ void main() {
     expect(copied.copyWith().teal4, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).teal4, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).teal4, value);
   });
   test('--semi-teal-5 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1373,6 +1675,8 @@ void main() {
     expect(copied.copyWith().teal5, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).teal5, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).teal5, value);
   });
   test('--semi-teal-6 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1383,6 +1687,8 @@ void main() {
     expect(copied.copyWith().teal6, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).teal6, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).teal6, value);
   });
   test('--semi-teal-7 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1393,6 +1699,8 @@ void main() {
     expect(copied.copyWith().teal7, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).teal7, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).teal7, value);
   });
   test('--semi-teal-8 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1403,6 +1711,8 @@ void main() {
     expect(copied.copyWith().teal8, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).teal8, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).teal8, value);
   });
   test('--semi-teal-9 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1413,6 +1723,8 @@ void main() {
     expect(copied.copyWith().teal9, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).teal9, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).teal9, value);
   });
   test('--semi-violet-0 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1423,6 +1735,8 @@ void main() {
     expect(copied.copyWith().violet0, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).violet0, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).violet0, value);
   });
   test('--semi-violet-1 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1433,6 +1747,8 @@ void main() {
     expect(copied.copyWith().violet1, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).violet1, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).violet1, value);
   });
   test('--semi-violet-2 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1443,6 +1759,8 @@ void main() {
     expect(copied.copyWith().violet2, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).violet2, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).violet2, value);
   });
   test('--semi-violet-3 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1453,6 +1771,8 @@ void main() {
     expect(copied.copyWith().violet3, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).violet3, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).violet3, value);
   });
   test('--semi-violet-4 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1463,6 +1783,8 @@ void main() {
     expect(copied.copyWith().violet4, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).violet4, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).violet4, value);
   });
   test('--semi-violet-5 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1473,6 +1795,8 @@ void main() {
     expect(copied.copyWith().violet5, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).violet5, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).violet5, value);
   });
   test('--semi-violet-6 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1483,6 +1807,8 @@ void main() {
     expect(copied.copyWith().violet6, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).violet6, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).violet6, value);
   });
   test('--semi-violet-7 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1493,6 +1819,8 @@ void main() {
     expect(copied.copyWith().violet7, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).violet7, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).violet7, value);
   });
   test('--semi-violet-8 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1503,6 +1831,8 @@ void main() {
     expect(copied.copyWith().violet8, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).violet8, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).violet8, value);
   });
   test('--semi-violet-9 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1513,6 +1843,8 @@ void main() {
     expect(copied.copyWith().violet9, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).violet9, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).violet9, value);
   });
   test('--semi-white constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1523,6 +1855,8 @@ void main() {
     expect(copied.copyWith().white, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).white, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).white, value);
   });
   test('--semi-yellow-0 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1533,6 +1867,8 @@ void main() {
     expect(copied.copyWith().yellow0, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).yellow0, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).yellow0, value);
   });
   test('--semi-yellow-1 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1543,6 +1879,8 @@ void main() {
     expect(copied.copyWith().yellow1, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).yellow1, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).yellow1, value);
   });
   test('--semi-yellow-2 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1553,6 +1891,8 @@ void main() {
     expect(copied.copyWith().yellow2, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).yellow2, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).yellow2, value);
   });
   test('--semi-yellow-3 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1563,6 +1903,8 @@ void main() {
     expect(copied.copyWith().yellow3, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).yellow3, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).yellow3, value);
   });
   test('--semi-yellow-4 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1573,6 +1915,8 @@ void main() {
     expect(copied.copyWith().yellow4, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).yellow4, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).yellow4, value);
   });
   test('--semi-yellow-5 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1583,6 +1927,8 @@ void main() {
     expect(copied.copyWith().yellow5, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).yellow5, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).yellow5, value);
   });
   test('--semi-yellow-6 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1593,6 +1939,8 @@ void main() {
     expect(copied.copyWith().yellow6, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).yellow6, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).yellow6, value);
   });
   test('--semi-yellow-7 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1603,6 +1951,8 @@ void main() {
     expect(copied.copyWith().yellow7, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).yellow7, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).yellow7, value);
   });
   test('--semi-yellow-8 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1613,6 +1963,8 @@ void main() {
     expect(copied.copyWith().yellow8, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).yellow8, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).yellow8, value);
   });
   test('--semi-yellow-9 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1623,6 +1975,8 @@ void main() {
     expect(copied.copyWith().yellow9, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).yellow9, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).yellow9, value);
   });
   test('--semi-ai-purple-0 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1633,6 +1987,8 @@ void main() {
     expect(copied.copyWith().aiPurple0, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiPurple0, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).aiPurple0, value);
   });
   test('--semi-ai-purple-1 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1643,6 +1999,8 @@ void main() {
     expect(copied.copyWith().aiPurple1, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiPurple1, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).aiPurple1, value);
   });
   test('--semi-ai-purple-2 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1653,6 +2011,8 @@ void main() {
     expect(copied.copyWith().aiPurple2, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiPurple2, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).aiPurple2, value);
   });
   test('--semi-ai-purple-3 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1663,6 +2023,8 @@ void main() {
     expect(copied.copyWith().aiPurple3, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiPurple3, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).aiPurple3, value);
   });
   test('--semi-ai-purple-4 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1673,6 +2035,8 @@ void main() {
     expect(copied.copyWith().aiPurple4, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiPurple4, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).aiPurple4, value);
   });
   test('--semi-ai-purple-5 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1683,6 +2047,8 @@ void main() {
     expect(copied.copyWith().aiPurple5, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiPurple5, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).aiPurple5, value);
   });
   test('--semi-ai-purple-6 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1693,6 +2059,8 @@ void main() {
     expect(copied.copyWith().aiPurple6, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiPurple6, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).aiPurple6, value);
   });
   test('--semi-ai-purple-7 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1703,6 +2071,8 @@ void main() {
     expect(copied.copyWith().aiPurple7, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiPurple7, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).aiPurple7, value);
   });
   test('--semi-ai-purple-8 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1713,6 +2083,8 @@ void main() {
     expect(copied.copyWith().aiPurple8, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiPurple8, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).aiPurple8, value);
   });
   test('--semi-ai-purple-9 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1723,6 +2095,8 @@ void main() {
     expect(copied.copyWith().aiPurple9, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiPurple9, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).aiPurple9, value);
   });
   test('--semi-ai-general-0-3 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1733,6 +2107,11 @@ void main() {
     expect(copied.copyWith().aiGeneral03, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral03, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral03,
+      value,
+    );
   });
   test('--semi-ai-general-0-2 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1743,6 +2122,11 @@ void main() {
     expect(copied.copyWith().aiGeneral02, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral02, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral02,
+      value,
+    );
   });
   test('--semi-ai-general-0-1 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1753,6 +2137,11 @@ void main() {
     expect(copied.copyWith().aiGeneral01, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral01, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral01,
+      value,
+    );
   });
   test('--semi-ai-general-0-0 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1763,6 +2152,11 @@ void main() {
     expect(copied.copyWith().aiGeneral00, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral00, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral00,
+      value,
+    );
   });
   test('--semi-ai-general-1-3 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1773,6 +2167,11 @@ void main() {
     expect(copied.copyWith().aiGeneral13, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral13, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral13,
+      value,
+    );
   });
   test('--semi-ai-general-1-2 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1783,6 +2182,11 @@ void main() {
     expect(copied.copyWith().aiGeneral12, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral12, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral12,
+      value,
+    );
   });
   test('--semi-ai-general-1-1 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1793,6 +2197,11 @@ void main() {
     expect(copied.copyWith().aiGeneral11, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral11, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral11,
+      value,
+    );
   });
   test('--semi-ai-general-1-0 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1803,6 +2212,11 @@ void main() {
     expect(copied.copyWith().aiGeneral10, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral10, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral10,
+      value,
+    );
   });
   test('--semi-ai-general-2-3 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1813,6 +2227,11 @@ void main() {
     expect(copied.copyWith().aiGeneral23, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral23, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral23,
+      value,
+    );
   });
   test('--semi-ai-general-2-2 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1823,6 +2242,11 @@ void main() {
     expect(copied.copyWith().aiGeneral22, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral22, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral22,
+      value,
+    );
   });
   test('--semi-ai-general-2-1 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1833,6 +2257,11 @@ void main() {
     expect(copied.copyWith().aiGeneral21, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral21, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral21,
+      value,
+    );
   });
   test('--semi-ai-general-2-0 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1843,6 +2272,11 @@ void main() {
     expect(copied.copyWith().aiGeneral20, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral20, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral20,
+      value,
+    );
   });
   test('--semi-ai-general-3-3 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1853,6 +2287,11 @@ void main() {
     expect(copied.copyWith().aiGeneral33, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral33, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral33,
+      value,
+    );
   });
   test('--semi-ai-general-3-2 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1863,6 +2302,11 @@ void main() {
     expect(copied.copyWith().aiGeneral32, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral32, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral32,
+      value,
+    );
   });
   test('--semi-ai-general-3-1 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1873,6 +2317,11 @@ void main() {
     expect(copied.copyWith().aiGeneral31, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral31, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral31,
+      value,
+    );
   });
   test('--semi-ai-general-3-0 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1883,6 +2332,11 @@ void main() {
     expect(copied.copyWith().aiGeneral30, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral30, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral30,
+      value,
+    );
   });
   test('--semi-ai-general-4-3 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1893,6 +2347,11 @@ void main() {
     expect(copied.copyWith().aiGeneral43, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral43, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral43,
+      value,
+    );
   });
   test('--semi-ai-general-4-2 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1903,6 +2362,11 @@ void main() {
     expect(copied.copyWith().aiGeneral42, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral42, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral42,
+      value,
+    );
   });
   test('--semi-ai-general-4-1 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1913,6 +2377,11 @@ void main() {
     expect(copied.copyWith().aiGeneral41, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral41, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral41,
+      value,
+    );
   });
   test('--semi-ai-general-4-0 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1923,6 +2392,11 @@ void main() {
     expect(copied.copyWith().aiGeneral40, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral40, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral40,
+      value,
+    );
   });
   test('--semi-ai-general-5-3 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1933,6 +2407,11 @@ void main() {
     expect(copied.copyWith().aiGeneral53, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral53, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral53,
+      value,
+    );
   });
   test('--semi-ai-general-5-2 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1943,6 +2422,11 @@ void main() {
     expect(copied.copyWith().aiGeneral52, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral52, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral52,
+      value,
+    );
   });
   test('--semi-ai-general-5-1 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1953,6 +2437,11 @@ void main() {
     expect(copied.copyWith().aiGeneral51, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral51, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral51,
+      value,
+    );
   });
   test('--semi-ai-general-5-0 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1963,6 +2452,11 @@ void main() {
     expect(copied.copyWith().aiGeneral50, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral50, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral50,
+      value,
+    );
   });
   test('--semi-ai-general-6-3 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1973,6 +2467,11 @@ void main() {
     expect(copied.copyWith().aiGeneral63, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral63, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral63,
+      value,
+    );
   });
   test('--semi-ai-general-6-2 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1983,6 +2482,11 @@ void main() {
     expect(copied.copyWith().aiGeneral62, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral62, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral62,
+      value,
+    );
   });
   test('--semi-ai-general-6-1 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -1993,6 +2497,11 @@ void main() {
     expect(copied.copyWith().aiGeneral61, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral61, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral61,
+      value,
+    );
   });
   test('--semi-ai-general-6-0 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -2003,6 +2512,11 @@ void main() {
     expect(copied.copyWith().aiGeneral60, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral60, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral60,
+      value,
+    );
   });
   test('--semi-ai-general-7-3 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -2013,6 +2527,11 @@ void main() {
     expect(copied.copyWith().aiGeneral73, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral73, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral73,
+      value,
+    );
   });
   test('--semi-ai-general-7-2 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -2023,6 +2542,11 @@ void main() {
     expect(copied.copyWith().aiGeneral72, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral72, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral72,
+      value,
+    );
   });
   test('--semi-ai-general-7-1 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -2033,6 +2557,11 @@ void main() {
     expect(copied.copyWith().aiGeneral71, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral71, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral71,
+      value,
+    );
   });
   test('--semi-ai-general-7-0 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -2043,6 +2572,11 @@ void main() {
     expect(copied.copyWith().aiGeneral70, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral70, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral70,
+      value,
+    );
   });
   test('--semi-ai-general-8-3 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -2053,6 +2587,11 @@ void main() {
     expect(copied.copyWith().aiGeneral83, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral83, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral83,
+      value,
+    );
   });
   test('--semi-ai-general-8-2 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -2063,6 +2602,11 @@ void main() {
     expect(copied.copyWith().aiGeneral82, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral82, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral82,
+      value,
+    );
   });
   test('--semi-ai-general-8-1 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -2073,6 +2617,11 @@ void main() {
     expect(copied.copyWith().aiGeneral81, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral81, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral81,
+      value,
+    );
   });
   test('--semi-ai-general-8-0 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -2083,6 +2632,11 @@ void main() {
     expect(copied.copyWith().aiGeneral80, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral80, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral80,
+      value,
+    );
   });
   test('--semi-ai-general-9-3 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -2093,6 +2647,11 @@ void main() {
     expect(copied.copyWith().aiGeneral93, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral93, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral93,
+      value,
+    );
   });
   test('--semi-ai-general-9-2 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -2103,6 +2662,11 @@ void main() {
     expect(copied.copyWith().aiGeneral92, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral92, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral92,
+      value,
+    );
   });
   test('--semi-ai-general-9-1 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -2113,6 +2677,11 @@ void main() {
     expect(copied.copyWith().aiGeneral91, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral91, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral91,
+      value,
+    );
   });
   test('--semi-ai-general-9-0 constructor and copyWith', () {
     final value = const SemiChannels(1, 2, 3, .5);
@@ -2123,6 +2692,11 @@ void main() {
     expect(copied.copyWith().aiGeneral90, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral90, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).aiGeneral90,
+      value,
+    );
   });
   test('--semi-ai-general-0 constructor and copyWith', () {
     final value = SemiGradient(90, [const Color(0xff123456)], [0]);
@@ -2133,6 +2707,8 @@ void main() {
     expect(copied.copyWith().aiGeneral0, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral0, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).aiGeneral0, value);
   });
   test('--semi-ai-general-1 constructor and copyWith', () {
     final value = SemiGradient(90, [const Color(0xff123456)], [0]);
@@ -2143,6 +2719,8 @@ void main() {
     expect(copied.copyWith().aiGeneral1, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral1, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).aiGeneral1, value);
   });
   test('--semi-ai-general-2 constructor and copyWith', () {
     final value = SemiGradient(90, [const Color(0xff123456)], [0]);
@@ -2153,6 +2731,8 @@ void main() {
     expect(copied.copyWith().aiGeneral2, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral2, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).aiGeneral2, value);
   });
   test('--semi-ai-general-3 constructor and copyWith', () {
     final value = SemiGradient(90, [const Color(0xff123456)], [0]);
@@ -2163,6 +2743,8 @@ void main() {
     expect(copied.copyWith().aiGeneral3, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral3, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).aiGeneral3, value);
   });
   test('--semi-ai-general-4 constructor and copyWith', () {
     final value = SemiGradient(90, [const Color(0xff123456)], [0]);
@@ -2173,6 +2755,8 @@ void main() {
     expect(copied.copyWith().aiGeneral4, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral4, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).aiGeneral4, value);
   });
   test('--semi-ai-general-5 constructor and copyWith', () {
     final value = SemiGradient(90, [const Color(0xff123456)], [0]);
@@ -2183,6 +2767,8 @@ void main() {
     expect(copied.copyWith().aiGeneral5, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral5, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).aiGeneral5, value);
   });
   test('--semi-ai-general-6 constructor and copyWith', () {
     final value = SemiGradient(90, [const Color(0xff123456)], [0]);
@@ -2193,6 +2779,8 @@ void main() {
     expect(copied.copyWith().aiGeneral6, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral6, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).aiGeneral6, value);
   });
   test('--semi-ai-general-7 constructor and copyWith', () {
     final value = SemiGradient(90, [const Color(0xff123456)], [0]);
@@ -2203,6 +2791,8 @@ void main() {
     expect(copied.copyWith().aiGeneral7, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral7, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).aiGeneral7, value);
   });
   test('--semi-ai-general-8 constructor and copyWith', () {
     final value = SemiGradient(90, [const Color(0xff123456)], [0]);
@@ -2213,6 +2803,8 @@ void main() {
     expect(copied.copyWith().aiGeneral8, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral8, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).aiGeneral8, value);
   });
   test('--semi-ai-general-9 constructor and copyWith', () {
     final value = SemiGradient(90, [const Color(0xff123456)], [0]);
@@ -2223,6 +2815,8 @@ void main() {
     expect(copied.copyWith().aiGeneral9, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).aiGeneral9, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).aiGeneral9, value);
   });
   test('--semi-color-white constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2233,6 +2827,8 @@ void main() {
     expect(copied.copyWith().colorWhite, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorWhite, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).colorWhite, value);
   });
   test('--semi-color-black constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2243,6 +2839,8 @@ void main() {
     expect(copied.copyWith().colorBlack, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorBlack, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).colorBlack, value);
   });
   test('--semi-color-primary constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2253,6 +2851,11 @@ void main() {
     expect(copied.copyWith().colorPrimary, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorPrimary, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorPrimary,
+      value,
+    );
   });
   test('--semi-color-primary-hover constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2263,6 +2866,11 @@ void main() {
     expect(copied.copyWith().colorPrimaryHover, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorPrimaryHover, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorPrimaryHover,
+      value,
+    );
   });
   test('--semi-color-primary-active constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2273,6 +2881,11 @@ void main() {
     expect(copied.copyWith().colorPrimaryActive, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorPrimaryActive, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorPrimaryActive,
+      value,
+    );
   });
   test('--semi-color-primary-disabled constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2283,6 +2896,11 @@ void main() {
     expect(copied.copyWith().colorPrimaryDisabled, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorPrimaryDisabled, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorPrimaryDisabled,
+      value,
+    );
   });
   test('--semi-color-primary-light-default constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2293,6 +2911,14 @@ void main() {
     expect(copied.copyWith().colorPrimaryLightDefault, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorPrimaryLightDefault, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .colorPrimaryLightDefault,
+      value,
+    );
   });
   test('--semi-color-primary-light-hover constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2303,6 +2929,11 @@ void main() {
     expect(copied.copyWith().colorPrimaryLightHover, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorPrimaryLightHover, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorPrimaryLightHover,
+      value,
+    );
   });
   test('--semi-color-primary-light-active constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2313,6 +2944,11 @@ void main() {
     expect(copied.copyWith().colorPrimaryLightActive, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorPrimaryLightActive, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorPrimaryLightActive,
+      value,
+    );
   });
   test('--semi-color-secondary constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2323,6 +2959,11 @@ void main() {
     expect(copied.copyWith().colorSecondary, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorSecondary, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorSecondary,
+      value,
+    );
   });
   test('--semi-color-secondary-hover constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2333,6 +2974,11 @@ void main() {
     expect(copied.copyWith().colorSecondaryHover, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorSecondaryHover, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorSecondaryHover,
+      value,
+    );
   });
   test('--semi-color-secondary-active constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2343,6 +2989,11 @@ void main() {
     expect(copied.copyWith().colorSecondaryActive, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorSecondaryActive, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorSecondaryActive,
+      value,
+    );
   });
   test('--semi-color-secondary-disabled constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2353,6 +3004,11 @@ void main() {
     expect(copied.copyWith().colorSecondaryDisabled, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorSecondaryDisabled, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorSecondaryDisabled,
+      value,
+    );
   });
   test('--semi-color-secondary-light-default constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2365,6 +3021,14 @@ void main() {
     expect(copied.copyWith().colorSecondaryLightDefault, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorSecondaryLightDefault, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .colorSecondaryLightDefault,
+      value,
+    );
   });
   test('--semi-color-secondary-light-hover constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2375,6 +3039,14 @@ void main() {
     expect(copied.copyWith().colorSecondaryLightHover, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorSecondaryLightHover, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .colorSecondaryLightHover,
+      value,
+    );
   });
   test('--semi-color-secondary-light-active constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2387,6 +3059,14 @@ void main() {
     expect(copied.copyWith().colorSecondaryLightActive, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorSecondaryLightActive, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .colorSecondaryLightActive,
+      value,
+    );
   });
   test('--semi-color-tertiary constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2397,6 +3077,11 @@ void main() {
     expect(copied.copyWith().colorTertiary, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorTertiary, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorTertiary,
+      value,
+    );
   });
   test('--semi-color-tertiary-hover constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2407,6 +3092,11 @@ void main() {
     expect(copied.copyWith().colorTertiaryHover, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorTertiaryHover, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorTertiaryHover,
+      value,
+    );
   });
   test('--semi-color-tertiary-active constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2417,6 +3107,11 @@ void main() {
     expect(copied.copyWith().colorTertiaryActive, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorTertiaryActive, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorTertiaryActive,
+      value,
+    );
   });
   test('--semi-color-tertiary-light-default constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2429,6 +3124,14 @@ void main() {
     expect(copied.copyWith().colorTertiaryLightDefault, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorTertiaryLightDefault, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .colorTertiaryLightDefault,
+      value,
+    );
   });
   test('--semi-color-tertiary-light-hover constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2439,6 +3142,11 @@ void main() {
     expect(copied.copyWith().colorTertiaryLightHover, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorTertiaryLightHover, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorTertiaryLightHover,
+      value,
+    );
   });
   test('--semi-color-tertiary-light-active constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2449,6 +3157,14 @@ void main() {
     expect(copied.copyWith().colorTertiaryLightActive, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorTertiaryLightActive, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .colorTertiaryLightActive,
+      value,
+    );
   });
   test('--semi-color-default constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2459,6 +3175,11 @@ void main() {
     expect(copied.copyWith().colorDefault, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorDefault, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorDefault,
+      value,
+    );
   });
   test('--semi-color-default-hover constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2469,6 +3190,11 @@ void main() {
     expect(copied.copyWith().colorDefaultHover, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorDefaultHover, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorDefaultHover,
+      value,
+    );
   });
   test('--semi-color-default-active constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2479,6 +3205,11 @@ void main() {
     expect(copied.copyWith().colorDefaultActive, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorDefaultActive, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorDefaultActive,
+      value,
+    );
   });
   test('--semi-color-info constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2489,6 +3220,8 @@ void main() {
     expect(copied.copyWith().colorInfo, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorInfo, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).colorInfo, value);
   });
   test('--semi-color-info-hover constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2499,6 +3232,11 @@ void main() {
     expect(copied.copyWith().colorInfoHover, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorInfoHover, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorInfoHover,
+      value,
+    );
   });
   test('--semi-color-info-active constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2509,6 +3247,11 @@ void main() {
     expect(copied.copyWith().colorInfoActive, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorInfoActive, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorInfoActive,
+      value,
+    );
   });
   test('--semi-color-info-disabled constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2519,6 +3262,11 @@ void main() {
     expect(copied.copyWith().colorInfoDisabled, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorInfoDisabled, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorInfoDisabled,
+      value,
+    );
   });
   test('--semi-color-info-light-default constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2529,6 +3277,11 @@ void main() {
     expect(copied.copyWith().colorInfoLightDefault, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorInfoLightDefault, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorInfoLightDefault,
+      value,
+    );
   });
   test('--semi-color-info-light-hover constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2539,6 +3292,11 @@ void main() {
     expect(copied.copyWith().colorInfoLightHover, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorInfoLightHover, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorInfoLightHover,
+      value,
+    );
   });
   test('--semi-color-info-light-active constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2549,6 +3307,11 @@ void main() {
     expect(copied.copyWith().colorInfoLightActive, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorInfoLightActive, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorInfoLightActive,
+      value,
+    );
   });
   test('--semi-color-success constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2559,6 +3322,11 @@ void main() {
     expect(copied.copyWith().colorSuccess, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorSuccess, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorSuccess,
+      value,
+    );
   });
   test('--semi-color-success-hover constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2569,6 +3337,11 @@ void main() {
     expect(copied.copyWith().colorSuccessHover, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorSuccessHover, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorSuccessHover,
+      value,
+    );
   });
   test('--semi-color-success-active constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2579,6 +3352,11 @@ void main() {
     expect(copied.copyWith().colorSuccessActive, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorSuccessActive, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorSuccessActive,
+      value,
+    );
   });
   test('--semi-color-success-disabled constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2589,6 +3367,11 @@ void main() {
     expect(copied.copyWith().colorSuccessDisabled, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorSuccessDisabled, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorSuccessDisabled,
+      value,
+    );
   });
   test('--semi-color-success-light-default constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2599,6 +3382,14 @@ void main() {
     expect(copied.copyWith().colorSuccessLightDefault, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorSuccessLightDefault, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .colorSuccessLightDefault,
+      value,
+    );
   });
   test('--semi-color-success-light-hover constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2609,6 +3400,11 @@ void main() {
     expect(copied.copyWith().colorSuccessLightHover, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorSuccessLightHover, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorSuccessLightHover,
+      value,
+    );
   });
   test('--semi-color-success-light-active constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2619,6 +3415,11 @@ void main() {
     expect(copied.copyWith().colorSuccessLightActive, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorSuccessLightActive, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorSuccessLightActive,
+      value,
+    );
   });
   test('--semi-color-danger constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2629,6 +3430,11 @@ void main() {
     expect(copied.copyWith().colorDanger, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorDanger, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorDanger,
+      value,
+    );
   });
   test('--semi-color-danger-hover constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2639,6 +3445,11 @@ void main() {
     expect(copied.copyWith().colorDangerHover, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorDangerHover, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorDangerHover,
+      value,
+    );
   });
   test('--semi-color-danger-active constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2649,6 +3460,11 @@ void main() {
     expect(copied.copyWith().colorDangerActive, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorDangerActive, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorDangerActive,
+      value,
+    );
   });
   test('--semi-color-danger-light-default constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2659,6 +3475,11 @@ void main() {
     expect(copied.copyWith().colorDangerLightDefault, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorDangerLightDefault, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorDangerLightDefault,
+      value,
+    );
   });
   test('--semi-color-danger-light-hover constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2669,6 +3490,11 @@ void main() {
     expect(copied.copyWith().colorDangerLightHover, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorDangerLightHover, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorDangerLightHover,
+      value,
+    );
   });
   test('--semi-color-danger-light-active constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2679,6 +3505,11 @@ void main() {
     expect(copied.copyWith().colorDangerLightActive, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorDangerLightActive, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorDangerLightActive,
+      value,
+    );
   });
   test('--semi-color-warning constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2689,6 +3520,11 @@ void main() {
     expect(copied.copyWith().colorWarning, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorWarning, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorWarning,
+      value,
+    );
   });
   test('--semi-color-warning-hover constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2699,6 +3535,11 @@ void main() {
     expect(copied.copyWith().colorWarningHover, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorWarningHover, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorWarningHover,
+      value,
+    );
   });
   test('--semi-color-warning-active constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2709,6 +3550,11 @@ void main() {
     expect(copied.copyWith().colorWarningActive, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorWarningActive, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorWarningActive,
+      value,
+    );
   });
   test('--semi-color-warning-light-default constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2719,6 +3565,14 @@ void main() {
     expect(copied.copyWith().colorWarningLightDefault, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorWarningLightDefault, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .colorWarningLightDefault,
+      value,
+    );
   });
   test('--semi-color-warning-light-hover constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2729,6 +3583,11 @@ void main() {
     expect(copied.copyWith().colorWarningLightHover, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorWarningLightHover, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorWarningLightHover,
+      value,
+    );
   });
   test('--semi-color-warning-light-active constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2739,6 +3598,11 @@ void main() {
     expect(copied.copyWith().colorWarningLightActive, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorWarningLightActive, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorWarningLightActive,
+      value,
+    );
   });
   test('--semi-color-focus-border constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2749,6 +3613,11 @@ void main() {
     expect(copied.copyWith().colorFocusBorder, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorFocusBorder, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorFocusBorder,
+      value,
+    );
   });
   test('--semi-color-disabled-text constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2759,6 +3628,11 @@ void main() {
     expect(copied.copyWith().colorDisabledText, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorDisabledText, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorDisabledText,
+      value,
+    );
   });
   test('--semi-color-disabled-border constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2769,6 +3643,11 @@ void main() {
     expect(copied.copyWith().colorDisabledBorder, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorDisabledBorder, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorDisabledBorder,
+      value,
+    );
   });
   test('--semi-color-disabled-bg constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2779,6 +3658,11 @@ void main() {
     expect(copied.copyWith().colorDisabledBg, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorDisabledBg, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorDisabledBg,
+      value,
+    );
   });
   test('--semi-color-disabled-fill constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2789,6 +3673,11 @@ void main() {
     expect(copied.copyWith().colorDisabledFill, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorDisabledFill, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorDisabledFill,
+      value,
+    );
   });
   test('--semi-color-shadow constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2799,6 +3688,11 @@ void main() {
     expect(copied.copyWith().colorShadow, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorShadow, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorShadow,
+      value,
+    );
   });
   test('--semi-color-link constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2809,6 +3703,8 @@ void main() {
     expect(copied.copyWith().colorLink, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorLink, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).colorLink, value);
   });
   test('--semi-color-link-hover constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2819,6 +3715,11 @@ void main() {
     expect(copied.copyWith().colorLinkHover, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorLinkHover, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorLinkHover,
+      value,
+    );
   });
   test('--semi-color-link-active constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2829,6 +3730,11 @@ void main() {
     expect(copied.copyWith().colorLinkActive, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorLinkActive, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorLinkActive,
+      value,
+    );
   });
   test('--semi-color-link-visited constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2839,6 +3745,11 @@ void main() {
     expect(copied.copyWith().colorLinkVisited, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorLinkVisited, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorLinkVisited,
+      value,
+    );
   });
   test('--semi-color-border constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2849,6 +3760,11 @@ void main() {
     expect(copied.copyWith().colorBorder, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorBorder, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorBorder,
+      value,
+    );
   });
   test('--semi-color-nav-bg constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2859,6 +3775,8 @@ void main() {
     expect(copied.copyWith().colorNavBg, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorNavBg, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).colorNavBg, value);
   });
   test('--semi-color-overlay-bg constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2869,6 +3787,11 @@ void main() {
     expect(copied.copyWith().colorOverlayBg, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorOverlayBg, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorOverlayBg,
+      value,
+    );
   });
   test('--semi-color-fill-0 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2879,6 +3802,8 @@ void main() {
     expect(copied.copyWith().colorFill0, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorFill0, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).colorFill0, value);
   });
   test('--semi-color-fill-1 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2889,6 +3814,8 @@ void main() {
     expect(copied.copyWith().colorFill1, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorFill1, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).colorFill1, value);
   });
   test('--semi-color-fill-2 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2899,6 +3826,8 @@ void main() {
     expect(copied.copyWith().colorFill2, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorFill2, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).colorFill2, value);
   });
   test('--semi-color-bg-0 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2909,6 +3838,8 @@ void main() {
     expect(copied.copyWith().colorBg0, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorBg0, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).colorBg0, value);
   });
   test('--semi-color-bg-1 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2919,6 +3850,8 @@ void main() {
     expect(copied.copyWith().colorBg1, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorBg1, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).colorBg1, value);
   });
   test('--semi-color-bg-2 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2929,6 +3862,8 @@ void main() {
     expect(copied.copyWith().colorBg2, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorBg2, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).colorBg2, value);
   });
   test('--semi-color-bg-3 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2939,6 +3874,8 @@ void main() {
     expect(copied.copyWith().colorBg3, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorBg3, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).colorBg3, value);
   });
   test('--semi-color-bg-4 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2949,6 +3886,8 @@ void main() {
     expect(copied.copyWith().colorBg4, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorBg4, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).colorBg4, value);
   });
   test('--semi-color-text-0 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2959,6 +3898,8 @@ void main() {
     expect(copied.copyWith().colorText0, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorText0, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).colorText0, value);
   });
   test('--semi-color-text-1 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2969,6 +3910,8 @@ void main() {
     expect(copied.copyWith().colorText1, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorText1, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).colorText1, value);
   });
   test('--semi-color-text-2 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2979,6 +3922,8 @@ void main() {
     expect(copied.copyWith().colorText2, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorText2, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).colorText2, value);
   });
   test('--semi-color-text-3 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2989,6 +3934,8 @@ void main() {
     expect(copied.copyWith().colorText3, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorText3, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).colorText3, value);
   });
   test('--semi-color-highlight-bg constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -2999,6 +3946,11 @@ void main() {
     expect(copied.copyWith().colorHighlightBg, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorHighlightBg, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorHighlightBg,
+      value,
+    );
   });
   test('--semi-color-highlight constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3009,6 +3961,11 @@ void main() {
     expect(copied.copyWith().colorHighlight, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorHighlight, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorHighlight,
+      value,
+    );
   });
   test('--semi-color-data-0 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3019,6 +3976,8 @@ void main() {
     expect(copied.copyWith().colorData0, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorData0, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).colorData0, value);
   });
   test('--semi-color-data-1 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3029,6 +3988,8 @@ void main() {
     expect(copied.copyWith().colorData1, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorData1, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).colorData1, value);
   });
   test('--semi-color-data-2 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3039,6 +4000,8 @@ void main() {
     expect(copied.copyWith().colorData2, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorData2, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).colorData2, value);
   });
   test('--semi-color-data-3 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3049,6 +4012,8 @@ void main() {
     expect(copied.copyWith().colorData3, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorData3, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).colorData3, value);
   });
   test('--semi-color-data-4 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3059,6 +4024,8 @@ void main() {
     expect(copied.copyWith().colorData4, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorData4, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).colorData4, value);
   });
   test('--semi-color-data-5 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3069,6 +4036,8 @@ void main() {
     expect(copied.copyWith().colorData5, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorData5, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).colorData5, value);
   });
   test('--semi-color-data-6 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3079,6 +4048,8 @@ void main() {
     expect(copied.copyWith().colorData6, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorData6, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).colorData6, value);
   });
   test('--semi-color-data-7 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3089,6 +4060,8 @@ void main() {
     expect(copied.copyWith().colorData7, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorData7, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).colorData7, value);
   });
   test('--semi-color-data-8 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3099,6 +4072,8 @@ void main() {
     expect(copied.copyWith().colorData8, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorData8, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).colorData8, value);
   });
   test('--semi-color-data-9 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3109,6 +4084,8 @@ void main() {
     expect(copied.copyWith().colorData9, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorData9, value);
+    expect(copied.copyWith(dark: true).copyWith(dark: false).colorData9, value);
   });
   test('--semi-color-data-10 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3119,6 +4096,11 @@ void main() {
     expect(copied.copyWith().colorData10, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorData10, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorData10,
+      value,
+    );
   });
   test('--semi-color-data-11 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3129,6 +4111,11 @@ void main() {
     expect(copied.copyWith().colorData11, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorData11, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorData11,
+      value,
+    );
   });
   test('--semi-color-data-12 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3139,6 +4126,11 @@ void main() {
     expect(copied.copyWith().colorData12, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorData12, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorData12,
+      value,
+    );
   });
   test('--semi-color-data-13 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3149,6 +4141,11 @@ void main() {
     expect(copied.copyWith().colorData13, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorData13, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorData13,
+      value,
+    );
   });
   test('--semi-color-data-14 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3159,6 +4156,11 @@ void main() {
     expect(copied.copyWith().colorData14, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorData14, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorData14,
+      value,
+    );
   });
   test('--semi-color-data-15 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3169,6 +4171,11 @@ void main() {
     expect(copied.copyWith().colorData15, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorData15, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorData15,
+      value,
+    );
   });
   test('--semi-color-data-16 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3179,6 +4186,11 @@ void main() {
     expect(copied.copyWith().colorData16, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorData16, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorData16,
+      value,
+    );
   });
   test('--semi-color-data-17 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3189,6 +4201,11 @@ void main() {
     expect(copied.copyWith().colorData17, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorData17, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorData17,
+      value,
+    );
   });
   test('--semi-color-data-18 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3199,6 +4216,11 @@ void main() {
     expect(copied.copyWith().colorData18, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorData18, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorData18,
+      value,
+    );
   });
   test('--semi-color-data-19 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3209,6 +4231,11 @@ void main() {
     expect(copied.copyWith().colorData19, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorData19, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorData19,
+      value,
+    );
   });
   test('--semi-color-ai-general constructor and copyWith', () {
     final value = SemiGradient(90, [const Color(0xff123456)], [0]);
@@ -3219,6 +4246,11 @@ void main() {
     expect(copied.copyWith().colorAiGeneral, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorAiGeneral, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorAiGeneral,
+      value,
+    );
   });
   test('--semi-color-ai-general-hover constructor and copyWith', () {
     final value = SemiGradient(90, [const Color(0xff123456)], [0]);
@@ -3229,6 +4261,11 @@ void main() {
     expect(copied.copyWith().colorAiGeneralHover, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorAiGeneralHover, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorAiGeneralHover,
+      value,
+    );
   });
   test('--semi-color-ai-general-active constructor and copyWith', () {
     final value = SemiGradient(90, [const Color(0xff123456)], [0]);
@@ -3239,6 +4276,11 @@ void main() {
     expect(copied.copyWith().colorAiGeneralActive, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorAiGeneralActive, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorAiGeneralActive,
+      value,
+    );
   });
   test('--semi-color-ai-general-disabled constructor and copyWith', () {
     final value = SemiGradient(90, [const Color(0xff123456)], [0]);
@@ -3249,6 +4291,11 @@ void main() {
     expect(copied.copyWith().colorAiGeneralDisabled, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorAiGeneralDisabled, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorAiGeneralDisabled,
+      value,
+    );
   });
   test('--semi-color-ai-purple constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3259,6 +4306,11 @@ void main() {
     expect(copied.copyWith().colorAiPurple, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorAiPurple, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorAiPurple,
+      value,
+    );
   });
   test('--semi-color-ai-purple-hover constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3269,6 +4321,11 @@ void main() {
     expect(copied.copyWith().colorAiPurpleHover, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorAiPurpleHover, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorAiPurpleHover,
+      value,
+    );
   });
   test('--semi-color-ai-purple-active constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3279,6 +4336,11 @@ void main() {
     expect(copied.copyWith().colorAiPurpleActive, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorAiPurpleActive, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorAiPurpleActive,
+      value,
+    );
   });
   test('--semi-color-ai-purple-disabled constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3289,6 +4351,11 @@ void main() {
     expect(copied.copyWith().colorAiPurpleDisabled, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorAiPurpleDisabled, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorAiPurpleDisabled,
+      value,
+    );
   });
   test('--semi-color-ai-background-bottom constructor and copyWith', () {
     final value = SemiGradient(90, [const Color(0xff123456)], [0]);
@@ -3299,6 +4366,11 @@ void main() {
     expect(copied.copyWith().colorAiBackgroundBottom, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorAiBackgroundBottom, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorAiBackgroundBottom,
+      value,
+    );
   });
   test('--semi-color-ai-background-bottom-hover constructor and copyWith', () {
     final value = SemiGradient(90, [const Color(0xff123456)], [0]);
@@ -3311,6 +4383,14 @@ void main() {
     expect(copied.copyWith().colorAiBackgroundBottomHover, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorAiBackgroundBottomHover, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .colorAiBackgroundBottomHover,
+      value,
+    );
   });
   test('--semi-color-ai-background-bottom-active constructor and copyWith', () {
     final value = SemiGradient(90, [const Color(0xff123456)], [0]);
@@ -3323,6 +4403,14 @@ void main() {
     expect(copied.copyWith().colorAiBackgroundBottomActive, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorAiBackgroundBottomActive, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .colorAiBackgroundBottomActive,
+      value,
+    );
   });
   test('--semi-color-ai-background-top constructor and copyWith', () {
     final value = SemiGradient(90, [const Color(0xff123456)], [0]);
@@ -3333,6 +4421,11 @@ void main() {
     expect(copied.copyWith().colorAiBackgroundTop, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorAiBackgroundTop, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).colorAiBackgroundTop,
+      value,
+    );
   });
   test('--semi-color-ai-background-top-hover constructor and copyWith', () {
     final value = SemiGradient(90, [const Color(0xff123456)], [0]);
@@ -3345,6 +4438,14 @@ void main() {
     expect(copied.copyWith().colorAiBackgroundTopHover, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).colorAiBackgroundTopHover, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .colorAiBackgroundTopHover,
+      value,
+    );
   });
   test('--semi-border-radius-extra-small constructor and copyWith', () {
     final value = const SemiLength.pixels(37);
@@ -3355,6 +4456,11 @@ void main() {
     expect(copied.copyWith().borderRadiusExtraSmall, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).borderRadiusExtraSmall, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).borderRadiusExtraSmall,
+      value,
+    );
   });
   test('--semi-border-radius-small constructor and copyWith', () {
     final value = const SemiLength.pixels(37);
@@ -3365,6 +4471,11 @@ void main() {
     expect(copied.copyWith().borderRadiusSmall, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).borderRadiusSmall, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).borderRadiusSmall,
+      value,
+    );
   });
   test('--semi-border-radius-medium constructor and copyWith', () {
     final value = const SemiLength.pixels(37);
@@ -3375,6 +4486,11 @@ void main() {
     expect(copied.copyWith().borderRadiusMedium, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).borderRadiusMedium, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).borderRadiusMedium,
+      value,
+    );
   });
   test('--semi-border-radius-large constructor and copyWith', () {
     final value = const SemiLength.pixels(37);
@@ -3385,6 +4501,11 @@ void main() {
     expect(copied.copyWith().borderRadiusLarge, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).borderRadiusLarge, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).borderRadiusLarge,
+      value,
+    );
   });
   test('--semi-border-radius-circle constructor and copyWith', () {
     final value = const SemiLength.pixels(37);
@@ -3395,6 +4516,11 @@ void main() {
     expect(copied.copyWith().borderRadiusCircle, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).borderRadiusCircle, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).borderRadiusCircle,
+      value,
+    );
   });
   test('--semi-border-radius-full constructor and copyWith', () {
     final value = const SemiLength.pixels(37);
@@ -3405,6 +4531,11 @@ void main() {
     expect(copied.copyWith().borderRadiusFull, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).borderRadiusFull, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).borderRadiusFull,
+      value,
+    );
   });
   test('--semi-shadow-elevated constructor and copyWith', () {
     final value = SemiShadows([
@@ -3417,6 +4548,11 @@ void main() {
     expect(copied.copyWith().shadowElevated, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).shadowElevated, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).shadowElevated,
+      value,
+    );
   });
   test('--semi-transition_duration-slowest constructor and copyWith', () {
     final value = const Duration(milliseconds: 123);
@@ -3429,6 +4565,14 @@ void main() {
     expect(copied.copyWith().transitionDurationSlowest, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transitionDurationSlowest, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .transitionDurationSlowest,
+      value,
+    );
   });
   test('--semi-transition_duration-slower constructor and copyWith', () {
     final value = const Duration(milliseconds: 123);
@@ -3439,6 +4583,14 @@ void main() {
     expect(copied.copyWith().transitionDurationSlower, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transitionDurationSlower, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .transitionDurationSlower,
+      value,
+    );
   });
   test('--semi-transition_duration-slow constructor and copyWith', () {
     final value = const Duration(milliseconds: 123);
@@ -3449,6 +4601,11 @@ void main() {
     expect(copied.copyWith().transitionDurationSlow, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transitionDurationSlow, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).transitionDurationSlow,
+      value,
+    );
   });
   test('--semi-transition_duration-normal constructor and copyWith', () {
     final value = const Duration(milliseconds: 123);
@@ -3459,6 +4616,14 @@ void main() {
     expect(copied.copyWith().transitionDurationNormal, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transitionDurationNormal, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .transitionDurationNormal,
+      value,
+    );
   });
   test('--semi-transition_duration-fast constructor and copyWith', () {
     final value = const Duration(milliseconds: 123);
@@ -3469,6 +4634,11 @@ void main() {
     expect(copied.copyWith().transitionDurationFast, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transitionDurationFast, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).transitionDurationFast,
+      value,
+    );
   });
   test('--semi-transition_duration-faster constructor and copyWith', () {
     final value = const Duration(milliseconds: 123);
@@ -3479,6 +4649,14 @@ void main() {
     expect(copied.copyWith().transitionDurationFaster, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transitionDurationFaster, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .transitionDurationFaster,
+      value,
+    );
   });
   test('--semi-transition_duration-fastest constructor and copyWith', () {
     final value = const Duration(milliseconds: 123);
@@ -3491,6 +4669,14 @@ void main() {
     expect(copied.copyWith().transitionDurationFastest, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transitionDurationFastest, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .transitionDurationFastest,
+      value,
+    );
   });
   test('--semi-transition_duration-none constructor and copyWith', () {
     final value = const Duration(milliseconds: 123);
@@ -3501,6 +4687,11 @@ void main() {
     expect(copied.copyWith().transitionDurationNone, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transitionDurationNone, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).transitionDurationNone,
+      value,
+    );
   });
   test('--semi-transition_function-linear constructor and copyWith', () {
     final value = Curves.bounceIn;
@@ -3511,6 +4702,14 @@ void main() {
     expect(copied.copyWith().transitionFunctionLinear, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transitionFunctionLinear, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .transitionFunctionLinear,
+      value,
+    );
   });
   test('--semi-transition_function-ease constructor and copyWith', () {
     final value = Curves.bounceIn;
@@ -3521,6 +4720,11 @@ void main() {
     expect(copied.copyWith().transitionFunctionEase, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transitionFunctionEase, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).transitionFunctionEase,
+      value,
+    );
   });
   test('--semi-transition_function-easeIn constructor and copyWith', () {
     final value = Curves.bounceIn;
@@ -3531,6 +4735,14 @@ void main() {
     expect(copied.copyWith().transitionFunctionEaseIn, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transitionFunctionEaseIn, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .transitionFunctionEaseIn,
+      value,
+    );
   });
   test('--semi-transition_function-easeOut constructor and copyWith', () {
     final value = Curves.bounceIn;
@@ -3543,6 +4755,14 @@ void main() {
     expect(copied.copyWith().transitionFunctionEaseOut, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transitionFunctionEaseOut, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .transitionFunctionEaseOut,
+      value,
+    );
   });
   test('--semi-transition_function-easeInIOut constructor and copyWith', () {
     final value = Curves.bounceIn;
@@ -3555,6 +4775,14 @@ void main() {
     expect(copied.copyWith().transitionFunctionEaseInIOut, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transitionFunctionEaseInIOut, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .transitionFunctionEaseInIOut,
+      value,
+    );
   });
   test('--semi-transition_delay-none constructor and copyWith', () {
     final value = const Duration(milliseconds: 123);
@@ -3565,6 +4793,11 @@ void main() {
     expect(copied.copyWith().transitionDelayNone, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transitionDelayNone, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).transitionDelayNone,
+      value,
+    );
   });
   test('--semi-transition_delay-slowest constructor and copyWith', () {
     final value = const Duration(milliseconds: 123);
@@ -3575,6 +4808,11 @@ void main() {
     expect(copied.copyWith().transitionDelaySlowest, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transitionDelaySlowest, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).transitionDelaySlowest,
+      value,
+    );
   });
   test('--semi-transition_delay-slower constructor and copyWith', () {
     final value = const Duration(milliseconds: 123);
@@ -3585,6 +4823,11 @@ void main() {
     expect(copied.copyWith().transitionDelaySlower, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transitionDelaySlower, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).transitionDelaySlower,
+      value,
+    );
   });
   test('--semi-transition_delay-slow constructor and copyWith', () {
     final value = const Duration(milliseconds: 123);
@@ -3595,6 +4838,11 @@ void main() {
     expect(copied.copyWith().transitionDelaySlow, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transitionDelaySlow, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).transitionDelaySlow,
+      value,
+    );
   });
   test('--semi-transition_delay-normal constructor and copyWith', () {
     final value = const Duration(milliseconds: 123);
@@ -3605,6 +4853,11 @@ void main() {
     expect(copied.copyWith().transitionDelayNormal, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transitionDelayNormal, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).transitionDelayNormal,
+      value,
+    );
   });
   test('--semi-transition_delay-fast constructor and copyWith', () {
     final value = const Duration(milliseconds: 123);
@@ -3615,6 +4868,11 @@ void main() {
     expect(copied.copyWith().transitionDelayFast, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transitionDelayFast, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).transitionDelayFast,
+      value,
+    );
   });
   test('--semi-transition_delay-faster constructor and copyWith', () {
     final value = const Duration(milliseconds: 123);
@@ -3625,6 +4883,11 @@ void main() {
     expect(copied.copyWith().transitionDelayFaster, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transitionDelayFaster, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).transitionDelayFaster,
+      value,
+    );
   });
   test('--semi-transition_delay-fastest constructor and copyWith', () {
     final value = const Duration(milliseconds: 123);
@@ -3635,6 +4898,11 @@ void main() {
     expect(copied.copyWith().transitionDelayFastest, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transitionDelayFastest, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).transitionDelayFastest,
+      value,
+    );
   });
   test('--semi-transform_scale-none constructor and copyWith', () {
     final value = const SemiTransform.rotate(37);
@@ -3645,6 +4913,11 @@ void main() {
     expect(copied.copyWith().transformScaleNone, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transformScaleNone, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).transformScaleNone,
+      value,
+    );
   });
   test('--semi-transform_scale-small constructor and copyWith', () {
     final value = const SemiTransform.rotate(37);
@@ -3655,6 +4928,11 @@ void main() {
     expect(copied.copyWith().transformScaleSmall, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transformScaleSmall, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).transformScaleSmall,
+      value,
+    );
   });
   test('--semi-transform_scale-medium constructor and copyWith', () {
     final value = const SemiTransform.rotate(37);
@@ -3665,6 +4943,11 @@ void main() {
     expect(copied.copyWith().transformScaleMedium, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transformScaleMedium, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).transformScaleMedium,
+      value,
+    );
   });
   test('--semi-transform_scale-large constructor and copyWith', () {
     final value = const SemiTransform.rotate(37);
@@ -3675,6 +4958,11 @@ void main() {
     expect(copied.copyWith().transformScaleLarge, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transformScaleLarge, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).transformScaleLarge,
+      value,
+    );
   });
   test('--semi-transform-rotate-none constructor and copyWith', () {
     final value = const SemiTransform.rotate(37);
@@ -3685,6 +4973,11 @@ void main() {
     expect(copied.copyWith().transformRotateNone, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transformRotateNone, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).transformRotateNone,
+      value,
+    );
   });
   test('--semi-transform_rotate-clockwise90deg constructor and copyWith', () {
     final value = const SemiTransform.rotate(37);
@@ -3697,6 +4990,14 @@ void main() {
     expect(copied.copyWith().transformRotateClockwise90deg, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transformRotateClockwise90deg, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .transformRotateClockwise90deg,
+      value,
+    );
   });
   test('--semi-transform_rotate-clockwise180deg constructor and copyWith', () {
     final value = const SemiTransform.rotate(37);
@@ -3709,6 +5010,14 @@ void main() {
     expect(copied.copyWith().transformRotateClockwise180deg, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transformRotateClockwise180deg, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .transformRotateClockwise180deg,
+      value,
+    );
   });
   test('--semi-transform_rotate-clockwise270deg constructor and copyWith', () {
     final value = const SemiTransform.rotate(37);
@@ -3721,6 +5030,14 @@ void main() {
     expect(copied.copyWith().transformRotateClockwise270deg, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transformRotateClockwise270deg, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .transformRotateClockwise270deg,
+      value,
+    );
   });
   test('--semi-transform_rotate-clockwise360deg constructor and copyWith', () {
     final value = const SemiTransform.rotate(37);
@@ -3733,6 +5050,14 @@ void main() {
     expect(copied.copyWith().transformRotateClockwise360deg, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).transformRotateClockwise360deg, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .transformRotateClockwise360deg,
+      value,
+    );
   });
   test(
     '--semi-transform_rotate-anticlockwise90deg constructor and copyWith',
@@ -3747,6 +5072,17 @@ void main() {
       expect(copied.copyWith().transformRotateAnticlockwise90deg, value);
       expect(direct, copied);
       expect(direct.hashCode, copied.hashCode);
+      expect(
+        copied.copyWith(dark: true).transformRotateAnticlockwise90deg,
+        value,
+      );
+      expect(
+        copied
+            .copyWith(dark: true)
+            .copyWith(dark: false)
+            .transformRotateAnticlockwise90deg,
+        value,
+      );
     },
   );
   test(
@@ -3762,6 +5098,17 @@ void main() {
       expect(copied.copyWith().transformRotateAnticlockwise180deg, value);
       expect(direct, copied);
       expect(direct.hashCode, copied.hashCode);
+      expect(
+        copied.copyWith(dark: true).transformRotateAnticlockwise180deg,
+        value,
+      );
+      expect(
+        copied
+            .copyWith(dark: true)
+            .copyWith(dark: false)
+            .transformRotateAnticlockwise180deg,
+        value,
+      );
     },
   );
   test(
@@ -3777,6 +5124,17 @@ void main() {
       expect(copied.copyWith().transformRotateAnticlockwise270deg, value);
       expect(direct, copied);
       expect(direct.hashCode, copied.hashCode);
+      expect(
+        copied.copyWith(dark: true).transformRotateAnticlockwise270deg,
+        value,
+      );
+      expect(
+        copied
+            .copyWith(dark: true)
+            .copyWith(dark: false)
+            .transformRotateAnticlockwise270deg,
+        value,
+      );
     },
   );
   test(
@@ -3792,6 +5150,17 @@ void main() {
       expect(copied.copyWith().transformRotateAnticlockwise360deg, value);
       expect(direct, copied);
       expect(direct.hashCode, copied.hashCode);
+      expect(
+        copied.copyWith(dark: true).transformRotateAnticlockwise360deg,
+        value,
+      );
+      expect(
+        copied
+            .copyWith(dark: true)
+            .copyWith(dark: false)
+            .transformRotateAnticlockwise360deg,
+        value,
+      );
     },
   );
   test('--semi-button-colorful-multiple-fill-0 constructor and copyWith', () {
@@ -3805,6 +5174,14 @@ void main() {
     expect(copied.copyWith().buttonColorfulMultipleFill0, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).buttonColorfulMultipleFill0, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .buttonColorfulMultipleFill0,
+      value,
+    );
   });
   test('--semi-button-colorful-multiple-fill-1 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3817,6 +5194,14 @@ void main() {
     expect(copied.copyWith().buttonColorfulMultipleFill1, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).buttonColorfulMultipleFill1, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .buttonColorfulMultipleFill1,
+      value,
+    );
   });
   test('--semi-button-colorful-multiple-fill-2 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3829,6 +5214,14 @@ void main() {
     expect(copied.copyWith().buttonColorfulMultipleFill2, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).buttonColorfulMultipleFill2, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .buttonColorfulMultipleFill2,
+      value,
+    );
   });
   test('--semi-button-colorful-multiple-fill-3 constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3841,6 +5234,14 @@ void main() {
     expect(copied.copyWith().buttonColorfulMultipleFill3, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).buttonColorfulMultipleFill3, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .buttonColorfulMultipleFill3,
+      value,
+    );
   });
   test('--semi-button-colorful-disabled-fill constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3853,6 +5254,14 @@ void main() {
     expect(copied.copyWith().buttonColorfulDisabledFill, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).buttonColorfulDisabledFill, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .buttonColorfulDisabledFill,
+      value,
+    );
   });
   test('--semi-button-colorful-fill-primary constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3865,6 +5274,14 @@ void main() {
     expect(copied.copyWith().buttonColorfulFillPrimary, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).buttonColorfulFillPrimary, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .buttonColorfulFillPrimary,
+      value,
+    );
   });
   test('--semi-button-colorful-fill-secondary constructor and copyWith', () {
     final value = const Color(0xff123456);
@@ -3877,6 +5294,14 @@ void main() {
     expect(copied.copyWith().buttonColorfulFillSecondary, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).buttonColorfulFillSecondary, value);
+    expect(
+      copied
+          .copyWith(dark: true)
+          .copyWith(dark: false)
+          .buttonColorfulFillSecondary,
+      value,
+    );
   });
   test('--semi-tooltip-arrow-offset-x constructor and copyWith', () {
     final value = const SemiLength.pixels(37);
@@ -3889,6 +5314,11 @@ void main() {
     expect(copied.copyWith().tooltipArrowOffsetX, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).tooltipArrowOffsetX, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).tooltipArrowOffsetX,
+      value,
+    );
   });
   test('--semi-tooltip-arrow-offset-y constructor and copyWith', () {
     final value = const SemiLength.pixels(37);
@@ -3901,5 +5331,10 @@ void main() {
     expect(copied.copyWith().tooltipArrowOffsetY, value);
     expect(direct, copied);
     expect(direct.hashCode, copied.hashCode);
+    expect(copied.copyWith(dark: true).tooltipArrowOffsetY, value);
+    expect(
+      copied.copyWith(dark: true).copyWith(dark: false).tooltipArrowOffsetY,
+      value,
+    );
   });
 }
