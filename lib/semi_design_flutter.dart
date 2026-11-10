@@ -1,3 +1,4 @@
+export 'src/components/typography/semi_paragraph.dart';
 export 'src/components/typography/semi_text.dart';
 export 'src/components/typography/semi_title.dart';
 export 'src/theme/semi_theme.dart';

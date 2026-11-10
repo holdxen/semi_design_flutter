@@ -130,7 +130,7 @@ All fields are nullable patches; non-null local fields inherit the remaining app
 | `lineHeightHeading6` | `double` | `global typography mixin` | `lineHeightHeading6` in packages/semi-foundation/typography/typography.scss |
 | `codePadding` | `EdgeInsets` | `2px 4px` | `$spacing-super-tight $spacing-extra-tight` in packages/semi-foundation/typography/typography.scss |
 
-Copy/expand spacing, paragraph metrics and named heading weight variants are resolved configuration; no copy, expand or paragraph behavior is introduced.
+Copy/expand spacing and named heading weight variants remain resolved configuration. SemiParagraph consumes paragraph regular weights, extended line height and titleParagraphMargin; see [SemiParagraph](semi_paragraph.md).
 
 ```dart
 SemiTypographyTheme(
@@ -145,4 +145,4 @@ SemiTypographyTheme(
 
 计数基于上游 `packages/semi-foundation/typography/variables.scss`，先剔除 `//` 和 `/* ... */` 注释，再匹配行首 Sass 声明。44 个 font 声明中，43 个 FontWeight = 第 25–27 行的通用字重 3 个 + 第 29–32 行正文/段落字重 4 个 + 第 34–39 行六级标题默认字重 6 个 + 第 44–77 行五组标题变体 30 个；另 1 个为第 28 行 extended paragraph lineHeight。11 个 spacing 在第 82–92 行，2 个 width 在第 94–95 行，1 个 radius 在第 97 行。以上均为实际声明，不包含注释或测试字符串。
 
-Python 验收从真实上游文件检查 58 项名称、默认值、字段类型和 `///` 来源；可用 `SEMI_DESIGN_SOURCE` 指定上游仓库。Flutter 测试独立断言全部默认值，并验证 global 实时依赖、应用/嵌套局部覆盖、同亮度度量变化通知、code/icon 布局、链接装饰及六级标题 margin/字重。段落相关字段仅为配置与 resolve，不表示公开支持 Paragraph 组件。复制、展开与命名字重变体同样不增加新的交互/API。
+Python 验收从真实上游文件检查 58 项名称、默认值、字段类型和 `///` 来源；可用 `SEMI_DESIGN_SOURCE` 指定上游仓库。Flutter 测试独立断言全部默认值，并验证 global 实时依赖、应用/嵌套局部覆盖、同亮度度量变化通知、code/icon 布局、链接装饰及六级标题 margin/字重。段落相关字段由公开 SemiParagraph 组件消费，覆盖 normal/small/inherit、extended 行高和 margin。复制、展开与命名字重变体同样不增加新的交互/API。

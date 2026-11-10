@@ -58,7 +58,7 @@ SemiTheme(
 // 将 data 替换为 SemiThemeData.dark()，或 copyWith(colors: ...)，即可刷新子树。
 ```
 
-仅支持 String 和末尾省略，不实现富文本 children、copyable、中间截断、suffix、展开、tooltip、Title 或 Paragraph。原有 Title 占位保持不变。测试验证布局与行为，不保证不同平台字体、emoji 字形及浏览器 inline 逐像素一致。
+仅支持 String 和末尾省略，不实现富文本 children、copyable、中间截断、suffix、展开或 tooltip。标题和段落分别使用 SemiTitle 与 [SemiParagraph](semi_paragraph.md)。原有 Title 占位保持不变。测试验证布局与行为，不保证不同平台字体、emoji 字形及浏览器 inline 逐像素一致。
 
 ## 排版主题
 

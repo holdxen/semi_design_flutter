@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 
 import '../../theme/semi_theme.dart';
 import '../../theme/semi_typography_theme.dart';
+import 'paragraph_defaults.dart';
 
 enum SemiTextType {
   primary,
@@ -105,6 +106,12 @@ class _SemiTextState extends State<SemiText> {
     final colors = SemiTypographyTheme.resolve(context);
     final typography = theme.typography;
     final inherited = DefaultTextStyle.of(context).style;
+    final paragraph = SemiParagraphDefaults.of(context);
+    final fontSize = switch (w.size) {
+      SemiTextSize.normal => colors.fontSizeRegular,
+      SemiTextSize.small => colors.fontSizeSmall,
+      SemiTextSize.inherit => inherited.fontSize,
+    };
     Color color = switch (w.type) {
       SemiTextType.primary => colors.defaultTextColor,
       SemiTextType.secondary => colors.secondaryTextColor,
@@ -143,26 +150,27 @@ class _SemiTextState extends State<SemiText> {
           fontFamilyFallback: w.size == SemiTextSize.inherit
               ? inherited.fontFamilyFallback
               : typography.fontFamilyFallback,
-          fontSize: switch (w.size) {
-            SemiTextSize.normal => colors.fontSizeRegular,
-            SemiTextSize.small => colors.fontSizeSmall,
-            SemiTextSize.inherit => inherited.fontSize,
-          },
-          height: switch (w.size) {
-            SemiTextSize.normal =>
-              colors.lineHeightRegular / colors.fontSizeRegular,
-            SemiTextSize.small => colors.lineHeightSmall / colors.fontSizeSmall,
-            SemiTextSize.inherit => inherited.height,
-          },
+          fontSize: fontSize,
+          height: paragraph?.extendedLineHeight != null
+              ? paragraph!.extendedLineHeight! /
+                    (fontSize ?? colors.fontSizeRegular)
+              : switch (w.size) {
+                  SemiTextSize.normal =>
+                    colors.lineHeightRegular / colors.fontSizeRegular,
+                  SemiTextSize.small =>
+                    colors.lineHeightSmall / colors.fontSizeSmall,
+                  SemiTextSize.inherit => inherited.height,
+                },
           fontWeight:
               w.weight ??
               (w.strong
                   ? colors.strongFontWeight
                   : w.link != null
                   ? colors.linkFontWeight
-                  : w.size == SemiTextSize.small
-                  ? colors.smallTextRegularFontWeight
-                  : colors.normalTextRegularFontWeight),
+                  : paragraph?.regularWeight ??
+                        (w.size == SemiTextSize.small
+                            ? colors.smallTextRegularFontWeight
+                            : colors.normalTextRegularFontWeight)),
           decoration: decoration,
           decorationThickness: w.link != null ? colors.linkBorderWidth : null,
           backgroundColor: w.mark && !w.code
