@@ -1,5 +1,5 @@
 import 'package:example/main.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:semi_design_flutter/semi_design_flutter.dart';
 
@@ -15,8 +15,8 @@ void main() {
     expect(Directionality.of(tester.element(heading)), TextDirection.ltr);
     expect(SemiTheme.of(tester.element(heading)).dark, isFalse);
     expect(
-      tester.widget<Scaffold>(find.byType(Scaffold)).backgroundColor,
-      Colors.white,
+      tester.widget<ColoredBox>(find.byType(ColoredBox).first).color,
+      const SemiThemeData.light().colors.colorBg0,
     );
     for (var level = 1; level <= 6; level++) {
       expect(find.text('h$level. Semi Design'), findsOneWidget);
