@@ -9,6 +9,7 @@ export 'src/tokens/radius.dart';
 export 'src/tokens/shadows.dart';
 export 'src/tokens/motion.dart';
 export 'src/tokens/button_tokens.dart';
+export 'src/tokens/typography_tokens.dart';
 export 'src/tokens/tooltip_tokens.dart';
 
 /// A Calculator.

@@ -27,7 +27,7 @@ SizedBox(width: 160, child: SemiText('有限宽度中的长文本……',
 | ellipsis | `maxLines` + `TextOverflow.ellipsis`，父级必须提供有限宽度 |
 | 文本布局 / 无障碍 | textAlign、textDirection、softWrap、maxLines、overflow、semanticsLabel |
 
-所有可空布局参数默认 null，交给 Flutter Text/DefaultTextStyle 处理；maxLines 必须大于零。字号与行高使用逻辑像素和比例，响应系统文字缩放。inherit 只继承字号/行高，常规字重仍为 400；链接或 strong 为 600。DefaultTextStyle 的字体家族等基础样式保留，但默认 decoration 明确清空，避免祖先下划线泄漏；使用 `style.decoration` 可最终替换或清除装饰。`TextStyle(inherit: false, ...)` 遵循 Flutter merge 的整份替换语义，可能同时取消组件默认字号/颜色。
+所有可空布局参数默认 null，交给 Flutter Text/DefaultTextStyle 处理；maxLines 必须大于零。字号与行高使用逻辑像素和比例，响应系统文字缩放。inherit 只继承字号/行高，常规字重仍为 400；链接或 strong 为 600。inherit 保留 DefaultTextStyle 的字体家族与 fallback；normal/small 使用主题字体，但默认 decoration 明确清空，避免祖先下划线泄漏；使用 `style.decoration` 可最终替换或清除装饰。`TextStyle(inherit: false, ...)` 遵循 Flutter merge 的整份替换语义，可能同时取消组件默认字号/颜色。
 
 ## 外观优先级与差异
 
@@ -37,7 +37,7 @@ code 使用整块 1px border、2px 圆角、垂直 2/水平 4 padding。这是�
 
 链接支持点击、Enter、Space 和单一 Semantics link/tap，禁用时无法激活。键盘焦点使用 focusBorder 的可见外框，不通过外部 FocusNode 管理生命周期。无链接的文本不创建交互控件。链接 onTap 只负责通知应用，无 URL 插件，也不提供浏览器原生地址、上下文菜单或 visited 历史行为。
 
-尺寸、间距、字重常量集中在组件内部，来源为上游 `packages/semi-foundation/typography/variables.scss`、`typography.scss` 和 `packages/semi-theme-default/scss/global.scss`/`mixin.scss`；这些是 Sass 派生组件度量，不属于现有 383 个生成 CSS 变量。
+排版字号、行高、字体与字重由 SemiThemeData.typography 提供；其来源为上游 `packages/semi-foundation/typography/variables.scss`、`typography.scss` 和 `packages/semi-theme-default/scss/variables.scss`/`_font.scss`；这些是 Sass 派生组件度量，不属于现有 383 个生成 CSS 变量。
 
 ## 主题定制
 
@@ -59,3 +59,31 @@ SemiTheme(
 ```
 
 仅支持 String 和末尾省略，不实现富文本 children、copyable、中间截断、suffix、展开、tooltip、Title 或 Paragraph。原有 Title 占位保持不变。测试验证布局与行为，不保证不同平台字体、emoji 字形及浏览器 inline 逐像素一致。
+
+## 排版主题
+
+`SemiThemeData.typography` 使用强类型不可变 `SemiTypographyTokens`。默认字体为 Inter，fallback 按上游 `$font-family-regular` 保留顺序；字号 small/regular 为 12/14，heading1..6 为 32/28/24/20/18/16；对应逻辑像素行高为 16/20 与 44/40/32/28/24/22。light/regular/bold 字重为 200/400/600。字号、字重和字体来源是 `packages/semi-theme-default/scss/variables.scss`；行高来源是 `_font.scss` 对应 mixin 的字面量，没有独立 Sass 变量。这些配置不加入 383 个 CSS token 的 manifest。
+
+```dart
+final base = const SemiThemeData.light();
+final customized = base.copyWith(
+  typography: base.typography.copyWith(
+    fontFamily: 'MyAppFont',
+    fontFamilyFallback: ['PingFang SC', 'Arial'],
+    fontSizeRegular: 16,
+    lineHeightRegular: 24,
+    fontSizeHeading2: 30,
+    lineHeightHeading2: 42,
+    fontWeightBold: FontWeight.w700,
+  ),
+);
+SemiTheme(data: customized, child: const SemiTitle('主题标题', heading: 2));
+SemiTheme(data: customized, child: const SemiText('主题正文'));
+final dark = customized.copyWith(dark: true); // 保留全部排版覆盖
+```
+
+字号与行高是独立 token；只改字号仍保留该级别的逻辑像素行高，Flutter `TextStyle.height` 为 `lineHeight / fontSize`。显式 style 最后合并（其 inherit:false 遵循 Flutter 整份替换语义）；显式 weight 优先于 strong/主题默认字重。标题 regular/normal 权重不改变主题字号与行高。SemiText 的 size:inherit 保留 DefaultTextStyle 的字号、行高、字体及 fallback，常规字重仍使用主题 regular。
+
+fallback 在构造和 copyWith 时防御性复制且不可修改。copyWith 的 null 表示保留；要清除字体族，使用 `SemiTypographyTokens(fontFamily: null)` 替换整组。默认组可用 `const SemiTypographyTokens.defaults()`，因此 const light/dark 仍可使用。自定义构造为保证 fallback 防御性复制使用非 const 构造。
+
+这里只提供字体配置，不下载或打包字体、不修改 pubspec，也不自动翻译 `-apple-system`、`BlinkMacSystemFont`、`sans-serif` 等平台别名。宿主负责安装或注册字体，并按目标平台需要覆盖字体名称。局部主题可从 `SemiTheme.of(context).copyWith(typography: ...)` 派生；相同亮暗模式下修改任意排版值同样通知子树。

@@ -27,11 +27,8 @@ class SemiTextLink {
 // packages/semi-foundation/typography/{variables,typography}.scss;
 // packages/semi-theme-default/scss/global.scss (font-size mixins).
 abstract final class _Metrics {
-  static const normal = 14.0, normalHeight = 20 / 14;
-  static const small = 12.0, smallHeight = 16 / 12;
   static const gap = 4.0, border = 1.0, radius = 2.0;
   static const codePadding = EdgeInsets.symmetric(vertical: 2, horizontal: 4);
-  static const strong = FontWeight.w600;
 }
 
 /// String-only typography with optional, accessible callback-based link behavior.
@@ -103,7 +100,9 @@ class _SemiTextState extends State<SemiText> {
   @override
   Widget build(BuildContext context) {
     final w = widget;
-    final c = SemiTheme.of(context).colors;
+    final theme = SemiTheme.of(context);
+    final c = theme.colors;
+    final typography = theme.typography;
     final inherited = DefaultTextStyle.of(context).style;
     Color color = switch (w.type) {
       SemiTextType.primary => c.colorText0,
@@ -133,21 +132,29 @@ class _SemiTextState extends State<SemiText> {
     final resolved = inherited
         .copyWith(
           color: color,
+          fontFamily: w.size == SemiTextSize.inherit
+              ? inherited.fontFamily
+              : typography.fontFamily,
+          fontFamilyFallback: w.size == SemiTextSize.inherit
+              ? inherited.fontFamilyFallback
+              : typography.fontFamilyFallback,
           fontSize: switch (w.size) {
-            SemiTextSize.normal => _Metrics.normal,
-            SemiTextSize.small => _Metrics.small,
+            SemiTextSize.normal => typography.fontSizeRegular,
+            SemiTextSize.small => typography.fontSizeSmall,
             SemiTextSize.inherit => inherited.fontSize,
           },
           height: switch (w.size) {
-            SemiTextSize.normal => _Metrics.normalHeight,
-            SemiTextSize.small => _Metrics.smallHeight,
+            SemiTextSize.normal =>
+              typography.lineHeightRegular / typography.fontSizeRegular,
+            SemiTextSize.small =>
+              typography.lineHeightSmall / typography.fontSizeSmall,
             SemiTextSize.inherit => inherited.height,
           },
           fontWeight:
               w.weight ??
               ((w.strong || w.link != null)
-                  ? _Metrics.strong
-                  : FontWeight.w400),
+                  ? typography.fontWeightBold
+                  : typography.fontWeightRegular),
           decoration: decoration,
           backgroundColor: w.mark && !w.code
               ? c.colorPrimaryLightDefault

@@ -2,7 +2,7 @@
 
 ## 范围与生成
 
-本次交付仅为 token/主题数据层，不实现 Button、Tooltip Widget 或 Sass token。默认主题 374 个唯一 CSS 变量，加 Button CSS 变量 7 个、Tooltip 运行时变量 2 个，共 383 个。官网文档不作为数据源。
+主题数据层，不实现 Button、Tooltip Widget ；另提供 Sass 排版配置。默认主题 374 个唯一 CSS 变量，加 Button CSS 变量 7 个、Tooltip 运行时变量 2 个，共 383 个。官网文档不作为数据源。
 
 ```sh
 python3 -I tool/generate_tokens.py --source /Users/zhouguiqing/Documents/Code/Html/semi-design --output /Users/zhouguiqing/Documents/Code/Flutter/semi_design_flutter
@@ -64,3 +64,31 @@ final pinned = custom.copyWith(
 - Tooltip 两个 offset 是 `arrow.scss` 中 `var(..., 50%)` 的运行时 fallback，不是默认主题声明。布局实际值可直接使用 `SemiLength.pixels` 或 `.percent`；默认 getter 返回 50%，由调用方按对应轴长解析。
 
 模板 Calculator 保留。未修改 example、依赖、发布配置；未作平台渲染或 Widget/golden 兼容性承诺。
+
+## 排版主题
+
+`SemiThemeData.typography` 使用强类型不可变 `SemiTypographyTokens`。默认字体为 Inter，fallback 按上游 `$font-family-regular` 保留顺序；字号 small/regular 为 12/14，heading1..6 为 32/28/24/20/18/16；对应逻辑像素行高为 16/20 与 44/40/32/28/24/22。light/regular/bold 字重为 200/400/600。字号、字重和字体来源是 `packages/semi-theme-default/scss/variables.scss`；行高来源是 `_font.scss` 对应 mixin 的字面量，没有独立 Sass 变量。这些配置不加入 383 个 CSS token 的 manifest。
+
+```dart
+final base = const SemiThemeData.light();
+final customized = base.copyWith(
+  typography: base.typography.copyWith(
+    fontFamily: 'MyAppFont',
+    fontFamilyFallback: ['PingFang SC', 'Arial'],
+    fontSizeRegular: 16,
+    lineHeightRegular: 24,
+    fontSizeHeading2: 30,
+    lineHeightHeading2: 42,
+    fontWeightBold: FontWeight.w700,
+  ),
+);
+SemiTheme(data: customized, child: const SemiTitle('主题标题', heading: 2));
+SemiTheme(data: customized, child: const SemiText('主题正文'));
+final dark = customized.copyWith(dark: true); // 保留全部排版覆盖
+```
+
+字号与行高是独立 token；只改字号仍保留该级别的逻辑像素行高，Flutter `TextStyle.height` 为 `lineHeight / fontSize`。显式 style 最后合并（其 inherit:false 遵循 Flutter 整份替换语义）；显式 weight 优先于 strong/主题默认字重。标题 regular/normal 权重不改变主题字号与行高。SemiText 的 size:inherit 保留 DefaultTextStyle 的字号、行高、字体及 fallback，常规字重仍使用主题 regular。
+
+fallback 在构造和 copyWith 时防御性复制且不可修改。copyWith 的 null 表示保留；要清除字体族，使用 `SemiTypographyTokens(fontFamily: null)` 替换整组。默认组可用 `const SemiTypographyTokens.defaults()`，因此 const light/dark 仍可使用。自定义构造为保证 fallback 防御性复制使用非 const 构造。
+
+这里只提供字体配置，不下载或打包字体、不修改 pubspec，也不自动翻译 `-apple-system`、`BlinkMacSystemFont`、`sans-serif` 等平台别名。宿主负责安装或注册字体，并按目标平台需要覆盖字体名称。局部主题可从 `SemiTheme.of(context).copyWith(typography: ...)` 派生；相同亮暗模式下修改任意排版值同样通知子树。

@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import 'semi_text.dart';
+import '../../theme/semi_theme.dart';
 
 /// String-only Semi Typography.Title, composed with [SemiText].
 ///
@@ -44,20 +45,31 @@ class SemiTitle extends StatelessWidget {
   final TextOverflow? overflow;
   final String? semanticsLabel;
 
-  // typography.scss uses font-size-header-1..6 from
-  // packages/semi-theme-default/scss/{_font,variables}.scss; local Sass metrics.
-  static const _sizes = [32.0, 28.0, 24.0, 20.0, 18.0, 16.0];
-  static const _lineHeights = [44.0, 40.0, 32.0, 28.0, 24.0, 22.0];
-
   @override
   Widget build(BuildContext context) {
-    final size = _sizes[heading - 1];
+    final t = SemiTheme.of(context).typography;
+    final size = [
+      t.fontSizeHeading1,
+      t.fontSizeHeading2,
+      t.fontSizeHeading3,
+      t.fontSizeHeading4,
+      t.fontSizeHeading5,
+      t.fontSizeHeading6,
+    ][heading - 1];
+    final lineHeight = [
+      t.lineHeightHeading1,
+      t.lineHeightHeading2,
+      t.lineHeightHeading3,
+      t.lineHeightHeading4,
+      t.lineHeightHeading5,
+      t.lineHeightHeading6,
+    ][heading - 1];
     return Semantics(
       header: true,
       child: SemiText(
         data,
         type: type,
-        weight: weight ?? FontWeight.w600,
+        weight: weight ?? t.fontWeightBold,
         strong: strong,
         disabled: disabled,
         mark: mark,
@@ -65,7 +77,7 @@ class SemiTitle extends StatelessWidget {
         delete: delete,
         style: TextStyle(
           fontSize: size,
-          height: _lineHeights[heading - 1] / size,
+          height: lineHeight / size,
         ).merge(style),
         link: link,
         textAlign: textAlign,
