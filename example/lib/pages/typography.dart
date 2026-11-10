@@ -6,10 +6,10 @@ class TypographyPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SingleChildScrollView(
+    return SingleChildScrollView(
       padding: EdgeInsets.all(16),
       child: Column(
-        spacing: 100,
+        spacing: 50,
         children: [
           Column(
             spacing: 16,
@@ -24,6 +24,8 @@ class TypographyPage extends StatelessWidget {
             ],
           ),
           Column(
+            spacing: 8,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               //
               SemiText("Text"),
@@ -39,6 +41,13 @@ class TypographyPage extends StatelessWidget {
               SemiText("Underline", underline: true),
               SemiText("Deleted", delete: true),
               SemiText("Strong", strong: true),
+            ],
+          ),
+          Column(
+            children: [
+              //
+              SemiText("链接文本", link: SemiTextLink(onTap: () {})),
+              SemiText("打开网站", link: SemiTextLink(onTap: () {})),
             ],
           ),
         ],
