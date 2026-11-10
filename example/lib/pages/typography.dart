@@ -6,15 +6,19 @@ class TypographyPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        SemiTitle("h1. Semi Design", heading: 1),
-        SemiTitle("h2. Semi Design", heading: 2),
-        SemiTitle("h3. Semi Design", heading: 3),
-        SemiTitle("h4. Semi Design", heading: 4),
-        SemiTitle("h5. Semi Design", heading: 5),
-        SemiTitle("h6. Semi Design", heading: 6),
-      ],
+    return const SingleChildScrollView(
+      padding: EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SemiTitle("h1. Semi Design", heading: 1),
+          SemiTitle("h2. Semi Design", heading: 2),
+          SemiTitle("h3. Semi Design", heading: 3),
+          SemiTitle("h4. Semi Design", heading: 4),
+          SemiTitle("h5. Semi Design", heading: 5),
+          SemiTitle("h6. Semi Design", heading: 6),
+        ],
+      ),
     );
   }
 }

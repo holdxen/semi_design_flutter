@@ -1,30 +1,44 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+import 'package:example/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:example/main.dart';
+import 'package:semi_design_flutter/semi_design_flutter.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  testWidgets('Typography example starts with readable headings', (
+    tester,
+  ) async {
     await tester.pumpWidget(const MyApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(tester.takeException(), isNull);
+    expect(find.byType(SemiTitle), findsNWidgets(6));
+    final heading = find.text('h1. Semi Design');
+    expect(Directionality.of(tester.element(heading)), TextDirection.ltr);
+    expect(SemiTheme.of(tester.element(heading)).dark, isFalse);
+    expect(
+      tester.widget<Scaffold>(find.byType(Scaffold)).backgroundColor,
+      Colors.white,
+    );
+    for (var level = 1; level <= 6; level++) {
+      expect(find.text('h$level. Semi Design'), findsOneWidget);
+    }
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  testWidgets('Typography example fits a narrow screen and scrolls', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(320, 240);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    await tester.pumpWidget(const MyApp());
+    expect(tester.takeException(), isNull);
+
+    final lastHeading = find.text('h6. Semi Design');
+    await tester.ensureVisible(lastHeading);
+    await tester.pumpAndSettle();
+
+    expect(lastHeading.hitTestable(), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }
