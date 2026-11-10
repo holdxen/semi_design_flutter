@@ -11,6 +11,8 @@ enum SemiProgressDirection { horizontal, vertical }
 
 enum SemiProgressSize { normal, small, large }
 
+enum SemiProgressCircleInfoLayout { overflow, scaleDown }
+
 enum SemiProgressStrokeLinecap { round, square }
 
 @immutable
@@ -75,6 +77,7 @@ class SemiProgress extends StatefulWidget {
     this.size = SemiProgressSize.normal,
     this.percent = 0,
     this.showInfo = false,
+    this.circleInfoLayout = SemiProgressCircleInfoLayout.overflow,
     this.format,
     this.motion = true,
     this.indeterminate = false,
@@ -92,6 +95,10 @@ class SemiProgress extends StatefulWidget {
   final SemiProgressType type;
   final SemiProgressDirection direction;
   final SemiProgressSize size;
+
+  /// Circle info only: preserve natural size or shrink to the stroke inset.
+  /// Does not change circle dimensions or the formatter's line breaks.
+  final SemiProgressCircleInfoLayout circleInfoLayout;
   final double percent;
   final bool showInfo, motion, indeterminate, strokeGradient;
   final Widget Function(double)? format;
@@ -290,10 +297,14 @@ class _SemiProgressState extends State<SemiProgress>
           info = ExcludeSemantics(
             child: DefaultTextStyle.merge(
               style: style.merge(widget.textStyle),
+              textAlign: circle ? TextAlign.center : null,
               child:
                   widget.format?.call(numeric) ??
                   Text(
                     '${numeric == numeric.roundToDouble() ? numeric.toInt() : numeric}%',
+                    // Only the built-in percentage is inherently single-line.
+                    maxLines: circle ? 1 : null,
+                    softWrap: circle ? false : null,
                   ),
             ),
           );
@@ -326,10 +337,42 @@ class _SemiProgressState extends State<SemiProgress>
             width: width,
             height: width,
             child: Stack(
+              clipBehavior: Clip.none,
               alignment: Alignment.center,
               children: [
                 Positioned.fill(child: paint(width, width)),
-                ?info,
+                if (info != null)
+                  Positioned.fill(
+                    // Info stays centered; overflow preserves its natural size.
+                    // Painting may overflow; hit testing still requires the
+                    // parent's bounds.
+                    child:
+                        widget.circleInfoLayout ==
+                            SemiProgressCircleInfoLayout.scaleDown
+                        ? LayoutBuilder(
+                            builder: (context, constraints) {
+                              final inset = math.min(
+                                widget.strokeWidth,
+                                constraints.biggest.shortestSide / 2,
+                              );
+                              return Padding(
+                                padding: EdgeInsets.all(inset),
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.center,
+                                  child: info,
+                                ),
+                              );
+                            },
+                          )
+                        : OverflowBox(
+                            minWidth: 0,
+                            maxWidth: double.infinity,
+                            minHeight: 0,
+                            maxHeight: double.infinity,
+                            child: info,
+                          ),
+                  ),
               ],
             ),
           );

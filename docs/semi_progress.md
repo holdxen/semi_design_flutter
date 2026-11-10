@@ -11,6 +11,7 @@ Material-free line and circle progress, exported from `package:semi_design_flutt
 | `size` | `SemiProgressSize.normal` | `normal`, `small`, `large` |
 | `percent` | `0` | Finite double; geometry and displayed info clamp to 0–100, colors use raw percent |
 | `showInfo` | `false` | Circle small and indeterminate always hide info |
+| `circleInfoLayout` | `SemiProgressCircleInfoLayout.overflow` | Circle info only: `overflow` preserves font size; `scaleDown` shrinks to fit the stroke inset without enlarging |
 | `format` | null | `Widget Function(double)`; receives displayed clamped number |
 | `motion` | `true` | Only numeric text animation, 300 ms linear, starts at previous prop |
 | `indeterminate` | `false` | Hides information and semantics value |
@@ -25,6 +26,30 @@ Material-free line and circle progress, exported from `package:semi_design_flutt
 | `semanticsLabel`, `semanticsValue` | null | Accessible label/value override; default visual info excluded to avoid duplicate speech |
 
 Horizontal line requires finite width or explicit width. Vertical line requires finite height or explicit height. No screen-size guessing occurs. All numeric sizes must be finite and nonnegative. NaN/infinite percent or threshold values are runtime errors, including release builds. Const widget/theme constructors remain available; widget input validation occurs during mounting/updating and theme validation during resolution.
+
+Circle info overlays the ring, centered on both axes. The default `SemiProgressCircleInfoLayout.overflow` preserves its inherited or explicit font size and system text scale without a stroke inset. `SemiProgressCircleInfoLayout.scaleDown` uses a centered `FittedBox` with `BoxFit.scaleDown`, insetting each edge by `strokeWidth` (capped at half the actual shortest side so constraints remain nonnegative). It shrinks only when needed and never enlarges info. Both options leave the circle's layout size unchanged (normal 72, large 24), and line progress ignores the setting.
+
+Only the built-in percentage is forced onto one complete line. Custom formatters retain explicit line breaks; widgets requiring bounded dimensions should provide their own finite constraints. With `overflow`, info can paint outside the ring; ancestor clipping still applies. Flutter hit testing remains limited by ancestor layout bounds, so painted overflow outside those bounds is not guaranteed tappable. Custom widget interactions remain available within the hit bounds in both layouts.
+
+```dart
+// Preserve the original text size (also the default).
+const SemiProgress(
+  type: SemiProgressType.circle,
+  size: SemiProgressSize.large,
+  percent: 100,
+  showInfo: true,
+  circleInfoLayout: SemiProgressCircleInfoLayout.overflow,
+);
+
+// Fit the complete info inside the stroke inset, without enlarging it.
+const SemiProgress(
+  type: SemiProgressType.circle,
+  size: SemiProgressSize.large,
+  percent: 100,
+  showInfo: true,
+  circleInfoLayout: SemiProgressCircleInfoLayout.scaleDown,
+);
+```
 
 ## Nineteen Sass mappings
 

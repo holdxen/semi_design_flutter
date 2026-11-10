@@ -1,4 +1,5 @@
 import 'package:example/main.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:semi_design_flutter/semi_design_flutter.dart';
@@ -22,6 +23,43 @@ Future<void> tap(WidgetTester tester, String key) async {
 }
 
 void main() {
+  testWidgets('actual large circle keeps complete centered percentage', (
+    tester,
+  ) async {
+    await start(tester);
+    final large = find.byWidgetPredicate(
+      (widget) =>
+          widget is SemiProgress &&
+          widget.type == SemiProgressType.circle &&
+          widget.size == SemiProgressSize.large,
+    );
+    await tester.ensureVisible(large);
+    await tester.pump();
+    final text = find.descendant(of: large, matching: find.text('60%'));
+    final paragraph = tester.renderObject<RenderParagraph>(text);
+    expect(
+      paragraph.getBoxesForSelection(
+        const TextSelection(baseOffset: 0, extentOffset: 3),
+      ),
+      hasLength(1),
+    );
+    final circle = tester.getRect(
+      find.descendant(of: large, matching: find.byType(CustomPaint)),
+    );
+    expect(circle.size, const Size(24, 24));
+    final bounds = MatrixUtils.transformRect(
+      paragraph.getTransformTo(null),
+      paragraph.paintBounds,
+    );
+    expect(bounds.center.dx, closeTo(circle.center.dx, .01));
+    expect(bounds.center.dy, closeTo(circle.center.dy, .01));
+    expect(bounds.width, greaterThan(24));
+    expect(paragraph.text.style!.fontSize, 14);
+    expect(paragraph.getTransformTo(null).entry(0, 0), 1);
+    expect(paragraph.getTransformTo(null).entry(1, 1), 1);
+    expect(paragraph.didExceedMaxLines, isFalse);
+    expect(tester.takeException(), isNull);
+  });
   testWidgets('sections fit a narrow scaled screen and scroll to the bottom', (
     tester,
   ) async {
