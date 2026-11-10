@@ -5,45 +5,61 @@ import 'package:flutter/painting.dart';
 import 'token_types.dart';
 
 class SemiShadowTokens {
-  const SemiShadowTokens({required bool dark}) : _dark = dark;
+  const SemiShadowTokens({bool dark = false, SemiShadows? shadowElevated})
+    : _dark = dark,
+      _shadowElevated = shadowElevated;
   final bool _dark;
+  final SemiShadows? _shadowElevated;
 
   /// `--semi-shadow-elevated` — `packages/semi-theme-default/scss/global.scss` (line 96).
-  SemiShadows get shadowElevated => _dark
-      ? SemiShadows([
-          SemiShadowLayer(
-            true,
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-            Color.fromRGBO(255, 255, 255, 0.1),
-          ),
-          SemiShadowLayer(
-            false,
-            0.0,
-            4.0,
-            14.0,
-            0.0,
-            Color.fromRGBO(0, 0, 0, 0.25),
-          ),
-        ])
-      : SemiShadows([
-          SemiShadowLayer(
-            false,
-            0.0,
-            0.0,
-            1.0,
-            0.0,
-            Color.fromRGBO(0, 0, 0, 0.3),
-          ),
-          SemiShadowLayer(
-            false,
-            0.0,
-            4.0,
-            14.0,
-            0.0,
-            Color.fromRGBO(0, 0, 0, 0.1),
-          ),
-        ]);
+  SemiShadows get shadowElevated =>
+      _shadowElevated ??
+      (_dark
+          ? SemiShadows([
+              SemiShadowLayer(
+                true,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                Color.fromRGBO(255, 255, 255, 0.1),
+              ),
+              SemiShadowLayer(
+                false,
+                0.0,
+                4.0,
+                14.0,
+                0.0,
+                Color.fromRGBO(0, 0, 0, 0.25),
+              ),
+            ])
+          : SemiShadows([
+              SemiShadowLayer(
+                false,
+                0.0,
+                0.0,
+                1.0,
+                0.0,
+                Color.fromRGBO(0, 0, 0, 0.3),
+              ),
+              SemiShadowLayer(
+                false,
+                0.0,
+                4.0,
+                14.0,
+                0.0,
+                Color.fromRGBO(0, 0, 0, 0.1),
+              ),
+            ]));
+  SemiShadowTokens copyWith({bool? dark, SemiShadows? shadowElevated}) =>
+      SemiShadowTokens(
+        dark: dark ?? _dark,
+        shadowElevated: shadowElevated ?? _shadowElevated,
+      );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SemiShadowTokens && shadowElevated == other.shadowElevated;
+  @override
+  int get hashCode => Object.hashAll([shadowElevated]);
 }

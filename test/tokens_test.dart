@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/animation.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:semi_design_flutter/semi_design_flutter.dart';
@@ -8,6 +9,84 @@ import 'package:semi_design_flutter/semi_design_flutter.dart';
 void main() {
   const light = SemiThemeData.light();
   const dark = SemiThemeData.dark();
+  test('dependency rebinding and explicit precedence across copies', () {
+    final changed = light.copyWith(
+      palette: light.palette.copyWith(blue5: const SemiChannels(1, 2, 3, 1)),
+    );
+    expect(changed.colors.colorPrimary, const Color(0xff010203));
+    expect(changed.colors.colorPrimaryHover, light.colors.colorPrimaryHover);
+    final semantic = changed.copyWith(
+      colors: changed.colors.copyWith(colorText0: const Color(0xff123456)),
+    );
+    expect(
+      semantic.button.buttonColorfulFillSecondary,
+      const Color(0xff123456),
+    );
+    final component = semantic.copyWith(
+      button: semantic.button.copyWith(
+        buttonColorfulFillSecondary: const Color(0xffabcdef),
+      ),
+    );
+    final next = component.copyWith(
+      palette: component.palette.copyWith(
+        blue5: const SemiChannels(4, 5, 6, 1),
+      ),
+    );
+    expect(next.colors.colorPrimary, const Color(0xff040506));
+    expect(next.colors.colorText0, const Color(0xff123456));
+    expect(next.button.buttonColorfulFillSecondary, const Color(0xffabcdef));
+    expect(next.palette.grey9, light.palette.grey9);
+    expect(
+      next.copyWith(dark: true).colors.colorPrimary,
+      const Color(0xff040506),
+    );
+    expect(light, const SemiThemeData.light());
+    expect(light.hashCode, const SemiThemeData.light().hashCode);
+  });
+  test('models have structural equality and defensive collections', () {
+    final colors = [const Color(0xff123456)];
+    final stops = [0.0];
+    final gradient = SemiGradient(90, colors, stops);
+    colors.clear();
+    stops.clear();
+    expect(gradient, SemiGradient(90, [const Color(0xff123456)], [0]));
+    expect(
+      gradient.hashCode,
+      SemiGradient(90, [const Color(0xff123456)], [0]).hashCode,
+    );
+    expect(() => gradient.colors.clear(), throwsUnsupportedError);
+    final layers = [
+      const SemiShadowLayer(false, 1, 2, 3, 4, Color(0xff123456)),
+    ];
+    final shadows = SemiShadows(layers);
+    layers.clear();
+    expect(shadows.layers.length, 1);
+    expect(() => shadows.layers.clear(), throwsUnsupportedError);
+    expect(
+      shadows,
+      SemiShadows([
+        const SemiShadowLayer(false, 1, 2, 3, 4, Color(0xff123456)),
+      ]),
+    );
+  });
+  test('equal cubic overrides and group reset', () {
+    final a = light.copyWith(
+      motion: light.motion.copyWith(
+        transitionFunctionEase: Cubic(.1, .2, .3, .4),
+      ),
+    );
+    final b = light.copyWith(
+      motion: light.motion.copyWith(
+        transitionFunctionEase: Cubic(.1, .2, .3, .4),
+      ),
+    );
+    expect(a, b);
+    expect(a.hashCode, b.hashCode);
+    final pinned = light.copyWith(
+      colors: light.colors.copyWith(colorPrimary: const Color(0xff123456)),
+    );
+    expect(pinned.copyWith(colors: const SemiColors()), light);
+  });
   test('383 unique names with complete source and public field mapping', () {
     final manifest = jsonDecode(
       File('tool/token_manifest.json').readAsStringSync(),

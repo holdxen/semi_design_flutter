@@ -3,715 +3,1450 @@
 import 'package:flutter/painting.dart';
 
 import 'token_types.dart';
+import 'semi_palette.dart';
 
 class SemiColors {
-  const SemiColors({required bool dark}) : _dark = dark;
+  const SemiColors({
+    bool dark = false,
+    Color? colorWhite,
+    Color? colorBlack,
+    Color? colorPrimary,
+    Color? colorPrimaryHover,
+    Color? colorPrimaryActive,
+    Color? colorPrimaryDisabled,
+    Color? colorPrimaryLightDefault,
+    Color? colorPrimaryLightHover,
+    Color? colorPrimaryLightActive,
+    Color? colorSecondary,
+    Color? colorSecondaryHover,
+    Color? colorSecondaryActive,
+    Color? colorSecondaryDisabled,
+    Color? colorSecondaryLightDefault,
+    Color? colorSecondaryLightHover,
+    Color? colorSecondaryLightActive,
+    Color? colorTertiary,
+    Color? colorTertiaryHover,
+    Color? colorTertiaryActive,
+    Color? colorTertiaryLightDefault,
+    Color? colorTertiaryLightHover,
+    Color? colorTertiaryLightActive,
+    Color? colorDefault,
+    Color? colorDefaultHover,
+    Color? colorDefaultActive,
+    Color? colorInfo,
+    Color? colorInfoHover,
+    Color? colorInfoActive,
+    Color? colorInfoDisabled,
+    Color? colorInfoLightDefault,
+    Color? colorInfoLightHover,
+    Color? colorInfoLightActive,
+    Color? colorSuccess,
+    Color? colorSuccessHover,
+    Color? colorSuccessActive,
+    Color? colorSuccessDisabled,
+    Color? colorSuccessLightDefault,
+    Color? colorSuccessLightHover,
+    Color? colorSuccessLightActive,
+    Color? colorDanger,
+    Color? colorDangerHover,
+    Color? colorDangerActive,
+    Color? colorDangerLightDefault,
+    Color? colorDangerLightHover,
+    Color? colorDangerLightActive,
+    Color? colorWarning,
+    Color? colorWarningHover,
+    Color? colorWarningActive,
+    Color? colorWarningLightDefault,
+    Color? colorWarningLightHover,
+    Color? colorWarningLightActive,
+    Color? colorFocusBorder,
+    Color? colorDisabledText,
+    Color? colorDisabledBorder,
+    Color? colorDisabledBg,
+    Color? colorDisabledFill,
+    Color? colorShadow,
+    Color? colorLink,
+    Color? colorLinkHover,
+    Color? colorLinkActive,
+    Color? colorLinkVisited,
+    Color? colorBorder,
+    Color? colorNavBg,
+    Color? colorOverlayBg,
+    Color? colorFill0,
+    Color? colorFill1,
+    Color? colorFill2,
+    Color? colorBg0,
+    Color? colorBg1,
+    Color? colorBg2,
+    Color? colorBg3,
+    Color? colorBg4,
+    Color? colorText0,
+    Color? colorText1,
+    Color? colorText2,
+    Color? colorText3,
+    Color? colorHighlightBg,
+    Color? colorHighlight,
+    Color? colorData0,
+    Color? colorData1,
+    Color? colorData2,
+    Color? colorData3,
+    Color? colorData4,
+    Color? colorData5,
+    Color? colorData6,
+    Color? colorData7,
+    Color? colorData8,
+    Color? colorData9,
+    Color? colorData10,
+    Color? colorData11,
+    Color? colorData12,
+    Color? colorData13,
+    Color? colorData14,
+    Color? colorData15,
+    Color? colorData16,
+    Color? colorData17,
+    Color? colorData18,
+    Color? colorData19,
+    SemiGradient? colorAiGeneral,
+    SemiGradient? colorAiGeneralHover,
+    SemiGradient? colorAiGeneralActive,
+    SemiGradient? colorAiGeneralDisabled,
+    Color? colorAiPurple,
+    Color? colorAiPurpleHover,
+    Color? colorAiPurpleActive,
+    Color? colorAiPurpleDisabled,
+    SemiGradient? colorAiBackgroundBottom,
+    SemiGradient? colorAiBackgroundBottomHover,
+    SemiGradient? colorAiBackgroundBottomActive,
+    SemiGradient? colorAiBackgroundTop,
+    SemiGradient? colorAiBackgroundTopHover,
+    SemiPalette palette = const SemiPalette(),
+  }) : _dark = dark,
+       _colorWhite = colorWhite,
+       _colorBlack = colorBlack,
+       _colorPrimary = colorPrimary,
+       _colorPrimaryHover = colorPrimaryHover,
+       _colorPrimaryActive = colorPrimaryActive,
+       _colorPrimaryDisabled = colorPrimaryDisabled,
+       _colorPrimaryLightDefault = colorPrimaryLightDefault,
+       _colorPrimaryLightHover = colorPrimaryLightHover,
+       _colorPrimaryLightActive = colorPrimaryLightActive,
+       _colorSecondary = colorSecondary,
+       _colorSecondaryHover = colorSecondaryHover,
+       _colorSecondaryActive = colorSecondaryActive,
+       _colorSecondaryDisabled = colorSecondaryDisabled,
+       _colorSecondaryLightDefault = colorSecondaryLightDefault,
+       _colorSecondaryLightHover = colorSecondaryLightHover,
+       _colorSecondaryLightActive = colorSecondaryLightActive,
+       _colorTertiary = colorTertiary,
+       _colorTertiaryHover = colorTertiaryHover,
+       _colorTertiaryActive = colorTertiaryActive,
+       _colorTertiaryLightDefault = colorTertiaryLightDefault,
+       _colorTertiaryLightHover = colorTertiaryLightHover,
+       _colorTertiaryLightActive = colorTertiaryLightActive,
+       _colorDefault = colorDefault,
+       _colorDefaultHover = colorDefaultHover,
+       _colorDefaultActive = colorDefaultActive,
+       _colorInfo = colorInfo,
+       _colorInfoHover = colorInfoHover,
+       _colorInfoActive = colorInfoActive,
+       _colorInfoDisabled = colorInfoDisabled,
+       _colorInfoLightDefault = colorInfoLightDefault,
+       _colorInfoLightHover = colorInfoLightHover,
+       _colorInfoLightActive = colorInfoLightActive,
+       _colorSuccess = colorSuccess,
+       _colorSuccessHover = colorSuccessHover,
+       _colorSuccessActive = colorSuccessActive,
+       _colorSuccessDisabled = colorSuccessDisabled,
+       _colorSuccessLightDefault = colorSuccessLightDefault,
+       _colorSuccessLightHover = colorSuccessLightHover,
+       _colorSuccessLightActive = colorSuccessLightActive,
+       _colorDanger = colorDanger,
+       _colorDangerHover = colorDangerHover,
+       _colorDangerActive = colorDangerActive,
+       _colorDangerLightDefault = colorDangerLightDefault,
+       _colorDangerLightHover = colorDangerLightHover,
+       _colorDangerLightActive = colorDangerLightActive,
+       _colorWarning = colorWarning,
+       _colorWarningHover = colorWarningHover,
+       _colorWarningActive = colorWarningActive,
+       _colorWarningLightDefault = colorWarningLightDefault,
+       _colorWarningLightHover = colorWarningLightHover,
+       _colorWarningLightActive = colorWarningLightActive,
+       _colorFocusBorder = colorFocusBorder,
+       _colorDisabledText = colorDisabledText,
+       _colorDisabledBorder = colorDisabledBorder,
+       _colorDisabledBg = colorDisabledBg,
+       _colorDisabledFill = colorDisabledFill,
+       _colorShadow = colorShadow,
+       _colorLink = colorLink,
+       _colorLinkHover = colorLinkHover,
+       _colorLinkActive = colorLinkActive,
+       _colorLinkVisited = colorLinkVisited,
+       _colorBorder = colorBorder,
+       _colorNavBg = colorNavBg,
+       _colorOverlayBg = colorOverlayBg,
+       _colorFill0 = colorFill0,
+       _colorFill1 = colorFill1,
+       _colorFill2 = colorFill2,
+       _colorBg0 = colorBg0,
+       _colorBg1 = colorBg1,
+       _colorBg2 = colorBg2,
+       _colorBg3 = colorBg3,
+       _colorBg4 = colorBg4,
+       _colorText0 = colorText0,
+       _colorText1 = colorText1,
+       _colorText2 = colorText2,
+       _colorText3 = colorText3,
+       _colorHighlightBg = colorHighlightBg,
+       _colorHighlight = colorHighlight,
+       _colorData0 = colorData0,
+       _colorData1 = colorData1,
+       _colorData2 = colorData2,
+       _colorData3 = colorData3,
+       _colorData4 = colorData4,
+       _colorData5 = colorData5,
+       _colorData6 = colorData6,
+       _colorData7 = colorData7,
+       _colorData8 = colorData8,
+       _colorData9 = colorData9,
+       _colorData10 = colorData10,
+       _colorData11 = colorData11,
+       _colorData12 = colorData12,
+       _colorData13 = colorData13,
+       _colorData14 = colorData14,
+       _colorData15 = colorData15,
+       _colorData16 = colorData16,
+       _colorData17 = colorData17,
+       _colorData18 = colorData18,
+       _colorData19 = colorData19,
+       _colorAiGeneral = colorAiGeneral,
+       _colorAiGeneralHover = colorAiGeneralHover,
+       _colorAiGeneralActive = colorAiGeneralActive,
+       _colorAiGeneralDisabled = colorAiGeneralDisabled,
+       _colorAiPurple = colorAiPurple,
+       _colorAiPurpleHover = colorAiPurpleHover,
+       _colorAiPurpleActive = colorAiPurpleActive,
+       _colorAiPurpleDisabled = colorAiPurpleDisabled,
+       _colorAiBackgroundBottom = colorAiBackgroundBottom,
+       _colorAiBackgroundBottomHover = colorAiBackgroundBottomHover,
+       _colorAiBackgroundBottomActive = colorAiBackgroundBottomActive,
+       _colorAiBackgroundTop = colorAiBackgroundTop,
+       _colorAiBackgroundTopHover = colorAiBackgroundTopHover,
+       palette = palette;
   final bool _dark;
+  final SemiPalette palette;
+  final Color? _colorWhite;
 
   /// `--semi-color-white` — `packages/semi-theme-default/scss/global.scss` (line 6).
-  Color get colorWhite => _dark
-      ? Color.fromRGBO(228, 231, 245, 1.0)
-      : Color.fromRGBO(255, 255, 255, 1.0);
+  Color get colorWhite =>
+      _colorWhite ??
+      (_dark ? Color.fromRGBO(228, 231, 245, 1.0) : palette.white.toColor(1.0));
+  final Color? _colorBlack;
 
   /// `--semi-color-black` — `packages/semi-theme-default/scss/global.scss` (line 7).
-  Color get colorBlack => Color.fromRGBO(0, 0, 0, 1.0);
+  Color get colorBlack => _colorBlack ?? (palette.black.toColor(1.0));
+  final Color? _colorPrimary;
 
   /// `--semi-color-primary` — `packages/semi-theme-default/scss/global.scss` (line 9).
-  Color get colorPrimary => _dark
-      ? Color.fromRGBO(84, 169, 255, 1.0)
-      : Color.fromRGBO(0, 100, 250, 1.0);
+  Color get colorPrimary => _colorPrimary ?? (palette.blue5.toColor(1.0));
+  final Color? _colorPrimaryHover;
 
   /// `--semi-color-primary-hover` — `packages/semi-theme-default/scss/global.scss` (line 10).
-  Color get colorPrimaryHover => _dark
-      ? Color.fromRGBO(127, 193, 255, 1.0)
-      : Color.fromRGBO(0, 98, 214, 1.0);
+  Color get colorPrimaryHover =>
+      _colorPrimaryHover ?? (palette.blue6.toColor(1.0));
+  final Color? _colorPrimaryActive;
 
   /// `--semi-color-primary-active` — `packages/semi-theme-default/scss/global.scss` (line 11).
-  Color get colorPrimaryActive => _dark
-      ? Color.fromRGBO(169, 215, 255, 1.0)
-      : Color.fromRGBO(0, 79, 179, 1.0);
+  Color get colorPrimaryActive =>
+      _colorPrimaryActive ?? (palette.blue7.toColor(1.0));
+  final Color? _colorPrimaryDisabled;
 
   /// `--semi-color-primary-disabled` — `packages/semi-theme-default/scss/global.scss` (line 12).
-  Color get colorPrimaryDisabled => _dark
-      ? Color.fromRGBO(19, 92, 184, 1.0)
-      : Color.fromRGBO(152, 205, 253, 1.0);
+  Color get colorPrimaryDisabled =>
+      _colorPrimaryDisabled ?? (palette.blue2.toColor(1.0));
+  final Color? _colorPrimaryLightDefault;
 
   /// `--semi-color-primary-light-default` — `packages/semi-theme-default/scss/global.scss` (line 13).
-  Color get colorPrimaryLightDefault => _dark
-      ? Color.fromRGBO(84, 169, 255, 0.2)
-      : Color.fromRGBO(234, 245, 255, 1.0);
+  Color get colorPrimaryLightDefault =>
+      _colorPrimaryLightDefault ??
+      (_dark ? palette.blue5.toColor(0.2) : palette.blue0.toColor(1.0));
+  final Color? _colorPrimaryLightHover;
 
   /// `--semi-color-primary-light-hover` — `packages/semi-theme-default/scss/global.scss` (line 14).
-  Color get colorPrimaryLightHover => _dark
-      ? Color.fromRGBO(84, 169, 255, 0.3)
-      : Color.fromRGBO(203, 231, 254, 1.0);
+  Color get colorPrimaryLightHover =>
+      _colorPrimaryLightHover ??
+      (_dark ? palette.blue5.toColor(0.3) : palette.blue1.toColor(1.0));
+  final Color? _colorPrimaryLightActive;
 
   /// `--semi-color-primary-light-active` — `packages/semi-theme-default/scss/global.scss` (line 15).
-  Color get colorPrimaryLightActive => _dark
-      ? Color.fromRGBO(84, 169, 255, 0.4)
-      : Color.fromRGBO(152, 205, 253, 1.0);
+  Color get colorPrimaryLightActive =>
+      _colorPrimaryLightActive ??
+      (_dark ? palette.blue5.toColor(0.4) : palette.blue2.toColor(1.0));
+  final Color? _colorSecondary;
 
   /// `--semi-color-secondary` — `packages/semi-theme-default/scss/global.scss` (line 17).
-  Color get colorSecondary => _dark
-      ? Color.fromRGBO(64, 180, 243, 1.0)
-      : Color.fromRGBO(0, 149, 238, 1.0);
+  Color get colorSecondary =>
+      _colorSecondary ?? (palette.lightBlue5.toColor(1.0));
+  final Color? _colorSecondaryHover;
 
   /// `--semi-color-secondary-hover` — `packages/semi-theme-default/scss/global.scss` (line 18).
-  Color get colorSecondaryHover => _dark
-      ? Color.fromRGBO(110, 200, 246, 1.0)
-      : Color.fromRGBO(0, 123, 202, 1.0);
+  Color get colorSecondaryHover =>
+      _colorSecondaryHover ?? (palette.lightBlue6.toColor(1.0));
+  final Color? _colorSecondaryActive;
 
   /// `--semi-color-secondary-active` — `packages/semi-theme-default/scss/global.scss` (line 19).
-  Color get colorSecondaryActive => _dark
-      ? Color.fromRGBO(157, 220, 249, 1.0)
-      : Color.fromRGBO(0, 99, 167, 1.0);
+  Color get colorSecondaryActive =>
+      _colorSecondaryActive ?? (palette.lightBlue7.toColor(1.0));
+  final Color? _colorSecondaryDisabled;
 
   /// `--semi-color-secondary-disabled` — `packages/semi-theme-default/scss/global.scss` (line 20).
-  Color get colorSecondaryDisabled => _dark
-      ? Color.fromRGBO(3, 102, 169, 1.0)
-      : Color.fromRGBO(149, 216, 248, 1.0);
+  Color get colorSecondaryDisabled =>
+      _colorSecondaryDisabled ?? (palette.lightBlue2.toColor(1.0));
+  final Color? _colorSecondaryLightDefault;
 
   /// `--semi-color-secondary-light-default` — `packages/semi-theme-default/scss/global.scss` (line 21).
-  Color get colorSecondaryLightDefault => _dark
-      ? Color.fromRGBO(64, 180, 243, 0.2)
-      : Color.fromRGBO(233, 247, 253, 1.0);
+  Color get colorSecondaryLightDefault =>
+      _colorSecondaryLightDefault ??
+      (_dark
+          ? palette.lightBlue5.toColor(0.2)
+          : palette.lightBlue0.toColor(1.0));
+  final Color? _colorSecondaryLightHover;
 
   /// `--semi-color-secondary-light-hover` — `packages/semi-theme-default/scss/global.scss` (line 22).
-  Color get colorSecondaryLightHover => _dark
-      ? Color.fromRGBO(64, 180, 243, 0.3)
-      : Color.fromRGBO(201, 236, 252, 1.0);
+  Color get colorSecondaryLightHover =>
+      _colorSecondaryLightHover ??
+      (_dark
+          ? palette.lightBlue5.toColor(0.3)
+          : palette.lightBlue1.toColor(1.0));
+  final Color? _colorSecondaryLightActive;
 
   /// `--semi-color-secondary-light-active` — `packages/semi-theme-default/scss/global.scss` (line 23).
-  Color get colorSecondaryLightActive => _dark
-      ? Color.fromRGBO(64, 180, 243, 0.4)
-      : Color.fromRGBO(149, 216, 248, 1.0);
+  Color get colorSecondaryLightActive =>
+      _colorSecondaryLightActive ??
+      (_dark
+          ? palette.lightBlue5.toColor(0.4)
+          : palette.lightBlue2.toColor(1.0));
+  final Color? _colorTertiary;
 
   /// `--semi-color-tertiary` — `packages/semi-theme-default/scss/global.scss` (line 25).
-  Color get colorTertiary => _dark
-      ? Color.fromRGBO(136, 141, 146, 1.0)
-      : Color.fromRGBO(107, 112, 117, 1.0);
+  Color get colorTertiary => _colorTertiary ?? (palette.grey5.toColor(1.0));
+  final Color? _colorTertiaryHover;
 
   /// `--semi-color-tertiary-hover` — `packages/semi-theme-default/scss/global.scss` (line 26).
-  Color get colorTertiaryHover => _dark
-      ? Color.fromRGBO(167, 171, 176, 1.0)
-      : Color.fromRGBO(85, 91, 97, 1.0);
+  Color get colorTertiaryHover =>
+      _colorTertiaryHover ?? (palette.grey6.toColor(1.0));
+  final Color? _colorTertiaryActive;
 
   /// `--semi-color-tertiary-active` — `packages/semi-theme-default/scss/global.scss` (line 27).
-  Color get colorTertiaryActive => _dark
-      ? Color.fromRGBO(198, 202, 205, 1.0)
-      : Color.fromRGBO(65, 70, 76, 1.0);
+  Color get colorTertiaryActive =>
+      _colorTertiaryActive ?? (palette.grey7.toColor(1.0));
+  final Color? _colorTertiaryLightDefault;
 
   /// `--semi-color-tertiary-light-default` — `packages/semi-theme-default/scss/global.scss` (line 28).
-  Color get colorTertiaryLightDefault => _dark
-      ? Color.fromRGBO(136, 141, 146, 0.2)
-      : Color.fromRGBO(249, 249, 249, 1.0);
+  Color get colorTertiaryLightDefault =>
+      _colorTertiaryLightDefault ??
+      (_dark ? palette.grey5.toColor(0.2) : palette.grey0.toColor(1.0));
+  final Color? _colorTertiaryLightHover;
 
   /// `--semi-color-tertiary-light-hover` — `packages/semi-theme-default/scss/global.scss` (line 29).
-  Color get colorTertiaryLightHover => _dark
-      ? Color.fromRGBO(136, 141, 146, 0.3)
-      : Color.fromRGBO(230, 232, 234, 1.0);
+  Color get colorTertiaryLightHover =>
+      _colorTertiaryLightHover ??
+      (_dark ? palette.grey5.toColor(0.3) : palette.grey1.toColor(1.0));
+  final Color? _colorTertiaryLightActive;
 
   /// `--semi-color-tertiary-light-active` — `packages/semi-theme-default/scss/global.scss` (line 30).
-  Color get colorTertiaryLightActive => _dark
-      ? Color.fromRGBO(136, 141, 146, 0.4)
-      : Color.fromRGBO(198, 202, 205, 1.0);
+  Color get colorTertiaryLightActive =>
+      _colorTertiaryLightActive ??
+      (_dark ? palette.grey5.toColor(0.4) : palette.grey2.toColor(1.0));
+  final Color? _colorDefault;
 
   /// `--semi-color-default` — `packages/semi-theme-default/scss/global.scss` (line 32).
-  Color get colorDefault => _dark
-      ? Color.fromRGBO(28, 31, 35, 1.0)
-      : Color.fromRGBO(249, 249, 249, 1.0);
+  Color get colorDefault => _colorDefault ?? (palette.grey0.toColor(1.0));
+  final Color? _colorDefaultHover;
 
   /// `--semi-color-default-hover` — `packages/semi-theme-default/scss/global.scss` (line 33).
-  Color get colorDefaultHover => _dark
-      ? Color.fromRGBO(46, 50, 56, 1.0)
-      : Color.fromRGBO(230, 232, 234, 1.0);
+  Color get colorDefaultHover =>
+      _colorDefaultHover ?? (palette.grey1.toColor(1.0));
+  final Color? _colorDefaultActive;
 
   /// `--semi-color-default-active` — `packages/semi-theme-default/scss/global.scss` (line 34).
-  Color get colorDefaultActive => _dark
-      ? Color.fromRGBO(65, 70, 76, 1.0)
-      : Color.fromRGBO(198, 202, 205, 1.0);
+  Color get colorDefaultActive =>
+      _colorDefaultActive ?? (palette.grey2.toColor(1.0));
+  final Color? _colorInfo;
 
   /// `--semi-color-info` — `packages/semi-theme-default/scss/global.scss` (line 36).
-  Color get colorInfo => _dark
-      ? Color.fromRGBO(84, 169, 255, 1.0)
-      : Color.fromRGBO(0, 100, 250, 1.0);
+  Color get colorInfo => _colorInfo ?? (palette.blue5.toColor(1.0));
+  final Color? _colorInfoHover;
 
   /// `--semi-color-info-hover` — `packages/semi-theme-default/scss/global.scss` (line 37).
-  Color get colorInfoHover => _dark
-      ? Color.fromRGBO(127, 193, 255, 1.0)
-      : Color.fromRGBO(0, 98, 214, 1.0);
+  Color get colorInfoHover => _colorInfoHover ?? (palette.blue6.toColor(1.0));
+  final Color? _colorInfoActive;
 
   /// `--semi-color-info-active` — `packages/semi-theme-default/scss/global.scss` (line 38).
-  Color get colorInfoActive => _dark
-      ? Color.fromRGBO(169, 215, 255, 1.0)
-      : Color.fromRGBO(0, 79, 179, 1.0);
+  Color get colorInfoActive => _colorInfoActive ?? (palette.blue7.toColor(1.0));
+  final Color? _colorInfoDisabled;
 
   /// `--semi-color-info-disabled` — `packages/semi-theme-default/scss/global.scss` (line 39).
-  Color get colorInfoDisabled => _dark
-      ? Color.fromRGBO(19, 92, 184, 1.0)
-      : Color.fromRGBO(152, 205, 253, 1.0);
+  Color get colorInfoDisabled =>
+      _colorInfoDisabled ?? (palette.blue2.toColor(1.0));
+  final Color? _colorInfoLightDefault;
 
   /// `--semi-color-info-light-default` — `packages/semi-theme-default/scss/global.scss` (line 40).
-  Color get colorInfoLightDefault => _dark
-      ? Color.fromRGBO(84, 169, 255, 0.2)
-      : Color.fromRGBO(234, 245, 255, 1.0);
+  Color get colorInfoLightDefault =>
+      _colorInfoLightDefault ??
+      (_dark ? palette.blue5.toColor(0.2) : palette.blue0.toColor(1.0));
+  final Color? _colorInfoLightHover;
 
   /// `--semi-color-info-light-hover` — `packages/semi-theme-default/scss/global.scss` (line 41).
-  Color get colorInfoLightHover => _dark
-      ? Color.fromRGBO(84, 169, 255, 0.3)
-      : Color.fromRGBO(203, 231, 254, 1.0);
+  Color get colorInfoLightHover =>
+      _colorInfoLightHover ??
+      (_dark ? palette.blue5.toColor(0.3) : palette.blue1.toColor(1.0));
+  final Color? _colorInfoLightActive;
 
   /// `--semi-color-info-light-active` — `packages/semi-theme-default/scss/global.scss` (line 42).
-  Color get colorInfoLightActive => _dark
-      ? Color.fromRGBO(84, 169, 255, 0.4)
-      : Color.fromRGBO(152, 205, 253, 1.0);
+  Color get colorInfoLightActive =>
+      _colorInfoLightActive ??
+      (_dark ? palette.blue5.toColor(0.4) : palette.blue2.toColor(1.0));
+  final Color? _colorSuccess;
 
   /// `--semi-color-success` — `packages/semi-theme-default/scss/global.scss` (line 44).
-  Color get colorSuccess => _dark
-      ? Color.fromRGBO(93, 194, 100, 1.0)
-      : Color.fromRGBO(59, 179, 70, 1.0);
+  Color get colorSuccess => _colorSuccess ?? (palette.green5.toColor(1.0));
+  final Color? _colorSuccessHover;
 
   /// `--semi-color-success-hover` — `packages/semi-theme-default/scss/global.scss` (line 45).
-  Color get colorSuccessHover => _dark
-      ? Color.fromRGBO(127, 209, 132, 1.0)
-      : Color.fromRGBO(48, 149, 59, 1.0);
+  Color get colorSuccessHover =>
+      _colorSuccessHover ?? (palette.green6.toColor(1.0));
+  final Color? _colorSuccessActive;
 
   /// `--semi-color-success-active` — `packages/semi-theme-default/scss/global.scss` (line 46).
-  Color get colorSuccessActive => _dark
-      ? Color.fromRGBO(166, 225, 168, 1.0)
-      : Color.fromRGBO(37, 119, 47, 1.0);
+  Color get colorSuccessActive =>
+      _colorSuccessActive ?? (palette.green7.toColor(1.0));
+  final Color? _colorSuccessDisabled;
 
   /// `--semi-color-success-disabled` — `packages/semi-theme-default/scss/global.scss` (line 47).
-  Color get colorSuccessDisabled => _dark
-      ? Color.fromRGBO(39, 119, 49, 1.0)
-      : Color.fromRGBO(164, 224, 167, 1.0);
+  Color get colorSuccessDisabled =>
+      _colorSuccessDisabled ?? (palette.green2.toColor(1.0));
+  final Color? _colorSuccessLightDefault;
 
   /// `--semi-color-success-light-default` — `packages/semi-theme-default/scss/global.scss` (line 48).
-  Color get colorSuccessLightDefault => _dark
-      ? Color.fromRGBO(93, 194, 100, 0.2)
-      : Color.fromRGBO(236, 247, 236, 1.0);
+  Color get colorSuccessLightDefault =>
+      _colorSuccessLightDefault ??
+      (_dark ? palette.green5.toColor(0.2) : palette.green0.toColor(1.0));
+  final Color? _colorSuccessLightHover;
 
   /// `--semi-color-success-light-hover` — `packages/semi-theme-default/scss/global.scss` (line 49).
-  Color get colorSuccessLightHover => _dark
-      ? Color.fromRGBO(93, 194, 100, 0.3)
-      : Color.fromRGBO(208, 240, 209, 1.0);
+  Color get colorSuccessLightHover =>
+      _colorSuccessLightHover ??
+      (_dark ? palette.green5.toColor(0.3) : palette.green1.toColor(1.0));
+  final Color? _colorSuccessLightActive;
 
   /// `--semi-color-success-light-active` — `packages/semi-theme-default/scss/global.scss` (line 50).
-  Color get colorSuccessLightActive => _dark
-      ? Color.fromRGBO(93, 194, 100, 0.4)
-      : Color.fromRGBO(164, 224, 167, 1.0);
+  Color get colorSuccessLightActive =>
+      _colorSuccessLightActive ??
+      (_dark ? palette.green5.toColor(0.4) : palette.green2.toColor(1.0));
+  final Color? _colorDanger;
 
   /// `--semi-color-danger` — `packages/semi-theme-default/scss/global.scss` (line 52).
-  Color get colorDanger => _dark
-      ? Color.fromRGBO(252, 114, 90, 1.0)
-      : Color.fromRGBO(249, 57, 32, 1.0);
+  Color get colorDanger => _colorDanger ?? (palette.red5.toColor(1.0));
+  final Color? _colorDangerHover;
 
   /// `--semi-color-danger-hover` — `packages/semi-theme-default/scss/global.scss` (line 53).
-  Color get colorDangerHover => _dark
-      ? Color.fromRGBO(253, 153, 131, 1.0)
-      : Color.fromRGBO(213, 37, 21, 1.0);
+  Color get colorDangerHover =>
+      _colorDangerHover ?? (palette.red6.toColor(1.0));
+  final Color? _colorDangerActive;
 
   /// `--semi-color-danger-active` — `packages/semi-theme-default/scss/global.scss` (line 54).
-  Color get colorDangerActive => _dark
-      ? Color.fromRGBO(253, 190, 172, 1.0)
-      : Color.fromRGBO(178, 20, 12, 1.0);
+  Color get colorDangerActive =>
+      _colorDangerActive ?? (palette.red7.toColor(1.0));
+  final Color? _colorDangerLightDefault;
 
   /// `--semi-color-danger-light-default` — `packages/semi-theme-default/scss/global.scss` (line 55).
-  Color get colorDangerLightDefault => _dark
-      ? Color.fromRGBO(252, 114, 90, 0.2)
-      : Color.fromRGBO(254, 242, 237, 1.0);
+  Color get colorDangerLightDefault =>
+      _colorDangerLightDefault ??
+      (_dark ? palette.red5.toColor(0.2) : palette.red0.toColor(1.0));
+  final Color? _colorDangerLightHover;
 
   /// `--semi-color-danger-light-hover` — `packages/semi-theme-default/scss/global.scss` (line 56).
-  Color get colorDangerLightHover => _dark
-      ? Color.fromRGBO(252, 114, 90, 0.3)
-      : Color.fromRGBO(254, 221, 210, 1.0);
+  Color get colorDangerLightHover =>
+      _colorDangerLightHover ??
+      (_dark ? palette.red5.toColor(0.3) : palette.red1.toColor(1.0));
+  final Color? _colorDangerLightActive;
 
   /// `--semi-color-danger-light-active` — `packages/semi-theme-default/scss/global.scss` (line 57).
-  Color get colorDangerLightActive => _dark
-      ? Color.fromRGBO(252, 114, 90, 0.4)
-      : Color.fromRGBO(253, 183, 165, 1.0);
+  Color get colorDangerLightActive =>
+      _colorDangerLightActive ??
+      (_dark ? palette.red5.toColor(0.4) : palette.red2.toColor(1.0));
+  final Color? _colorWarning;
 
   /// `--semi-color-warning` — `packages/semi-theme-default/scss/global.scss` (line 59).
-  Color get colorWarning => _dark
-      ? Color.fromRGBO(255, 174, 67, 1.0)
-      : Color.fromRGBO(252, 136, 0, 1.0);
+  Color get colorWarning => _colorWarning ?? (palette.orange5.toColor(1.0));
+  final Color? _colorWarningHover;
 
   /// `--semi-color-warning-hover` — `packages/semi-theme-default/scss/global.scss` (line 60).
-  Color get colorWarningHover => _dark
-      ? Color.fromRGBO(255, 199, 114, 1.0)
-      : Color.fromRGBO(210, 103, 0, 1.0);
+  Color get colorWarningHover =>
+      _colorWarningHover ?? (palette.orange6.toColor(1.0));
+  final Color? _colorWarningActive;
 
   /// `--semi-color-warning-active` — `packages/semi-theme-default/scss/global.scss` (line 61).
-  Color get colorWarningActive => _dark
-      ? Color.fromRGBO(255, 221, 161, 1.0)
-      : Color.fromRGBO(168, 74, 0, 1.0);
+  Color get colorWarningActive =>
+      _colorWarningActive ?? (palette.orange7.toColor(1.0));
+  final Color? _colorWarningLightDefault;
 
   /// `--semi-color-warning-light-default` — `packages/semi-theme-default/scss/global.scss` (line 62).
-  Color get colorWarningLightDefault => _dark
-      ? Color.fromRGBO(255, 174, 67, 0.2)
-      : Color.fromRGBO(255, 248, 234, 1.0);
+  Color get colorWarningLightDefault =>
+      _colorWarningLightDefault ??
+      (_dark ? palette.orange5.toColor(0.2) : palette.orange0.toColor(1.0));
+  final Color? _colorWarningLightHover;
 
   /// `--semi-color-warning-light-hover` — `packages/semi-theme-default/scss/global.scss` (line 63).
-  Color get colorWarningLightHover => _dark
-      ? Color.fromRGBO(255, 174, 67, 0.3)
-      : Color.fromRGBO(254, 238, 204, 1.0);
+  Color get colorWarningLightHover =>
+      _colorWarningLightHover ??
+      (_dark ? palette.orange5.toColor(0.3) : palette.orange1.toColor(1.0));
+  final Color? _colorWarningLightActive;
 
   /// `--semi-color-warning-light-active` — `packages/semi-theme-default/scss/global.scss` (line 64).
-  Color get colorWarningLightActive => _dark
-      ? Color.fromRGBO(255, 174, 67, 0.4)
-      : Color.fromRGBO(254, 217, 152, 1.0);
+  Color get colorWarningLightActive =>
+      _colorWarningLightActive ??
+      (_dark ? palette.orange5.toColor(0.4) : palette.orange2.toColor(1.0));
+  final Color? _colorFocusBorder;
 
   /// `--semi-color-focus-border` — `packages/semi-theme-default/scss/global.scss` (line 66).
-  Color get colorFocusBorder => _dark
-      ? Color.fromRGBO(84, 169, 255, 1.0)
-      : Color.fromRGBO(0, 100, 250, 1.0);
+  Color get colorFocusBorder =>
+      _colorFocusBorder ?? (palette.blue5.toColor(1.0));
+  final Color? _colorDisabledText;
 
   /// `--semi-color-disabled-text` — `packages/semi-theme-default/scss/global.scss` (line 68).
-  Color get colorDisabledText => _dark
-      ? Color.fromRGBO(249, 249, 249, 0.35)
-      : Color.fromRGBO(28, 31, 35, 0.35);
+  Color get colorDisabledText =>
+      _colorDisabledText ?? (palette.grey9.toColor(0.35));
+  final Color? _colorDisabledBorder;
 
   /// `--semi-color-disabled-border` — `packages/semi-theme-default/scss/global.scss` (line 69).
-  Color get colorDisabledBorder => _dark
-      ? Color.fromRGBO(46, 50, 56, 1.0)
-      : Color.fromRGBO(230, 232, 234, 1.0);
+  Color get colorDisabledBorder =>
+      _colorDisabledBorder ?? (palette.grey1.toColor(1.0));
+  final Color? _colorDisabledBg;
 
   /// `--semi-color-disabled-bg` — `packages/semi-theme-default/scss/global.scss` (line 70).
-  Color get colorDisabledBg => _dark
-      ? Color.fromRGBO(46, 50, 56, 1.0)
-      : Color.fromRGBO(230, 232, 234, 1.0);
+  Color get colorDisabledBg => _colorDisabledBg ?? (palette.grey1.toColor(1.0));
+  final Color? _colorDisabledFill;
 
   /// `--semi-color-disabled-fill` — `packages/semi-theme-default/scss/global.scss` (line 71).
-  Color get colorDisabledFill => _dark
-      ? Color.fromRGBO(230, 232, 234, 0.04)
-      : Color.fromRGBO(46, 50, 56, 0.04);
+  Color get colorDisabledFill =>
+      _colorDisabledFill ?? (palette.grey8.toColor(0.04));
+  final Color? _colorShadow;
 
   /// `--semi-color-shadow` — `packages/semi-theme-default/scss/global.scss` (line 73).
-  Color get colorShadow => Color.fromRGBO(0, 0, 0, 0.04);
+  Color get colorShadow => _colorShadow ?? (palette.black.toColor(0.04));
+  final Color? _colorLink;
 
   /// `--semi-color-link` — `packages/semi-theme-default/scss/global.scss` (line 75).
-  Color get colorLink => _dark
-      ? Color.fromRGBO(84, 169, 255, 1.0)
-      : Color.fromRGBO(0, 100, 250, 1.0);
+  Color get colorLink => _colorLink ?? (palette.blue5.toColor(1.0));
+  final Color? _colorLinkHover;
 
   /// `--semi-color-link-hover` — `packages/semi-theme-default/scss/global.scss` (line 76).
-  Color get colorLinkHover => _dark
-      ? Color.fromRGBO(127, 193, 255, 1.0)
-      : Color.fromRGBO(0, 98, 214, 1.0);
+  Color get colorLinkHover => _colorLinkHover ?? (palette.blue6.toColor(1.0));
+  final Color? _colorLinkActive;
 
   /// `--semi-color-link-active` — `packages/semi-theme-default/scss/global.scss` (line 77).
-  Color get colorLinkActive => _dark
-      ? Color.fromRGBO(169, 215, 255, 1.0)
-      : Color.fromRGBO(0, 79, 179, 1.0);
+  Color get colorLinkActive => _colorLinkActive ?? (palette.blue7.toColor(1.0));
+  final Color? _colorLinkVisited;
 
   /// `--semi-color-link-visited` — `packages/semi-theme-default/scss/global.scss` (line 78).
-  Color get colorLinkVisited => _dark
-      ? Color.fromRGBO(84, 169, 255, 1.0)
-      : Color.fromRGBO(0, 100, 250, 1.0);
+  Color get colorLinkVisited =>
+      _colorLinkVisited ?? (palette.blue5.toColor(1.0));
+  final Color? _colorBorder;
 
   /// `--semi-color-border` — `packages/semi-theme-default/scss/global.scss` (line 80).
-  Color get colorBorder => _dark
-      ? Color.fromRGBO(255, 255, 255, 0.08)
-      : Color.fromRGBO(28, 31, 35, 0.08);
+  Color get colorBorder =>
+      _colorBorder ??
+      (_dark ? palette.white.toColor(0.08) : palette.grey9.toColor(0.08));
+  final Color? _colorNavBg;
 
   /// `--semi-color-nav-bg` — `packages/semi-theme-default/scss/global.scss` (line 81).
-  Color get colorNavBg => _dark
-      ? Color.fromRGBO(35, 36, 41, 1.0)
-      : Color.fromRGBO(255, 255, 255, 1.0);
+  Color get colorNavBg =>
+      _colorNavBg ??
+      (_dark ? Color.fromRGBO(35, 36, 41, 1.0) : palette.white.toColor(1.0));
+  final Color? _colorOverlayBg;
 
   /// `--semi-color-overlay-bg` — `packages/semi-theme-default/scss/global.scss` (line 82).
-  Color get colorOverlayBg => Color.fromRGBO(22, 22, 26, 0.6);
+  Color get colorOverlayBg =>
+      _colorOverlayBg ?? (Color.fromRGBO(22, 22, 26, 0.6));
+  final Color? _colorFill0;
 
   /// `--semi-color-fill-0` — `packages/semi-theme-default/scss/global.scss` (line 84).
-  Color get colorFill0 => _dark
-      ? Color.fromRGBO(255, 255, 255, 0.12)
-      : Color.fromRGBO(46, 50, 56, 0.05);
+  Color get colorFill0 =>
+      _colorFill0 ??
+      (_dark ? palette.white.toColor(0.12) : palette.grey8.toColor(0.05));
+  final Color? _colorFill1;
 
   /// `--semi-color-fill-1` — `packages/semi-theme-default/scss/global.scss` (line 85).
-  Color get colorFill1 => _dark
-      ? Color.fromRGBO(255, 255, 255, 0.16)
-      : Color.fromRGBO(46, 50, 56, 0.09);
+  Color get colorFill1 =>
+      _colorFill1 ??
+      (_dark ? palette.white.toColor(0.16) : palette.grey8.toColor(0.09));
+  final Color? _colorFill2;
 
   /// `--semi-color-fill-2` — `packages/semi-theme-default/scss/global.scss` (line 86).
-  Color get colorFill2 => _dark
-      ? Color.fromRGBO(255, 255, 255, 0.2)
-      : Color.fromRGBO(46, 50, 56, 0.13);
+  Color get colorFill2 =>
+      _colorFill2 ??
+      (_dark ? palette.white.toColor(0.2) : palette.grey8.toColor(0.13));
+  final Color? _colorBg0;
 
   /// `--semi-color-bg-0` — `packages/semi-theme-default/scss/global.scss` (line 87).
-  Color get colorBg0 => _dark
-      ? Color.fromRGBO(22, 22, 26, 1.0)
-      : Color.fromRGBO(255, 255, 255, 1.0);
+  Color get colorBg0 =>
+      _colorBg0 ??
+      (_dark ? Color.fromRGBO(22, 22, 26, 1.0) : palette.white.toColor(1.0));
+  final Color? _colorBg1;
 
   /// `--semi-color-bg-1` — `packages/semi-theme-default/scss/global.scss` (line 88).
-  Color get colorBg1 => _dark
-      ? Color.fromRGBO(35, 36, 41, 1.0)
-      : Color.fromRGBO(255, 255, 255, 1.0);
+  Color get colorBg1 =>
+      _colorBg1 ??
+      (_dark ? Color.fromRGBO(35, 36, 41, 1.0) : palette.white.toColor(1.0));
+  final Color? _colorBg2;
 
   /// `--semi-color-bg-2` — `packages/semi-theme-default/scss/global.scss` (line 89).
-  Color get colorBg2 => _dark
-      ? Color.fromRGBO(53, 54, 60, 1.0)
-      : Color.fromRGBO(255, 255, 255, 1.0);
+  Color get colorBg2 =>
+      _colorBg2 ??
+      (_dark ? Color.fromRGBO(53, 54, 60, 1.0) : palette.white.toColor(1.0));
+  final Color? _colorBg3;
 
   /// `--semi-color-bg-3` — `packages/semi-theme-default/scss/global.scss` (line 90).
-  Color get colorBg3 => _dark
-      ? Color.fromRGBO(67, 68, 74, 1.0)
-      : Color.fromRGBO(255, 255, 255, 1.0);
+  Color get colorBg3 =>
+      _colorBg3 ??
+      (_dark ? Color.fromRGBO(67, 68, 74, 1.0) : palette.white.toColor(1.0));
+  final Color? _colorBg4;
 
   /// `--semi-color-bg-4` — `packages/semi-theme-default/scss/global.scss` (line 91).
-  Color get colorBg4 => _dark
-      ? Color.fromRGBO(79, 81, 89, 1.0)
-      : Color.fromRGBO(255, 255, 255, 1.0);
+  Color get colorBg4 =>
+      _colorBg4 ??
+      (_dark ? Color.fromRGBO(79, 81, 89, 1.0) : palette.white.toColor(1.0));
+  final Color? _colorText0;
 
   /// `--semi-color-text-0` — `packages/semi-theme-default/scss/global.scss` (line 92).
-  Color get colorText0 => _dark
-      ? Color.fromRGBO(249, 249, 249, 1.0)
-      : Color.fromRGBO(28, 31, 35, 1.0);
+  Color get colorText0 => _colorText0 ?? (palette.grey9.toColor(1.0));
+  final Color? _colorText1;
 
   /// `--semi-color-text-1` — `packages/semi-theme-default/scss/global.scss` (line 93).
-  Color get colorText1 => _dark
-      ? Color.fromRGBO(249, 249, 249, 0.8)
-      : Color.fromRGBO(28, 31, 35, 0.8);
+  Color get colorText1 => _colorText1 ?? (palette.grey9.toColor(0.8));
+  final Color? _colorText2;
 
   /// `--semi-color-text-2` — `packages/semi-theme-default/scss/global.scss` (line 94).
-  Color get colorText2 => _dark
-      ? Color.fromRGBO(249, 249, 249, 0.6)
-      : Color.fromRGBO(28, 31, 35, 0.62);
+  Color get colorText2 =>
+      _colorText2 ??
+      (_dark ? palette.grey9.toColor(0.6) : palette.grey9.toColor(0.62));
+  final Color? _colorText3;
 
   /// `--semi-color-text-3` — `packages/semi-theme-default/scss/global.scss` (line 95).
-  Color get colorText3 => _dark
-      ? Color.fromRGBO(249, 249, 249, 0.35)
-      : Color.fromRGBO(28, 31, 35, 0.35);
+  Color get colorText3 => _colorText3 ?? (palette.grey9.toColor(0.35));
+  final Color? _colorHighlightBg;
 
   /// `--semi-color-highlight-bg` — `packages/semi-theme-default/scss/global.scss` (line 103).
-  Color get colorHighlightBg => _dark
-      ? Color.fromRGBO(168, 142, 10, 1.0)
-      : Color.fromRGBO(251, 218, 50, 1.0);
+  Color get colorHighlightBg =>
+      _colorHighlightBg ??
+      (_dark ? palette.yellow2.toColor(1.0) : palette.yellow4.toColor(1.0));
+  final Color? _colorHighlight;
 
   /// `--semi-color-highlight` — `packages/semi-theme-default/scss/global.scss` (line 104).
   Color get colorHighlight =>
-      _dark ? Color.fromRGBO(255, 255, 255, 1.0) : Color.fromRGBO(0, 0, 0, 1.0);
+      _colorHighlight ??
+      (_dark ? palette.white.toColor(1.0) : palette.black.toColor(1.0));
+  final Color? _colorData0;
 
   /// `--semi-color-data-0` — `packages/semi-theme-default/scss/global.scss` (line 105).
-  Color get colorData0 => _dark
-      ? Color.fromRGBO(94, 109, 194, 1.0)
-      : Color.fromRGBO(87, 105, 255, 1.0);
+  Color get colorData0 =>
+      _colorData0 ??
+      (_dark
+          ? Color.fromRGBO(94, 109, 194, 1.0)
+          : Color.fromRGBO(87, 105, 255, 1.0));
+  final Color? _colorData1;
 
   /// `--semi-color-data-1` — `packages/semi-theme-default/scss/global.scss` (line 106).
-  Color get colorData1 => _dark
-      ? Color.fromRGBO(8, 104, 120, 1.0)
-      : Color.fromRGBO(142, 212, 231, 1.0);
+  Color get colorData1 =>
+      _colorData1 ??
+      (_dark
+          ? Color.fromRGBO(8, 104, 120, 1.0)
+          : Color.fromRGBO(142, 212, 231, 1.0));
+  final Color? _colorData2;
 
   /// `--semi-color-data-2` — `packages/semi-theme-default/scss/global.scss` (line 107).
-  Color get colorData2 => _dark
-      ? Color.fromRGBO(250, 173, 63, 1.0)
-      : Color.fromRGBO(245, 135, 0, 1.0);
+  Color get colorData2 =>
+      _colorData2 ??
+      (_dark
+          ? Color.fromRGBO(250, 173, 63, 1.0)
+          : Color.fromRGBO(245, 135, 0, 1.0));
+  final Color? _colorData3;
 
   /// `--semi-color-data-3` — `packages/semi-theme-default/scss/global.scss` (line 108).
-  Color get colorData3 => _dark
-      ? Color.fromRGBO(76, 43, 156, 1.0)
-      : Color.fromRGBO(220, 183, 252, 1.0);
+  Color get colorData3 =>
+      _colorData3 ??
+      (_dark
+          ? Color.fromRGBO(76, 43, 156, 1.0)
+          : Color.fromRGBO(220, 183, 252, 1.0));
+  final Color? _colorData4;
 
   /// `--semi-color-data-4` — `packages/semi-theme-default/scss/global.scss` (line 109).
-  Color get colorData4 => _dark
-      ? Color.fromRGBO(16, 125, 248, 1.0)
-      : Color.fromRGBO(74, 156, 247, 1.0);
+  Color get colorData4 =>
+      _colorData4 ??
+      (_dark
+          ? Color.fromRGBO(16, 125, 248, 1.0)
+          : Color.fromRGBO(74, 156, 247, 1.0));
+  final Color? _colorData5;
 
   /// `--semi-color-data-5` — `packages/semi-theme-default/scss/global.scss` (line 110).
-  Color get colorData5 => _dark
-      ? Color.fromRGBO(248, 202, 16, 1.0)
-      : Color.fromRGBO(243, 204, 53, 1.0);
+  Color get colorData5 =>
+      _colorData5 ??
+      (_dark
+          ? Color.fromRGBO(248, 202, 16, 1.0)
+          : Color.fromRGBO(243, 204, 53, 1.0));
+  final Color? _colorData6;
 
   /// `--semi-color-data-6` — `packages/semi-theme-default/scss/global.scss` (line 111).
-  Color get colorData6 => _dark
-      ? Color.fromRGBO(195, 30, 87, 1.0)
-      : Color.fromRGBO(254, 128, 144, 1.0);
+  Color get colorData6 =>
+      _colorData6 ??
+      (_dark
+          ? Color.fromRGBO(195, 30, 87, 1.0)
+          : Color.fromRGBO(254, 128, 144, 1.0));
+  final Color? _colorData7;
 
   /// `--semi-color-data-7` — `packages/semi-theme-default/scss/global.scss` (line 112).
-  Color get colorData7 => _dark
-      ? Color.fromRGBO(5, 119, 115, 1.0)
-      : Color.fromRGBO(139, 215, 210, 1.0);
+  Color get colorData7 =>
+      _colorData7 ??
+      (_dark
+          ? Color.fromRGBO(5, 119, 115, 1.0)
+          : Color.fromRGBO(139, 215, 210, 1.0));
+  final Color? _colorData8;
 
   /// `--semi-color-data-8` — `packages/semi-theme-default/scss/global.scss` (line 113).
-  Color get colorData8 => _dark
-      ? Color.fromRGBO(154, 207, 13, 1.0)
-      : Color.fromRGBO(131, 176, 35, 1.0);
+  Color get colorData8 =>
+      _colorData8 ??
+      (_dark
+          ? Color.fromRGBO(154, 207, 13, 1.0)
+          : Color.fromRGBO(131, 176, 35, 1.0));
+  final Color? _colorData9;
 
   /// `--semi-color-data-9` — `packages/semi-theme-default/scss/global.scss` (line 114).
-  Color get colorData9 => _dark
-      ? Color.fromRGBO(117, 29, 138, 1.0)
-      : Color.fromRGBO(233, 165, 229, 1.0);
+  Color get colorData9 =>
+      _colorData9 ??
+      (_dark
+          ? Color.fromRGBO(117, 29, 138, 1.0)
+          : Color.fromRGBO(233, 165, 229, 1.0));
+  final Color? _colorData10;
 
   /// `--semi-color-data-10` — `packages/semi-theme-default/scss/global.scss` (line 115).
-  Color get colorData10 => _dark
-      ? Color.fromRGBO(16, 162, 180, 1.0)
-      : Color.fromRGBO(48, 167, 206, 1.0);
+  Color get colorData10 =>
+      _colorData10 ??
+      (_dark
+          ? Color.fromRGBO(16, 162, 180, 1.0)
+          : Color.fromRGBO(48, 167, 206, 1.0));
+  final Color? _colorData11;
 
   /// `--semi-color-data-11` — `packages/semi-theme-default/scss/global.scss` (line 116).
-  Color get colorData11 => _dark
-      ? Color.fromRGBO(208, 110, 11, 1.0)
-      : Color.fromRGBO(249, 192, 100, 1.0);
+  Color get colorData11 =>
+      _colorData11 ??
+      (_dark
+          ? Color.fromRGBO(208, 110, 11, 1.0)
+          : Color.fromRGBO(249, 192, 100, 1.0));
+  final Color? _colorData12;
 
   /// `--semi-color-data-12` — `packages/semi-theme-default/scss/global.scss` (line 117).
-  Color get colorData12 => _dark
-      ? Color.fromRGBO(113, 66, 197, 1.0)
-      : Color.fromRGBO(177, 113, 249, 1.0);
+  Color get colorData12 =>
+      _colorData12 ??
+      (_dark
+          ? Color.fromRGBO(113, 66, 197, 1.0)
+          : Color.fromRGBO(177, 113, 249, 1.0));
+  final Color? _colorData13;
 
   /// `--semi-color-data-13` — `packages/semi-theme-default/scss/global.scss` (line 118).
-  Color get colorData13 => _dark
-      ? Color.fromRGBO(7, 100, 212, 1.0)
-      : Color.fromRGBO(119, 182, 249, 1.0);
+  Color get colorData13 =>
+      _colorData13 ??
+      (_dark
+          ? Color.fromRGBO(7, 100, 212, 1.0)
+          : Color.fromRGBO(119, 182, 249, 1.0));
+  final Color? _colorData14;
 
   /// `--semi-color-data-14` — `packages/semi-theme-default/scss/global.scss` (line 119).
-  Color get colorData14 => _dark
-      ? Color.fromRGBO(251, 232, 110, 1.0)
-      : Color.fromRGBO(200, 143, 2, 1.0);
+  Color get colorData14 =>
+      _colorData14 ??
+      (_dark
+          ? Color.fromRGBO(251, 232, 110, 1.0)
+          : Color.fromRGBO(200, 143, 2, 1.0));
+  final Color? _colorData15;
 
   /// `--semi-color-data-15` — `packages/semi-theme-default/scss/global.scss` (line 120).
-  Color get colorData15 => _dark
-      ? Color.fromRGBO(160, 19, 73, 1.0)
-      : Color.fromRGBO(255, 170, 178, 1.0);
+  Color get colorData15 =>
+      _colorData15 ??
+      (_dark
+          ? Color.fromRGBO(160, 19, 73, 1.0)
+          : Color.fromRGBO(255, 170, 178, 1.0));
+  final Color? _colorData16;
 
   /// `--semi-color-data-16` — `packages/semi-theme-default/scss/global.scss` (line 121).
-  Color get colorData16 => _dark
-      ? Color.fromRGBO(11, 179, 167, 1.0)
-      : Color.fromRGBO(51, 176, 171, 1.0);
+  Color get colorData16 =>
+      _colorData16 ??
+      (_dark
+          ? Color.fromRGBO(11, 179, 167, 1.0)
+          : Color.fromRGBO(51, 176, 171, 1.0));
+  final Color? _colorData17;
 
   /// `--semi-color-data-17` — `packages/semi-theme-default/scss/global.scss` (line 122).
-  Color get colorData17 => _dark
-      ? Color.fromRGBO(98, 138, 6, 1.0)
-      : Color.fromRGBO(182, 215, 129, 1.0);
+  Color get colorData17 =>
+      _colorData17 ??
+      (_dark
+          ? Color.fromRGBO(98, 138, 6, 1.0)
+          : Color.fromRGBO(182, 215, 129, 1.0));
+  final Color? _colorData18;
 
   /// `--semi-color-data-18` — `packages/semi-theme-default/scss/global.scss` (line 123).
-  Color get colorData18 => _dark
-      ? Color.fromRGBO(162, 48, 179, 1.0)
-      : Color.fromRGBO(212, 88, 212, 1.0);
+  Color get colorData18 =>
+      _colorData18 ??
+      (_dark
+          ? Color.fromRGBO(162, 48, 179, 1.0)
+          : Color.fromRGBO(212, 88, 212, 1.0));
+  final Color? _colorData19;
 
   /// `--semi-color-data-19` — `packages/semi-theme-default/scss/global.scss` (line 124).
-  Color get colorData19 => _dark
-      ? Color.fromRGBO(40, 51, 138, 1.0)
-      : Color.fromRGBO(188, 198, 255, 1.0);
+  Color get colorData19 =>
+      _colorData19 ??
+      (_dark
+          ? Color.fromRGBO(40, 51, 138, 1.0)
+          : Color.fromRGBO(188, 198, 255, 1.0));
+  final SemiGradient? _colorAiGeneral;
 
   /// `--semi-color-ai-general` — `packages/semi-theme-default/scss/global.scss` (line 127).
-  SemiGradient get colorAiGeneral => _dark
-      ? SemiGradient(
-          278.0,
-          [
-            Color.fromRGBO(91, 162, 245, 1.0),
-            Color.fromRGBO(134, 129, 252, 1.0),
-            Color.fromRGBO(195, 117, 255, 1.0),
-            Color.fromRGBO(234, 107, 246, 1.0),
-          ],
-          [0.0, 0.3, 0.6, 1.0],
-        )
-      : SemiGradient(
-          278.0,
-          [
-            Color.fromRGBO(233, 69, 255, 1.0),
-            Color.fromRGBO(166, 71, 255, 1.0),
-            Color.fromRGBO(107, 97, 255, 1.0),
-            Color.fromRGBO(46, 140, 255, 1.0),
-          ],
-          [0.0, 0.3, 0.6, 1.0],
-        );
+  SemiGradient get colorAiGeneral => _colorAiGeneral ?? (palette.aiGeneral5);
+  final SemiGradient? _colorAiGeneralHover;
 
   /// `--semi-color-ai-general-hover` — `packages/semi-theme-default/scss/global.scss` (line 128).
-  SemiGradient get colorAiGeneralHover => _dark
-      ? SemiGradient(
-          278.0,
-          [
-            Color.fromRGBO(131, 187, 248, 1.0),
-            Color.fromRGBO(163, 160, 253, 1.0),
-            Color.fromRGBO(213, 152, 255, 1.0),
-            Color.fromRGBO(243, 143, 248, 1.0),
-          ],
-          [0.0, 0.3, 0.6, 1.0],
-        )
-      : SemiGradient(
-          278.0,
-          [
-            Color.fromRGBO(194, 53, 219, 1.0),
-            Color.fromRGBO(134, 54, 219, 1.0),
-            Color.fromRGBO(88, 77, 219, 1.0),
-            Color.fromRGBO(33, 114, 219, 1.0),
-          ],
-          [0.0, 0.3, 0.6, 1.0],
-        );
+  SemiGradient get colorAiGeneralHover =>
+      _colorAiGeneralHover ?? (palette.aiGeneral6);
+  final SemiGradient? _colorAiGeneralActive;
 
   /// `--semi-color-ai-general-active` — `packages/semi-theme-default/scss/global.scss` (line 129).
-  SemiGradient get colorAiGeneralActive => _dark
-      ? SemiGradient(
-          278.0,
-          [
-            Color.fromRGBO(172, 210, 250, 1.0),
-            Color.fromRGBO(192, 192, 253, 1.0),
-            Color.fromRGBO(229, 186, 255, 1.0),
-            Color.fromRGBO(249, 180, 251, 1.0),
-          ],
-          [0.0, 0.3, 0.6, 1.0],
-        )
-      : SemiGradient(
-          278.0,
-          [
-            Color.fromRGBO(157, 39, 184, 1.0),
-            Color.fromRGBO(105, 40, 184, 1.0),
-            Color.fromRGBO(71, 59, 184, 1.0),
-            Color.fromRGBO(22, 89, 184, 1.0),
-          ],
-          [0.0, 0.3, 0.6, 1.0],
-        );
+  SemiGradient get colorAiGeneralActive =>
+      _colorAiGeneralActive ?? (palette.aiGeneral7);
+  final SemiGradient? _colorAiGeneralDisabled;
 
   /// `--semi-color-ai-general-disabled` — `packages/semi-theme-default/scss/global.scss` (line 130).
-  SemiGradient get colorAiGeneralDisabled => _dark
-      ? SemiGradient(
-          278.0,
-          [
-            Color.fromRGBO(26, 86, 172, 1.0),
-            Color.fromRGBO(70, 59, 180, 1.0),
-            Color.fromRGBO(111, 49, 184, 1.0),
-            Color.fromRGBO(148, 41, 173, 1.0),
-          ],
-          [0.0, 0.3, 0.6, 1.0],
-        )
-      : SemiGradient(
-          278.0,
-          [
-            Color.fromRGBO(254, 181, 255, 1.0),
-            Color.fromRGBO(227, 181, 255, 1.0),
-            Color.fromRGBO(193, 192, 255, 1.0),
-            Color.fromRGBO(171, 213, 255, 1.0),
-          ],
-          [0.0, 0.3, 0.6, 1.0],
-        );
+  SemiGradient get colorAiGeneralDisabled =>
+      _colorAiGeneralDisabled ?? (palette.aiGeneral2);
+  final Color? _colorAiPurple;
 
   /// `--semi-color-ai-purple` — `packages/semi-theme-default/scss/global.scss` (line 132).
-  Color get colorAiPurple => _dark
-      ? Color.fromRGBO(195, 117, 255, 1.0)
-      : Color.fromRGBO(166, 71, 255, 1.0);
+  Color get colorAiPurple => _colorAiPurple ?? (palette.aiPurple5.toColor());
+  final Color? _colorAiPurpleHover;
 
   /// `--semi-color-ai-purple-hover` — `packages/semi-theme-default/scss/global.scss` (line 133).
-  Color get colorAiPurpleHover => _dark
-      ? Color.fromRGBO(213, 152, 255, 1.0)
-      : Color.fromRGBO(134, 54, 219, 1.0);
+  Color get colorAiPurpleHover =>
+      _colorAiPurpleHover ?? (palette.aiPurple6.toColor());
+  final Color? _colorAiPurpleActive;
 
   /// `--semi-color-ai-purple-active` — `packages/semi-theme-default/scss/global.scss` (line 134).
-  Color get colorAiPurpleActive => _dark
-      ? Color.fromRGBO(229, 186, 255, 1.0)
-      : Color.fromRGBO(105, 40, 184, 1.0);
+  Color get colorAiPurpleActive =>
+      _colorAiPurpleActive ?? (palette.aiPurple7.toColor());
+  final Color? _colorAiPurpleDisabled;
 
   /// `--semi-color-ai-purple-disabled` — `packages/semi-theme-default/scss/global.scss` (line 135).
-  Color get colorAiPurpleDisabled => _dark
-      ? Color.fromRGBO(111, 49, 184, 1.0)
-      : Color.fromRGBO(227, 181, 255, 1.0);
+  Color get colorAiPurpleDisabled =>
+      _colorAiPurpleDisabled ?? (palette.aiPurple2.toColor());
+  final SemiGradient? _colorAiBackgroundBottom;
 
   /// `--semi-color-ai-background-bottom` — `packages/semi-theme-default/scss/global.scss` (line 137).
-  SemiGradient get colorAiBackgroundBottom => _dark
-      ? SemiGradient(
-          201.15,
-          [
-            Color.fromRGBO(255, 226, 138, 0.2),
-            Color.fromRGBO(231, 45, 255, 0.2),
-            Color.fromRGBO(0, 115, 255, 0.2),
-          ],
-          [0.0658, 0.504, 0.9423],
-        )
-      : SemiGradient(
-          201.15,
-          [
-            Color.fromRGBO(255, 255, 255, 0.04),
-            Color.fromRGBO(255, 226, 138, 0.04),
-            Color.fromRGBO(231, 45, 255, 0.04),
-            Color.fromRGBO(0, 115, 255, 0.04),
-          ],
-          [0.0658, 0.32880000000000004, 0.6793, 0.9423],
-        );
+  SemiGradient get colorAiBackgroundBottom =>
+      _colorAiBackgroundBottom ??
+      (_dark
+          ? SemiGradient(
+              201.15,
+              [
+                Color.fromRGBO(255, 226, 138, 0.2),
+                Color.fromRGBO(231, 45, 255, 0.2),
+                Color.fromRGBO(0, 115, 255, 0.2),
+              ],
+              [0.0658, 0.504, 0.9423],
+            )
+          : SemiGradient(
+              201.15,
+              [
+                Color.fromRGBO(255, 255, 255, 0.04),
+                Color.fromRGBO(255, 226, 138, 0.04),
+                Color.fromRGBO(231, 45, 255, 0.04),
+                Color.fromRGBO(0, 115, 255, 0.04),
+              ],
+              [0.0658, 0.32880000000000004, 0.6793, 0.9423],
+            ));
+  final SemiGradient? _colorAiBackgroundBottomHover;
 
   /// `--semi-color-ai-background-bottom-hover` — `packages/semi-theme-default/scss/global.scss` (line 138).
-  SemiGradient get colorAiBackgroundBottomHover => _dark
-      ? SemiGradient(
-          201.15,
-          [
-            Color.fromRGBO(255, 226, 138, 0.3),
-            Color.fromRGBO(231, 45, 255, 0.3),
-            Color.fromRGBO(0, 115, 255, 0.3),
-          ],
-          [0.0658, 0.504, 0.9423],
-        )
-      : SemiGradient(
-          201.15,
-          [
-            Color.fromRGBO(255, 255, 255, 0.08),
-            Color.fromRGBO(255, 226, 138, 0.08),
-            Color.fromRGBO(231, 45, 255, 0.08),
-            Color.fromRGBO(0, 115, 255, 0.08),
-          ],
-          [0.0658, 0.32880000000000004, 0.6793, 0.9423],
-        );
+  SemiGradient get colorAiBackgroundBottomHover =>
+      _colorAiBackgroundBottomHover ??
+      (_dark
+          ? SemiGradient(
+              201.15,
+              [
+                Color.fromRGBO(255, 226, 138, 0.3),
+                Color.fromRGBO(231, 45, 255, 0.3),
+                Color.fromRGBO(0, 115, 255, 0.3),
+              ],
+              [0.0658, 0.504, 0.9423],
+            )
+          : SemiGradient(
+              201.15,
+              [
+                Color.fromRGBO(255, 255, 255, 0.08),
+                Color.fromRGBO(255, 226, 138, 0.08),
+                Color.fromRGBO(231, 45, 255, 0.08),
+                Color.fromRGBO(0, 115, 255, 0.08),
+              ],
+              [0.0658, 0.32880000000000004, 0.6793, 0.9423],
+            ));
+  final SemiGradient? _colorAiBackgroundBottomActive;
 
   /// `--semi-color-ai-background-bottom-active` — `packages/semi-theme-default/scss/global.scss` (line 139).
-  SemiGradient get colorAiBackgroundBottomActive => _dark
-      ? SemiGradient(
-          201.15,
-          [
-            Color.fromRGBO(255, 226, 138, 0.4),
-            Color.fromRGBO(231, 45, 255, 0.4),
-            Color.fromRGBO(0, 115, 255, 0.4),
-          ],
-          [0.0658, 0.504, 0.9423],
-        )
-      : SemiGradient(
-          201.15,
-          [
-            Color.fromRGBO(255, 255, 255, 0.12),
-            Color.fromRGBO(255, 226, 138, 0.12),
-            Color.fromRGBO(231, 45, 255, 0.12),
-            Color.fromRGBO(0, 115, 255, 0.12),
-          ],
-          [0.0658, 0.32880000000000004, 0.6793, 0.9423],
-        );
+  SemiGradient get colorAiBackgroundBottomActive =>
+      _colorAiBackgroundBottomActive ??
+      (_dark
+          ? SemiGradient(
+              201.15,
+              [
+                Color.fromRGBO(255, 226, 138, 0.4),
+                Color.fromRGBO(231, 45, 255, 0.4),
+                Color.fromRGBO(0, 115, 255, 0.4),
+              ],
+              [0.0658, 0.504, 0.9423],
+            )
+          : SemiGradient(
+              201.15,
+              [
+                Color.fromRGBO(255, 255, 255, 0.12),
+                Color.fromRGBO(255, 226, 138, 0.12),
+                Color.fromRGBO(231, 45, 255, 0.12),
+                Color.fromRGBO(0, 115, 255, 0.12),
+              ],
+              [0.0658, 0.32880000000000004, 0.6793, 0.9423],
+            ));
+  final SemiGradient? _colorAiBackgroundTop;
 
   /// `--semi-color-ai-background-top` — `packages/semi-theme-default/scss/global.scss` (line 141).
-  SemiGradient get colorAiBackgroundTop => _dark
-      ? SemiGradient(
-          201.15,
-          [
-            Color.fromRGBO(83, 56, 255, 0.36),
-            Color.fromRGBO(176, 48, 240, 0.216),
-            Color.fromRGBO(154, 0, 174, 0.108),
-            Color.fromRGBO(0, 0, 0, 0.0),
-          ],
-          [0.0658, 0.32880000000000004, 0.5917, 0.9423],
-        )
-      : SemiGradient(
-          201.15,
-          [
-            Color.fromRGBO(83, 56, 255, 0.16),
-            Color.fromRGBO(176, 48, 240, 0.096),
-            Color.fromRGBO(231, 45, 255, 0.048),
-            Color.fromRGBO(255, 255, 255, 0.0),
-          ],
-          [0.0658, 0.32880000000000004, 0.5917, 0.9423],
-        );
+  SemiGradient get colorAiBackgroundTop =>
+      _colorAiBackgroundTop ??
+      (_dark
+          ? SemiGradient(
+              201.15,
+              [
+                Color.fromRGBO(83, 56, 255, 0.36),
+                Color.fromRGBO(176, 48, 240, 0.216),
+                Color.fromRGBO(154, 0, 174, 0.108),
+                Color.fromRGBO(0, 0, 0, 0.0),
+              ],
+              [0.0658, 0.32880000000000004, 0.5917, 0.9423],
+            )
+          : SemiGradient(
+              201.15,
+              [
+                Color.fromRGBO(83, 56, 255, 0.16),
+                Color.fromRGBO(176, 48, 240, 0.096),
+                Color.fromRGBO(231, 45, 255, 0.048),
+                Color.fromRGBO(255, 255, 255, 0.0),
+              ],
+              [0.0658, 0.32880000000000004, 0.5917, 0.9423],
+            ));
+  final SemiGradient? _colorAiBackgroundTopHover;
 
   /// `--semi-color-ai-background-top-hover` — `packages/semi-theme-default/scss/global.scss` (line 143).
-  SemiGradient get colorAiBackgroundTopHover => _dark
-      ? SemiGradient(
-          201.15,
-          [
-            Color.fromRGBO(83, 56, 255, 0.72),
-            Color.fromRGBO(176, 48, 240, 0.432),
-            Color.fromRGBO(154, 0, 174, 0.216),
-            Color.fromRGBO(0, 0, 0, 0.0),
-          ],
-          [0.0658, 0.32880000000000004, 0.5917, 0.9423],
-        )
-      : SemiGradient(
-          201.15,
-          [
-            Color.fromRGBO(83, 56, 255, 0.32),
-            Color.fromRGBO(176, 48, 240, 0.192),
-            Color.fromRGBO(231, 45, 255, 0.096),
-            Color.fromRGBO(255, 255, 255, 0.0),
-          ],
-          [0.0658, 0.32880000000000004, 0.5917, 0.9423],
-        );
+  SemiGradient get colorAiBackgroundTopHover =>
+      _colorAiBackgroundTopHover ??
+      (_dark
+          ? SemiGradient(
+              201.15,
+              [
+                Color.fromRGBO(83, 56, 255, 0.72),
+                Color.fromRGBO(176, 48, 240, 0.432),
+                Color.fromRGBO(154, 0, 174, 0.216),
+                Color.fromRGBO(0, 0, 0, 0.0),
+              ],
+              [0.0658, 0.32880000000000004, 0.5917, 0.9423],
+            )
+          : SemiGradient(
+              201.15,
+              [
+                Color.fromRGBO(83, 56, 255, 0.32),
+                Color.fromRGBO(176, 48, 240, 0.192),
+                Color.fromRGBO(231, 45, 255, 0.096),
+                Color.fromRGBO(255, 255, 255, 0.0),
+              ],
+              [0.0658, 0.32880000000000004, 0.5917, 0.9423],
+            ));
+  SemiColors copyWith({
+    bool? dark,
+    Color? colorWhite,
+    Color? colorBlack,
+    Color? colorPrimary,
+    Color? colorPrimaryHover,
+    Color? colorPrimaryActive,
+    Color? colorPrimaryDisabled,
+    Color? colorPrimaryLightDefault,
+    Color? colorPrimaryLightHover,
+    Color? colorPrimaryLightActive,
+    Color? colorSecondary,
+    Color? colorSecondaryHover,
+    Color? colorSecondaryActive,
+    Color? colorSecondaryDisabled,
+    Color? colorSecondaryLightDefault,
+    Color? colorSecondaryLightHover,
+    Color? colorSecondaryLightActive,
+    Color? colorTertiary,
+    Color? colorTertiaryHover,
+    Color? colorTertiaryActive,
+    Color? colorTertiaryLightDefault,
+    Color? colorTertiaryLightHover,
+    Color? colorTertiaryLightActive,
+    Color? colorDefault,
+    Color? colorDefaultHover,
+    Color? colorDefaultActive,
+    Color? colorInfo,
+    Color? colorInfoHover,
+    Color? colorInfoActive,
+    Color? colorInfoDisabled,
+    Color? colorInfoLightDefault,
+    Color? colorInfoLightHover,
+    Color? colorInfoLightActive,
+    Color? colorSuccess,
+    Color? colorSuccessHover,
+    Color? colorSuccessActive,
+    Color? colorSuccessDisabled,
+    Color? colorSuccessLightDefault,
+    Color? colorSuccessLightHover,
+    Color? colorSuccessLightActive,
+    Color? colorDanger,
+    Color? colorDangerHover,
+    Color? colorDangerActive,
+    Color? colorDangerLightDefault,
+    Color? colorDangerLightHover,
+    Color? colorDangerLightActive,
+    Color? colorWarning,
+    Color? colorWarningHover,
+    Color? colorWarningActive,
+    Color? colorWarningLightDefault,
+    Color? colorWarningLightHover,
+    Color? colorWarningLightActive,
+    Color? colorFocusBorder,
+    Color? colorDisabledText,
+    Color? colorDisabledBorder,
+    Color? colorDisabledBg,
+    Color? colorDisabledFill,
+    Color? colorShadow,
+    Color? colorLink,
+    Color? colorLinkHover,
+    Color? colorLinkActive,
+    Color? colorLinkVisited,
+    Color? colorBorder,
+    Color? colorNavBg,
+    Color? colorOverlayBg,
+    Color? colorFill0,
+    Color? colorFill1,
+    Color? colorFill2,
+    Color? colorBg0,
+    Color? colorBg1,
+    Color? colorBg2,
+    Color? colorBg3,
+    Color? colorBg4,
+    Color? colorText0,
+    Color? colorText1,
+    Color? colorText2,
+    Color? colorText3,
+    Color? colorHighlightBg,
+    Color? colorHighlight,
+    Color? colorData0,
+    Color? colorData1,
+    Color? colorData2,
+    Color? colorData3,
+    Color? colorData4,
+    Color? colorData5,
+    Color? colorData6,
+    Color? colorData7,
+    Color? colorData8,
+    Color? colorData9,
+    Color? colorData10,
+    Color? colorData11,
+    Color? colorData12,
+    Color? colorData13,
+    Color? colorData14,
+    Color? colorData15,
+    Color? colorData16,
+    Color? colorData17,
+    Color? colorData18,
+    Color? colorData19,
+    SemiGradient? colorAiGeneral,
+    SemiGradient? colorAiGeneralHover,
+    SemiGradient? colorAiGeneralActive,
+    SemiGradient? colorAiGeneralDisabled,
+    Color? colorAiPurple,
+    Color? colorAiPurpleHover,
+    Color? colorAiPurpleActive,
+    Color? colorAiPurpleDisabled,
+    SemiGradient? colorAiBackgroundBottom,
+    SemiGradient? colorAiBackgroundBottomHover,
+    SemiGradient? colorAiBackgroundBottomActive,
+    SemiGradient? colorAiBackgroundTop,
+    SemiGradient? colorAiBackgroundTopHover,
+    SemiPalette? palette,
+  }) => SemiColors(
+    dark: dark ?? _dark,
+    colorWhite: colorWhite ?? _colorWhite,
+    colorBlack: colorBlack ?? _colorBlack,
+    colorPrimary: colorPrimary ?? _colorPrimary,
+    colorPrimaryHover: colorPrimaryHover ?? _colorPrimaryHover,
+    colorPrimaryActive: colorPrimaryActive ?? _colorPrimaryActive,
+    colorPrimaryDisabled: colorPrimaryDisabled ?? _colorPrimaryDisabled,
+    colorPrimaryLightDefault:
+        colorPrimaryLightDefault ?? _colorPrimaryLightDefault,
+    colorPrimaryLightHover: colorPrimaryLightHover ?? _colorPrimaryLightHover,
+    colorPrimaryLightActive:
+        colorPrimaryLightActive ?? _colorPrimaryLightActive,
+    colorSecondary: colorSecondary ?? _colorSecondary,
+    colorSecondaryHover: colorSecondaryHover ?? _colorSecondaryHover,
+    colorSecondaryActive: colorSecondaryActive ?? _colorSecondaryActive,
+    colorSecondaryDisabled: colorSecondaryDisabled ?? _colorSecondaryDisabled,
+    colorSecondaryLightDefault:
+        colorSecondaryLightDefault ?? _colorSecondaryLightDefault,
+    colorSecondaryLightHover:
+        colorSecondaryLightHover ?? _colorSecondaryLightHover,
+    colorSecondaryLightActive:
+        colorSecondaryLightActive ?? _colorSecondaryLightActive,
+    colorTertiary: colorTertiary ?? _colorTertiary,
+    colorTertiaryHover: colorTertiaryHover ?? _colorTertiaryHover,
+    colorTertiaryActive: colorTertiaryActive ?? _colorTertiaryActive,
+    colorTertiaryLightDefault:
+        colorTertiaryLightDefault ?? _colorTertiaryLightDefault,
+    colorTertiaryLightHover:
+        colorTertiaryLightHover ?? _colorTertiaryLightHover,
+    colorTertiaryLightActive:
+        colorTertiaryLightActive ?? _colorTertiaryLightActive,
+    colorDefault: colorDefault ?? _colorDefault,
+    colorDefaultHover: colorDefaultHover ?? _colorDefaultHover,
+    colorDefaultActive: colorDefaultActive ?? _colorDefaultActive,
+    colorInfo: colorInfo ?? _colorInfo,
+    colorInfoHover: colorInfoHover ?? _colorInfoHover,
+    colorInfoActive: colorInfoActive ?? _colorInfoActive,
+    colorInfoDisabled: colorInfoDisabled ?? _colorInfoDisabled,
+    colorInfoLightDefault: colorInfoLightDefault ?? _colorInfoLightDefault,
+    colorInfoLightHover: colorInfoLightHover ?? _colorInfoLightHover,
+    colorInfoLightActive: colorInfoLightActive ?? _colorInfoLightActive,
+    colorSuccess: colorSuccess ?? _colorSuccess,
+    colorSuccessHover: colorSuccessHover ?? _colorSuccessHover,
+    colorSuccessActive: colorSuccessActive ?? _colorSuccessActive,
+    colorSuccessDisabled: colorSuccessDisabled ?? _colorSuccessDisabled,
+    colorSuccessLightDefault:
+        colorSuccessLightDefault ?? _colorSuccessLightDefault,
+    colorSuccessLightHover: colorSuccessLightHover ?? _colorSuccessLightHover,
+    colorSuccessLightActive:
+        colorSuccessLightActive ?? _colorSuccessLightActive,
+    colorDanger: colorDanger ?? _colorDanger,
+    colorDangerHover: colorDangerHover ?? _colorDangerHover,
+    colorDangerActive: colorDangerActive ?? _colorDangerActive,
+    colorDangerLightDefault:
+        colorDangerLightDefault ?? _colorDangerLightDefault,
+    colorDangerLightHover: colorDangerLightHover ?? _colorDangerLightHover,
+    colorDangerLightActive: colorDangerLightActive ?? _colorDangerLightActive,
+    colorWarning: colorWarning ?? _colorWarning,
+    colorWarningHover: colorWarningHover ?? _colorWarningHover,
+    colorWarningActive: colorWarningActive ?? _colorWarningActive,
+    colorWarningLightDefault:
+        colorWarningLightDefault ?? _colorWarningLightDefault,
+    colorWarningLightHover: colorWarningLightHover ?? _colorWarningLightHover,
+    colorWarningLightActive:
+        colorWarningLightActive ?? _colorWarningLightActive,
+    colorFocusBorder: colorFocusBorder ?? _colorFocusBorder,
+    colorDisabledText: colorDisabledText ?? _colorDisabledText,
+    colorDisabledBorder: colorDisabledBorder ?? _colorDisabledBorder,
+    colorDisabledBg: colorDisabledBg ?? _colorDisabledBg,
+    colorDisabledFill: colorDisabledFill ?? _colorDisabledFill,
+    colorShadow: colorShadow ?? _colorShadow,
+    colorLink: colorLink ?? _colorLink,
+    colorLinkHover: colorLinkHover ?? _colorLinkHover,
+    colorLinkActive: colorLinkActive ?? _colorLinkActive,
+    colorLinkVisited: colorLinkVisited ?? _colorLinkVisited,
+    colorBorder: colorBorder ?? _colorBorder,
+    colorNavBg: colorNavBg ?? _colorNavBg,
+    colorOverlayBg: colorOverlayBg ?? _colorOverlayBg,
+    colorFill0: colorFill0 ?? _colorFill0,
+    colorFill1: colorFill1 ?? _colorFill1,
+    colorFill2: colorFill2 ?? _colorFill2,
+    colorBg0: colorBg0 ?? _colorBg0,
+    colorBg1: colorBg1 ?? _colorBg1,
+    colorBg2: colorBg2 ?? _colorBg2,
+    colorBg3: colorBg3 ?? _colorBg3,
+    colorBg4: colorBg4 ?? _colorBg4,
+    colorText0: colorText0 ?? _colorText0,
+    colorText1: colorText1 ?? _colorText1,
+    colorText2: colorText2 ?? _colorText2,
+    colorText3: colorText3 ?? _colorText3,
+    colorHighlightBg: colorHighlightBg ?? _colorHighlightBg,
+    colorHighlight: colorHighlight ?? _colorHighlight,
+    colorData0: colorData0 ?? _colorData0,
+    colorData1: colorData1 ?? _colorData1,
+    colorData2: colorData2 ?? _colorData2,
+    colorData3: colorData3 ?? _colorData3,
+    colorData4: colorData4 ?? _colorData4,
+    colorData5: colorData5 ?? _colorData5,
+    colorData6: colorData6 ?? _colorData6,
+    colorData7: colorData7 ?? _colorData7,
+    colorData8: colorData8 ?? _colorData8,
+    colorData9: colorData9 ?? _colorData9,
+    colorData10: colorData10 ?? _colorData10,
+    colorData11: colorData11 ?? _colorData11,
+    colorData12: colorData12 ?? _colorData12,
+    colorData13: colorData13 ?? _colorData13,
+    colorData14: colorData14 ?? _colorData14,
+    colorData15: colorData15 ?? _colorData15,
+    colorData16: colorData16 ?? _colorData16,
+    colorData17: colorData17 ?? _colorData17,
+    colorData18: colorData18 ?? _colorData18,
+    colorData19: colorData19 ?? _colorData19,
+    colorAiGeneral: colorAiGeneral ?? _colorAiGeneral,
+    colorAiGeneralHover: colorAiGeneralHover ?? _colorAiGeneralHover,
+    colorAiGeneralActive: colorAiGeneralActive ?? _colorAiGeneralActive,
+    colorAiGeneralDisabled: colorAiGeneralDisabled ?? _colorAiGeneralDisabled,
+    colorAiPurple: colorAiPurple ?? _colorAiPurple,
+    colorAiPurpleHover: colorAiPurpleHover ?? _colorAiPurpleHover,
+    colorAiPurpleActive: colorAiPurpleActive ?? _colorAiPurpleActive,
+    colorAiPurpleDisabled: colorAiPurpleDisabled ?? _colorAiPurpleDisabled,
+    colorAiBackgroundBottom:
+        colorAiBackgroundBottom ?? _colorAiBackgroundBottom,
+    colorAiBackgroundBottomHover:
+        colorAiBackgroundBottomHover ?? _colorAiBackgroundBottomHover,
+    colorAiBackgroundBottomActive:
+        colorAiBackgroundBottomActive ?? _colorAiBackgroundBottomActive,
+    colorAiBackgroundTop: colorAiBackgroundTop ?? _colorAiBackgroundTop,
+    colorAiBackgroundTopHover:
+        colorAiBackgroundTopHover ?? _colorAiBackgroundTopHover,
+    palette: palette ?? this.palette,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SemiColors &&
+          colorWhite == other.colorWhite &&
+          colorBlack == other.colorBlack &&
+          colorPrimary == other.colorPrimary &&
+          colorPrimaryHover == other.colorPrimaryHover &&
+          colorPrimaryActive == other.colorPrimaryActive &&
+          colorPrimaryDisabled == other.colorPrimaryDisabled &&
+          colorPrimaryLightDefault == other.colorPrimaryLightDefault &&
+          colorPrimaryLightHover == other.colorPrimaryLightHover &&
+          colorPrimaryLightActive == other.colorPrimaryLightActive &&
+          colorSecondary == other.colorSecondary &&
+          colorSecondaryHover == other.colorSecondaryHover &&
+          colorSecondaryActive == other.colorSecondaryActive &&
+          colorSecondaryDisabled == other.colorSecondaryDisabled &&
+          colorSecondaryLightDefault == other.colorSecondaryLightDefault &&
+          colorSecondaryLightHover == other.colorSecondaryLightHover &&
+          colorSecondaryLightActive == other.colorSecondaryLightActive &&
+          colorTertiary == other.colorTertiary &&
+          colorTertiaryHover == other.colorTertiaryHover &&
+          colorTertiaryActive == other.colorTertiaryActive &&
+          colorTertiaryLightDefault == other.colorTertiaryLightDefault &&
+          colorTertiaryLightHover == other.colorTertiaryLightHover &&
+          colorTertiaryLightActive == other.colorTertiaryLightActive &&
+          colorDefault == other.colorDefault &&
+          colorDefaultHover == other.colorDefaultHover &&
+          colorDefaultActive == other.colorDefaultActive &&
+          colorInfo == other.colorInfo &&
+          colorInfoHover == other.colorInfoHover &&
+          colorInfoActive == other.colorInfoActive &&
+          colorInfoDisabled == other.colorInfoDisabled &&
+          colorInfoLightDefault == other.colorInfoLightDefault &&
+          colorInfoLightHover == other.colorInfoLightHover &&
+          colorInfoLightActive == other.colorInfoLightActive &&
+          colorSuccess == other.colorSuccess &&
+          colorSuccessHover == other.colorSuccessHover &&
+          colorSuccessActive == other.colorSuccessActive &&
+          colorSuccessDisabled == other.colorSuccessDisabled &&
+          colorSuccessLightDefault == other.colorSuccessLightDefault &&
+          colorSuccessLightHover == other.colorSuccessLightHover &&
+          colorSuccessLightActive == other.colorSuccessLightActive &&
+          colorDanger == other.colorDanger &&
+          colorDangerHover == other.colorDangerHover &&
+          colorDangerActive == other.colorDangerActive &&
+          colorDangerLightDefault == other.colorDangerLightDefault &&
+          colorDangerLightHover == other.colorDangerLightHover &&
+          colorDangerLightActive == other.colorDangerLightActive &&
+          colorWarning == other.colorWarning &&
+          colorWarningHover == other.colorWarningHover &&
+          colorWarningActive == other.colorWarningActive &&
+          colorWarningLightDefault == other.colorWarningLightDefault &&
+          colorWarningLightHover == other.colorWarningLightHover &&
+          colorWarningLightActive == other.colorWarningLightActive &&
+          colorFocusBorder == other.colorFocusBorder &&
+          colorDisabledText == other.colorDisabledText &&
+          colorDisabledBorder == other.colorDisabledBorder &&
+          colorDisabledBg == other.colorDisabledBg &&
+          colorDisabledFill == other.colorDisabledFill &&
+          colorShadow == other.colorShadow &&
+          colorLink == other.colorLink &&
+          colorLinkHover == other.colorLinkHover &&
+          colorLinkActive == other.colorLinkActive &&
+          colorLinkVisited == other.colorLinkVisited &&
+          colorBorder == other.colorBorder &&
+          colorNavBg == other.colorNavBg &&
+          colorOverlayBg == other.colorOverlayBg &&
+          colorFill0 == other.colorFill0 &&
+          colorFill1 == other.colorFill1 &&
+          colorFill2 == other.colorFill2 &&
+          colorBg0 == other.colorBg0 &&
+          colorBg1 == other.colorBg1 &&
+          colorBg2 == other.colorBg2 &&
+          colorBg3 == other.colorBg3 &&
+          colorBg4 == other.colorBg4 &&
+          colorText0 == other.colorText0 &&
+          colorText1 == other.colorText1 &&
+          colorText2 == other.colorText2 &&
+          colorText3 == other.colorText3 &&
+          colorHighlightBg == other.colorHighlightBg &&
+          colorHighlight == other.colorHighlight &&
+          colorData0 == other.colorData0 &&
+          colorData1 == other.colorData1 &&
+          colorData2 == other.colorData2 &&
+          colorData3 == other.colorData3 &&
+          colorData4 == other.colorData4 &&
+          colorData5 == other.colorData5 &&
+          colorData6 == other.colorData6 &&
+          colorData7 == other.colorData7 &&
+          colorData8 == other.colorData8 &&
+          colorData9 == other.colorData9 &&
+          colorData10 == other.colorData10 &&
+          colorData11 == other.colorData11 &&
+          colorData12 == other.colorData12 &&
+          colorData13 == other.colorData13 &&
+          colorData14 == other.colorData14 &&
+          colorData15 == other.colorData15 &&
+          colorData16 == other.colorData16 &&
+          colorData17 == other.colorData17 &&
+          colorData18 == other.colorData18 &&
+          colorData19 == other.colorData19 &&
+          colorAiGeneral == other.colorAiGeneral &&
+          colorAiGeneralHover == other.colorAiGeneralHover &&
+          colorAiGeneralActive == other.colorAiGeneralActive &&
+          colorAiGeneralDisabled == other.colorAiGeneralDisabled &&
+          colorAiPurple == other.colorAiPurple &&
+          colorAiPurpleHover == other.colorAiPurpleHover &&
+          colorAiPurpleActive == other.colorAiPurpleActive &&
+          colorAiPurpleDisabled == other.colorAiPurpleDisabled &&
+          colorAiBackgroundBottom == other.colorAiBackgroundBottom &&
+          colorAiBackgroundBottomHover == other.colorAiBackgroundBottomHover &&
+          colorAiBackgroundBottomActive ==
+              other.colorAiBackgroundBottomActive &&
+          colorAiBackgroundTop == other.colorAiBackgroundTop &&
+          colorAiBackgroundTopHover == other.colorAiBackgroundTopHover;
+  @override
+  int get hashCode => Object.hashAll([
+    colorWhite,
+    colorBlack,
+    colorPrimary,
+    colorPrimaryHover,
+    colorPrimaryActive,
+    colorPrimaryDisabled,
+    colorPrimaryLightDefault,
+    colorPrimaryLightHover,
+    colorPrimaryLightActive,
+    colorSecondary,
+    colorSecondaryHover,
+    colorSecondaryActive,
+    colorSecondaryDisabled,
+    colorSecondaryLightDefault,
+    colorSecondaryLightHover,
+    colorSecondaryLightActive,
+    colorTertiary,
+    colorTertiaryHover,
+    colorTertiaryActive,
+    colorTertiaryLightDefault,
+    colorTertiaryLightHover,
+    colorTertiaryLightActive,
+    colorDefault,
+    colorDefaultHover,
+    colorDefaultActive,
+    colorInfo,
+    colorInfoHover,
+    colorInfoActive,
+    colorInfoDisabled,
+    colorInfoLightDefault,
+    colorInfoLightHover,
+    colorInfoLightActive,
+    colorSuccess,
+    colorSuccessHover,
+    colorSuccessActive,
+    colorSuccessDisabled,
+    colorSuccessLightDefault,
+    colorSuccessLightHover,
+    colorSuccessLightActive,
+    colorDanger,
+    colorDangerHover,
+    colorDangerActive,
+    colorDangerLightDefault,
+    colorDangerLightHover,
+    colorDangerLightActive,
+    colorWarning,
+    colorWarningHover,
+    colorWarningActive,
+    colorWarningLightDefault,
+    colorWarningLightHover,
+    colorWarningLightActive,
+    colorFocusBorder,
+    colorDisabledText,
+    colorDisabledBorder,
+    colorDisabledBg,
+    colorDisabledFill,
+    colorShadow,
+    colorLink,
+    colorLinkHover,
+    colorLinkActive,
+    colorLinkVisited,
+    colorBorder,
+    colorNavBg,
+    colorOverlayBg,
+    colorFill0,
+    colorFill1,
+    colorFill2,
+    colorBg0,
+    colorBg1,
+    colorBg2,
+    colorBg3,
+    colorBg4,
+    colorText0,
+    colorText1,
+    colorText2,
+    colorText3,
+    colorHighlightBg,
+    colorHighlight,
+    colorData0,
+    colorData1,
+    colorData2,
+    colorData3,
+    colorData4,
+    colorData5,
+    colorData6,
+    colorData7,
+    colorData8,
+    colorData9,
+    colorData10,
+    colorData11,
+    colorData12,
+    colorData13,
+    colorData14,
+    colorData15,
+    colorData16,
+    colorData17,
+    colorData18,
+    colorData19,
+    colorAiGeneral,
+    colorAiGeneralHover,
+    colorAiGeneralActive,
+    colorAiGeneralDisabled,
+    colorAiPurple,
+    colorAiPurpleHover,
+    colorAiPurpleActive,
+    colorAiPurpleDisabled,
+    colorAiBackgroundBottom,
+    colorAiBackgroundBottomHover,
+    colorAiBackgroundBottomActive,
+    colorAiBackgroundTop,
+    colorAiBackgroundTopHover,
+  ]);
 }

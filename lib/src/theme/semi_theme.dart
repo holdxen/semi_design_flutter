@@ -20,7 +20,7 @@ class SemiTheme extends InheritedTheme {
 
   @override
   bool updateShouldNotify(SemiTheme oldWidget) {
-    return data.dark != oldWidget.data.dark;
+    return data != oldWidget.data;
   }
 
   @override

@@ -5,111 +5,437 @@ import 'package:flutter/animation.dart';
 import 'token_types.dart';
 
 class SemiMotion {
-  const SemiMotion({required bool dark});
+  const SemiMotion({
+    bool dark = false,
+    Duration? transitionDurationSlowest,
+    Duration? transitionDurationSlower,
+    Duration? transitionDurationSlow,
+    Duration? transitionDurationNormal,
+    Duration? transitionDurationFast,
+    Duration? transitionDurationFaster,
+    Duration? transitionDurationFastest,
+    Duration? transitionDurationNone,
+    Curve? transitionFunctionLinear,
+    Curve? transitionFunctionEase,
+    Curve? transitionFunctionEaseIn,
+    Curve? transitionFunctionEaseOut,
+    Curve? transitionFunctionEaseInIOut,
+    Duration? transitionDelayNone,
+    Duration? transitionDelaySlowest,
+    Duration? transitionDelaySlower,
+    Duration? transitionDelaySlow,
+    Duration? transitionDelayNormal,
+    Duration? transitionDelayFast,
+    Duration? transitionDelayFaster,
+    Duration? transitionDelayFastest,
+    SemiTransform? transformScaleNone,
+    SemiTransform? transformScaleSmall,
+    SemiTransform? transformScaleMedium,
+    SemiTransform? transformScaleLarge,
+    SemiTransform? transformRotateNone,
+    SemiTransform? transformRotateClockwise90deg,
+    SemiTransform? transformRotateClockwise180deg,
+    SemiTransform? transformRotateClockwise270deg,
+    SemiTransform? transformRotateClockwise360deg,
+    SemiTransform? transformRotateAnticlockwise90deg,
+    SemiTransform? transformRotateAnticlockwise180deg,
+    SemiTransform? transformRotateAnticlockwise270deg,
+    SemiTransform? transformRotateAnticlockwise360deg,
+  }) : _dark = dark,
+       _transitionDurationSlowest = transitionDurationSlowest,
+       _transitionDurationSlower = transitionDurationSlower,
+       _transitionDurationSlow = transitionDurationSlow,
+       _transitionDurationNormal = transitionDurationNormal,
+       _transitionDurationFast = transitionDurationFast,
+       _transitionDurationFaster = transitionDurationFaster,
+       _transitionDurationFastest = transitionDurationFastest,
+       _transitionDurationNone = transitionDurationNone,
+       _transitionFunctionLinear = transitionFunctionLinear,
+       _transitionFunctionEase = transitionFunctionEase,
+       _transitionFunctionEaseIn = transitionFunctionEaseIn,
+       _transitionFunctionEaseOut = transitionFunctionEaseOut,
+       _transitionFunctionEaseInIOut = transitionFunctionEaseInIOut,
+       _transitionDelayNone = transitionDelayNone,
+       _transitionDelaySlowest = transitionDelaySlowest,
+       _transitionDelaySlower = transitionDelaySlower,
+       _transitionDelaySlow = transitionDelaySlow,
+       _transitionDelayNormal = transitionDelayNormal,
+       _transitionDelayFast = transitionDelayFast,
+       _transitionDelayFaster = transitionDelayFaster,
+       _transitionDelayFastest = transitionDelayFastest,
+       _transformScaleNone = transformScaleNone,
+       _transformScaleSmall = transformScaleSmall,
+       _transformScaleMedium = transformScaleMedium,
+       _transformScaleLarge = transformScaleLarge,
+       _transformRotateNone = transformRotateNone,
+       _transformRotateClockwise90deg = transformRotateClockwise90deg,
+       _transformRotateClockwise180deg = transformRotateClockwise180deg,
+       _transformRotateClockwise270deg = transformRotateClockwise270deg,
+       _transformRotateClockwise360deg = transformRotateClockwise360deg,
+       _transformRotateAnticlockwise90deg = transformRotateAnticlockwise90deg,
+       _transformRotateAnticlockwise180deg = transformRotateAnticlockwise180deg,
+       _transformRotateAnticlockwise270deg = transformRotateAnticlockwise270deg,
+       _transformRotateAnticlockwise360deg = transformRotateAnticlockwise360deg;
+  final bool _dark;
+  final Duration? _transitionDurationSlowest;
 
   /// `--semi-transition_duration-slowest` — `packages/semi-theme-default/scss/animation.scss` (line 4).
-  Duration get transitionDurationSlowest => Duration(milliseconds: 0);
+  Duration get transitionDurationSlowest =>
+      _transitionDurationSlowest ?? (Duration(milliseconds: 0));
+  final Duration? _transitionDurationSlower;
 
   /// `--semi-transition_duration-slower` — `packages/semi-theme-default/scss/animation.scss` (line 5).
-  Duration get transitionDurationSlower => Duration(milliseconds: 0);
+  Duration get transitionDurationSlower =>
+      _transitionDurationSlower ?? (Duration(milliseconds: 0));
+  final Duration? _transitionDurationSlow;
 
   /// `--semi-transition_duration-slow` — `packages/semi-theme-default/scss/animation.scss` (line 6).
-  Duration get transitionDurationSlow => Duration(milliseconds: 0);
+  Duration get transitionDurationSlow =>
+      _transitionDurationSlow ?? (Duration(milliseconds: 0));
+  final Duration? _transitionDurationNormal;
 
   /// `--semi-transition_duration-normal` — `packages/semi-theme-default/scss/animation.scss` (line 7).
-  Duration get transitionDurationNormal => Duration(milliseconds: 0);
+  Duration get transitionDurationNormal =>
+      _transitionDurationNormal ?? (Duration(milliseconds: 0));
+  final Duration? _transitionDurationFast;
 
   /// `--semi-transition_duration-fast` — `packages/semi-theme-default/scss/animation.scss` (line 8).
-  Duration get transitionDurationFast => Duration(milliseconds: 0);
+  Duration get transitionDurationFast =>
+      _transitionDurationFast ?? (Duration(milliseconds: 0));
+  final Duration? _transitionDurationFaster;
 
   /// `--semi-transition_duration-faster` — `packages/semi-theme-default/scss/animation.scss` (line 9).
-  Duration get transitionDurationFaster => Duration(milliseconds: 0);
+  Duration get transitionDurationFaster =>
+      _transitionDurationFaster ?? (Duration(milliseconds: 0));
+  final Duration? _transitionDurationFastest;
 
   /// `--semi-transition_duration-fastest` — `packages/semi-theme-default/scss/animation.scss` (line 10).
-  Duration get transitionDurationFastest => Duration(milliseconds: 0);
+  Duration get transitionDurationFastest =>
+      _transitionDurationFastest ?? (Duration(milliseconds: 0));
+  final Duration? _transitionDurationNone;
 
   /// `--semi-transition_duration-none` — `packages/semi-theme-default/scss/animation.scss` (line 11).
-  Duration get transitionDurationNone => Duration(milliseconds: 0);
+  Duration get transitionDurationNone =>
+      _transitionDurationNone ?? (Duration(milliseconds: 0));
+  final Curve? _transitionFunctionLinear;
 
   /// `--semi-transition_function-linear` — `packages/semi-theme-default/scss/animation.scss` (line 13).
-  Curve get transitionFunctionLinear => Curves.linear;
+  Curve get transitionFunctionLinear =>
+      _transitionFunctionLinear ?? (Curves.linear);
+  final Curve? _transitionFunctionEase;
 
   /// `--semi-transition_function-ease` — `packages/semi-theme-default/scss/animation.scss` (line 14).
-  Curve get transitionFunctionEase => Cubic(0.25, 0.1, 0.25, 1);
+  Curve get transitionFunctionEase =>
+      _transitionFunctionEase ?? (const Cubic(0.25, 0.1, 0.25, 1));
+  final Curve? _transitionFunctionEaseIn;
 
   /// `--semi-transition_function-easeIn` — `packages/semi-theme-default/scss/animation.scss` (line 15).
-  Curve get transitionFunctionEaseIn => Curves.easeIn;
+  Curve get transitionFunctionEaseIn =>
+      _transitionFunctionEaseIn ?? (Curves.easeIn);
+  final Curve? _transitionFunctionEaseOut;
 
   /// `--semi-transition_function-easeOut` — `packages/semi-theme-default/scss/animation.scss` (line 16).
-  Curve get transitionFunctionEaseOut => Curves.easeOut;
+  Curve get transitionFunctionEaseOut =>
+      _transitionFunctionEaseOut ?? (Curves.easeOut);
+  final Curve? _transitionFunctionEaseInIOut;
 
   /// `--semi-transition_function-easeInIOut` — `packages/semi-theme-default/scss/animation.scss` (line 17).
-  Curve get transitionFunctionEaseInIOut => Curves.easeInOut;
+  Curve get transitionFunctionEaseInIOut =>
+      _transitionFunctionEaseInIOut ?? (Curves.easeInOut);
+  final Duration? _transitionDelayNone;
 
   /// `--semi-transition_delay-none` — `packages/semi-theme-default/scss/animation.scss` (line 19).
-  Duration get transitionDelayNone => Duration(milliseconds: 0);
+  Duration get transitionDelayNone =>
+      _transitionDelayNone ?? (Duration(milliseconds: 0));
+  final Duration? _transitionDelaySlowest;
 
   /// `--semi-transition_delay-slowest` — `packages/semi-theme-default/scss/animation.scss` (line 20).
-  Duration get transitionDelaySlowest => Duration(milliseconds: 0);
+  Duration get transitionDelaySlowest =>
+      _transitionDelaySlowest ?? (Duration(milliseconds: 0));
+  final Duration? _transitionDelaySlower;
 
   /// `--semi-transition_delay-slower` — `packages/semi-theme-default/scss/animation.scss` (line 21).
-  Duration get transitionDelaySlower => Duration(milliseconds: 0);
+  Duration get transitionDelaySlower =>
+      _transitionDelaySlower ?? (Duration(milliseconds: 0));
+  final Duration? _transitionDelaySlow;
 
   /// `--semi-transition_delay-slow` — `packages/semi-theme-default/scss/animation.scss` (line 22).
-  Duration get transitionDelaySlow => Duration(milliseconds: 0);
+  Duration get transitionDelaySlow =>
+      _transitionDelaySlow ?? (Duration(milliseconds: 0));
+  final Duration? _transitionDelayNormal;
 
   /// `--semi-transition_delay-normal` — `packages/semi-theme-default/scss/animation.scss` (line 23).
-  Duration get transitionDelayNormal => Duration(milliseconds: 0);
+  Duration get transitionDelayNormal =>
+      _transitionDelayNormal ?? (Duration(milliseconds: 0));
+  final Duration? _transitionDelayFast;
 
   /// `--semi-transition_delay-fast` — `packages/semi-theme-default/scss/animation.scss` (line 24).
-  Duration get transitionDelayFast => Duration(milliseconds: 0);
+  Duration get transitionDelayFast =>
+      _transitionDelayFast ?? (Duration(milliseconds: 0));
+  final Duration? _transitionDelayFaster;
 
   /// `--semi-transition_delay-faster` — `packages/semi-theme-default/scss/animation.scss` (line 25).
-  Duration get transitionDelayFaster => Duration(milliseconds: 0);
+  Duration get transitionDelayFaster =>
+      _transitionDelayFaster ?? (Duration(milliseconds: 0));
+  final Duration? _transitionDelayFastest;
 
   /// `--semi-transition_delay-fastest` — `packages/semi-theme-default/scss/animation.scss` (line 26).
-  Duration get transitionDelayFastest => Duration(milliseconds: 0);
+  Duration get transitionDelayFastest =>
+      _transitionDelayFastest ?? (Duration(milliseconds: 0));
+  final SemiTransform? _transformScaleNone;
 
   /// `--semi-transform_scale-none` — `packages/semi-theme-default/scss/animation.scss` (line 28).
-  SemiTransform get transformScaleNone => SemiTransform.scale(1, 1);
+  SemiTransform get transformScaleNone =>
+      _transformScaleNone ?? (SemiTransform.scale(1, 1));
+  final SemiTransform? _transformScaleSmall;
 
   /// `--semi-transform_scale-small` — `packages/semi-theme-default/scss/animation.scss` (line 29).
-  SemiTransform get transformScaleSmall => SemiTransform.scale(1, 1);
+  SemiTransform get transformScaleSmall =>
+      _transformScaleSmall ?? (SemiTransform.scale(1, 1));
+  final SemiTransform? _transformScaleMedium;
 
   /// `--semi-transform_scale-medium` — `packages/semi-theme-default/scss/animation.scss` (line 30).
-  SemiTransform get transformScaleMedium => SemiTransform.scale(1, 1);
+  SemiTransform get transformScaleMedium =>
+      _transformScaleMedium ?? (SemiTransform.scale(1, 1));
+  final SemiTransform? _transformScaleLarge;
 
   /// `--semi-transform_scale-large` — `packages/semi-theme-default/scss/animation.scss` (line 31).
-  SemiTransform get transformScaleLarge => SemiTransform.scale(1, 1);
+  SemiTransform get transformScaleLarge =>
+      _transformScaleLarge ?? (SemiTransform.scale(1, 1));
+  final SemiTransform? _transformRotateNone;
 
   /// `--semi-transform-rotate-none` — `packages/semi-theme-default/scss/animation.scss` (line 33).
-  SemiTransform get transformRotateNone => SemiTransform.rotate(0);
+  SemiTransform get transformRotateNone =>
+      _transformRotateNone ?? (SemiTransform.rotate(0));
+  final SemiTransform? _transformRotateClockwise90deg;
 
   /// `--semi-transform_rotate-clockwise90deg` — `packages/semi-theme-default/scss/animation.scss` (line 34).
-  SemiTransform get transformRotateClockwise90deg => SemiTransform.rotate(90);
+  SemiTransform get transformRotateClockwise90deg =>
+      _transformRotateClockwise90deg ?? (SemiTransform.rotate(90));
+  final SemiTransform? _transformRotateClockwise180deg;
 
   /// `--semi-transform_rotate-clockwise180deg` — `packages/semi-theme-default/scss/animation.scss` (line 35).
-  SemiTransform get transformRotateClockwise180deg => SemiTransform.rotate(180);
+  SemiTransform get transformRotateClockwise180deg =>
+      _transformRotateClockwise180deg ?? (SemiTransform.rotate(180));
+  final SemiTransform? _transformRotateClockwise270deg;
 
   /// `--semi-transform_rotate-clockwise270deg` — `packages/semi-theme-default/scss/animation.scss` (line 36).
-  SemiTransform get transformRotateClockwise270deg => SemiTransform.rotate(270);
+  SemiTransform get transformRotateClockwise270deg =>
+      _transformRotateClockwise270deg ?? (SemiTransform.rotate(270));
+  final SemiTransform? _transformRotateClockwise360deg;
 
   /// `--semi-transform_rotate-clockwise360deg` — `packages/semi-theme-default/scss/animation.scss` (line 37).
-  SemiTransform get transformRotateClockwise360deg => SemiTransform.rotate(360);
+  SemiTransform get transformRotateClockwise360deg =>
+      _transformRotateClockwise360deg ?? (SemiTransform.rotate(360));
+  final SemiTransform? _transformRotateAnticlockwise90deg;
 
   /// `--semi-transform_rotate-anticlockwise90deg` — `packages/semi-theme-default/scss/animation.scss` (line 38).
   SemiTransform get transformRotateAnticlockwise90deg =>
-      SemiTransform.rotate(-90);
+      _transformRotateAnticlockwise90deg ?? (SemiTransform.rotate(-90));
+  final SemiTransform? _transformRotateAnticlockwise180deg;
 
   /// `--semi-transform_rotate-anticlockwise180deg` — `packages/semi-theme-default/scss/animation.scss` (line 39).
   SemiTransform get transformRotateAnticlockwise180deg =>
-      SemiTransform.rotate(-180);
+      _transformRotateAnticlockwise180deg ?? (SemiTransform.rotate(-180));
+  final SemiTransform? _transformRotateAnticlockwise270deg;
 
   /// `--semi-transform_rotate-anticlockwise270deg` — `packages/semi-theme-default/scss/animation.scss` (line 40).
   SemiTransform get transformRotateAnticlockwise270deg =>
-      SemiTransform.rotate(-270);
+      _transformRotateAnticlockwise270deg ?? (SemiTransform.rotate(-270));
+  final SemiTransform? _transformRotateAnticlockwise360deg;
 
   /// `--semi-transform_rotate-anticlockwise360deg` — `packages/semi-theme-default/scss/animation.scss` (line 41).
   SemiTransform get transformRotateAnticlockwise360deg =>
-      SemiTransform.rotate(-360);
+      _transformRotateAnticlockwise360deg ?? (SemiTransform.rotate(-360));
+  SemiMotion copyWith({
+    bool? dark,
+    Duration? transitionDurationSlowest,
+    Duration? transitionDurationSlower,
+    Duration? transitionDurationSlow,
+    Duration? transitionDurationNormal,
+    Duration? transitionDurationFast,
+    Duration? transitionDurationFaster,
+    Duration? transitionDurationFastest,
+    Duration? transitionDurationNone,
+    Curve? transitionFunctionLinear,
+    Curve? transitionFunctionEase,
+    Curve? transitionFunctionEaseIn,
+    Curve? transitionFunctionEaseOut,
+    Curve? transitionFunctionEaseInIOut,
+    Duration? transitionDelayNone,
+    Duration? transitionDelaySlowest,
+    Duration? transitionDelaySlower,
+    Duration? transitionDelaySlow,
+    Duration? transitionDelayNormal,
+    Duration? transitionDelayFast,
+    Duration? transitionDelayFaster,
+    Duration? transitionDelayFastest,
+    SemiTransform? transformScaleNone,
+    SemiTransform? transformScaleSmall,
+    SemiTransform? transformScaleMedium,
+    SemiTransform? transformScaleLarge,
+    SemiTransform? transformRotateNone,
+    SemiTransform? transformRotateClockwise90deg,
+    SemiTransform? transformRotateClockwise180deg,
+    SemiTransform? transformRotateClockwise270deg,
+    SemiTransform? transformRotateClockwise360deg,
+    SemiTransform? transformRotateAnticlockwise90deg,
+    SemiTransform? transformRotateAnticlockwise180deg,
+    SemiTransform? transformRotateAnticlockwise270deg,
+    SemiTransform? transformRotateAnticlockwise360deg,
+  }) => SemiMotion(
+    dark: dark ?? _dark,
+    transitionDurationSlowest:
+        transitionDurationSlowest ?? _transitionDurationSlowest,
+    transitionDurationSlower:
+        transitionDurationSlower ?? _transitionDurationSlower,
+    transitionDurationSlow: transitionDurationSlow ?? _transitionDurationSlow,
+    transitionDurationNormal:
+        transitionDurationNormal ?? _transitionDurationNormal,
+    transitionDurationFast: transitionDurationFast ?? _transitionDurationFast,
+    transitionDurationFaster:
+        transitionDurationFaster ?? _transitionDurationFaster,
+    transitionDurationFastest:
+        transitionDurationFastest ?? _transitionDurationFastest,
+    transitionDurationNone: transitionDurationNone ?? _transitionDurationNone,
+    transitionFunctionLinear:
+        transitionFunctionLinear ?? _transitionFunctionLinear,
+    transitionFunctionEase: transitionFunctionEase ?? _transitionFunctionEase,
+    transitionFunctionEaseIn:
+        transitionFunctionEaseIn ?? _transitionFunctionEaseIn,
+    transitionFunctionEaseOut:
+        transitionFunctionEaseOut ?? _transitionFunctionEaseOut,
+    transitionFunctionEaseInIOut:
+        transitionFunctionEaseInIOut ?? _transitionFunctionEaseInIOut,
+    transitionDelayNone: transitionDelayNone ?? _transitionDelayNone,
+    transitionDelaySlowest: transitionDelaySlowest ?? _transitionDelaySlowest,
+    transitionDelaySlower: transitionDelaySlower ?? _transitionDelaySlower,
+    transitionDelaySlow: transitionDelaySlow ?? _transitionDelaySlow,
+    transitionDelayNormal: transitionDelayNormal ?? _transitionDelayNormal,
+    transitionDelayFast: transitionDelayFast ?? _transitionDelayFast,
+    transitionDelayFaster: transitionDelayFaster ?? _transitionDelayFaster,
+    transitionDelayFastest: transitionDelayFastest ?? _transitionDelayFastest,
+    transformScaleNone: transformScaleNone ?? _transformScaleNone,
+    transformScaleSmall: transformScaleSmall ?? _transformScaleSmall,
+    transformScaleMedium: transformScaleMedium ?? _transformScaleMedium,
+    transformScaleLarge: transformScaleLarge ?? _transformScaleLarge,
+    transformRotateNone: transformRotateNone ?? _transformRotateNone,
+    transformRotateClockwise90deg:
+        transformRotateClockwise90deg ?? _transformRotateClockwise90deg,
+    transformRotateClockwise180deg:
+        transformRotateClockwise180deg ?? _transformRotateClockwise180deg,
+    transformRotateClockwise270deg:
+        transformRotateClockwise270deg ?? _transformRotateClockwise270deg,
+    transformRotateClockwise360deg:
+        transformRotateClockwise360deg ?? _transformRotateClockwise360deg,
+    transformRotateAnticlockwise90deg:
+        transformRotateAnticlockwise90deg ?? _transformRotateAnticlockwise90deg,
+    transformRotateAnticlockwise180deg:
+        transformRotateAnticlockwise180deg ??
+        _transformRotateAnticlockwise180deg,
+    transformRotateAnticlockwise270deg:
+        transformRotateAnticlockwise270deg ??
+        _transformRotateAnticlockwise270deg,
+    transformRotateAnticlockwise360deg:
+        transformRotateAnticlockwise360deg ??
+        _transformRotateAnticlockwise360deg,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SemiMotion &&
+          transitionDurationSlowest == other.transitionDurationSlowest &&
+          transitionDurationSlower == other.transitionDurationSlower &&
+          transitionDurationSlow == other.transitionDurationSlow &&
+          transitionDurationNormal == other.transitionDurationNormal &&
+          transitionDurationFast == other.transitionDurationFast &&
+          transitionDurationFaster == other.transitionDurationFaster &&
+          transitionDurationFastest == other.transitionDurationFastest &&
+          transitionDurationNone == other.transitionDurationNone &&
+          semiCurveEquals(
+            transitionFunctionLinear,
+            other.transitionFunctionLinear,
+          ) &&
+          semiCurveEquals(
+            transitionFunctionEase,
+            other.transitionFunctionEase,
+          ) &&
+          semiCurveEquals(
+            transitionFunctionEaseIn,
+            other.transitionFunctionEaseIn,
+          ) &&
+          semiCurveEquals(
+            transitionFunctionEaseOut,
+            other.transitionFunctionEaseOut,
+          ) &&
+          semiCurveEquals(
+            transitionFunctionEaseInIOut,
+            other.transitionFunctionEaseInIOut,
+          ) &&
+          transitionDelayNone == other.transitionDelayNone &&
+          transitionDelaySlowest == other.transitionDelaySlowest &&
+          transitionDelaySlower == other.transitionDelaySlower &&
+          transitionDelaySlow == other.transitionDelaySlow &&
+          transitionDelayNormal == other.transitionDelayNormal &&
+          transitionDelayFast == other.transitionDelayFast &&
+          transitionDelayFaster == other.transitionDelayFaster &&
+          transitionDelayFastest == other.transitionDelayFastest &&
+          transformScaleNone == other.transformScaleNone &&
+          transformScaleSmall == other.transformScaleSmall &&
+          transformScaleMedium == other.transformScaleMedium &&
+          transformScaleLarge == other.transformScaleLarge &&
+          transformRotateNone == other.transformRotateNone &&
+          transformRotateClockwise90deg ==
+              other.transformRotateClockwise90deg &&
+          transformRotateClockwise180deg ==
+              other.transformRotateClockwise180deg &&
+          transformRotateClockwise270deg ==
+              other.transformRotateClockwise270deg &&
+          transformRotateClockwise360deg ==
+              other.transformRotateClockwise360deg &&
+          transformRotateAnticlockwise90deg ==
+              other.transformRotateAnticlockwise90deg &&
+          transformRotateAnticlockwise180deg ==
+              other.transformRotateAnticlockwise180deg &&
+          transformRotateAnticlockwise270deg ==
+              other.transformRotateAnticlockwise270deg &&
+          transformRotateAnticlockwise360deg ==
+              other.transformRotateAnticlockwise360deg;
+  @override
+  int get hashCode => Object.hashAll([
+    transitionDurationSlowest,
+    transitionDurationSlower,
+    transitionDurationSlow,
+    transitionDurationNormal,
+    transitionDurationFast,
+    transitionDurationFaster,
+    transitionDurationFastest,
+    transitionDurationNone,
+    semiCurveHash(transitionFunctionLinear),
+    semiCurveHash(transitionFunctionEase),
+    semiCurveHash(transitionFunctionEaseIn),
+    semiCurveHash(transitionFunctionEaseOut),
+    semiCurveHash(transitionFunctionEaseInIOut),
+    transitionDelayNone,
+    transitionDelaySlowest,
+    transitionDelaySlower,
+    transitionDelaySlow,
+    transitionDelayNormal,
+    transitionDelayFast,
+    transitionDelayFaster,
+    transitionDelayFastest,
+    transformScaleNone,
+    transformScaleSmall,
+    transformScaleMedium,
+    transformScaleLarge,
+    transformRotateNone,
+    transformRotateClockwise90deg,
+    transformRotateClockwise180deg,
+    transformRotateClockwise270deg,
+    transformRotateClockwise360deg,
+    transformRotateAnticlockwise90deg,
+    transformRotateAnticlockwise180deg,
+    transformRotateAnticlockwise270deg,
+    transformRotateAnticlockwise360deg,
+  ]);
 }

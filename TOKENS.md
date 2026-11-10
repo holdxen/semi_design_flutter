@@ -28,7 +28,27 @@ final gradient = light.palette.aiGeneral5.forSize(const Size(240, 40));
 final circle = light.radius.borderRadiusCircle.resolveRadius(const Size(80, 40));
 ```
 
-颜色引用在生成阶段按各自亮暗色板解析；Button 七个 token 也分别解析，不复用错误的亮色结果。这里不是通用 CSS 运行时，也不支持用户任意 CSS 字符串或自动追踪自定义色板覆盖。
+所有 383 个字段均可通过所属类型的强类型命名构造参数或 `copyWith` 覆盖。生成器将默认 CSS 引用编译为 Dart 属性依赖，无运行时 CSS 解析。主题保存显式配置，每次读取组时绑定当前亮暗模式和上游配置。
+
+```dart
+const base = SemiThemeData.light();
+final branded = base.copyWith(
+  palette: base.palette.copyWith(blue5: const SemiChannels(12, 34, 56, 1)),
+);
+// 未覆盖 colorPrimary 随 blue5 改变；hover 仍按其自己的 CSS 引用。
+final custom = branded.copyWith(
+  colors: branded.colors.copyWith(colorText0: const Color(0xff123456)),
+  tooltip: branded.tooltip.copyWith(tooltipArrowOffsetX: const SemiLength.pixels(8)),
+);
+// buttonColorfulFillSecondary 默认引用 colorText0，因此跟随。
+final pinned = custom.copyWith(
+  button: custom.button.copyWith(buttonColorfulFillSecondary: const Color(0xffabcdef)),
+);
+```
+
+显式语义色和组件字段优先于默认引用，连续 copyWith 保留此前显式覆盖；语义覆盖不会反向修改色板，也不会自动生成 hover。light/dark 构造仍支持 const；`copyWith(dark: true)` 切换默认模式并保留覆盖。所有组及类型模型使用值相等和 hashCode，渐变/阴影集合防御性复制且不可修改。主题以完整有效值比较决定是否通知。
+
+`copyWith` 的 null 表示保留，**不支持用 null 清除单字段覆盖**。恢复某组默认值可传新实例，例如 `pinned.copyWith(colors: const SemiColors())`；这会清除该组全部显式覆盖并重新绑定当前色板。其他组同理。默认引用的值相等不意味着显式覆盖历史相同：显式固定值与当前默认值相同也会固定后续行为。
 
 - `SemiChannels` 保留 RGB/RGBA 通道，`Color` 表达颜色，渐变是独立类型。
 - `SemiGradient.forSize` 通过 CSS 从上顺时针角度及真实 Size 计算渐变端点，保留 stop。

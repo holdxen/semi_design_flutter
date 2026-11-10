@@ -3,23 +3,86 @@
 import 'token_types.dart';
 
 class SemiRadius {
-  const SemiRadius({required bool dark});
+  const SemiRadius({
+    bool dark = false,
+    SemiLength? borderRadiusExtraSmall,
+    SemiLength? borderRadiusSmall,
+    SemiLength? borderRadiusMedium,
+    SemiLength? borderRadiusLarge,
+    SemiLength? borderRadiusCircle,
+    SemiLength? borderRadiusFull,
+  }) : _dark = dark,
+       _borderRadiusExtraSmall = borderRadiusExtraSmall,
+       _borderRadiusSmall = borderRadiusSmall,
+       _borderRadiusMedium = borderRadiusMedium,
+       _borderRadiusLarge = borderRadiusLarge,
+       _borderRadiusCircle = borderRadiusCircle,
+       _borderRadiusFull = borderRadiusFull;
+  final bool _dark;
+  final SemiLength? _borderRadiusExtraSmall;
 
   /// `--semi-border-radius-extra-small` — `packages/semi-theme-default/scss/global.scss` (line 97).
-  SemiLength get borderRadiusExtraSmall => SemiLength.pixels(3.0);
+  SemiLength get borderRadiusExtraSmall =>
+      _borderRadiusExtraSmall ?? (SemiLength.pixels(3.0));
+  final SemiLength? _borderRadiusSmall;
 
   /// `--semi-border-radius-small` — `packages/semi-theme-default/scss/global.scss` (line 98).
-  SemiLength get borderRadiusSmall => SemiLength.pixels(3.0);
+  SemiLength get borderRadiusSmall =>
+      _borderRadiusSmall ?? (SemiLength.pixels(3.0));
+  final SemiLength? _borderRadiusMedium;
 
   /// `--semi-border-radius-medium` — `packages/semi-theme-default/scss/global.scss` (line 99).
-  SemiLength get borderRadiusMedium => SemiLength.pixels(6.0);
+  SemiLength get borderRadiusMedium =>
+      _borderRadiusMedium ?? (SemiLength.pixels(6.0));
+  final SemiLength? _borderRadiusLarge;
 
   /// `--semi-border-radius-large` — `packages/semi-theme-default/scss/global.scss` (line 100).
-  SemiLength get borderRadiusLarge => SemiLength.pixels(12.0);
+  SemiLength get borderRadiusLarge =>
+      _borderRadiusLarge ?? (SemiLength.pixels(12.0));
+  final SemiLength? _borderRadiusCircle;
 
   /// `--semi-border-radius-circle` — `packages/semi-theme-default/scss/global.scss` (line 101).
-  SemiLength get borderRadiusCircle => SemiLength.percent(50.0);
+  SemiLength get borderRadiusCircle =>
+      _borderRadiusCircle ?? (SemiLength.percent(50.0));
+  final SemiLength? _borderRadiusFull;
 
   /// `--semi-border-radius-full` — `packages/semi-theme-default/scss/global.scss` (line 102).
-  SemiLength get borderRadiusFull => SemiLength.pixels(9999.0);
+  SemiLength get borderRadiusFull =>
+      _borderRadiusFull ?? (SemiLength.pixels(9999.0));
+  SemiRadius copyWith({
+    bool? dark,
+    SemiLength? borderRadiusExtraSmall,
+    SemiLength? borderRadiusSmall,
+    SemiLength? borderRadiusMedium,
+    SemiLength? borderRadiusLarge,
+    SemiLength? borderRadiusCircle,
+    SemiLength? borderRadiusFull,
+  }) => SemiRadius(
+    dark: dark ?? _dark,
+    borderRadiusExtraSmall: borderRadiusExtraSmall ?? _borderRadiusExtraSmall,
+    borderRadiusSmall: borderRadiusSmall ?? _borderRadiusSmall,
+    borderRadiusMedium: borderRadiusMedium ?? _borderRadiusMedium,
+    borderRadiusLarge: borderRadiusLarge ?? _borderRadiusLarge,
+    borderRadiusCircle: borderRadiusCircle ?? _borderRadiusCircle,
+    borderRadiusFull: borderRadiusFull ?? _borderRadiusFull,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SemiRadius &&
+          borderRadiusExtraSmall == other.borderRadiusExtraSmall &&
+          borderRadiusSmall == other.borderRadiusSmall &&
+          borderRadiusMedium == other.borderRadiusMedium &&
+          borderRadiusLarge == other.borderRadiusLarge &&
+          borderRadiusCircle == other.borderRadiusCircle &&
+          borderRadiusFull == other.borderRadiusFull;
+  @override
+  int get hashCode => Object.hashAll([
+    borderRadiusExtraSmall,
+    borderRadiusSmall,
+    borderRadiusMedium,
+    borderRadiusLarge,
+    borderRadiusCircle,
+    borderRadiusFull,
+  ]);
 }

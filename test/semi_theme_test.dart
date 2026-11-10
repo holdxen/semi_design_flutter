@@ -62,6 +62,30 @@ void main() {
     expect(builds, 2);
   });
 
+  testWidgets('same brightness values notify, equal copies do not', (
+    tester,
+  ) async {
+    var builds = 0;
+    final child = Builder(
+      builder: (context) {
+        builds++;
+        SemiTheme.of(context);
+        return const SizedBox();
+      },
+    );
+    const base = SemiThemeData.light();
+    await tester.pumpWidget(SemiTheme(data: base, child: child));
+    final changed = base.copyWith(
+      tooltip: base.tooltip.copyWith(
+        tooltipArrowOffsetX: const SemiLength.pixels(7),
+      ),
+    );
+    await tester.pumpWidget(SemiTheme(data: changed, child: child));
+    expect(builds, 2);
+    await tester.pumpWidget(SemiTheme(data: changed.copyWith(), child: child));
+    expect(builds, 2);
+  });
+
   testWidgets('captureAll preserves the theme in another subtree', (
     tester,
   ) async {

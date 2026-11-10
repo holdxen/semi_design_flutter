@@ -2,42 +2,118 @@
 // ignore_for_file: prefer_initializing_formals
 import 'package:flutter/painting.dart';
 
+import 'colors.dart';
+import 'semi_palette.dart';
+
 class SemiButtonTokens {
-  const SemiButtonTokens({required bool dark}) : _dark = dark;
+  const SemiButtonTokens({
+    bool dark = false,
+    Color? buttonColorfulMultipleFill0,
+    Color? buttonColorfulMultipleFill1,
+    Color? buttonColorfulMultipleFill2,
+    Color? buttonColorfulMultipleFill3,
+    Color? buttonColorfulDisabledFill,
+    Color? buttonColorfulFillPrimary,
+    Color? buttonColorfulFillSecondary,
+    SemiColors colors = const SemiColors(),
+    SemiPalette palette = const SemiPalette(),
+  }) : _dark = dark,
+       _buttonColorfulMultipleFill0 = buttonColorfulMultipleFill0,
+       _buttonColorfulMultipleFill1 = buttonColorfulMultipleFill1,
+       _buttonColorfulMultipleFill2 = buttonColorfulMultipleFill2,
+       _buttonColorfulMultipleFill3 = buttonColorfulMultipleFill3,
+       _buttonColorfulDisabledFill = buttonColorfulDisabledFill,
+       _buttonColorfulFillPrimary = buttonColorfulFillPrimary,
+       _buttonColorfulFillSecondary = buttonColorfulFillSecondary,
+       colors = colors,
+       palette = palette;
   final bool _dark;
+  final SemiColors colors;
+  final SemiPalette palette;
+  final Color? _buttonColorfulMultipleFill0;
 
   /// `--semi-button-colorful-multiple-fill-0` — `packages/semi-foundation/button/cssVariables.scss` (line 4).
-  Color get buttonColorfulMultipleFill0 => _dark
-      ? Color.fromRGBO(234, 107, 246, 1.0)
-      : Color.fromRGBO(46, 140, 255, 1.0);
+  Color get buttonColorfulMultipleFill0 =>
+      _buttonColorfulMultipleFill0 ?? (palette.aiGeneral53.toColor());
+  final Color? _buttonColorfulMultipleFill1;
 
   /// `--semi-button-colorful-multiple-fill-1` — `packages/semi-foundation/button/cssVariables.scss` (line 5).
-  Color get buttonColorfulMultipleFill1 => _dark
-      ? Color.fromRGBO(195, 117, 255, 1.0)
-      : Color.fromRGBO(107, 97, 255, 1.0);
+  Color get buttonColorfulMultipleFill1 =>
+      _buttonColorfulMultipleFill1 ?? (palette.aiGeneral52.toColor());
+  final Color? _buttonColorfulMultipleFill2;
 
   /// `--semi-button-colorful-multiple-fill-2` — `packages/semi-foundation/button/cssVariables.scss` (line 6).
-  Color get buttonColorfulMultipleFill2 => _dark
-      ? Color.fromRGBO(134, 129, 252, 1.0)
-      : Color.fromRGBO(166, 71, 255, 1.0);
+  Color get buttonColorfulMultipleFill2 =>
+      _buttonColorfulMultipleFill2 ?? (palette.aiGeneral51.toColor());
+  final Color? _buttonColorfulMultipleFill3;
 
   /// `--semi-button-colorful-multiple-fill-3` — `packages/semi-foundation/button/cssVariables.scss` (line 7).
-  Color get buttonColorfulMultipleFill3 => _dark
-      ? Color.fromRGBO(91, 162, 245, 1.0)
-      : Color.fromRGBO(233, 69, 255, 1.0);
+  Color get buttonColorfulMultipleFill3 =>
+      _buttonColorfulMultipleFill3 ?? (palette.aiGeneral50.toColor());
+  final Color? _buttonColorfulDisabledFill;
 
   /// `--semi-button-colorful-disabled-fill` — `packages/semi-foundation/button/cssVariables.scss` (line 8).
-  Color get buttonColorfulDisabledFill => _dark
-      ? Color.fromRGBO(249, 249, 249, 0.35)
-      : Color.fromRGBO(28, 31, 35, 0.35);
+  Color get buttonColorfulDisabledFill =>
+      _buttonColorfulDisabledFill ?? (colors.colorDisabledText);
+  final Color? _buttonColorfulFillPrimary;
 
   /// `--semi-button-colorful-fill-primary` — `packages/semi-foundation/button/cssVariables.scss` (line 9).
-  Color get buttonColorfulFillPrimary => _dark
-      ? Color.fromRGBO(195, 117, 255, 1.0)
-      : Color.fromRGBO(166, 71, 255, 1.0);
+  Color get buttonColorfulFillPrimary =>
+      _buttonColorfulFillPrimary ?? (colors.colorAiPurple);
+  final Color? _buttonColorfulFillSecondary;
 
   /// `--semi-button-colorful-fill-secondary` — `packages/semi-foundation/button/cssVariables.scss` (line 10).
-  Color get buttonColorfulFillSecondary => _dark
-      ? Color.fromRGBO(249, 249, 249, 1.0)
-      : Color.fromRGBO(28, 31, 35, 1.0);
+  Color get buttonColorfulFillSecondary =>
+      _buttonColorfulFillSecondary ?? (colors.colorText0);
+  SemiButtonTokens copyWith({
+    bool? dark,
+    Color? buttonColorfulMultipleFill0,
+    Color? buttonColorfulMultipleFill1,
+    Color? buttonColorfulMultipleFill2,
+    Color? buttonColorfulMultipleFill3,
+    Color? buttonColorfulDisabledFill,
+    Color? buttonColorfulFillPrimary,
+    Color? buttonColorfulFillSecondary,
+    SemiColors? colors,
+    SemiPalette? palette,
+  }) => SemiButtonTokens(
+    dark: dark ?? _dark,
+    buttonColorfulMultipleFill0:
+        buttonColorfulMultipleFill0 ?? _buttonColorfulMultipleFill0,
+    buttonColorfulMultipleFill1:
+        buttonColorfulMultipleFill1 ?? _buttonColorfulMultipleFill1,
+    buttonColorfulMultipleFill2:
+        buttonColorfulMultipleFill2 ?? _buttonColorfulMultipleFill2,
+    buttonColorfulMultipleFill3:
+        buttonColorfulMultipleFill3 ?? _buttonColorfulMultipleFill3,
+    buttonColorfulDisabledFill:
+        buttonColorfulDisabledFill ?? _buttonColorfulDisabledFill,
+    buttonColorfulFillPrimary:
+        buttonColorfulFillPrimary ?? _buttonColorfulFillPrimary,
+    buttonColorfulFillSecondary:
+        buttonColorfulFillSecondary ?? _buttonColorfulFillSecondary,
+    colors: colors ?? this.colors,
+    palette: palette ?? this.palette,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SemiButtonTokens &&
+          buttonColorfulMultipleFill0 == other.buttonColorfulMultipleFill0 &&
+          buttonColorfulMultipleFill1 == other.buttonColorfulMultipleFill1 &&
+          buttonColorfulMultipleFill2 == other.buttonColorfulMultipleFill2 &&
+          buttonColorfulMultipleFill3 == other.buttonColorfulMultipleFill3 &&
+          buttonColorfulDisabledFill == other.buttonColorfulDisabledFill &&
+          buttonColorfulFillPrimary == other.buttonColorfulFillPrimary &&
+          buttonColorfulFillSecondary == other.buttonColorfulFillSecondary;
+  @override
+  int get hashCode => Object.hashAll([
+    buttonColorfulMultipleFill0,
+    buttonColorfulMultipleFill1,
+    buttonColorfulMultipleFill2,
+    buttonColorfulMultipleFill3,
+    buttonColorfulDisabledFill,
+    buttonColorfulFillPrimary,
+    buttonColorfulFillSecondary,
+  ]);
 }

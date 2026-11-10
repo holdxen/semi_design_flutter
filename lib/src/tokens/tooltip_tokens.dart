@@ -3,11 +3,40 @@
 import 'token_types.dart';
 
 class SemiTooltipTokens {
-  const SemiTooltipTokens({required bool dark});
+  const SemiTooltipTokens({
+    bool dark = false,
+    SemiLength? tooltipArrowOffsetX,
+    SemiLength? tooltipArrowOffsetY,
+  }) : _dark = dark,
+       _tooltipArrowOffsetX = tooltipArrowOffsetX,
+       _tooltipArrowOffsetY = tooltipArrowOffsetY;
+  final bool _dark;
+  final SemiLength? _tooltipArrowOffsetX;
 
   /// `--semi-tooltip-arrow-offset-x` — `packages/semi-foundation/tooltip/arrow.scss` (line 26). Runtime fallback, not a theme declaration.
-  SemiLength get tooltipArrowOffsetX => SemiLength.percent(50.0);
+  SemiLength get tooltipArrowOffsetX =>
+      _tooltipArrowOffsetX ?? (SemiLength.percent(50.0));
+  final SemiLength? _tooltipArrowOffsetY;
 
   /// `--semi-tooltip-arrow-offset-y` — `packages/semi-foundation/tooltip/arrow.scss` (line 64). Runtime fallback, not a theme declaration.
-  SemiLength get tooltipArrowOffsetY => SemiLength.percent(50.0);
+  SemiLength get tooltipArrowOffsetY =>
+      _tooltipArrowOffsetY ?? (SemiLength.percent(50.0));
+  SemiTooltipTokens copyWith({
+    bool? dark,
+    SemiLength? tooltipArrowOffsetX,
+    SemiLength? tooltipArrowOffsetY,
+  }) => SemiTooltipTokens(
+    dark: dark ?? _dark,
+    tooltipArrowOffsetX: tooltipArrowOffsetX ?? _tooltipArrowOffsetX,
+    tooltipArrowOffsetY: tooltipArrowOffsetY ?? _tooltipArrowOffsetY,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SemiTooltipTokens &&
+          tooltipArrowOffsetX == other.tooltipArrowOffsetX &&
+          tooltipArrowOffsetY == other.tooltipArrowOffsetY;
+  @override
+  int get hashCode =>
+      Object.hashAll([tooltipArrowOffsetX, tooltipArrowOffsetY]);
 }
