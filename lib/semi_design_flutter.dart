@@ -1,3 +1,4 @@
+export 'src/theme/semi_theme.dart';
 export 'src/theme/semi_theme_data.dart';
 export 'src/tokens/token_types.dart';
 export 'src/tokens/semi_palette.dart';
