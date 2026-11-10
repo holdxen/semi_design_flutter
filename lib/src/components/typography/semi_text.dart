@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../../theme/semi_theme.dart';
+import '../../theme/semi_typography_theme.dart';
 
 enum SemiTextType {
   primary,
@@ -102,28 +103,33 @@ class _SemiTextState extends State<SemiText> {
     final w = widget;
     final theme = SemiTheme.of(context);
     final c = theme.colors;
+    final colors = SemiTypographyTheme.resolve(context);
     final typography = theme.typography;
     final inherited = DefaultTextStyle.of(context).style;
     Color color = switch (w.type) {
-      SemiTextType.primary => c.colorText0,
-      SemiTextType.secondary => c.colorText1,
-      SemiTextType.tertiary => c.colorText2,
-      SemiTextType.quaternary => c.colorText3,
-      SemiTextType.warning => c.colorWarning,
-      SemiTextType.danger => c.colorDanger,
-      SemiTextType.success => c.colorSuccess,
+      SemiTextType.primary => colors.defaultTextColor,
+      SemiTextType.secondary => colors.secondaryTextColor,
+      SemiTextType.tertiary => colors.tertiaryTextColor,
+      SemiTextType.quaternary => colors.quaternaryTextColor,
+      SemiTextType.warning => colors.warningTextColor,
+      SemiTextType.danger => colors.dangerTextColor,
+      SemiTextType.success => colors.successTextColor,
     };
-    if (w.code) color = c.colorText2;
+    if (w.code) color = colors.codeTextColor;
     if (w.link != null) {
       color = _pressed
-          ? c.colorLinkActive
+          ? colors.linkActiveColor
           : _hover
-          ? c.colorLinkHover
+          ? colors.linkHoverColor
           : w.link!.visited
-          ? c.colorLinkVisited
-          : c.colorLink;
+          ? colors.linkVisitedColor
+          : colors.linkTextColor;
     }
-    if (w.disabled) color = c.colorDisabledText;
+    if (w.disabled) {
+      color = w.link != null
+          ? colors.linkDisabledColor
+          : colors.disabledTextColor;
+    }
     final decoration = TextDecoration.combine([
       if (w.underline && (w.link == null || (_enabled && (_hover || _pressed))))
         TextDecoration.underline,
@@ -157,7 +163,7 @@ class _SemiTextState extends State<SemiText> {
                   : typography.fontWeightRegular),
           decoration: decoration,
           backgroundColor: w.mark && !w.code
-              ? c.colorPrimaryLightDefault
+              ? colors.markBackgroundColor
               : null,
         )
         .merge(w.style)
@@ -186,8 +192,11 @@ class _SemiTextState extends State<SemiText> {
     if (w.code) {
       child = DecoratedBox(
         decoration: BoxDecoration(
-          color: c.colorFill1,
-          border: Border.all(color: c.colorBorder, width: _Metrics.border),
+          color: colors.codeBackgroundColor,
+          border: Border.all(
+            color: colors.codeBorderColor,
+            width: _Metrics.border,
+          ),
           borderRadius: BorderRadius.circular(_Metrics.radius),
         ),
         child: Padding(padding: _Metrics.codePadding, child: child),

@@ -160,7 +160,7 @@ void main() {
     await t.tap(find.byType(Text));
     await t.sendKeyEvent(LogicalKeyboardKey.enter);
     expect(taps, 3);
-    expect(textStyle(t).color, c.colorDisabledText);
+    expect(textStyle(t).color, c.colorLink);
     await mouse.removePointer();
   });
 

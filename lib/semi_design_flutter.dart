@@ -11,6 +11,9 @@ export 'src/tokens/motion.dart';
 export 'src/tokens/button_tokens.dart';
 export 'src/tokens/typography_tokens.dart';
 export 'src/tokens/tooltip_tokens.dart';
+export 'src/theme/semi_component_themes.dart';
+export 'src/theme/semi_typography_theme_data.dart';
+export 'src/theme/semi_typography_theme.dart';
 
 /// A Calculator.
 class Calculator {

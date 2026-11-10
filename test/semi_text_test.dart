@@ -231,7 +231,7 @@ void main() {
     await t.pump();
     expect(count, 4);
     await t.pumpWidget(link(disabled: true));
-    expect(textStyle(t).color, c.colorDisabledText);
+    expect(textStyle(t).color, c.colorLink);
     expect(textStyle(t).decoration, TextDecoration.none);
     expect(
       t

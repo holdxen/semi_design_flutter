@@ -8,6 +8,7 @@ import '../tokens/motion.dart';
 import '../tokens/button_tokens.dart';
 import '../tokens/tooltip_tokens.dart';
 import '../tokens/typography_tokens.dart';
+import 'semi_component_themes.dart';
 
 class SemiThemeData {
   const SemiThemeData.light({
@@ -19,6 +20,7 @@ class SemiThemeData {
     SemiButtonTokens button = const SemiButtonTokens(),
     SemiTooltipTokens tooltip = const SemiTooltipTokens(),
     SemiTypographyTokens typography = const SemiTypographyTokens.defaults(),
+    SemiComponentThemes components = const SemiComponentThemes(),
   }) : dark = false,
        _palette = palette,
        _colors = colors,
@@ -27,7 +29,8 @@ class SemiThemeData {
        _motion = motion,
        _button = button,
        _tooltip = tooltip,
-       _typography = typography;
+       _typography = typography,
+       _components = components;
   const SemiThemeData.dark({
     SemiPalette palette = const SemiPalette(),
     SemiColors colors = const SemiColors(),
@@ -37,6 +40,7 @@ class SemiThemeData {
     SemiButtonTokens button = const SemiButtonTokens(),
     SemiTooltipTokens tooltip = const SemiTooltipTokens(),
     SemiTypographyTokens typography = const SemiTypographyTokens.defaults(),
+    SemiComponentThemes components = const SemiComponentThemes(),
   }) : dark = true,
        _palette = palette,
        _colors = colors,
@@ -45,7 +49,8 @@ class SemiThemeData {
        _motion = motion,
        _button = button,
        _tooltip = tooltip,
-       _typography = typography;
+       _typography = typography,
+       _components = components;
   final bool dark;
   final SemiPalette _palette;
   SemiPalette get palette => _palette.copyWith(dark: dark);
@@ -64,6 +69,8 @@ class SemiThemeData {
   SemiTooltipTokens get tooltip => _tooltip.copyWith(dark: dark);
   final SemiTypographyTokens _typography;
   SemiTypographyTokens get typography => _typography;
+  final SemiComponentThemes _components;
+  SemiComponentThemes get components => _components;
   SemiThemeData copyWith({
     bool? dark,
     SemiPalette? palette,
@@ -74,6 +81,7 @@ class SemiThemeData {
     SemiButtonTokens? button,
     SemiTooltipTokens? tooltip,
     SemiTypographyTokens? typography,
+    SemiComponentThemes? components,
   }) {
     if (dark ?? this.dark)
       return SemiThemeData.dark(
@@ -85,6 +93,7 @@ class SemiThemeData {
         button: button ?? _button,
         tooltip: tooltip ?? _tooltip,
         typography: typography ?? _typography,
+        components: components ?? _components,
       );
     return SemiThemeData.light(
       palette: palette ?? _palette,
@@ -95,6 +104,7 @@ class SemiThemeData {
       button: button ?? _button,
       tooltip: tooltip ?? _tooltip,
       typography: typography ?? _typography,
+      components: components ?? _components,
     );
   }
 
@@ -110,7 +120,8 @@ class SemiThemeData {
           motion == other.motion &&
           button == other.button &&
           tooltip == other.tooltip &&
-          typography == other.typography;
+          typography == other.typography &&
+          components == other.components;
   @override
   int get hashCode => Object.hashAll([
     dark,
@@ -122,5 +133,6 @@ class SemiThemeData {
     button,
     tooltip,
     typography,
+    components,
   ]);
 }

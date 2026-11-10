@@ -31,7 +31,7 @@ SizedBox(width: 160, child: SemiText('有限宽度中的长文本……',
 
 ## 外观优先级与差异
 
-颜色优先级是 type → code(text2) → link → disabledText → 显式 style。链接颜色始终优先 type；静止用 link/visited，hover 用 linkHover，按下用 linkActive。disabled 使用 disabledText（含链接），保留 code 的 fill1 背景、border 描边和 mark 的浅主色背景；这是明确的 Flutter 禁用外观约定。style 可以覆盖禁用文字颜色，但不能恢复交互。
+颜色优先级是 type → code → link → disabled → 显式 style。链接静止用 link/visited，hover 用 linkHover，按下用 linkActive。普通禁用文本使用 disabledTextColor；禁用链接使用 linkDisabledColor，忠于 Sass 默认引用 colorLink，仍不可交互。所有相关颜色均可通过组件主题覆盖，style 可覆盖文字颜色但不能恢复交互。
 
 code 使用整块 1px border、2px 圆角、垂直 2/水平 4 padding。这是有意区别于浏览器逐行 inline code 片段的布局；多行 code 只有一个外框。code 与 mark 同时启用时，code 的 fill1 背景优先；style.backgroundColor 可以覆盖文字背景，但不改变外框背景。单独 mark 用 primaryLightDefault 文字背景。delete 与 underline 可组合；链接 underline 仅 hover/pressed 时出现，禁用时隐藏。
 
@@ -87,3 +87,7 @@ final dark = customized.copyWith(dark: true); // 保留全部排版覆盖
 fallback 在构造和 copyWith 时防御性复制且不可修改。copyWith 的 null 表示保留；要清除字体族，使用 `SemiTypographyTokens(fontFamily: null)` 替换整组。默认组可用 `const SemiTypographyTokens.defaults()`，因此 const light/dark 仍可使用。自定义构造为保证 fallback 防御性复制使用非 const 构造。
 
 这里只提供字体配置，不下载或打包字体、不修改 pubspec，也不自动翻译 `-apple-system`、`BlinkMacSystemFont`、`sans-serif` 等平台别名。宿主负责安装或注册字体，并按目标平台需要覆盖字体名称。局部主题可从 `SemiTheme.of(context).copyWith(typography: ...)` 派生；相同亮暗模式下修改任意排版值同样通知子树。
+
+## Typography 组件颜色
+
+`SemiThemeData.components.typography` 提供应用级 19 个可空颜色覆盖，`SemiTypographyTheme(data: ..., child: ...)` 提供可嵌套局部补丁；颜色统一通过 `SemiTypographyTheme.resolve(context)` 解析。字体度量仍由 `SemiThemeData.typography` 管理。应用和局部例子、全部 Sass 映射、优先级及 null/reset 边界见 [组件颜色主题](typography_theme.md)。禁用链接默认使用 colorLink，仍不可激活。

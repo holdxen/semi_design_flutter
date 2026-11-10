@@ -53,3 +53,7 @@ final dark = customized.copyWith(dark: true); // 保留全部排版覆盖
 fallback 在构造和 copyWith 时防御性复制且不可修改。copyWith 的 null 表示保留；要清除字体族，使用 `SemiTypographyTokens(fontFamily: null)` 替换整组。默认组可用 `const SemiTypographyTokens.defaults()`，因此 const light/dark 仍可使用。自定义构造为保证 fallback 防御性复制使用非 const 构造。
 
 这里只提供字体配置，不下载或打包字体、不修改 pubspec，也不自动翻译 `-apple-system`、`BlinkMacSystemFont`、`sans-serif` 等平台别名。宿主负责安装或注册字体，并按目标平台需要覆盖字体名称。局部主题可从 `SemiTheme.of(context).copyWith(typography: ...)` 派生；相同亮暗模式下修改任意排版值同样通知子树。
+
+## Typography 组件颜色
+
+`SemiThemeData.components.typography` 提供应用级 19 个可空颜色覆盖，`SemiTypographyTheme(data: ..., child: ...)` 提供可嵌套局部补丁；颜色统一通过 `SemiTypographyTheme.resolve(context)` 解析。字体度量仍由 `SemiThemeData.typography` 管理。应用和局部例子、全部 Sass 映射、优先级及 null/reset 边界见 [组件颜色主题](typography_theme.md)。禁用链接默认使用 colorLink，仍不可激活。
