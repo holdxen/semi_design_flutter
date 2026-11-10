@@ -28,8 +28,7 @@ class SemiTextLink {
 // packages/semi-foundation/typography/{variables,typography}.scss;
 // packages/semi-theme-default/scss/global.scss (font-size mixins).
 abstract final class _Metrics {
-  static const gap = 4.0, border = 1.0, radius = 2.0;
-  static const codePadding = EdgeInsets.symmetric(vertical: 2, horizontal: 4);
+  static const border = 1.0;
 }
 
 /// String-only typography with optional, accessible callback-based link behavior.
@@ -145,23 +144,27 @@ class _SemiTextState extends State<SemiText> {
               ? inherited.fontFamilyFallback
               : typography.fontFamilyFallback,
           fontSize: switch (w.size) {
-            SemiTextSize.normal => typography.fontSizeRegular,
-            SemiTextSize.small => typography.fontSizeSmall,
+            SemiTextSize.normal => colors.fontSizeRegular,
+            SemiTextSize.small => colors.fontSizeSmall,
             SemiTextSize.inherit => inherited.fontSize,
           },
           height: switch (w.size) {
             SemiTextSize.normal =>
-              typography.lineHeightRegular / typography.fontSizeRegular,
-            SemiTextSize.small =>
-              typography.lineHeightSmall / typography.fontSizeSmall,
+              colors.lineHeightRegular / colors.fontSizeRegular,
+            SemiTextSize.small => colors.lineHeightSmall / colors.fontSizeSmall,
             SemiTextSize.inherit => inherited.height,
           },
           fontWeight:
               w.weight ??
-              ((w.strong || w.link != null)
-                  ? typography.fontWeightBold
-                  : typography.fontWeightRegular),
+              (w.strong
+                  ? colors.strongFontWeight
+                  : w.link != null
+                  ? colors.linkFontWeight
+                  : w.size == SemiTextSize.small
+                  ? colors.smallTextRegularFontWeight
+                  : colors.normalTextRegularFontWeight),
           decoration: decoration,
+          decorationThickness: w.link != null ? colors.linkBorderWidth : null,
           backgroundColor: w.mark && !w.code
               ? colors.markBackgroundColor
               : null,
@@ -184,7 +187,7 @@ class _SemiTextState extends State<SemiText> {
         textDirection: w.textDirection,
         children: [
           ExcludeSemantics(child: w.icon!),
-          const SizedBox(width: _Metrics.gap),
+          SizedBox(width: colors.iconPrefixMarginRight),
           Flexible(child: child),
         ],
       );
@@ -195,11 +198,11 @@ class _SemiTextState extends State<SemiText> {
           color: colors.codeBackgroundColor,
           border: Border.all(
             color: colors.codeBorderColor,
-            width: _Metrics.border,
+            width: colors.codeBorderWidth,
           ),
-          borderRadius: BorderRadius.circular(_Metrics.radius),
+          borderRadius: BorderRadius.circular(colors.codeBorderRadius),
         ),
-        child: Padding(padding: _Metrics.codePadding, child: child),
+        child: Padding(padding: colors.codePadding, child: child),
       );
     }
     if (w.link == null) return child;

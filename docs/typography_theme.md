@@ -47,3 +47,102 @@ final dark = app.copyWith(dark: true); // 保留 components
 | `copiedTextColor` | `$color-typography_copied-text-success` | `var(--semi-color-text-2)` |
 | `copiedIconColor` | `$color-typography_copied-icon-success` | `var(--semi-color-success)` |
 | `codeBorderColor` | `$color-typography_code-border-default` | `var(--semi-color-border)` |
+
+## Sass typography metrics
+
+All fields are nullable patches; non-null local fields inherit the remaining application fields. Global defaults resolve live on each build. Heading sizes come from global mixins, not component Sass variables. Explicit TextStyle merges last; line height is resolved pixels / resolved font size.
+
+| Field | Type | Upstream default | Source |
+|---|---|---|---|
+| `titleFontWeight` | `FontWeight` | `$font-weight-bold` | `font-typography_title-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `linkFontWeight` | `FontWeight` | `$font-weight-bold` | `font-typography_link-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `strongFontWeight` | `FontWeight` | `$font-weight-bold` | `font-typography_strong-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `paragraphExtendedLineHeight` | `double` | `24px` | `font-typography_paragraph_extended-lineHeight` in packages/semi-foundation/typography/variables.scss |
+| `normalTextRegularFontWeight` | `FontWeight` | `$font-weight-regular` | `font-typography_normalText-regular-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `smallTextRegularFontWeight` | `FontWeight` | `$font-weight-regular` | `font-typography_smallText-regular-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `normalParagraphRegularFontWeight` | `FontWeight` | `$font-weight-regular` | `font-typography_normalParagraph-regular-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `smallParagraphRegularFontWeight` | `FontWeight` | `$font-weight-regular` | `font-typography_smallParagraph-regular-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title1FontWeight` | `FontWeight` | `$font-typography_title-fontWeight` | `font-typography_title1-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title2FontWeight` | `FontWeight` | `$font-typography_title-fontWeight` | `font-typography_title2-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title3FontWeight` | `FontWeight` | `$font-typography_title-fontWeight` | `font-typography_title3-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title4FontWeight` | `FontWeight` | `$font-typography_title-fontWeight` | `font-typography_title4-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title5FontWeight` | `FontWeight` | `$font-typography_title-fontWeight` | `font-typography_title5-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title6FontWeight` | `FontWeight` | `$font-typography_title-fontWeight` | `font-typography_title6-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title1LightFontWeight` | `FontWeight` | `200` | `font-typography_title1-light-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title2LightFontWeight` | `FontWeight` | `200` | `font-typography_title2-light-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title3LightFontWeight` | `FontWeight` | `200` | `font-typography_title3-light-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title4LightFontWeight` | `FontWeight` | `200` | `font-typography_title4-light-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title5LightFontWeight` | `FontWeight` | `200` | `font-typography_title5-light-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title6LightFontWeight` | `FontWeight` | `200` | `font-typography_title6-light-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title1RegularFontWeight` | `FontWeight` | `400` | `font-typography_title1-regular-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title2RegularFontWeight` | `FontWeight` | `400` | `font-typography_title2-regular-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title3RegularFontWeight` | `FontWeight` | `400` | `font-typography_title3-regular-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title4RegularFontWeight` | `FontWeight` | `400` | `font-typography_title4-regular-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title5RegularFontWeight` | `FontWeight` | `400` | `font-typography_title5-regular-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title6RegularFontWeight` | `FontWeight` | `400` | `font-typography_title6-regular-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title1MediumFontWeight` | `FontWeight` | `500` | `font-typography_title1-medium-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title2MediumFontWeight` | `FontWeight` | `500` | `font-typography_title2-medium-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title3MediumFontWeight` | `FontWeight` | `500` | `font-typography_title3-medium-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title4MediumFontWeight` | `FontWeight` | `500` | `font-typography_title4-medium-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title5MediumFontWeight` | `FontWeight` | `500` | `font-typography_title5-medium-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title6MediumFontWeight` | `FontWeight` | `500` | `font-typography_title6-medium-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title1SemiboldFontWeight` | `FontWeight` | `600` | `font-typography_title1-semibold-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title2SemiboldFontWeight` | `FontWeight` | `600` | `font-typography_title2-semibold-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title3SemiboldFontWeight` | `FontWeight` | `600` | `font-typography_title3-semibold-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title4SemiboldFontWeight` | `FontWeight` | `600` | `font-typography_title4-semibold-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title5SemiboldFontWeight` | `FontWeight` | `600` | `font-typography_title5-semibold-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title6SemiboldFontWeight` | `FontWeight` | `600` | `font-typography_title6-semibold-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title1BoldFontWeight` | `FontWeight` | `700` | `font-typography_title1-bold-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title2BoldFontWeight` | `FontWeight` | `700` | `font-typography_title2-bold-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title3BoldFontWeight` | `FontWeight` | `700` | `font-typography_title3-bold-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title4BoldFontWeight` | `FontWeight` | `700` | `font-typography_title4-bold-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title5BoldFontWeight` | `FontWeight` | `700` | `font-typography_title5-bold-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `title6BoldFontWeight` | `FontWeight` | `700` | `font-typography_title6-bold-fontWeight` in packages/semi-foundation/typography/variables.scss |
+| `iconPrefixMarginRight` | `double` | `4px` | `spacing-typography_iconPrefix-marginRight` in packages/semi-foundation/typography/variables.scss |
+| `expandTextMarginLeft` | `double` | `8px` | `spacing-typography_expandText-marginLeft` in packages/semi-foundation/typography/variables.scss |
+| `copyIconMarginLeft` | `double` | `4px` | `spacing-typography_copyIcon-marginLeft` in packages/semi-foundation/typography/variables.scss |
+| `copyIconPadding` | `EdgeInsets` | `0` | `spacing-typography_copyIcon-padding` in packages/semi-foundation/typography/variables.scss |
+| `titleH1Margin` | `EdgeInsets` | `0` | `spacing-typography_title_h1-margin` in packages/semi-foundation/typography/variables.scss |
+| `titleH2Margin` | `EdgeInsets` | `0` | `spacing-typography_title_h2-margin` in packages/semi-foundation/typography/variables.scss |
+| `titleH3Margin` | `EdgeInsets` | `0` | `spacing-typography_title_h3-margin` in packages/semi-foundation/typography/variables.scss |
+| `titleH4Margin` | `EdgeInsets` | `0` | `spacing-typography_title_h4-margin` in packages/semi-foundation/typography/variables.scss |
+| `titleH5Margin` | `EdgeInsets` | `0` | `spacing-typography_title_h5-margin` in packages/semi-foundation/typography/variables.scss |
+| `titleH6Margin` | `EdgeInsets` | `0` | `spacing-typography_title_h6-margin` in packages/semi-foundation/typography/variables.scss |
+| `titleParagraphMargin` | `EdgeInsets` | `0` | `spacing-typography_title_paragraph-margin` in packages/semi-foundation/typography/variables.scss |
+| `codeBorderWidth` | `double` | `1px` | `width-typography_code-border` in packages/semi-foundation/typography/variables.scss |
+| `linkBorderWidth` | `double` | `1px` | `width-typography_link-border` in packages/semi-foundation/typography/variables.scss |
+| `codeBorderRadius` | `double` | `2px` | `radius-typography_code` in packages/semi-foundation/typography/variables.scss |
+| `fontSizeRegular` | `double` | `global typography mixin` | `fontSizeRegular` in packages/semi-foundation/typography/typography.scss |
+| `fontSizeSmall` | `double` | `global typography mixin` | `fontSizeSmall` in packages/semi-foundation/typography/typography.scss |
+| `lineHeightRegular` | `double` | `global typography mixin` | `lineHeightRegular` in packages/semi-foundation/typography/typography.scss |
+| `lineHeightSmall` | `double` | `global typography mixin` | `lineHeightSmall` in packages/semi-foundation/typography/typography.scss |
+| `fontSizeHeading1` | `double` | `global typography mixin` | `fontSizeHeading1` in packages/semi-foundation/typography/typography.scss |
+| `lineHeightHeading1` | `double` | `global typography mixin` | `lineHeightHeading1` in packages/semi-foundation/typography/typography.scss |
+| `fontSizeHeading2` | `double` | `global typography mixin` | `fontSizeHeading2` in packages/semi-foundation/typography/typography.scss |
+| `lineHeightHeading2` | `double` | `global typography mixin` | `lineHeightHeading2` in packages/semi-foundation/typography/typography.scss |
+| `fontSizeHeading3` | `double` | `global typography mixin` | `fontSizeHeading3` in packages/semi-foundation/typography/typography.scss |
+| `lineHeightHeading3` | `double` | `global typography mixin` | `lineHeightHeading3` in packages/semi-foundation/typography/typography.scss |
+| `fontSizeHeading4` | `double` | `global typography mixin` | `fontSizeHeading4` in packages/semi-foundation/typography/typography.scss |
+| `lineHeightHeading4` | `double` | `global typography mixin` | `lineHeightHeading4` in packages/semi-foundation/typography/typography.scss |
+| `fontSizeHeading5` | `double` | `global typography mixin` | `fontSizeHeading5` in packages/semi-foundation/typography/typography.scss |
+| `lineHeightHeading5` | `double` | `global typography mixin` | `lineHeightHeading5` in packages/semi-foundation/typography/typography.scss |
+| `fontSizeHeading6` | `double` | `global typography mixin` | `fontSizeHeading6` in packages/semi-foundation/typography/typography.scss |
+| `lineHeightHeading6` | `double` | `global typography mixin` | `lineHeightHeading6` in packages/semi-foundation/typography/typography.scss |
+| `codePadding` | `EdgeInsets` | `2px 4px` | `$spacing-super-tight $spacing-extra-tight` in packages/semi-foundation/typography/typography.scss |
+
+Copy/expand spacing, paragraph metrics and named heading weight variants are resolved configuration; no copy, expand or paragraph behavior is introduced.
+
+```dart
+SemiTypographyTheme(
+  data: const SemiTypographyThemeData(fontSizeRegular: 18, codeBorderRadius: 6),
+  child: SemiText("Local metrics", code: true),
+)
+```
+
+应用级：`SemiThemeData.light(components: SemiComponentThemes(typography: SemiTypographyThemeData(fontSizeRegular: 18, lineHeightRegular: 26)))`。局部仅覆盖指定非空字段。58 个 Sass 变量：44 font（43 FontWeight、1 double）、11 spacing（8 EdgeInsets、3 double）、2 width double、1 radius double；另有 16 个字号/行高 double 和 codePadding EdgeInsets，共新增 75 字段。字号和行高实际定义于 packages/semi-theme-default/scss/_font.scss，字号再引用 variables.scss；codePadding 是 typography.scss 消费的 `$spacing-super-tight $spacing-extra-tight`（2px 4px）。标题命名字重变体为字面量 200/400/500/600/700；默认 title1..6 跟随 titleFontWeight，再回退 global bold。
+
+### 变量计数与验收边界
+
+计数基于上游 `packages/semi-foundation/typography/variables.scss`，先剔除 `//` 和 `/* ... */` 注释，再匹配行首 Sass 声明。44 个 font 声明中，43 个 FontWeight = 第 25–27 行的通用字重 3 个 + 第 29–32 行正文/段落字重 4 个 + 第 34–39 行六级标题默认字重 6 个 + 第 44–77 行五组标题变体 30 个；另 1 个为第 28 行 extended paragraph lineHeight。11 个 spacing 在第 82–92 行，2 个 width 在第 94–95 行，1 个 radius 在第 97 行。以上均为实际声明，不包含注释或测试字符串。
+
+Python 验收从真实上游文件检查 58 项名称、默认值、字段类型和 `///` 来源；可用 `SEMI_DESIGN_SOURCE` 指定上游仓库。Flutter 测试独立断言全部默认值，并验证 global 实时依赖、应用/嵌套局部覆盖、同亮度度量变化通知、code/icon 布局、链接装饰及六级标题 margin/字重。段落相关字段仅为配置与 resolve，不表示公开支持 Paragraph 组件。复制、展开与命名字重变体同样不增加新的交互/API。

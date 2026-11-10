@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import 'semi_text.dart';
-import '../../theme/semi_theme.dart';
+import '../../theme/semi_typography_theme.dart';
 
 /// String-only Semi Typography.Title, composed with [SemiText].
 ///
@@ -47,7 +47,7 @@ class SemiTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = SemiTheme.of(context).typography;
+    final t = SemiTypographyTheme.resolve(context);
     final size = [
       t.fontSizeHeading1,
       t.fontSizeHeading2,
@@ -66,26 +66,47 @@ class SemiTitle extends StatelessWidget {
     ][heading - 1];
     return Semantics(
       header: true,
-      child: SemiText(
-        data,
-        type: type,
-        weight: weight ?? t.fontWeightBold,
-        strong: strong,
-        disabled: disabled,
-        mark: mark,
-        underline: underline,
-        delete: delete,
-        style: TextStyle(
-          fontSize: size,
-          height: lineHeight / size,
-        ).merge(style),
-        link: link,
-        textAlign: textAlign,
-        textDirection: textDirection,
-        softWrap: softWrap,
-        maxLines: maxLines,
-        overflow: overflow,
-        semanticsLabel: semanticsLabel,
+      child: Padding(
+        padding: [
+          t.titleH1Margin,
+          t.titleH2Margin,
+          t.titleH3Margin,
+          t.titleH4Margin,
+          t.titleH5Margin,
+          t.titleH6Margin,
+        ][heading - 1],
+        child: SemiText(
+          data,
+          type: type,
+          weight:
+              weight ??
+              (strong
+                  ? t.strongFontWeight
+                  : [
+                      t.title1FontWeight,
+                      t.title2FontWeight,
+                      t.title3FontWeight,
+                      t.title4FontWeight,
+                      t.title5FontWeight,
+                      t.title6FontWeight,
+                    ][heading - 1]),
+          strong: strong,
+          disabled: disabled,
+          mark: mark,
+          underline: underline,
+          delete: delete,
+          style: TextStyle(
+            fontSize: size,
+            height: lineHeight / size,
+          ).merge(style),
+          link: link,
+          textAlign: textAlign,
+          textDirection: textDirection,
+          softWrap: softWrap,
+          maxLines: maxLines,
+          overflow: overflow,
+          semanticsLabel: semanticsLabel,
+        ),
       ),
     );
   }

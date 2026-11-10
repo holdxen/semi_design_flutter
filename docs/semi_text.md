@@ -90,4 +90,4 @@ fallback 在构造和 copyWith 时防御性复制且不可修改。copyWith 的 
 
 ## Typography 组件颜色
 
-`SemiThemeData.components.typography` 提供应用级 19 个可空颜色覆盖，`SemiTypographyTheme(data: ..., child: ...)` 提供可嵌套局部补丁；颜色统一通过 `SemiTypographyTheme.resolve(context)` 解析。字体度量仍由 `SemiThemeData.typography` 管理。应用和局部例子、全部 Sass 映射、优先级及 null/reset 边界见 [组件颜色主题](typography_theme.md)。禁用链接默认使用 colorLink，仍不可激活。
+`SemiThemeData.components.typography` 提供应用级 19 个颜色及 75 个度量可空覆盖，`SemiTypographyTheme(data: ..., child: ...)` 提供可嵌套局部补丁；颜色统一通过 `SemiTypographyTheme.resolve(context)` 解析。未覆盖度量实时引用 `SemiThemeData.typography`，组件级覆盖优先。应用和局部例子、全部 Sass 映射、优先级及 null/reset 边界见 [组件排版主题](typography_theme.md)。禁用链接默认使用 colorLink，仍不可激活。
