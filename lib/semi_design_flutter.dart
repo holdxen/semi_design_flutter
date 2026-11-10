@@ -21,6 +21,9 @@ export 'src/theme/semi_typography_theme.dart';
 export 'src/components/icon/semi_icon.dart';
 export 'src/components/icon/semi_icon_data.dart';
 export 'src/components/icon/semi_icons.dart';
+export 'src/components/semi_divider.dart';
+export 'src/theme/semi_divider_theme.dart';
+export 'src/theme/semi_divider_theme_data.dart';
 export 'src/theme/semi_icon_theme.dart';
 
 /// A Calculator.
