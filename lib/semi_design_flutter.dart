@@ -1,3 +1,5 @@
+export 'src/components/typography/format_numeral.dart';
+export 'src/components/typography/semi_numeral.dart';
 export 'src/components/typography/semi_paragraph.dart';
 export 'src/components/typography/semi_text.dart';
 export 'src/components/typography/semi_title.dart';
