@@ -1,4 +1,4 @@
-import 'package:example/main.dart';
+import 'package:example/pages/progress.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,7 +10,7 @@ SemiProgress progress(WidgetTester tester, String key) =>
 
 Future<void> start(WidgetTester tester) async {
   addTearDown(() async => tester.pumpWidget(const SizedBox.shrink()));
-  await tester.pumpWidget(const MyApp());
+  await tester.pumpWidget(const SemiApp(home: ProgressPage()));
   await tester.pump(const Duration(milliseconds: 50));
 }
 
