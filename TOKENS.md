@@ -61,7 +61,7 @@ final pinned = custom.copyWith(
 - `SemiLength` 区分 px 与 percent，圆角百分比按宽高分别解析，而非固定当作像素。
 - 多层阴影保留 inset、位移、模糊、扩散与颜色。Flutter BoxShadow 不支持 inset，转换时明确抛出 UnsupportedError，不默默丢弃；专用 inset painter 不在本次范围。
 - 动效为 Duration、Curve 及受限 scale/rotate 数据模型，不包含完整 transform 链解释器。
-- Tooltip 两个 offset 是 `arrow.scss` 中 `var(..., 50%)` 的运行时 fallback，不是默认主题声明。布局实际值可直接使用 `SemiLength.pixels` 或 `.percent`；默认 getter 返回 50%，由调用方按对应轴长解析。
+- Tooltip 两个 offset 是 `arrow.scss` 中 `var(..., 50%)` 的运行时 fallback，不是默认主题声明。布局实际值可直接使用 `SemiLength.pixels` 或 `.percent`；默认 getter 返回 50%，由调用方按对应轴长解析。`SemiTooltip` 组件在中心位箭头偏移未偏离 50% 时即按此 fallback 解析（组件文档见 docs/semi_tooltip.md）。
 
 模板 Calculator 保留。未修改 example、依赖、发布配置；未作平台渲染或 Widget/golden 兼容性承诺。
 

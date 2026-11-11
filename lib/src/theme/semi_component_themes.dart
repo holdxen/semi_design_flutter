@@ -8,6 +8,7 @@ import 'semi_highlight_theme_data.dart';
 import 'semi_empty_theme_data.dart';
 import 'semi_timeline_theme_data.dart';
 import 'semi_descriptions_theme_data.dart';
+import 'semi_tooltip_theme_data.dart';
 import 'semi_typography_theme_data.dart';
 
 @immutable
@@ -22,6 +23,7 @@ class SemiComponentThemes {
     this.empty = const SemiEmptyThemeData(),
     this.timeline = const SemiTimelineThemeData(),
     this.descriptions = const SemiDescriptionsThemeData(),
+    this.tooltip = const SemiTooltipThemeData(),
   });
   final SemiTagThemeData tag;
   final SemiTypographyThemeData typography;
@@ -32,6 +34,7 @@ class SemiComponentThemes {
   final SemiEmptyThemeData empty;
   final SemiTimelineThemeData timeline;
   final SemiDescriptionsThemeData descriptions;
+  final SemiTooltipThemeData tooltip;
   SemiComponentThemes copyWith({
     SemiTagThemeData? tag,
     SemiTypographyThemeData? typography,
@@ -42,6 +45,7 @@ class SemiComponentThemes {
     SemiEmptyThemeData? empty,
     SemiTimelineThemeData? timeline,
     SemiDescriptionsThemeData? descriptions,
+    SemiTooltipThemeData? tooltip,
   }) => SemiComponentThemes(
     tag: tag ?? this.tag,
     typography: typography ?? this.typography,
@@ -52,6 +56,7 @@ class SemiComponentThemes {
     empty: empty ?? this.empty,
     timeline: timeline ?? this.timeline,
     descriptions: descriptions ?? this.descriptions,
+    tooltip: tooltip ?? this.tooltip,
   );
   @override
   bool operator ==(Object other) =>
@@ -65,7 +70,8 @@ class SemiComponentThemes {
           highlight == other.highlight &&
           empty == other.empty &&
           timeline == other.timeline &&
-          descriptions == other.descriptions;
+          descriptions == other.descriptions &&
+          tooltip == other.tooltip;
   @override
   int get hashCode => Object.hash(
     tag,
@@ -77,5 +83,6 @@ class SemiComponentThemes {
     empty,
     timeline,
     descriptions,
+    tooltip,
   );
 }

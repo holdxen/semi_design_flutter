@@ -50,6 +50,10 @@ export 'src/theme/semi_descriptions_theme_data.dart';
 export 'src/components/illustration/semi_illustration.dart';
 export 'src/components/illustration/semi_illustrations.dart';
 export 'src/theme/semi_icon_theme.dart';
+export 'src/components/semi_tooltip.dart';
+export 'src/theme/semi_tooltip_theme.dart';
+export 'src/theme/semi_tooltip_theme_data.dart';
+export 'src/overlay/tooltip_positioning.dart';
 
 /// A Calculator.
 class Calculator {

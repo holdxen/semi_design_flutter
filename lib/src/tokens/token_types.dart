@@ -154,7 +154,8 @@ class SemiTransform {
 
 /// Cubic curves compare their control points; other Curve implementations use
 /// their own equality contract (custom curves should implement value equality).
-bool semiCurveEquals(Curve a, Curve b) =>
+/// Nullability matches nullable theme patch fields (null == null is true).
+bool semiCurveEquals(Curve? a, Curve? b) =>
     a == b ||
     a is Cubic &&
         b is Cubic &&
@@ -162,6 +163,8 @@ bool semiCurveEquals(Curve a, Curve b) =>
         a.b == b.b &&
         a.c == b.c &&
         a.d == b.d;
-int semiCurveHash(Curve curve) => curve is Cubic
+int semiCurveHash(Curve? curve) => curve == null
+    ? 0
+    : curve is Cubic
     ? Object.hash(curve.a, curve.b, curve.c, curve.d)
     : curve.hashCode;
