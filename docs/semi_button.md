@@ -116,7 +116,7 @@ Quirk（不修正）：`$color-button_danger-border-hover: var(--semi-color-dang
 
 ### ButtonGroup 渲染
 
-- 分割线：非 outline 变体在相邻按钮间插 1px 线（`width-button_group-border` × `height-button_group_line_default` 20），颜色按上游 `group-line-{theme,type,-disabled}` class 级联：borderless→透明、light→`color-button_light-bg-default`、其余→disabled ? `color-button_disabled-bg-default` : `color-button_<type>-bg-default`（见差异清单第 13 条）。
+- 分割线（上游 `.semi-button-group-line` 双层结构）：非 outline 变体在相邻按钮间插 **1px 全高色条**（高=相邻按钮较高者），色条颜色按上游 `group-line-{theme,type,-disabled}` class 级联：borderless→透明、light→`color-button_light-bg-default`、其余→disabled ? `color-button_disabled-bg-default` : `color-button_<type>-bg-default`（见差异清单第 13 条）；色条内居中叠一根 **1px × 20px 灰色刻线**（`height-button_group_line_default`，恒 `color-button_group-border-default`，即上游 `&::before`）。light 色条与按钮背景同为 fill-0，整组因此连成一整块，仅以短刻线分隔。
 - 首尾圆角：首按钮左上/左下、末按钮右上/右下（左首右尾，`radius-button_group`），RTL 镜像（BorderRadiusDirectional）。
 - outline 相邻 `margin -1px` 重叠（负 margin 以 `_NegativeEndMargin` 表达：布局宽度 -1、右侧绘制保持满宽，下一按钮压过接缝）。
 - 组内按钮水平内边距归零、内容层承担水平 padding（按 size/iconOnly 取对应 `spacing-button_*` 字段）。
@@ -494,7 +494,7 @@ Quirk（不修正）：`$color-button_danger-border-hover: var(--semi-color-dang
 - **状态字段消费差异**：solid 档 text-hover/active 与 border-hover/active 上游 scss 未消费（hover/active 只改背景），解析器按字段逐条取值（默认值相同无视觉差；theme 覆盖时与上游语义有差，如实记录）。`$color-button_secondary-border-default` 上游仅被 `outline-color` 引用（会被 focus outline 覆盖）。
 - **danger 边框 hover quirk 保留**：`$color-button_danger-border-hover: var(--semi-color-danger)`（非 hover 色）。
 - **padding 底部 quirk 保留**：default 档 `padding-bottom: $spacing-button_default-paddingTop`、iconOnly default `padding-bottom: $spacing-button_iconOnly_default-paddingRight`（small/large 用各自 -paddingBottom）。
-- **group 分割线着色**：上游 `group-line-{theme,type,-disabled}` class 级联与 `::before`（1px×20 恒 `$color-button_group-border-default` 覆盖层）并存；移植按计划取 class 级联色（随 type/disabled/light/borderless）。
+- **group 分割线**：上游 `group-line` 的双层结构已完整复刻——外层 1px 全高色条（`group-line-{theme,type,-disabled}` class 级联）+ 内层 `::before` 1px×20 灰色刻线（恒 `$color-button_group-border-default`）；色条高度取相邻按钮较高者（上游 flex stretch 语义）。
 - **group outline 重叠**：上游 `margin-right: -1px` + `border-right-color: transparent`；BoxDecoration 拒绝"非均匀 border + 圆角"，移植保留均匀 border（接缝由相邻按钮 z-order 覆盖，视觉一致）、负 margin 以 `_NegativeEndMargin`（布局宽度 -1px）表达；RTL 不镜像（上游 rtl.scss 未覆盖这两条物理声明）。
 - **focus-visible 门控**：`_keyboardUsed` + 全局键盘模态追踪（任意按键置位、按下按钮清位），Tab 聚焦也显示焦点环（浏览器 :focus-visible 语义）；焦点环画在框外（spread shadow）。danger/warning 在 borderless/light 保留 primary 焦点色 quirk 不修正。
 - **注入机制**：上游 `cloneElement` 只作用于直接子级；移植经 `SemiButtonScope`（InheritedWidget）注入，嵌套更深处的 `SemiButton` 也会读到组级值（范围更宽，如实记录）。分割线/首尾圆角按 `children` 列表位置判定（上游 `:first-child/:last-child` 含非按钮元素判定；列表首/末位非按钮时上游不圆角、移植同——圆角只挂在首末位 `_ButtonPosition` 上）。

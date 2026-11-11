@@ -746,9 +746,20 @@ void main() {
       of: find.byType(SemiButtonGroup),
       matching: find.byType(ColoredBox),
     );
-    expect(lines, findsNWidgets(2));
-    final line = tester.widget<ColoredBox>(lines.first);
-    expect(line.color, t.colorButtonLightBgDefault);
+    // Two dividers × (full-height strip + centered grey tick).
+    expect(lines, findsNWidgets(4));
+    final strip = tester.widget<ColoredBox>(lines.at(0));
+    final tick = tester.widget<ColoredBox>(lines.at(1));
+    expect(strip.color, t.colorButtonLightBgDefault);
+    expect(tick.color, t.colorButtonGroupBorderDefault);
+    expect(
+      tester.getSize(lines.at(0)),
+      Size(t.widthButtonGroupBorder, t.heightButtonDefault),
+    );
+    expect(
+      tester.getSize(lines.at(1)),
+      Size(t.widthButtonGroupBorder, t.heightButtonGroupLineDefault),
+    );
     final firstBox = box(tester, of: find.byType(SemiButton).at(0));
     final lastBox = box(tester, of: find.byType(SemiButton).at(2));
     final firstRadius = (firstBox.borderRadius! as BorderRadiusDirectional)

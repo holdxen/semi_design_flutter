@@ -220,15 +220,36 @@ class SemiButtonGroup extends StatelessWidget {
                 final t = SemiButtonTheme.resolve(context);
                 final lineType = type ?? child.type ?? SemiButtonType.primary;
                 final lineDisabled = child.disabled ?? disabled ?? false;
+                // Upstream `.semi-button-group-line` is a full-height strip whose
+                // background matches the adjacent button surfaces (light strips
+                // reuse the light fill), so the group reads as ONE block; the
+                // visible separator is the centered 1px × 20px grey `::before`
+                // tick inside it (button.scss `&-line::before`).
+                final next = children[i + 1];
+                final stripHeight = math.max(
+                  _groupButtonHeight(t, child, size),
+                  next is SemiButton
+                      ? _groupButtonHeight(t, next, size)
+                      : _groupButtonHeight(t, child, size),
+                );
                 return SizedBox(
                   width: t.widthButtonGroupBorder,
-                  height: t.heightButtonGroupLineDefault,
+                  height: stripHeight,
                   child: ColoredBox(
                     color: _groupLineColor(
                       t,
                       lineType,
                       lineVariant,
                       lineDisabled,
+                    ),
+                    child: Center(
+                      child: SizedBox(
+                        width: t.widthButtonGroupBorder,
+                        height: t.heightButtonGroupLineDefault,
+                        child: ColoredBox(
+                          color: t.colorButtonGroupBorderDefault,
+                        ),
+                      ),
                     ),
                   ),
                 );
@@ -1092,6 +1113,22 @@ SemiTransform _transformFor(
 /// Upstream `.#{$module}-group-line-{theme,type,-disabled}` cascade: the
 /// borderless class wins, then the light class, then disabled over the type
 /// background (button.scss file order).
+/// Effective button height for the divider strip: upstream flex `stretch`
+/// spans the tallest sibling, so the strip matches the taller of the two
+/// adjacent buttons (uniform groups reduce to the shared size height).
+double _groupButtonHeight(
+  SemiResolvedButtonThemeData t,
+  SemiButton button,
+  SemiButtonSize? groupSize,
+) {
+  final size = button.size ?? groupSize ?? SemiButtonSize.normal;
+  return switch (size) {
+    SemiButtonSize.small => t.heightButtonSmall,
+    SemiButtonSize.normal => t.heightButtonDefault,
+    SemiButtonSize.large => t.heightButtonLarge,
+  };
+}
+
 Color _groupLineColor(
   SemiResolvedButtonThemeData t,
   SemiButtonType type,
