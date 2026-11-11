@@ -1,4 +1,4 @@
-import 'package:example/pages/empty.dart';
+import 'package:example/pages/timeline.dart';
 import 'package:flutter/widgets.dart';
 import 'package:semi_design_flutter/semi_design_flutter.dart';
 
@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const SemiApp(
       themeMode: SemiThemeMode.light,
-      home: SafeArea(child: EmptyPage()),
+      home: SafeArea(child: TimelinePage()),
     );
   }
 }
