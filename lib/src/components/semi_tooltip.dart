@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -590,6 +591,18 @@ class _SemiTooltipState extends State<SemiTooltip>
     }
   }
 
+  /// Touch fallback for the hover trigger: emulators and touch devices never
+  /// produce hover events, so a touch tap toggles visibility directly. Mouse
+  /// (and stylus) taps are ignored to keep upstream click semantics.
+  void _handleHoverTapUp(TapUpDetails details) {
+    if (details.kind != PointerDeviceKind.touch) return;
+    if (_effectiveVisible) {
+      _requestHide();
+    } else {
+      _requestShow();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget child = widget.child;
@@ -603,6 +616,15 @@ class _SemiTooltipState extends State<SemiTooltip>
           child: child,
         );
       case SemiTooltipTrigger.hover:
+        // Touch devices (mobile, emulators) never emit hover events, so the
+        // hover trigger would be unreachable there. Taps from touch pointers
+        // toggle the tooltip instead; mouse clicks keep the upstream hover
+        // semantics and never toggle.
+        child = GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTapUp: _handleHoverTapUp,
+          child: child,
+        );
       case SemiTooltipTrigger.focus:
       case SemiTooltipTrigger.custom:
         break;

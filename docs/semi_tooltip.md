@@ -18,7 +18,7 @@ SemiTooltip(
 | `content` | 必填，弹层内容 `Widget`（文字样式/背景/圆角/内边距/maxWidth 全取主题，Flutter `Text` 自带换行即上游 `word-break` 语义） | - |
 | `child` | 必填，触发元素 | - |
 | `position` | 12 个公开位置枚举 `SemiTooltipPosition` | `top` |
-| `trigger` | `hover`/`click`/`focus`/`custom`/`contextMenu` | `hover` |
+| `trigger` | `hover`/`click`/`focus`/`custom`/`contextMenu` | `hover`。**触摸回退**：hover 在手机、模拟器等无悬浮事件的设备上不可达，故触摸点按会直接切换显示（仅 `PointerDeviceKind.touch`；鼠标点击保持上游语义，绝不切换） |
 | `showArrow` | 是否绘制箭头。形状为上游 `TriangleArrow(.Vertical).tsx` 的凹面翼形曲线（24×7，侧向 7×24，`CustomPaint` 逐路径绘制，反向位置按上游 `rotate(180deg)` 翻转），颜色取 `colorTooltipArrowIconDefault`，默认同背景色 | `true` |
 | `arrowPointAtCenter` | 箭头指向触发物中心而非弹层边角 | `true` |
 | `autoAdjustOverflow` | 空间不足时自动调整位置 | `true` |
