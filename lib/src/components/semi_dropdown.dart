@@ -294,6 +294,12 @@ class _SemiDropdownMenuState extends State<_SemiDropdownMenu> {
   /// Node index of the keyboard-highlighted item (null = nothing highlighted).
   int? _highlight;
 
+  /// Mirrors the browser `:focus-visible` heuristic: the cursor may sit on the
+  /// first row after a mouse-opened menu (upstream focuses it), but the
+  /// highlight background only becomes visible once the keyboard actually
+  /// navigates — so mouse hover feedback is never masked by a permanent fill.
+  bool _keyboardUsed = false;
+
   final Map<int, GlobalKey> _itemKeys = {};
 
   @override
@@ -360,7 +366,10 @@ class _SemiDropdownMenuState extends State<_SemiDropdownMenu> {
   }
 
   void _moveHighlight(List<int> enabled, int position) {
-    setState(() => _highlight = enabled[position]);
+    setState(() {
+      _keyboardUsed = true;
+      _highlight = enabled[position];
+    });
     _ensureHighlightVisible();
   }
 
@@ -490,7 +499,7 @@ class _SemiDropdownMenuState extends State<_SemiDropdownMenu> {
       child: _DropdownItemView(
         item: item,
         showTick: showTick,
-        highlighted: _highlight == index,
+        highlighted: _keyboardUsed && _highlight == index,
         onTap: item.disabled ? null : item.onTap,
       ),
     );

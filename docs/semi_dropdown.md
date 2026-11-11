@@ -85,7 +85,7 @@ DecoratedBox(bg3 / 圆角 medium / shadow-elevated 两行)   ← 容器
 
 ## 键盘（单层）
 
-菜单整体 `Focus`；click 触发器打开时聚焦菜单并高亮首个可用行（上游 `setFocusToFirstMenuItem` 仅 click 触发）：
+菜单整体 `Focus`；click 触发器打开时把键盘光标放在首个可用行（上游 `setFocusToFirstMenuItem` 仅 click 触发），但**不显示高亮背景**——对齐浏览器 `:focus-visible` 语义：鼠标打开不绘制焦点高亮，仅在键盘导航（方向键/typeahead）后才显示，避免常驻填充掩盖 hover 反馈；Enter/Space 激活光标所在行（打开后直接按即首行）：
 
 - **Enter/Space** 激活高亮行（高亮只在可用行间移动，disabled 跳过）。
 - **ArrowUp/ArrowDown** 循环移动高亮（等价上游 `setFocusToPrevious/NextMenuItem`，disabled 行不入导航表），移动时 `Scrollable.ensureVisible`。
