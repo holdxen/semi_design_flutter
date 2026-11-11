@@ -20,12 +20,13 @@ SemiTooltip(
 | `position` | 12 个公开位置枚举 `SemiTooltipPosition` | `top` |
 | `trigger` | `hover`/`click`/`focus`/`custom`/`contextMenu` | `hover`。**触摸回退**：hover 在手机、模拟器等无悬浮事件的设备上不可达，故触摸点按会直接切换显示（仅 `PointerDeviceKind.touch`；鼠标点击保持上游语义，绝不切换）。**focus**：点击/点按会聚焦触发物并显示（Flutter 裸 `Focus` 不会因点击自动聚焦，此处显式 `requestFocus` 对齐 DOM 语义），点按外部失焦并关闭；键盘 Tab 进入/离开同样有效 |
 | `showArrow` | 是否绘制箭头。形状为上游 `TriangleArrow(.Vertical).tsx` 的凹面翼形曲线（24×7，侧向 7×24，`CustomPaint` 逐路径绘制，反向位置按上游 `rotate(180deg)` 翻转），颜色取 `colorTooltipArrowIconDefault`，默认同背景色 | `true` |
+| `popupBare` | true 时弹层不套气泡装饰（不应用背景/内边距/圆角/箭头/maxWidth），内容自绘表面（SemiDropdown 的菜单容器使用）。定位仍按内容尺寸计算 | `false` |
 | `arrowPointAtCenter` | 箭头指向触发物中心而非弹层边角 | `true` |
 | `autoAdjustOverflow` | 空间不足时自动调整位置 | `true` |
 | `spacing` | 触发物与弹层主轴间距 | `8` |
 | `mouseEnterDelay` / `mouseLeaveDelay` | `hover`/`focus` 显隐延时（`Duration`） | 50ms |
 | `clickToHide` | 点击弹层关闭 | `false` |
-| `closeOnEsc` | Escape 消费并关闭（见下）。按键经触发物的 Focus 节点送达：click/contextMenu 在按下时聚焦触发物（对齐浏览器 tabindex 点击聚焦），故点击打开后按 Esc 即可关闭；hover 只有触发物本身已获焦点（如 Tab 进入）时才响应 Esc | `false` |
+| `closeOnEsc` | Escape 消费并关闭（见下）。按键经触发物或弹层的 Focus 节点送达：click/contextMenu 在按下时聚焦触发物（对齐浏览器 tabindex 点击聚焦），故点击打开后按 Esc 即可关闭；弹层内容持有焦点（如 Dropdown 菜单）时由弹层侧处理器关闭；hover 只有触发物本身已获焦点（如 Tab 进入）时才响应 Esc | `false` |
 | `visible` | 非空即受控 | null |
 | `onVisibleChange` | 可见性请求/变化回调 | - |
 | `onClickOutSide` | 外部点击（trigger 之外）回调 | - |
@@ -35,6 +36,8 @@ SemiTooltip(
 | `repositionKey` | 变化时强制重定位 | null |
 
 `SemiTooltipPopup` 暴露 `placement`（调整后的落点，含 4 个 `*Over` 内部态）与 `arrowOffset`（箭头沿边偏移）测试 getter。
+
+指针豁免（SemiDropdown 嵌套弹层使用）：每个弹层内容包一层 `SemiOverlayPointerExempt` scope，嵌套弹层把自身 RenderBox 全局矩形注册到最近祖先 scope（`SemiOverlayPointerExemptScope.addRegion` 沿 scope 链向上注册）；`_handleOutsidePointer` 判定时命中注册矩形的指针视为内部（点子弹层不关父层，兄弟弹层不互相豁免）。
 
 ## 12 定位
 

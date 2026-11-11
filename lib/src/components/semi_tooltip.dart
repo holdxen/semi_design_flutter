@@ -49,6 +49,7 @@ class SemiTooltip extends StatefulWidget {
     this.position = SemiTooltipPosition.top,
     this.trigger = SemiTooltipTrigger.hover,
     this.showArrow = true,
+    this.popupBare = false,
     this.arrowPointAtCenter = true,
     this.autoAdjustOverflow = true,
     this.spacing = 8,
@@ -79,6 +80,11 @@ class SemiTooltip extends StatefulWidget {
 
   /// Whether to paint the small triangle.
   final bool showArrow;
+
+  /// Skip the tooltip bubble decoration: no background, padding, radius,
+  /// arrow or max width are applied, and [content] paints its own surface
+  /// (SemiDropdown's menu wrapper). Positioning still measures the content.
+  final bool popupBare;
 
   /// Anchor the arrow at the trigger center instead of the popup corner.
   final bool arrowPointAtCenter;
@@ -149,6 +155,66 @@ abstract final class _TooltipMetrics {
   static const String filter = 'none';
 }
 
+/// Pointer-exemption registry for overlay popups (SemiDropdown's nested menu
+/// requirement). An [SemiOverlayPointerExempt] scope wraps each popup's
+/// content; a nested popup registers its global rect into the nearest ancestor
+/// scope, and [SemiOverlayPointerExemptScope.addRegion] propagates the same
+/// provider up the scope chain so multi-level nests stay exempt for every
+/// ancestor while sibling scopes never see each other's regions.
+class SemiOverlayPointerExemptScope {
+  SemiOverlayPointerExemptScope({this.parent});
+
+  /// The scope wrapping the popup that contains this popup's trigger (null at
+  /// the top level).
+  final SemiOverlayPointerExemptScope? parent;
+
+  final List<Rect? Function()> _regions = [];
+
+  /// Adds a region provider to this scope and every ancestor scope.
+  void addRegion(Rect? Function() region) {
+    _regions.add(region);
+    parent?.addRegion(region);
+  }
+
+  /// Removes a provider previously added with [addRegion] (all scopes).
+  void removeRegion(Rect? Function() region) {
+    _regions.remove(region);
+    parent?.removeRegion(region);
+  }
+
+  /// Whether [globalPosition] hits any region registered on this scope.
+  bool exemptAt(Offset globalPosition) {
+    for (final region in _regions) {
+      final rect = region();
+      if (rect != null && rect.contains(globalPosition)) {
+        return true;
+      }
+    }
+    return false;
+  }
+}
+
+/// Wraps a popup's content with its [SemiOverlayPointerExemptScope] so nested
+/// popups built inside it can register their regions on the right scope.
+class SemiOverlayPointerExempt extends InheritedWidget {
+  const SemiOverlayPointerExempt({
+    super.key,
+    required this.scope,
+    required super.child,
+  });
+
+  final SemiOverlayPointerExemptScope scope;
+
+  /// The nearest enclosing popup scope, or null outside any popup.
+  static SemiOverlayPointerExemptScope? maybeOf(BuildContext context) => context
+      .dependOnInheritedWidgetOfExactType<SemiOverlayPointerExempt>()
+      ?.scope;
+
+  @override
+  bool updateShouldNotify(SemiOverlayPointerExempt oldWidget) =>
+      scope != oldWidget.scope;
+}
+
 class _SemiTooltipState extends State<SemiTooltip>
     with SingleTickerProviderStateMixin {
   final LayerLink _link = LayerLink();
@@ -168,6 +234,15 @@ class _SemiTooltipState extends State<SemiTooltip>
   bool _pendingShow = false;
   bool _showScheduled = false;
   bool _disposed = false;
+
+  /// Scope for popups nested inside this popup (exists while the entry lives).
+  SemiOverlayPointerExemptScope? _exemptScope;
+
+  /// Scope of the popup this tooltip's trigger lives in (null at top level).
+  SemiOverlayPointerExemptScope? _ancestorScope;
+
+  /// Stable identity so registration and removal match.
+  late final Rect? Function() _exemptRegion = _popupGlobalRect;
 
   /// Owned so the focus trigger can request focus on click/tap (a bare [Focus]
   /// never gains focus from pointer input on its own).
@@ -216,6 +291,7 @@ class _SemiTooltipState extends State<SemiTooltip>
     }
     if (widget.content != oldWidget.content ||
         widget.showArrow != oldWidget.showArrow ||
+        widget.popupBare != oldWidget.popupBare ||
         widget.clickToHide != oldWidget.clickToHide) {
       _schedulePostFrame(() => _entry?.markNeedsBuild());
     }
@@ -224,6 +300,7 @@ class _SemiTooltipState extends State<SemiTooltip>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _ancestorScope = SemiOverlayPointerExempt.maybeOf(context);
     _schedulePostFrame(_reposition);
   }
 
@@ -240,6 +317,7 @@ class _SemiTooltipState extends State<SemiTooltip>
   void dispose() {
     _disposed = true;
     _clearTimer();
+    _ancestorScope?.removeRegion(_exemptRegion);
     _entry?.remove();
     _entry = null;
     _curved?.dispose();
@@ -297,6 +375,10 @@ class _SemiTooltipState extends State<SemiTooltip>
       from: context,
       to: Overlay.of(context).context,
     );
+    _exemptScope = SemiOverlayPointerExemptScope(parent: _ancestorScope);
+    if (_ancestorScope != null) {
+      _ancestorScope!.addRegion(_exemptRegion);
+    }
     _entry = OverlayEntry(builder: _buildEntry);
     Overlay.of(context).insert(_entry!);
     WidgetsBinding.instance.addPostFrameCallback((_) => _firstPosition());
@@ -357,9 +439,18 @@ class _SemiTooltipState extends State<SemiTooltip>
   }
 
   void _removeOverlay() {
+    _ancestorScope?.removeRegion(_exemptRegion);
     _entry?.remove();
     _entry = null;
     _result = null;
+    _exemptScope = null;
+  }
+
+  /// Global rect of this tooltip's popup (null before the first layout).
+  Rect? _popupGlobalRect() {
+    final box = _popupKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return null;
+    return box.localToGlobal(Offset.zero) & box.size;
   }
 
   // -- delays (web shares a single timer between show and hide) --------------
@@ -534,11 +625,24 @@ class _SemiTooltipState extends State<SemiTooltip>
                           onTap: widget.clickToHide
                               ? () => _requestHide()
                               : null,
-                          child: SemiTooltipPopup(
-                            key: _popupKey,
-                            content: widget.content,
-                            positionResult: result,
-                            showArrow: widget.showArrow,
+                          child: SemiOverlayPointerExempt(
+                            // Nested popups register their regions here; the
+                            // scope chain links them to this tooltip's own
+                            // ancestor scope.
+                            scope: _exemptScope!,
+                            // Popup-side twin of the trigger's key handler:
+                            // the focus chain of content inside the overlay
+                            // never passes through the trigger node.
+                            child: Focus(
+                              onKeyEvent: _handleKeyEvent,
+                              child: SemiTooltipPopup(
+                                key: _popupKey,
+                                content: widget.content,
+                                positionResult: result,
+                                showArrow: widget.showArrow,
+                                popupBare: widget.popupBare,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -567,6 +671,8 @@ class _SemiTooltipState extends State<SemiTooltip>
         event.position,
       );
     }
+    // Popups nested inside this popup (registered rects) are not "outside".
+    inside |= _exemptScope?.exemptAt(event.position) ?? false;
     if (inside) return;
     // Blur like the browser does when clicking outside a focused element, so
     // the trigger leaves the focused state for every trigger kind.
@@ -681,13 +787,16 @@ class _SemiTooltipState extends State<SemiTooltip>
 }
 
 /// The popup surface: themed background, radius, padding, max width, text
-/// style and the arrow. Exposes [placement]/[arrowOffset] for tests.
+/// style and the arrow. Exposes [placement]/[arrowOffset] for tests. With
+/// [popupBare] the bubble decoration is skipped entirely and [content] paints
+/// its own surface.
 class SemiTooltipPopup extends StatelessWidget {
   const SemiTooltipPopup({
     super.key,
     required this.content,
     required this.positionResult,
     this.showArrow = true,
+    this.popupBare = false,
   });
 
   /// Popup body.
@@ -699,6 +808,9 @@ class SemiTooltipPopup extends StatelessWidget {
   /// Whether the arrow paints.
   final bool showArrow;
 
+  /// Skip the bubble decoration (SemiTooltip.popupBare).
+  final bool popupBare;
+
   /// Placement after auto-adjust (may be one of the four `*Over` states).
   TooltipPlacement? get placement => positionResult?.placement;
 
@@ -708,6 +820,7 @@ class SemiTooltipPopup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (popupBare) return content;
     final theme = SemiTooltipTheme.resolve(context);
     final rtl = Directionality.maybeOf(context) == TextDirection.rtl;
     final padding = EdgeInsets.fromLTRB(

@@ -715,4 +715,124 @@ void main() {
       },
     );
   });
+
+  group('popupBare and pointer exemption', () {
+    testWidgets('popupBare skips the bubble decoration', (tester) async {
+      await tester.pumpWidget(
+        _app(
+          SemiTooltip(
+            trigger: SemiTooltipTrigger.click,
+            motion: false,
+            popupBare: true,
+            content: const Text('Bare'),
+            child: _trigger(),
+          ),
+        ),
+      );
+      await tester.tap(find.byKey(_kTrigger), warnIfMissed: false);
+      await _settleOpen(tester);
+      expect(find.byType(SemiTooltipPopup), findsOneWidget);
+      // No background, padding or max width: content paints its own surface.
+      expect(
+        find.descendant(
+          of: find.byType(SemiTooltipPopup),
+          matching: find.byType(DecoratedBox),
+        ),
+        findsNothing,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(SemiTooltipPopup),
+          matching: find.byType(Padding),
+        ),
+        findsNothing,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(SemiTooltipPopup),
+          matching: find.byType(ConstrainedBox),
+        ),
+        findsNothing,
+      );
+    });
+
+    testWidgets('the default popup keeps the bubble decoration', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _app(
+          SemiTooltip(
+            trigger: SemiTooltipTrigger.click,
+            motion: false,
+            content: const Text('Decorated'),
+            child: _trigger(),
+          ),
+        ),
+      );
+      await tester.tap(find.byKey(_kTrigger), warnIfMissed: false);
+      await _settleOpen(tester);
+      expect(find.byType(SemiTooltipPopup), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(SemiTooltipPopup),
+          matching: find.byType(DecoratedBox),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('a nested popup rect is exempt; outside hits still close', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _app(
+          SemiTooltip(
+            trigger: SemiTooltipTrigger.click,
+            motion: false,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Outer body'),
+                SemiTooltip(
+                  trigger: SemiTooltipTrigger.custom,
+                  visible: true,
+                  motion: false,
+                  popupBare: true,
+                  content: const SizedBox(
+                    key: Key('inner-popup'),
+                    width: 80,
+                    height: 40,
+                  ),
+                  child: const SizedBox(width: 10, height: 10),
+                ),
+              ],
+            ),
+            child: _trigger(),
+          ),
+        ),
+      );
+      await tester.tap(find.byKey(_kTrigger), warnIfMissed: false);
+      // The nested popup mounts with the outer entry and inserts one frame
+      // later.
+      for (var i = 0; i < 5; i++) {
+        await tester.pump();
+      }
+      expect(find.byType(SemiTooltipPopup), findsNWidgets(2));
+
+      // Inside the registered inner popup rect the bare content falls through
+      // to the outer barrier, which must treat the hit as inside.
+      await tester.tapAt(
+        tester.getCenter(find.byKey(const Key('inner-popup'))),
+      );
+      await tester.pump();
+      expect(find.text('Outer body'), findsOneWidget);
+
+      // Outside everything the outer closes; the inner disposes with its
+      // content and drops its entry on the following frame.
+      await tester.tapAt(const Offset(2, 2));
+      await tester.pump();
+      await tester.pump();
+      expect(find.byType(SemiTooltipPopup), findsNothing);
+    });
+  });
 }

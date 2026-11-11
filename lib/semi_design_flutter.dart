@@ -57,6 +57,9 @@ export 'src/overlay/tooltip_positioning.dart';
 export 'src/components/semi_collapse.dart';
 export 'src/theme/semi_collapse_theme.dart';
 export 'src/theme/semi_collapse_theme_data.dart';
+export 'src/components/semi_dropdown.dart';
+export 'src/theme/semi_dropdown_theme.dart';
+export 'src/theme/semi_dropdown_theme_data.dart';
 
 /// A Calculator.
 class Calculator {
