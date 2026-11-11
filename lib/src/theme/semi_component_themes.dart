@@ -12,6 +12,7 @@ import 'semi_tooltip_theme_data.dart';
 import 'semi_collapse_theme_data.dart';
 import 'semi_dropdown_theme_data.dart';
 import 'semi_button_theme_data.dart';
+import 'semi_card_theme_data.dart';
 import 'semi_typography_theme_data.dart';
 
 @immutable
@@ -30,6 +31,7 @@ class SemiComponentThemes {
     this.collapse = const SemiCollapseThemeData(),
     this.dropdown = const SemiDropdownThemeData(),
     this.button = const SemiButtonThemeData(),
+    this.card = const SemiCardThemeData(),
   });
   final SemiTagThemeData tag;
   final SemiTypographyThemeData typography;
@@ -44,6 +46,7 @@ class SemiComponentThemes {
   final SemiCollapseThemeData collapse;
   final SemiDropdownThemeData dropdown;
   final SemiButtonThemeData button;
+  final SemiCardThemeData card;
   SemiComponentThemes copyWith({
     SemiTagThemeData? tag,
     SemiTypographyThemeData? typography,
@@ -58,6 +61,7 @@ class SemiComponentThemes {
     SemiCollapseThemeData? collapse,
     SemiDropdownThemeData? dropdown,
     SemiButtonThemeData? button,
+    SemiCardThemeData? card,
   }) => SemiComponentThemes(
     tag: tag ?? this.tag,
     typography: typography ?? this.typography,
@@ -72,6 +76,7 @@ class SemiComponentThemes {
     collapse: collapse ?? this.collapse,
     dropdown: dropdown ?? this.dropdown,
     button: button ?? this.button,
+    card: card ?? this.card,
   );
   @override
   bool operator ==(Object other) =>
@@ -89,7 +94,8 @@ class SemiComponentThemes {
           tooltip == other.tooltip &&
           collapse == other.collapse &&
           dropdown == other.dropdown &&
-          button == other.button;
+          button == other.button &&
+          card == other.card;
   @override
   int get hashCode => Object.hash(
     tag,
@@ -105,5 +111,6 @@ class SemiComponentThemes {
     collapse,
     dropdown,
     button,
+    card,
   );
 }
