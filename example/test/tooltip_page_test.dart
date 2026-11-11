@@ -1,4 +1,4 @@
-import 'package:example/main.dart';
+import 'package:example/pages/tooltip.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,7 +8,7 @@ Finder keyed(String key) => find.byKey(ValueKey(key));
 
 Future<void> start(WidgetTester tester) async {
   addTearDown(() async => tester.pumpWidget(const SizedBox.shrink()));
-  await tester.pumpWidget(const MyApp());
+  await tester.pumpWidget(const SemiApp(home: TooltipPage()));
   await tester.pump(const Duration(milliseconds: 50));
 }
 
