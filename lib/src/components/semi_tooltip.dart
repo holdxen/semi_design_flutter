@@ -568,9 +568,9 @@ class _SemiTooltipState extends State<SemiTooltip>
       );
     }
     if (inside) return;
-    // Blur first so the focus trigger leaves the focused state even when the
-    // tooltip was opened programmatically.
-    if (widget.trigger == SemiTooltipTrigger.focus) _focusNode.unfocus();
+    // Blur like the browser does when clicking outside a focused element, so
+    // the trigger leaves the focused state for every trigger kind.
+    _focusNode.unfocus();
     widget.onClickOutSide?.call();
     _requestHide();
   }
@@ -617,11 +617,20 @@ class _SemiTooltipState extends State<SemiTooltip>
     Widget child = widget.child;
     switch (widget.trigger) {
       case SemiTooltipTrigger.click:
-        child = GestureDetector(onTap: _requestShow, child: child);
+        // Focus on press like a focusable web element, so closeOnEsc can
+        // receive the key from the trigger's Focus node.
+        child = GestureDetector(
+          onTapDown: (_) => _focusNode.requestFocus(),
+          onTap: _requestShow,
+          child: child,
+        );
       case SemiTooltipTrigger.contextMenu:
         child = GestureDetector(
           behavior: HitTestBehavior.translucent,
-          onSecondaryTapDown: (_) => _requestShow(),
+          onSecondaryTapDown: (_) {
+            _focusNode.requestFocus();
+            _requestShow();
+          },
           child: child,
         );
       case SemiTooltipTrigger.hover:

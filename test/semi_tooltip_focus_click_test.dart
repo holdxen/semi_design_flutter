@@ -1,4 +1,5 @@
 import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:semi_design_flutter/semi_design_flutter.dart';
@@ -64,6 +65,31 @@ void main() {
     expect(find.text('提示'), findsOneWidget);
 
     FocusManager.instance.primaryFocus?.unfocus();
+    await settleHide(tester);
+    expect(find.text('提示'), findsNothing);
+  });
+
+  testWidgets('click tooltip closes on Escape once click has focused it', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const SemiApp(
+        home: Center(
+          child: SemiTooltip(
+            trigger: SemiTooltipTrigger.click,
+            closeOnEsc: true,
+            content: Text('提示'),
+            child: Text('目标'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('目标'));
+    await settle(tester);
+    expect(find.text('提示'), findsOneWidget);
+
+    // The trigger holds focus after the click, so Escape reaches its handler.
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await settleHide(tester);
     expect(find.text('提示'), findsNothing);
   });

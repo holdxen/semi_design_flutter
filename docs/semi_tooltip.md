@@ -25,7 +25,7 @@ SemiTooltip(
 | `spacing` | 触发物与弹层主轴间距 | `8` |
 | `mouseEnterDelay` / `mouseLeaveDelay` | `hover`/`focus` 显隐延时（`Duration`） | 50ms |
 | `clickToHide` | 点击弹层关闭 | `false` |
-| `closeOnEsc` | Escape 消费并关闭（见下） | `false` |
+| `closeOnEsc` | Escape 消费并关闭（见下）。按键经触发物的 Focus 节点送达：click/contextMenu 在按下时聚焦触发物（对齐浏览器 tabindex 点击聚焦），故点击打开后按 Esc 即可关闭；hover 只有触发物本身已获焦点（如 Tab 进入）时才响应 Esc | `false` |
 | `visible` | 非空即受控 | null |
 | `onVisibleChange` | 可见性请求/变化回调 | - |
 | `onClickOutSide` | 外部点击（trigger 之外）回调 | - |
