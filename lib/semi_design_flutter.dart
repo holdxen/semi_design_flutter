@@ -38,6 +38,11 @@ export 'src/components/highlight_algorithm.dart';
 export 'src/components/semi_highlight.dart';
 export 'src/theme/semi_highlight_theme.dart';
 export 'src/theme/semi_highlight_theme_data.dart';
+export 'src/components/semi_empty.dart';
+export 'src/theme/semi_empty_theme.dart';
+export 'src/theme/semi_empty_theme_data.dart';
+export 'src/components/illustration/semi_illustration.dart';
+export 'src/components/illustration/semi_illustrations.dart';
 export 'src/theme/semi_icon_theme.dart';
 
 /// A Calculator.
