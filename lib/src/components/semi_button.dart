@@ -279,6 +279,68 @@ class SemiButtonGroup extends StatelessWidget {
   }
 }
 
+/// Upstream `SplitButtonGroup` (`packages/semi-ui/button/splitButtonGroup.tsx`
+/// + `splitButtonGroup.scss`): a 1px-gap row where every button carries
+/// `border-radius: 0` and the first/last buttons round only their outer
+/// corners — one physical corner token each.
+///
+/// Documented differences (docs/semi_button.md): the first/last flags attach
+/// to the first/last direct [SemiButton] children (upstream marks the
+/// first/last `button` DOM descendants at any depth); the 1px gap sits
+/// between all children (upstream margins only `.semi-button`); the radii are
+/// physical corners because upstream `rtl.scss` never mirrors this component.
+class SemiSplitButtonGroup extends StatelessWidget {
+  const SemiSplitButtonGroup({
+    super.key,
+    required this.children,
+    this.semanticsLabel,
+  });
+
+  final List<Widget> children;
+
+  /// Accessible group label (upstream `aria-label`).
+  final String? semanticsLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    var firstIndex = -1;
+    var lastIndex = -1;
+    for (var i = 0; i < children.length; i++) {
+      if (children[i] is SemiButton) {
+        firstIndex = i;
+        break;
+      }
+    }
+    for (var i = children.length - 1; i >= 0; i--) {
+      if (children[i] is SemiButton) {
+        lastIndex = i;
+        break;
+      }
+    }
+    final items = <Widget>[
+      for (var i = 0; i < children.length; i++)
+        _ButtonPosition(
+          isFirst: i == firstIndex,
+          isLast: i == lastIndex,
+          split: true,
+          child: children[i],
+        ),
+    ];
+    // Upstream uses per-button `margin-right: 1px` with the last reset; Wrap
+    // spacing reproduces "between only" placement.
+    return Semantics(
+      container: true,
+      label: semanticsLabel,
+      child: Wrap(
+        spacing: 1,
+        runSpacing: 0,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: items,
+      ),
+    );
+  }
+}
+
 /// Per-child position flags the group injects (upstream
 /// `> .#{$module}:first-child/:last-child` on the raw children, so a
 /// non-button first child leaves the first button unrounded).
@@ -286,17 +348,24 @@ class _ButtonPosition extends InheritedWidget {
   const _ButtonPosition({
     required this.isFirst,
     required this.isLast,
+    this.split = false,
     required super.child,
   });
 
   final bool isFirst, isLast;
+
+  /// SplitButtonGroup positions round per-corner split tokens (physical
+  /// corners, matching upstream `splitButtonGroup.scss`).
+  final bool split;
 
   static _ButtonPosition? maybeOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<_ButtonPosition>();
 
   @override
   bool updateShouldNotify(_ButtonPosition oldWidget) =>
-      isFirst != oldWidget.isFirst || isLast != oldWidget.isLast;
+      isFirst != oldWidget.isFirst ||
+      isLast != oldWidget.isLast ||
+      split != oldWidget.split;
 }
 
 class _SemiButtonState extends State<SemiButton> {
@@ -568,17 +637,37 @@ class _SemiButtonState extends State<SemiButton> {
     }
 
     final BorderRadiusGeometry radius;
-    if (inGroup) {
+    if (inGroup || position?.split == true) {
       final first = position?.isFirst ?? false;
       final last = position?.isLast ?? false;
-      final r = Radius.circular(t.radiusButtonGroup);
-      radius = first && last
-          ? BorderRadius.all(r)
-          : first
-          ? BorderRadiusDirectional.only(topStart: r, bottomStart: r)
-          : last
-          ? BorderRadiusDirectional.only(topEnd: r, bottomEnd: r)
-          : BorderRadius.zero;
+      if (position?.split == true) {
+        // splitButtonGroup.scss: `border-radius: 0` on every button, each
+        // outer corner from its own token — physical corners (upstream
+        // rtl.scss never mirrors this component).
+        final tl = Radius.circular(t.radiusButtonSplitButtonGroupFirstTopLeft);
+        final bl = Radius.circular(
+          t.radiusButtonSplitButtonGroupFirstBottomLeft,
+        );
+        final tr = Radius.circular(t.radiusButtonSplitButtonGroupLastTopRight);
+        final br = Radius.circular(
+          t.radiusButtonSplitButtonGroupLastBottomRight,
+        );
+        radius = BorderRadius.only(
+          topLeft: first ? tl : Radius.zero,
+          bottomLeft: first ? bl : Radius.zero,
+          topRight: last ? tr : Radius.zero,
+          bottomRight: last ? br : Radius.zero,
+        );
+      } else {
+        final r = Radius.circular(t.radiusButtonGroup);
+        radius = first && last
+            ? BorderRadius.all(r)
+            : first
+            ? BorderRadiusDirectional.only(topStart: r, bottomStart: r)
+            : last
+            ? BorderRadiusDirectional.only(topEnd: r, bottomEnd: r)
+            : BorderRadius.zero;
+      }
     } else {
       radius = BorderRadiusDirectional.circular(t.radiusButton);
     }

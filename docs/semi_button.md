@@ -56,7 +56,7 @@ SemiButtonGroup(
 
 合并优先级（上游 `cloneElement(item, { disabled, size, type, ...item.props, ...rest })`）：子 props 显式 `disabled`/`type`/`size` > 组级；组级 `variant`/`colorful` > 子级。Flutter 侧以可空字段表达"未显式"（null = 未给），经 `SemiButtonScope`（InheritedWidget）注入。
 
-不移植：`htmlType`（button/reset/submit，HTML 原生语义）、`circle`（上游无 scss 规则、事实 no-op）、`SplitButtonGroup`（见差异清单）、`className`/`style`/`contentClassName`/`iconStyle`、`onMouseDown`（无 DOM 事件对象）。
+不移植：`htmlType`（button/reset/submit，HTML 原生语义）、`circle`（上游无 scss 规则、事实 no-op）、`className`/`style`/`contentClassName`/`iconStyle`、`onMouseDown`（无 DOM 事件对象）。`SplitButtonGroup` 已移植为 `SemiSplitButtonGroup`（见下文与差异清单）。
 
 ## 渲染语义
 
@@ -120,6 +120,20 @@ Quirk（不修正）：`$color-button_danger-border-hover: var(--semi-color-dang
 - 首尾圆角：首按钮左上/左下、末按钮右上/右下（左首右尾，`radius-button_group`），RTL 镜像（BorderRadiusDirectional）。
 - outline 相邻 `margin -1px` 重叠（负 margin 以 `_NegativeEndMargin` 表达：布局宽度 -1、右侧绘制保持满宽，下一按钮压过接缝）。
 - 组内按钮水平内边距归零、内容层承担水平 padding（按 size/iconOnly 取对应 `spacing-button_*` 字段）。
+
+### SplitButtonGroup 渲染
+
+```dart
+SemiSplitButtonGroup(
+  semanticsLabel: '分裂按钮',
+  children: [
+    SemiButton('主要操作', onPressed: _run),
+    SemiButton('', icon: const SemiIcon(SemiIcons.caretdown), onPressed: _menu),
+  ],
+)
+```
+
+上游 `SplitButtonGroup`（`splitButtonGroup.tsx` + `splitButtonGroup.scss`）：子按钮排成 1px 间隙的行，所有按钮 `border-radius: 0`，首/末按钮仅圆外侧角——每角一条独立 token（`radius-button_splitButtonGroup_first_topLeft` 等四条）。不注入任何属性（无 SemiButtonScope，padding/type/size 完全由按钮自身决定）。差异见差异清单。
 
 ### 尺寸与 RTL
 
@@ -374,7 +388,7 @@ Quirk（不修正）：`$color-button_danger-border-hover: var(--semi-color-dang
 | `$radius-button` | var(--semi-border-radius-small) | radiusButton → theme.radius.borderRadiusSmall.value |
 | `$radius-button_group` | $radius-button | radiusButtonGroup → theme.radius.borderRadiusSmall.value |
 
-**split 圆角 4（SplitButtonGroup 未移植、仅配置）**
+**split 圆角 4（SemiSplitButtonGroup 消费）**
 
 | Sass | 默认 | Theme 字段 → resolve |
 |---|---|---|
@@ -484,7 +498,7 @@ Quirk（不修正）：`$color-button_danger-border-hover: var(--semi-color-dang
 - **htmlType/circle 不移植**：`htmlType` 是 HTML 原生 `type`（button/reset/submit）；`circle` 上游无任何 scss 规则、事实 no-op，均不移植。
 - **无受控 loading**：上游 `loading` 即普通 prop（无受控/非受控之分），移植一致。
 - **图标四 stop/两 stop 重染不移植**：SemiIcon 单色架构（同 Tag 边界），colorful 图标以 currentColor 呈现；7 条 cssVariables 由 `SemiButtonTokens` 承接（对照表见 colorful 节）。
-- **SplitButtonGroup 未移植**：上游 4 条 `radius-button_splitButtonGroup_*` token 仅配置留存（主题字段存在、无消费组件）。
+- **SplitButtonGroup 已移植**（`SemiSplitButtonGroup`）：1px 间隙行（上游 per-button `margin-right: 1px`、末位复位）、所有按钮 `border-radius: 0`、首/末按钮按四条物理角 token 圆外侧角（`splitButtonGroup.scss`）。差异：首/末标记挂在**直接子级中的首个/末个 SemiButton**（上游按 DOM 深度查所有 `button` 后代）；1px 间隙作用于全部子级（上游仅 `.semi-button` 带 margin）；**圆角为物理角不随 RTL 镜像**（上游 rtl.scss 未覆盖 split，照实保留）；上游 `:hover .semi-button-borderless:active` 背景补偿规则在 Flutter 状态渲染下无对应物、不需复制。
 - **宽度保持**：无 icon → loading 增宽为上游原样行为（loading 走 IconButton 路径增开图标位 + 8 间距），移植如实；有 icon 时 spinner 原位替换不改宽度。
 - **onPressed null 语义**：不可按（指针/键盘均不触发）但视觉不置 disabled（上游 `onClick` 默认 noop）；`Semantics.enabled` 仍为 true。
 - **loading 键盘**：拦截限于指针（`pointer-events: none` 等价）；键盘 Enter/Space 在 loading 时仍触发 `onPressed`（上游原生 button 行为原样）。disabled 优先于 loading（无 spinner、禁用视觉）。
