@@ -214,7 +214,7 @@ class _ButtonPageState extends State<ButtonPage> {
                 ),
                 SemiButton(
                   '',
-                  icon: const SemiIcon(SemiIcons.caretdown),
+                  icon: const SemiIcon(SemiIcons.treeTriangleDown),
                   onPressed: () => setState(() => _status = '点击了分裂按钮「更多」。'),
                 ),
               ],
@@ -230,7 +230,7 @@ class _ButtonPageState extends State<ButtonPage> {
                 SemiButton(
                   '',
                   variant: SemiButtonVariant.solid,
-                  icon: const SemiIcon(SemiIcons.caretdown),
+                  icon: const SemiIcon(SemiIcons.treeTriangleDown),
                   onPressed: () => setState(() => _status = '点击了分裂按钮「保存选项」。'),
                 ),
               ],
