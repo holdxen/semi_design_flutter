@@ -1,4 +1,4 @@
-import 'package:example/main.dart';
+import 'package:example/pages/timeline.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:semi_design_flutter/semi_design_flutter.dart';
@@ -10,7 +10,7 @@ SemiTimeline timeline(WidgetTester tester, String key) =>
 
 Future<void> start(WidgetTester tester) async {
   addTearDown(() async => tester.pumpWidget(const SizedBox.shrink()));
-  await tester.pumpWidget(const MyApp());
+  await tester.pumpWidget(const SemiApp(home: TimelinePage()));
   await tester.pump(const Duration(milliseconds: 50));
 }
 
