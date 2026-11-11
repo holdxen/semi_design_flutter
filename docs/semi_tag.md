@@ -29,7 +29,7 @@ SemiTagTheme(data: SemiTagThemeData(textColor: Color(0xff123456)),
 
 16 色 × 3 类型实时读取 palette；white 单独遵循来源规则。AI 颜色与渐变分别使用 Color/SemiGradient；渐变文字 ShaderMask，边框/背景 CustomPainter。任意 prefixWidget 不重写内部 SVG gradient stop：AI 四 stop 参数可配置但未实现自动应用，不改变 SemiIcon 体系。
 
-组间距仅配置，不提供 TagGroup；deep-close 是上游保留未消费字段。没有 Tooltip、关闭动画或 Avatar 组件。
+组间距由基础版 SemiTagGroup 消费，该组已移植但不完整（见 docs/semi_tag_group.md，showPopover 待 Popover 移植后补全）；deep-close 是上游保留未消费字段。没有 Tooltip、关闭动画或 Avatar 组件。
 
 ## 完整 Sass 映射（64）
 
@@ -98,8 +98,8 @@ SemiTagTheme(data: SemiTagThemeData(textColor: Color(0xff123456)),
 | `$spacing-tag_avatar_circle-paddingBottom` | `spacingTagAvatarCirclePaddingBottom` | `double` | `$spacing-super-tight` |
 | `$spacing-tag_avatar_circle-paddingLeft` | `spacingTagAvatarCirclePaddingLeft` | `double` | `$spacing-super-tight` |
 | `$color-tag_avatar_square_img-bg-default` | `colorTagAvatarSquareImgBgDefault` | `Color` | `var(--semi-color-default)` |
-| `$spacing-tag_group-marginBottom` | `spacingTagGroupMarginBottom` | `double` | `0` |
-| `$spacing-tag_group-marginRight` | `spacingTagGroupMarginRight` | `double` | `$spacing-tight` |
+| `$spacing-tag_group-marginBottom` | `spacingTagGroupMarginBottom`（由 SemiTagGroup 消费） | `double` | `0` |
+| `$spacing-tag_group-marginRight` | `spacingTagGroupMarginRight`（由 SemiTagGroup 消费） | `double` | `$spacing-tight` |
 | `$font-tag_colorful-fontWeight` | `fontTagColorfulFontWeight` | `FontWeight` | `$font-weight-bold` |
 
 ## CSS 优先级与布局兼容
