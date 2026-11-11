@@ -202,6 +202,39 @@ class _ButtonPageState extends State<ButtonPage> {
                 SemiButton('归档', onPressed: () {}),
               ],
             ),
+            const SizedBox(height: 16),
+            const SemiText('分裂按钮', type: SemiTextType.secondary),
+            const SizedBox(height: 12),
+            SemiSplitButtonGroup(
+              semanticsLabel: '分裂按钮',
+              children: [
+                SemiButton(
+                  '主要操作',
+                  onPressed: () => setState(() => _status = '点击了分裂按钮「主要操作」。'),
+                ),
+                SemiButton(
+                  '',
+                  icon: const SemiIcon(SemiIcons.caretdown),
+                  onPressed: () => setState(() => _status = '点击了分裂按钮「更多」。'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SemiSplitButtonGroup(
+              children: [
+                SemiButton(
+                  '保存',
+                  variant: SemiButtonVariant.solid,
+                  onPressed: () => setState(() => _status = '点击了分裂按钮「保存」。'),
+                ),
+                SemiButton(
+                  '',
+                  variant: SemiButtonVariant.solid,
+                  icon: const SemiIcon(SemiIcons.caretdown),
+                  onPressed: () => setState(() => _status = '点击了分裂按钮「保存选项」。'),
+                ),
+              ],
+            ),
           ]),
           const SizedBox(height: 40),
           _section('局部主题', [

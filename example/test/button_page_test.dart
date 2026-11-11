@@ -113,6 +113,13 @@ void main() {
     );
     expect(groups, hasLength(2));
 
+    final splits = tester.widgetList<SemiSplitButtonGroup>(
+      find.byType(SemiSplitButtonGroup),
+    );
+    expect(splits, hasLength(2));
+    expect(find.text('主要操作'), findsOneWidget);
+    expect(find.text('保存'), findsOneWidget);
+
     await tester.ensureVisible(find.text('主题按钮'));
     await tester.pump(const Duration(milliseconds: 100));
     final theme = SemiButtonTheme.resolve(tester.element(find.text('主题按钮')));
