@@ -709,8 +709,8 @@ class _SemiTooltipState extends State<SemiTooltip>
   /// Touch fallback for the hover trigger: emulators and touch devices never
   /// produce hover events, so a touch tap toggles visibility directly. Mouse
   /// (and stylus) taps are ignored to keep upstream click semantics.
-  void _handleHoverTapUp(TapUpDetails details) {
-    if (details.kind != PointerDeviceKind.touch) return;
+  void _handleHoverTapUp(PointerUpEvent event) {
+    if (event.kind != PointerDeviceKind.touch) return;
     if (_effectiveVisible) {
       _requestHide();
     } else {
@@ -725,15 +725,15 @@ class _SemiTooltipState extends State<SemiTooltip>
       case SemiTooltipTrigger.click:
         // Focus on press like a focusable web element, so closeOnEsc can
         // receive the key from the trigger's Focus node.
-        child = GestureDetector(
-          onTapDown: (_) => _focusNode.requestFocus(),
-          onTap: _requestShow,
+        child = _PointerTapArea(
+          onDown: (_) => _focusNode.requestFocus(),
+          onUpInside: (_) => _requestShow(),
           child: child,
         );
       case SemiTooltipTrigger.contextMenu:
-        child = GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onSecondaryTapDown: (_) {
+        child = _PointerTapArea(
+          onDown: (event) {
+            if (event.buttons & kSecondaryMouseButton == 0) return;
             _focusNode.requestFocus();
             _requestShow();
           },
@@ -744,18 +744,13 @@ class _SemiTooltipState extends State<SemiTooltip>
         // hover trigger would be unreachable there. Taps from touch pointers
         // toggle the tooltip instead; mouse clicks keep the upstream hover
         // semantics and never toggle.
-        child = GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onTapUp: _handleHoverTapUp,
-          child: child,
-        );
+        child = _PointerTapArea(onUpInside: _handleHoverTapUp, child: child);
       case SemiTooltipTrigger.focus:
         // Flutter does not move focus on pointer input by itself (upstream is
         // DOM click-to-focus); request it explicitly so click/tap shows the
         // tooltip like a focusable web element.
-        child = GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onTapDown: (_) => _focusNode.requestFocus(),
+        child = _PointerTapArea(
+          onDown: (_) => _focusNode.requestFocus(),
           child: child,
         );
       case SemiTooltipTrigger.custom:
@@ -781,6 +776,51 @@ class _SemiTooltipState extends State<SemiTooltip>
     return CompositedTransformTarget(
       link: _link,
       key: _targetKey,
+      child: child,
+    );
+  }
+}
+
+/// Arena-free pointer tap detection for trigger activation.
+///
+/// A wrapping [GestureDetector] competes in the gesture arena with the
+/// child's own recognizers and loses: the innermost recognizer wins, so a
+/// trigger wrapping an interactive child (e.g. a `SemiButton` with
+/// `onPressed`) would never activate. Upstream Trigger binds DOM click
+/// listeners that always observe child clicks — a [Listener] mirrors that
+/// semantics. [onUpInside] fires only when the pointer is released within the
+/// trigger bounds (DOM click: down and up on the element).
+class _PointerTapArea extends StatelessWidget {
+  const _PointerTapArea({required this.child, this.onDown, this.onUpInside});
+
+  final Widget child;
+  final ValueChanged<PointerDownEvent>? onDown;
+  final ValueChanged<PointerUpEvent>? onUpInside;
+
+  @override
+  Widget build(BuildContext context) {
+    Offset? downPosition;
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerDown: (event) {
+        downPosition = event.position;
+        onDown?.call(event);
+      },
+      onPointerUp: (event) {
+        final down = downPosition;
+        downPosition = null;
+        if (down == null || onUpInside == null) return;
+        final box = context.findRenderObject() as RenderBox?;
+        if (box == null || !box.hasSize) return;
+        if ((box.localToGlobal(Offset.zero) & box.size).contains(
+          event.position,
+        )) {
+          onUpInside!(event);
+        }
+      },
+      onPointerCancel: (_) {
+        downPosition = null;
+      },
       child: child,
     );
   }

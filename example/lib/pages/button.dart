@@ -212,10 +212,15 @@ class _ButtonPageState extends State<ButtonPage> {
                   '主要操作',
                   onPressed: () => setState(() => _status = '点击了分裂按钮「主要操作」。'),
                 ),
-                SemiButton(
-                  '',
-                  icon: const SemiIcon(SemiIcons.treeTriangleDown),
-                  onPressed: () => setState(() => _status = '点击了分裂按钮「更多」。'),
+                SemiDropdown(
+                  trigger: SemiTooltipTrigger.click,
+                  position: SemiTooltipPosition.bottomRight,
+                  menu: _splitMenu(),
+                  child: SemiButton(
+                    '',
+                    icon: const SemiIcon(SemiIcons.treeTriangleDown),
+                    onPressed: () => setState(() => _status = '点击了分裂按钮「更多」。'),
+                  ),
                 ),
               ],
             ),
@@ -227,11 +232,16 @@ class _ButtonPageState extends State<ButtonPage> {
                   variant: SemiButtonVariant.solid,
                   onPressed: () => setState(() => _status = '点击了分裂按钮「保存」。'),
                 ),
-                SemiButton(
-                  '',
-                  variant: SemiButtonVariant.solid,
-                  icon: const SemiIcon(SemiIcons.treeTriangleDown),
-                  onPressed: () => setState(() => _status = '点击了分裂按钮「保存选项」。'),
+                SemiDropdown(
+                  trigger: SemiTooltipTrigger.click,
+                  position: SemiTooltipPosition.bottomRight,
+                  menu: _splitMenu(),
+                  child: SemiButton(
+                    '',
+                    variant: SemiButtonVariant.solid,
+                    icon: const SemiIcon(SemiIcons.treeTriangleDown),
+                    onPressed: () => setState(() => _status = '点击了分裂按钮「保存选项」。'),
+                  ),
                 ),
               ],
             ),
@@ -264,6 +274,24 @@ class _ButtonPageState extends State<ButtonPage> {
       ),
     );
   }
+
+  /// Official split-button demo menu (content/basic/button SplitButtonDemo).
+  List<SemiDropdownNode> _splitMenu() => [
+    SemiDropdownItemData(
+      name: '编辑项目',
+      onTap: () => setState(() => _status = '点击了「编辑项目」。'),
+    ),
+    SemiDropdownItemData(
+      name: '复制项目',
+      onTap: () => setState(() => _status = '点击了「复制项目」。'),
+    ),
+    const SemiDropdownDividerData(),
+    SemiDropdownItemData(
+      name: '删除项目',
+      type: SemiDropdownItemType.danger,
+      onTap: () => setState(() => _status = '点击了「删除项目」。'),
+    ),
+  ];
 
   Widget _action(String key, String label, VoidCallback onTap) => SemiText(
     label,

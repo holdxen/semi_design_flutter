@@ -9,7 +9,12 @@ Widget host(Widget child, {bool rtl = false}) => SemiTheme(
   data: const SemiThemeData.light(),
   child: Directionality(
     textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
-    child: Center(child: child),
+    // Popups (SemiDropdown/SemiTooltip) need an Overlay ancestor.
+    child: Overlay(
+      initialEntries: [
+        OverlayEntry(builder: (context) => Center(child: child)),
+      ],
+    ),
   ),
 );
 
@@ -182,4 +187,65 @@ void main() {
     );
     expect(first.topRight, Radius.zero);
   });
+
+  testWidgets('Dropdown-wrapped triggers still mark first and last', (
+    tester,
+  ) async {
+    // The canonical split-button composition wraps the trigger in a Dropdown
+    // (official SplitButtonDemo); upstream `querySelectorAll('button')` finds
+    // it at any depth, so the flags must reach through the wrapper.
+    await tester.pumpWidget(
+      host(
+        SemiSplitButtonGroup(
+          children: [
+            SemiButton('主要操作', onPressed: () {}),
+            SemiDropdown(
+              trigger: SemiTooltipTrigger.click,
+              menu: const [SemiDropdownItemData(name: '项')],
+              child: SemiButton(
+                '',
+                icon: const SemiIcon(SemiIcons.treeTriangleDown),
+                onPressed: () {},
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    final first = box(tester, 0).borderRadius! as BorderRadius;
+    final trigger = box(tester, 1).borderRadius! as BorderRadius;
+    expect(first.topLeft, isNot(Radius.zero));
+    expect(first.topRight, Radius.zero);
+    expect(trigger.topRight, isNot(Radius.zero));
+    expect(trigger.topLeft, Radius.zero);
+  });
+
+  testWidgets(
+    'the Dropdown-wrapped trigger opens even when its button consumes taps',
+    (tester) async {
+      await tester.pumpWidget(
+        host(
+          SemiSplitButtonGroup(
+            children: [
+              SemiButton('主要操作', onPressed: () {}),
+              SemiDropdown(
+                trigger: SemiTooltipTrigger.click,
+                menu: const [SemiDropdownItemData(name: '编辑项目')],
+                child: SemiButton(
+                  '',
+                  icon: const SemiIcon(SemiIcons.treeTriangleDown),
+                  onPressed: () {},
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.tap(find.byType(SemiButton).at(1));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 120));
+      await tester.pump();
+      expect(find.text('编辑项目'), findsOneWidget);
+    },
+  );
 }

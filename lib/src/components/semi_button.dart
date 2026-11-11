@@ -11,6 +11,8 @@ import '../tokens/token_types.dart';
 import 'icon/semi_icon.dart';
 import 'icon/semi_icon_data.dart';
 import 'icon/semi_icons.dart';
+import 'semi_dropdown.dart';
+import 'semi_tooltip.dart';
 import 'typography/semi_text.dart';
 
 /// Upstream `strings.btnTypes` (`packages/semi-foundation/button/constants.ts`).
@@ -284,9 +286,10 @@ class SemiButtonGroup extends StatelessWidget {
 /// `border-radius: 0` and the first/last buttons round only their outer
 /// corners — one physical corner token each.
 ///
-/// Documented differences (docs/semi_button.md): the first/last flags attach
-/// to the first/last direct [SemiButton] children (upstream marks the
-/// first/last `button` DOM descendants at any depth); the 1px gap sits
+/// Documented differences (docs/semi_button.md): first/last detection recurses
+/// through the library's Dropdown/Tooltip trigger wrappers to mirror upstream
+/// `querySelectorAll('button')` at any depth (custom non-library wrappers are
+/// not introspected); the 1px gap sits
 /// between all children (upstream margins only `.semi-button`); the radii are
 /// physical corners because upstream `rtl.scss` never mirrors this component.
 class SemiSplitButtonGroup extends StatelessWidget {
@@ -301,18 +304,30 @@ class SemiSplitButtonGroup extends StatelessWidget {
   /// Accessible group label (upstream `aria-label`).
   final String? semanticsLabel;
 
+  /// Upstream marks the first/last `button` DOM descendants at any depth
+  /// (`querySelectorAll('button')`), which matters when a trigger button is
+  /// wrapped in a Dropdown/Tooltip — the canonical split-button composition.
+  /// Recurse through those library wrappers; the [_ButtonPosition] inherited
+  /// flags reach buttons at any depth regardless.
+  static bool _containsButton(Widget widget) {
+    if (widget is SemiButton) return true;
+    if (widget is SemiDropdown) return _containsButton(widget.child);
+    if (widget is SemiTooltip) return _containsButton(widget.child);
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     var firstIndex = -1;
     var lastIndex = -1;
     for (var i = 0; i < children.length; i++) {
-      if (children[i] is SemiButton) {
+      if (_containsButton(children[i])) {
         firstIndex = i;
         break;
       }
     }
     for (var i = children.length - 1; i >= 0; i--) {
-      if (children[i] is SemiButton) {
+      if (_containsButton(children[i])) {
         lastIndex = i;
         break;
       }

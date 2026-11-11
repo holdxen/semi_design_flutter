@@ -498,7 +498,7 @@ SemiSplitButtonGroup(
 - **htmlType/circle 不移植**：`htmlType` 是 HTML 原生 `type`（button/reset/submit）；`circle` 上游无任何 scss 规则、事实 no-op，均不移植。
 - **无受控 loading**：上游 `loading` 即普通 prop（无受控/非受控之分），移植一致。
 - **图标四 stop/两 stop 重染不移植**：SemiIcon 单色架构（同 Tag 边界），colorful 图标以 currentColor 呈现；7 条 cssVariables 由 `SemiButtonTokens` 承接（对照表见 colorful 节）。
-- **SplitButtonGroup 已移植**（`SemiSplitButtonGroup`）：1px 间隙行（上游 per-button `margin-right: 1px`、末位复位）、所有按钮 `border-radius: 0`、首/末按钮按四条物理角 token 圆外侧角（`splitButtonGroup.scss`）。差异：首/末标记挂在**直接子级中的首个/末个 SemiButton**（上游按 DOM 深度查所有 `button` 后代）；1px 间隙作用于全部子级（上游仅 `.semi-button` 带 margin）；**圆角为物理角不随 RTL 镜像**（上游 rtl.scss 未覆盖 split，照实保留）；上游 `:hover .semi-button-borderless:active` 背景补偿规则在 Flutter 状态渲染下无对应物、不需复制。
+- **SplitButtonGroup 已移植**（`SemiSplitButtonGroup`）：1px 间隙行（上游 per-button `margin-right: 1px`、末位复位）、所有按钮 `border-radius: 0`、首/末按钮按四条物理角 token 圆外侧角（`splitButtonGroup.scss`）。差异：首/末检测递归穿过本库 `SemiDropdown`/`SemiTooltip` 触发器包装（等价上游 `querySelectorAll('button')` 任意深度；其他自定义包装不内省）；1px 间隙作用于全部子级（上游仅 `.semi-button` 带 margin）；**圆角为物理角不随 RTL 镜像**（上游 rtl.scss 未覆盖 split，照实保留）；上游 `:hover .semi-button-borderless:active` 背景补偿规则在 Flutter 状态渲染下无对应物、不需复制。
 - **宽度保持**：无 icon → loading 增宽为上游原样行为（loading 走 IconButton 路径增开图标位 + 8 间距），移植如实；有 icon 时 spinner 原位替换不改宽度。
 - **onPressed null 语义**：不可按（指针/键盘均不触发）但视觉不置 disabled（上游 `onClick` 默认 noop）；`Semantics.enabled` 仍为 true。
 - **loading 键盘**：拦截限于指针（`pointer-events: none` 等价）；键盘 Enter/Space 在 loading 时仍触发 `onPressed`（上游原生 button 行为原样）。disabled 优先于 loading（无 spinner、禁用视觉）。
