@@ -169,6 +169,10 @@ class _SemiTooltipState extends State<SemiTooltip>
   bool _showScheduled = false;
   bool _disposed = false;
 
+  /// Owned so the focus trigger can request focus on click/tap (a bare [Focus]
+  /// never gains focus from pointer input on its own).
+  final FocusNode _focusNode = FocusNode();
+
   bool get _isControlled => widget.visible != null;
 
   bool get _effectiveVisible => _isControlled ? widget.visible! : _visible;
@@ -181,7 +185,8 @@ class _SemiTooltipState extends State<SemiTooltip>
 
   bool get _needsOutsideBarrier =>
       widget.trigger == SemiTooltipTrigger.click ||
-      widget.trigger == SemiTooltipTrigger.contextMenu;
+      widget.trigger == SemiTooltipTrigger.contextMenu ||
+      widget.trigger == SemiTooltipTrigger.focus;
 
   @override
   void initState() {
@@ -239,6 +244,7 @@ class _SemiTooltipState extends State<SemiTooltip>
     _entry = null;
     _curved?.dispose();
     _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -562,6 +568,9 @@ class _SemiTooltipState extends State<SemiTooltip>
       );
     }
     if (inside) return;
+    // Blur first so the focus trigger leaves the focused state even when the
+    // tooltip was opened programmatically.
+    if (widget.trigger == SemiTooltipTrigger.focus) _focusNode.unfocus();
     widget.onClickOutSide?.call();
     _requestHide();
   }
@@ -626,10 +635,19 @@ class _SemiTooltipState extends State<SemiTooltip>
           child: child,
         );
       case SemiTooltipTrigger.focus:
+        // Flutter does not move focus on pointer input by itself (upstream is
+        // DOM click-to-focus); request it explicitly so click/tap shows the
+        // tooltip like a focusable web element.
+        child = GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTapDown: (_) => _focusNode.requestFocus(),
+          child: child,
+        );
       case SemiTooltipTrigger.custom:
         break;
     }
     child = Focus(
+      focusNode: _focusNode,
       onKeyEvent: _handleKeyEvent,
       onFocusChange:
           widget.trigger == SemiTooltipTrigger.hover ||
