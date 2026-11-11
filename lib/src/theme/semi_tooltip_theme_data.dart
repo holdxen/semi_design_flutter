@@ -220,10 +220,13 @@ class SemiTooltipThemeData {
         colorTooltipBgDefault ?? theme.palette.grey7.toColor(1),
     colorTooltipTextDefault: colorTooltipTextDefault ?? theme.colors.colorBg0,
     colorTooltipIconDefault:
-        colorTooltipIconDefault ?? theme.palette.grey7.toColor(1),
+        colorTooltipIconDefault ??
+        (colorTooltipBgDefault ?? theme.palette.grey7.toColor(1)),
     colorTooltipArrowIconDefault:
         colorTooltipArrowIconDefault ??
-        (colorTooltipIconDefault ?? theme.palette.grey7.toColor(1)),
+        (colorTooltipIconDefault ??
+            colorTooltipBgDefault ??
+            theme.palette.grey7.toColor(1)),
     radiusTooltip: radiusTooltip ?? theme.radius.borderRadiusMedium.value,
     spacingTooltipContentPaddingLeft: spacingTooltipContentPaddingLeft ?? 12,
     spacingTooltipContentPaddingRight: spacingTooltipContentPaddingRight ?? 12,

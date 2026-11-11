@@ -84,8 +84,8 @@ bottomLeft   bottom   bottomRight  （下方三位置，translateY=0）
 | --- | --- | --- | --- |
 | `colorTooltipBgDefault` | `$color-tooltip-bg-default: rgba(var(--semi-grey-7), 1)` | `theme.palette.grey7.toColor(1)` | variables.scss |
 | `colorTooltipTextDefault` | `$color-tooltip-text-default: var(--semi-color-bg-0)` | `theme.colors.colorBg0` | variables.scss |
-| `colorTooltipIconDefault` | `$color-tooltip-icon-default: rgba(var(--semi-grey-7), 1)` | `theme.palette.grey7.toColor(1)` | variables.scss |
-| `colorTooltipArrowIconDefault` | `$color-tooltip_arrow-icon-default: $color-tooltip-icon-default` | `colorTooltipIconDefault`（活引用） | variables.scss |
+| `colorTooltipIconDefault` | `$color-tooltip-icon-default: rgba(var(--semi-grey-7), 1)` | 未覆盖时跟随 `colorTooltipBgDefault`，再回退 `theme.palette.grey7.toColor(1)`（上游 icon 默认同 bg） | variables.scss |
+| `colorTooltipArrowIconDefault` | `$color-tooltip_arrow-icon-default: $color-tooltip-icon-default` | 未覆盖时按 `colorTooltipIconDefault` → `colorTooltipBgDefault` → grey7 逐级跟随（上游箭头以气泡背景绘制，`renderIcon` 注入 `style.backgroundColor`，因此背景覆盖会带动箭头变色） | variables.scss |
 | `radiusTooltip` | `$radius-tooltip: var(--semi-border-radius-medium)` | `theme.radius.borderRadiusMedium.value` | variables.scss |
 | `spacingTooltipContentPaddingLeft` | `$spacing-tooltip_content-paddingLeft: $spacing-base-tight` | 12 | variables.scss |
 | `spacingTooltipContentPaddingRight` | `$spacing-tooltip_content-paddingRight: $spacing-base-tight` | 12 | variables.scss |
