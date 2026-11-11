@@ -34,6 +34,10 @@ export 'src/components/icon/semi_icons.dart';
 export 'src/components/semi_divider.dart';
 export 'src/theme/semi_divider_theme.dart';
 export 'src/theme/semi_divider_theme_data.dart';
+export 'src/components/highlight_algorithm.dart';
+export 'src/components/semi_highlight.dart';
+export 'src/theme/semi_highlight_theme.dart';
+export 'src/theme/semi_highlight_theme_data.dart';
 export 'src/theme/semi_icon_theme.dart';
 
 /// A Calculator.

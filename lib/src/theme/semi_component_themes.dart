@@ -4,6 +4,7 @@ import 'semi_tag_theme_data.dart';
 import 'semi_divider_theme_data.dart';
 import 'semi_progress_theme_data.dart';
 import 'semi_spin_theme_data.dart';
+import 'semi_highlight_theme_data.dart';
 import 'semi_typography_theme_data.dart';
 
 @immutable
@@ -14,24 +15,28 @@ class SemiComponentThemes {
     this.divider = const SemiDividerThemeData(),
     this.progress = const SemiProgressThemeData(),
     this.spin = const SemiSpinThemeData(),
+    this.highlight = const SemiHighlightThemeData(),
   });
   final SemiTagThemeData tag;
   final SemiTypographyThemeData typography;
   final SemiDividerThemeData divider;
   final SemiProgressThemeData progress;
   final SemiSpinThemeData spin;
+  final SemiHighlightThemeData highlight;
   SemiComponentThemes copyWith({
     SemiTagThemeData? tag,
     SemiTypographyThemeData? typography,
     SemiDividerThemeData? divider,
     SemiProgressThemeData? progress,
     SemiSpinThemeData? spin,
+    SemiHighlightThemeData? highlight,
   }) => SemiComponentThemes(
     tag: tag ?? this.tag,
     typography: typography ?? this.typography,
     divider: divider ?? this.divider,
     progress: progress ?? this.progress,
     spin: spin ?? this.spin,
+    highlight: highlight ?? this.highlight,
   );
   @override
   bool operator ==(Object other) =>
@@ -41,7 +46,9 @@ class SemiComponentThemes {
           typography == other.typography &&
           divider == other.divider &&
           progress == other.progress &&
-          spin == other.spin;
+          spin == other.spin &&
+          highlight == other.highlight;
   @override
-  int get hashCode => Object.hash(tag, typography, divider, spin, progress);
+  int get hashCode =>
+      Object.hash(tag, typography, divider, spin, progress, highlight);
 }
