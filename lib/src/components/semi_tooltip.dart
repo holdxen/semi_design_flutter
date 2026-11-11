@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -8,6 +9,7 @@ import '../theme/semi_theme.dart';
 import '../theme/semi_tooltip_theme.dart';
 import '../theme/semi_tooltip_theme_data.dart';
 import '../tokens/token_types.dart';
+import 'tooltip_arrow_paths.dart';
 
 /// How the tooltip is triggered (web `strings.TRIGGER_SET`).
 enum SemiTooltipTrigger {
@@ -801,38 +803,35 @@ class _TooltipArrowPainter extends CustomPainter {
     final paint = Paint()
       ..color = color
       ..style = PaintingStyle.fill;
-    final path = Path();
+    // The upstream arrow is the curved "wing" from TriangleArrow(.Vertical).tsx
+    // scaled to the theme dimensions and rotated 180° for the opposite edge,
+    // exactly like arrow.scss does with `transform: rotate(180deg)`.
+    canvas.save();
     switch (edge) {
       case TooltipArrowEdge.bottom:
-        final baseY = size.height - overlapY;
-        path
-          ..moveTo(center - alongSpan / 2, baseY)
-          ..lineTo(center + alongSpan / 2, baseY)
-          ..lineTo(center, baseY + thick)
-          ..close();
+        canvas
+          ..translate(center - alongSpan / 2, size.height - overlapY)
+          ..scale(alongSpan / 24, thick / 7);
+        canvas.drawPath(tooltipArrowWingHorizontal(), paint);
       case TooltipArrowEdge.top:
-        final baseY = overlapY;
-        path
-          ..moveTo(center - alongSpan / 2, baseY)
-          ..lineTo(center + alongSpan / 2, baseY)
-          ..lineTo(center, baseY - thick)
-          ..close();
+        canvas
+          ..translate(center + alongSpan / 2, overlapY)
+          ..rotate(math.pi)
+          ..scale(alongSpan / 24, thick / 7);
+        canvas.drawPath(tooltipArrowWingHorizontal(), paint);
       case TooltipArrowEdge.right:
-        final baseX = size.width - overlapY;
-        path
-          ..moveTo(baseX, center - alongSpan / 2)
-          ..lineTo(baseX, center + alongSpan / 2)
-          ..lineTo(baseX + thick, center)
-          ..close();
+        canvas
+          ..translate(size.width - overlapY, center - alongSpan / 2)
+          ..scale(thick / 7, alongSpan / 24);
+        canvas.drawPath(tooltipArrowWingVertical(), paint);
       case TooltipArrowEdge.left:
-        final baseX = overlapY;
-        path
-          ..moveTo(baseX, center - alongSpan / 2)
-          ..lineTo(baseX, center + alongSpan / 2)
-          ..lineTo(baseX - thick, center)
-          ..close();
+        canvas
+          ..translate(overlapY, center + alongSpan / 2)
+          ..rotate(math.pi)
+          ..scale(thick / 7, alongSpan / 24);
+        canvas.drawPath(tooltipArrowWingVertical(), paint);
     }
-    canvas.drawPath(path, paint);
+    canvas.restore();
   }
 
   @override

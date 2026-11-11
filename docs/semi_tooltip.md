@@ -19,7 +19,7 @@ SemiTooltip(
 | `child` | 必填，触发元素 | - |
 | `position` | 12 个公开位置枚举 `SemiTooltipPosition` | `top` |
 | `trigger` | `hover`/`click`/`focus`/`custom`/`contextMenu` | `hover` |
-| `showArrow` | 是否绘制小三角（`CustomPaint` 24×7，侧向 7×24，颜色取 `colorTooltipArrowIconDefault`，默认同背景色） | `true` |
+| `showArrow` | 是否绘制箭头。形状为上游 `TriangleArrow(.Vertical).tsx` 的凹面翼形曲线（24×7，侧向 7×24，`CustomPaint` 逐路径绘制，反向位置按上游 `rotate(180deg)` 翻转），颜色取 `colorTooltipArrowIconDefault`，默认同背景色 | `true` |
 | `arrowPointAtCenter` | 箭头指向触发物中心而非弹层边角 | `true` |
 | `autoAdjustOverflow` | 空间不足时自动调整位置 | `true` |
 | `spacing` | 触发物与弹层主轴间距 | `8` |
