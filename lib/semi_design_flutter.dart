@@ -58,6 +58,9 @@ export 'src/components/semi_collapse.dart';
 export 'src/theme/semi_collapse_theme.dart';
 export 'src/theme/semi_collapse_theme_data.dart';
 export 'src/components/semi_dropdown.dart';
+export 'src/components/semi_button.dart';
+export 'src/theme/semi_button_theme.dart';
+export 'src/theme/semi_button_theme_data.dart';
 export 'src/theme/semi_dropdown_theme.dart';
 export 'src/theme/semi_dropdown_theme_data.dart';
 
