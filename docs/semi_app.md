@@ -33,3 +33,14 @@ SemiApp(
 有路由时，用户 builder 必须把 child 放入返回的子树才能保留 Navigator；无路由时 child 为 null。WidgetsApp 提供 Directionality、WidgetsLocalizations、焦点及导航基础设施。默认 supportedLocales 仅声明 en_US；可传入 locale、localizationsDelegates、supportedLocales 扩展实际本地化能力。默认 WidgetsLocalizations 本身支持基础文字方向，不等于提供组件翻译，更不包含 Material/Cupertino localizations。
 
 此入口不提供 SemiScaffold、Material/Cupertino 组件服务、Router 2 或 restoration 配置。页面布局和滚动由宿主使用 SafeArea、SingleChildScrollView 等 widgets 构建。
+
+## macOS hover 注意事项
+
+Flutter macOS 引擎的 `mouseTrackingMode` **默认为 `FlutterMouseTrackingModeInKeyWindow`**：悬浮事件只在窗口处于关键（key）状态时投递，后台窗口悬浮样式不响应，切窗激活后恢复。这是引擎默认值而非组件问题（`FlutterViewController.h` 与 `flutter/flutter#185426`）。如需与普通 macOS 应用一致的后台悬浮行为，在 runner 中设置：
+
+```swift
+// macos/Runner/MainFlutterWindow.swift
+flutterViewController.mouseTrackingMode = .always
+```
+
+该模式也使 enter/exit 在焦点切换时保持稳定，避免指针 add/remove 状态与按下/松开事件错位。example 的 macOS runner 已作此设置。
