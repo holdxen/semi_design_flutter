@@ -87,6 +87,9 @@ export 'src/theme/semi_radio_theme_data.dart';
 export 'src/components/semi_rating.dart';
 export 'src/theme/semi_rating_theme.dart';
 export 'src/theme/semi_rating_theme_data.dart';
+export 'src/components/semi_select.dart';
+export 'src/theme/semi_select_theme.dart';
+export 'src/theme/semi_select_theme_data.dart';
 
 /// A Calculator.
 class Calculator {
