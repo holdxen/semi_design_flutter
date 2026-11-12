@@ -455,12 +455,15 @@ class _RatingItem extends StatelessWidget {
   Widget _character(BuildContext context, Color color) {
     if (character != null) {
       // Custom characters inherit the star's font-size and color (the li
-      // `font-size` + `color: inherit` cascade of rating.scss).
+      // `font-size` + `color: inherit` cascade of rating.scss). `height: 1`
+      // pins the text line box to the em square so glyph ink fits the
+      // star box — the default line-height multiplier (~1.4x) overflowed
+      // and the stack clipped the bottom of CJK glyphs like 「赞」.
       return IconTheme(
         data: IconThemeData(color: color, size: fontSize),
         child: DefaultTextStyle(
           style: DefaultTextStyle.of(context).style
-              .merge(TextStyle(fontSize: fontSize, color: color)),
+              .merge(TextStyle(fontSize: fontSize, height: 1.0, color: color)),
           child: character!,
         ),
       );

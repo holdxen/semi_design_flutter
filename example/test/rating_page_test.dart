@@ -198,6 +198,14 @@ void main() {
       ),
       findsNWidgets(10), // 5 stars × (bottom + clipped top layer)
     );
+    // Regression: the glyph line box must fit the 18px star box — the
+    // default line-height overflowed and the stack clipped 「赞」's bottom.
+    final glyph = tester.getRect(
+      find
+          .descendant(of: keyed('rating-custom-text'), matching: find.text('赞'))
+          .first,
+    );
+    expect(glyph.height, lessThanOrEqualTo(18.0));
     expect(tester.takeException(), isNull);
   });
 }
