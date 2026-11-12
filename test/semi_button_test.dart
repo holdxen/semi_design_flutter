@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:semi_design_flutter/semi_design_flutter.dart';
+import 'package:semi_design_flutter/src/components/spin_svg.dart';
 
 /// Docs/semi_button.md derivation table: expected state colors read from the
 /// theme fields (the widget wiring is what these tests pin down).
@@ -37,6 +38,10 @@ Border borderOf(BoxDecoration d) => d.border! as Border;
 
 Color? labelColor(WidgetTester tester) =>
     tester.widget<SemiText>(find.byType(SemiText)).style?.color;
+
+SemiIcon svgSpinner(WidgetTester tester) => tester.widget<SemiIcon>(
+  find.byWidgetPredicate((w) => w is SemiIcon && w.svgSource == semiSpinSvg),
+);
 
 double buttonHeight(WidgetTester tester, {Finder? of}) =>
     tester.getSize(of ?? find.byType(SemiButton)).height;
@@ -540,7 +545,7 @@ void main() {
       (w) => w.runtimeType.toString() == '_ButtonSpinner',
     );
     expect(spinner, findsOneWidget);
-    expect(iconFinder(SemiIcons.spin), findsOneWidget);
+    expect(svgSpinner(tester).color, isNotNull);
     await tester.tap(find.byType(SemiButton));
     await tester.pump();
     expect(taps, 0);
@@ -570,7 +575,7 @@ void main() {
       ),
     );
     expect((spinner as dynamic).duration, const Duration(milliseconds: 600));
-    expect(iconFinder(SemiIcons.spin), findsOneWidget);
+    expect(svgSpinner(tester).color, isNotNull);
     await tester.pumpWidget(
       host(
         SemiButton(

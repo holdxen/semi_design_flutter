@@ -12,6 +12,7 @@ import 'icon/semi_icon.dart';
 import 'icon/semi_icon_data.dart';
 import 'icon/semi_icons.dart';
 import 'semi_dropdown.dart';
+import 'spin_svg.dart';
 import 'semi_tooltip.dart';
 import 'typography/semi_text.dart';
 
@@ -491,16 +492,26 @@ class _SemiButtonState extends State<SemiButton> {
 
     Widget? iconSlot;
     if (showSpinner) {
+      // Upstream iconButton renders `SpinIcon` (spin/icon.tsx: stroked arc
+      // with a 0→0.5→1 opacity gradient tail) or `IconAILoading` for the
+      // colorful/solid-tertiary cases — never the fill-based catalog spin.
       iconSlot = _ButtonSpinner(
         duration: useAiSpinner
             ? t.animationDurationButtonIconCustomIconLoading
             : t.animationDurationButtonIconLoading,
-        child: SemiIcon(
-          useAiSpinner ? SemiIcons.aiLoading : SemiIcons.spin,
-          customSize: _ButtonMetrics.spinnerBoxSize,
-          color: visual.color,
-          excludeFromSemantics: true,
-        ),
+        child: useAiSpinner
+            ? SemiIcon(
+                SemiIcons.aiLoading,
+                customSize: _ButtonMetrics.spinnerBoxSize,
+                color: visual.color,
+                excludeFromSemantics: true,
+              )
+            : SemiIcon.svg(
+                semiSpinSvg,
+                customSize: _ButtonMetrics.spinnerBoxSize,
+                color: visual.color,
+                excludeFromSemantics: true,
+              ),
       );
     } else if (widget.icon != null) {
       iconSlot = SemiIconTheme(

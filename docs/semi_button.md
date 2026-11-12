@@ -79,8 +79,8 @@ Quirk（不修正）：`$color-button_danger-border-hover: var(--semi-color-dang
 
 - spinner 原位替换 icon（文本不动）；指针点击拦截（`pointer-events: none` 等价），`Semantics.enabled` 仅看 `disabled`（上游 `aria-disabled: disabled`）。
 - disabled 优先于 loading：disabled 时无 spinner、原 icon 保留、禁用视觉。
-- spinner 选型（上游 `iconButton/index.tsx` 原样）：`(colorful && variant != solid) || (variant == solid && type == tertiary)` 用 `SemiIcons.aiLoading`（对应上游 `IconAILoading`，资产 `ai_loading.svg` 四 stop 渐变描边已烘焙），否则 `SemiIcons.spin`（`spin.svg` 渐变 spinner）。注意 solid+tertiary 即便非 colorful 也走 aiLoading（上游条件原样）。
-- 旋转：`SemiIcons.spin` 600ms（`$animation_duration-button_icon_loading`）；aiLoading 1600ms（`$animation_duration-button_icon_customIcon_loading`，"自定义指示器时旋转一周时长"）。
+- spinner 选型（上游 `iconButton/index.tsx` 原样）：`(colorful && variant != solid) || (variant == solid && type == tertiary)` 用 `SemiIcons.aiLoading`（对应上游 `IconAILoading`，资产 `ai_loading.svg` 四 stop 渐变描边已烘焙），否则 **`spin/icon.tsx` 的渐变 spinner**（`semiSpinSvg`：36 视框描边弧线，linearGradient 透明度 0→0.5→1 造成尾部渐隐；注意**不是**图标目录的 `SemiIcons.spin`——那个是填充式月牙、渐变定义未挂到路径上，曾误用导致无渐隐）。注意 solid+tertiary 即便非 colorful 也走 aiLoading（上游条件原样）。
+- 旋转：渐变 spinner 600ms（`$animation_duration-button_icon_loading`）；aiLoading 1600ms（`$animation_duration-button_icon_customIcon_loading`，"自定义指示器时旋转一周时长"）。
 - **宽度保持**：无 icon 的按钮进入 loading 会增开图标位（spinner + 8 间距）而变宽——上游 loading 走 IconButton 路径的原样行为，如实移植。
 
 ### colorful（多彩）
