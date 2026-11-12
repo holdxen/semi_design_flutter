@@ -20,6 +20,7 @@ import 'semi_input_number_theme_data.dart';
 import 'semi_pincode_theme_data.dart';
 import 'semi_autocomplete_theme_data.dart';
 import 'semi_radio_theme_data.dart';
+import 'semi_rating_theme_data.dart';
 
 @immutable
 class SemiComponentThemes {
@@ -44,6 +45,7 @@ class SemiComponentThemes {
     this.pinCode = const SemiPinCodeThemeData(),
     this.autocomplete = const SemiAutoCompleteThemeData(),
     this.radio = const SemiRadioThemeData(),
+    this.rating = const SemiRatingThemeData(),
   });
   final SemiTagThemeData tag;
   final SemiTypographyThemeData typography;
@@ -65,6 +67,7 @@ class SemiComponentThemes {
   final SemiPinCodeThemeData pinCode;
   final SemiAutoCompleteThemeData autocomplete;
   final SemiRadioThemeData radio;
+  final SemiRatingThemeData rating;
   SemiComponentThemes copyWith({
     SemiTagThemeData? tag,
     SemiTypographyThemeData? typography,
@@ -86,6 +89,7 @@ class SemiComponentThemes {
     SemiPinCodeThemeData? pinCode,
     SemiAutoCompleteThemeData? autocomplete,
     SemiRadioThemeData? radio,
+    SemiRatingThemeData? rating,
   }) => SemiComponentThemes(
     tag: tag ?? this.tag,
     typography: typography ?? this.typography,
@@ -107,6 +111,7 @@ class SemiComponentThemes {
     pinCode: pinCode ?? this.pinCode,
     autocomplete: autocomplete ?? this.autocomplete,
     radio: radio ?? this.radio,
+    rating: rating ?? this.rating,
   );
   @override
   bool operator ==(Object other) =>
@@ -131,9 +136,10 @@ class SemiComponentThemes {
           inputNumber == other.inputNumber &&
           pinCode == other.pinCode &&
           autocomplete == other.autocomplete &&
-          radio == other.radio;
+          radio == other.radio &&
+          rating == other.rating;
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     tag,
     typography,
     divider,
@@ -154,5 +160,6 @@ class SemiComponentThemes {
     pinCode,
     autocomplete,
     radio,
-  );
+    rating,
+  ]);
 }
