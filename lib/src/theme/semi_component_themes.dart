@@ -15,6 +15,7 @@ import 'semi_button_theme_data.dart';
 import 'semi_card_theme_data.dart';
 import 'semi_typography_theme_data.dart';
 import 'semi_checkbox_theme_data.dart';
+import 'semi_input_theme_data.dart';
 
 @immutable
 class SemiComponentThemes {
@@ -34,6 +35,7 @@ class SemiComponentThemes {
     this.button = const SemiButtonThemeData(),
     this.card = const SemiCardThemeData(),
     this.checkbox = const SemiCheckboxThemeData(),
+    this.input = const SemiInputThemeData(),
   });
   final SemiTagThemeData tag;
   final SemiTypographyThemeData typography;
@@ -50,6 +52,7 @@ class SemiComponentThemes {
   final SemiButtonThemeData button;
   final SemiCardThemeData card;
   final SemiCheckboxThemeData checkbox;
+  final SemiInputThemeData input;
   SemiComponentThemes copyWith({
     SemiTagThemeData? tag,
     SemiTypographyThemeData? typography,
@@ -66,6 +69,7 @@ class SemiComponentThemes {
     SemiButtonThemeData? button,
     SemiCardThemeData? card,
     SemiCheckboxThemeData? checkbox,
+    SemiInputThemeData? input,
   }) => SemiComponentThemes(
     tag: tag ?? this.tag,
     typography: typography ?? this.typography,
@@ -82,6 +86,7 @@ class SemiComponentThemes {
     button: button ?? this.button,
     card: card ?? this.card,
     checkbox: checkbox ?? this.checkbox,
+    input: input ?? this.input,
   );
   @override
   bool operator ==(Object other) =>
@@ -101,7 +106,8 @@ class SemiComponentThemes {
           dropdown == other.dropdown &&
           button == other.button &&
           card == other.card &&
-          checkbox == other.checkbox;
+          checkbox == other.checkbox &&
+          input == other.input;
   @override
   int get hashCode => Object.hash(
     tag,
@@ -119,5 +125,6 @@ class SemiComponentThemes {
     button,
     card,
     checkbox,
+    input,
   );
 }

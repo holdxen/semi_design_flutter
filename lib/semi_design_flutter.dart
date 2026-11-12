@@ -69,6 +69,9 @@ export 'src/theme/semi_card_theme_data.dart';
 export 'src/components/semi_checkbox.dart';
 export 'src/theme/semi_checkbox_theme.dart';
 export 'src/theme/semi_checkbox_theme_data.dart';
+export 'src/components/semi_input.dart';
+export 'src/theme/semi_input_theme.dart';
+export 'src/theme/semi_input_theme_data.dart';
 
 /// A Calculator.
 class Calculator {
