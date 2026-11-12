@@ -10,7 +10,6 @@ class InputPage extends StatefulWidget {
 
 class _InputPageState extends State<InputPage> {
   String _status = '在输入框内键入内容或按 Enter 查看事件。';
-  String _controlled = '受控文本';
 
   Widget _section(String title, List<Widget> children) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,10 +40,8 @@ class _InputPageState extends State<InputPage> {
             SemiInput(
               key: const ValueKey('basic-input'),
               placeholder: '请输入内容',
-              onChanged: (text) =>
-                  setState(() => _status = '输入了「$text」。'),
-              onEnterPress: () =>
-                  setState(() => _status = '按下了 Enter。'),
+              onChanged: (text) => setState(() => _status = '输入了「$text」。'),
+              onEnterPress: () => setState(() => _status = '按下了 Enter。'),
             ),
           ]),
           const SizedBox(height: 40),
