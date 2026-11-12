@@ -486,24 +486,28 @@ class _SemiInputState extends State<SemiInput> {
   }
 
   Widget _slot(Object value, TextStyle style, SemiResolvedInputThemeData t) {
+    // The surrounding Row stretches slots to the wrapper height; center the
+    // slot content on the horizontal axis (upstream flex `align-items:center`).
+    final Widget content;
     if (value is String) {
-      return Padding(
+      content = Padding(
         padding: EdgeInsetsDirectional.symmetric(
           horizontal: t.spacingInputPrefixSuffixMarginX,
         ),
         child: Text(value, style: style, maxLines: 1),
       );
-    }
-    if (value is SemiIcon) {
-      return Padding(
+    } else if (value is SemiIcon) {
+      content = Padding(
         padding: EdgeInsetsDirectional.symmetric(
           horizontal: t.spacingInputPrefixIconMarginX,
           vertical: t.spacingInputPrefixIconMarginY,
         ),
         child: value,
       );
+    } else {
+      content = value as Widget;
     }
-    return value as Widget;
+    return Center(widthFactor: 1, child: content);
   }
 
   Widget _addon(
