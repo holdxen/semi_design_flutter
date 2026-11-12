@@ -599,72 +599,85 @@ class _SemiInputState extends State<SemiInput> {
     );
 
     Widget buildEdit(double? forcedWidth) {
-      return Padding(
-        padding: EdgeInsetsDirectional.only(
-          start: withPrefix ? 0 : t.spacingInputPaddingLeft,
-          end: suffixVisible ? 0 : t.spacingInputPaddingRight,
-        ),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final scale = MediaQuery.textScalerOf(context)
-                .scale(_InputMetrics.textLineHeight);
-            final innerHeight = constraints.maxHeight.isFinite
-                ? constraints.maxHeight
-                : _InputMetrics.textLineHeight;
-            final slotHeight = math.min(scale, innerHeight);
-            return Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: SizedBox(
-                height: slotHeight,
-                width: forcedWidth,
-                child: ExcludeFocus(
-                  excluding: widget.disabled,
-                  child: IgnorePointer(
-                    ignoring: widget.disabled,
-                    child: Stack(
-                      clipBehavior: Clip.hardEdge,
-                      children: [
-                        EditableText(
-                          controller: _controller,
-                          focusNode: _focusNode,
-                          style: editStyle,
-                          cursorColor:
-                              editStyle.color ?? t.colorInputDefaultTextDefault,
-                          backgroundCursorColor:
-                              t.colorInputDisabledTextDefault,
-                          readOnly: widget.readonly,
-                          obscureText:
-                              widget.mode == SemiInputMode.password &&
-                              _eyeClosed,
-                          maxLines: 1,
-                          keyboardType: TextInputType.text,
-                          textInputAction: TextInputAction.done,
-                          onChanged: _handleChanged,
-                          onSubmitted: _handleSubmitted,
-                          inputFormatters: [
-                            if (widget.maxLength != null)
-                              _CodeUnitTruncateFormatter(widget.maxLength!),
-                          ],
-                        ),
-                        if (_controller.text.isEmpty &&
-                            widget.placeholder != null)
-                          IgnorePointer(
-                            child: Align(
-                              alignment: AlignmentDirectional.centerStart,
-                              child: Text(
-                                widget.placeholder!,
-                                style: placeholderStyle,
-                                maxLines: 1,
+      return Listener(
+        // Whole-box focus like the textarea's _editArea: the padding strips
+        // around the EditableText are part of the field's click area.
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: widget.disabled
+            ? null
+            : (_) => _focusNode.requestFocus(),
+        child: Padding(
+          padding: EdgeInsetsDirectional.only(
+            start: withPrefix ? 0 : t.spacingInputPaddingLeft,
+            end: suffixVisible ? 0 : t.spacingInputPaddingRight,
+          ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final scale = MediaQuery.textScalerOf(context)
+                  .scale(_InputMetrics.textLineHeight);
+              final innerHeight = constraints.maxHeight.isFinite
+                  ? constraints.maxHeight
+                  : _InputMetrics.textLineHeight;
+              final slotHeight = math.min(scale, innerHeight);
+              return Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: SizedBox(
+                  height: slotHeight,
+                  width: forcedWidth,
+                  child: ExcludeFocus(
+                    excluding: widget.disabled,
+                    child: IgnorePointer(
+                      ignoring: widget.disabled,
+                      child: Stack(
+                        clipBehavior: Clip.hardEdge,
+                        // Fill the whole input box so every point is
+                        // focusable/tappable (the EditableText shrinks to its
+                        // text width and is zero-width when empty).
+                        fit: StackFit.expand,
+                        children: [
+                          EditableText(
+                            controller: _controller,
+                            focusNode: _focusNode,
+                            style: editStyle,
+                            cursorColor:
+                                editStyle.color ??
+                                t.colorInputDefaultTextDefault,
+                            backgroundCursorColor:
+                                t.colorInputDisabledTextDefault,
+                            readOnly: widget.readonly,
+                            obscureText:
+                                widget.mode == SemiInputMode.password &&
+                                _eyeClosed,
+                            maxLines: 1,
+                            keyboardType: TextInputType.text,
+                            textInputAction: TextInputAction.done,
+                            onChanged: _handleChanged,
+                            onSubmitted: _handleSubmitted,
+                            inputFormatters: [
+                              if (widget.maxLength != null)
+                                _CodeUnitTruncateFormatter(widget.maxLength!),
+                            ],
+                          ),
+                          if (_controller.text.isEmpty &&
+                              widget.placeholder != null)
+                            IgnorePointer(
+                              child: Align(
+                                alignment: AlignmentDirectional.centerStart,
+                                child: Text(
+                                  widget.placeholder!,
+                                  style: placeholderStyle,
+                                  maxLines: 1,
+                                ),
                               ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       );
     }
@@ -1385,43 +1398,55 @@ class _SemiTextAreaState extends State<SemiTextArea> {
     double padTop,
     double padBottom,
   ) {
-    return Padding(
-      padding: EdgeInsetsDirectional.only(
-        start: padStart,
-        top: padTop,
-        end: padEnd,
-        bottom: padBottom,
-      ),
-      child: ExcludeFocus(
-        excluding: widget.disabled,
-        child: IgnorePointer(
-          ignoring: widget.disabled,
-          child: Stack(
-            children: [
-              ClipRect(
-                child: EditableText(
-                  controller: _controller,
-                  focusNode: _focusNode,
-                  style: textStyle,
-                  cursorColor:
-                      textStyle.color ?? t.colorInputDefaultTextDefault,
-                  backgroundCursorColor: t.colorInputDisabledTextDefault,
-                  readOnly: widget.readonly,
-                  maxLines: null,
-                  keyboardType: TextInputType.multiline,
-                  textInputAction: TextInputAction.newline,
-                  onChanged: _handleChanged,
-                  inputFormatters: [
-                    if (widget.maxLength != null)
-                      _CodeUnitTruncateFormatter(widget.maxLength!),
-                  ],
+    return Listener(
+      // The whole edit box — padding included — focuses the field, matching
+      // web inputs where the padding is part of the input's hit area.
+      // EditableText alone only hit-tests its own content box, so without
+      // this the padding strips are dead zones (taps there did nothing).
+      behavior: HitTestBehavior.translucent,
+      onPointerDown: widget.disabled ? null : (_) => _focusNode.requestFocus(),
+      child: Padding(
+        padding: EdgeInsetsDirectional.only(
+          start: padStart,
+          top: padTop,
+          end: padEnd,
+          bottom: padBottom,
+        ),
+        child: ExcludeFocus(
+          excluding: widget.disabled,
+          child: IgnorePointer(
+            ignoring: widget.disabled,
+            child: Stack(
+              // Fill the whole edit box so every point is focusable/tappable;
+              // a loose-fitting Stack would leave only the (zero-width, empty)
+              // EditableText hittable in the top-left corner.
+              fit: StackFit.expand,
+              children: [
+                ClipRect(
+                  child: EditableText(
+                    controller: _controller,
+                    focusNode: _focusNode,
+                    style: textStyle,
+                    cursorColor:
+                        textStyle.color ?? t.colorInputDefaultTextDefault,
+                    backgroundCursorColor: t.colorInputDisabledTextDefault,
+                    readOnly: widget.readonly,
+                    maxLines: null,
+                    keyboardType: TextInputType.multiline,
+                    textInputAction: TextInputAction.newline,
+                    onChanged: _handleChanged,
+                    inputFormatters: [
+                      if (widget.maxLength != null)
+                        _CodeUnitTruncateFormatter(widget.maxLength!),
+                    ],
+                  ),
                 ),
-              ),
-              if (_controller.text.isEmpty && widget.placeholder != null)
-                IgnorePointer(
-                  child: Text(widget.placeholder!, style: placeholderStyle),
-                ),
-            ],
+                if (_controller.text.isEmpty && widget.placeholder != null)
+                  IgnorePointer(
+                    child: Text(widget.placeholder!, style: placeholderStyle),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
