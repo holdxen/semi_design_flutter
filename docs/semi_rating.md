@@ -76,6 +76,10 @@ onChanged: ValueChanged<double>?（每次值变化，受控也回调）。onHove
 | `firstDefaultWidthPercent` | rating.scss :96 `-first` `width: 50%` | 50（CSS 默认宽度，运行时被 item.tsx 内联 `width: firstWidth*100%` 覆盖；此处以 widthFactor 直接取比例） |
 | `iconSizeTiers` | item.tsx:176 `const iconSize = isCustomSize ? 'inherit' : (size === 'small' ? 'default' : 'extra-large');` | small→`SemiIconSize.normal`（'default' 16）、normal→`SemiIconSize.extraLarge`（'extra-large' 24）、数字→customSize（'inherit' 即 li font-size = 像素值） |
 
+## 自定义 character 的取色
+
+两层（填充/未填）通过 `IconTheme` + `DefaultTextStyle` 向 character 注入各自颜色（对应上游 `color: inherit` 级联）。**character 不要写死 `color`/`TextStyle.color`**——写死后两层同色，裁切的填充比例将不可见（点击/悬浮看起来"没有反应"）。需要整体染色时用局部 `SemiRatingTheme` patch `colorRatingIconDefault`（对应上游 `style={{ color: 'red' }}`），见 example 的自定义演示。
+
 ## 差异清单
 
 - **size 联合承载**：`Object`（SemiRatingSize | double，assert 校验，SemiPinCode.format 先例）；`SemiRatingSize.normal` = 上游 `default`（Dart 保留字不可作枚举名同 radio 惯例……此处直接用 normal）。

@@ -164,15 +164,32 @@ void main() {
     expect(rating(tester, 'rating-readonly').disabled, isTrue);
     expect(rating(tester, 'rating-no-clear').allowClear, isFalse);
     // Custom heart characters render in place of stars.
-    expect(
-      find.descendant(
-        of: keyed('rating-custom-heart'),
-        matching: find.byWidgetPredicate(
-          (w) => w is SemiIcon && w.data == SemiIcons.likeHeart,
-        ),
+    final hearts = find.descendant(
+      of: keyed('rating-custom-heart'),
+      matching: find.byWidgetPredicate(
+        (w) => w is SemiIcon && w.data == SemiIcons.likeHeart,
       ),
-      findsWidgets,
     );
+    expect(hearts, findsWidgets);
+    final heartWidgets = hearts.evaluate();
+    // Regression: characters must NOT hardcode their color — the two fill
+    // layers tint via IconTheme/DefaultTextStyle, and a fixed color makes the
+    // clipped fill fraction invisible (clicks/hover look dead).
+    for (final e in heartWidgets) {
+      expect((e.widget as SemiIcon).color, isNull);
+    }
+    final layerColors = <Color?>{
+      for (final e
+          in find
+              .descendant(
+                of: keyed('rating-custom-heart'),
+                matching: find.byType(IconTheme),
+              )
+              .evaluate())
+        (e.widget as IconTheme).data.color,
+    };
+    expect(layerColors, hasLength(2));
+    expect(layerColors, contains(const Color(0xfffb6052)));
     // The custom text character.
     expect(
       find.descendant(

@@ -152,28 +152,36 @@ class _RatingPageState extends State<RatingPage> {
           const SizedBox(height: 40),
           _section('自定义', [
             _demo(
-              '自定义图标',
-              SemiRating(
-                key: const ValueKey('rating-custom-heart'),
-                character: const SemiIcon(
-                  SemiIcons.likeHeart,
-                  color: Color(0xfffb6052),
+              '自定义图标（局部主题染红，对应上游 style color:red）',
+              SemiRatingTheme(
+                data: const SemiRatingThemeData(
+                  colorRatingIconDefault: Color(0xfffb6052),
                 ),
-                defaultValue: 3,
+                child: SemiRating(
+                  key: const ValueKey('rating-custom-heart'),
+                  // 不给 character 写死颜色：填充/未填两层靠取色继承
+                  // （IconTheme/DefaultTextStyle）区分，写死会令裁切不可见。
+                  character: const SemiIcon(SemiIcons.likeHeart),
+                  defaultValue: 3,
+                ),
               ),
             ),
             _demo(
               '数字尺寸 + 半星',
-              SemiRating(
-                key: const ValueKey('rating-custom-big'),
-                size: 48.0,
-                allowHalf: true,
-                character: const SemiIcon(
-                  SemiIcons.likeHeart,
-                  customSize: 48,
-                  color: Color(0xfffb6052),
+              SemiRatingTheme(
+                data: const SemiRatingThemeData(
+                  colorRatingIconDefault: Color(0xfffb6052),
                 ),
-                defaultValue: 3.5,
+                child: SemiRating(
+                  key: const ValueKey('rating-custom-big'),
+                  size: 48.0,
+                  allowHalf: true,
+                  character: const SemiIcon(
+                    SemiIcons.likeHeart,
+                    customSize: 48,
+                  ),
+                  defaultValue: 3.5,
+                ),
               ),
             ),
             _demo(
