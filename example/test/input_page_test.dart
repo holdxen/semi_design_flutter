@@ -1,4 +1,4 @@
-import 'package:example/main.dart';
+import 'package:example/pages/input.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,7 +14,7 @@ Finder editable(String key) =>
 
 Future<void> start(WidgetTester tester) async {
   addTearDown(() async => tester.pumpWidget(const SizedBox.shrink()));
-  await tester.pumpWidget(const MyApp());
+  await tester.pumpWidget(const SemiApp(home: InputPage()));
   await tester.pump(const Duration(milliseconds: 50));
 }
 
