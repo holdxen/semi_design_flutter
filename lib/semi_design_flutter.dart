@@ -72,6 +72,9 @@ export 'src/theme/semi_checkbox_theme_data.dart';
 export 'src/components/semi_input.dart';
 export 'src/theme/semi_input_theme.dart';
 export 'src/theme/semi_input_theme_data.dart';
+export 'src/components/semi_autocomplete.dart';
+export 'src/theme/semi_autocomplete_theme.dart';
+export 'src/theme/semi_autocomplete_theme_data.dart';
 
 /// A Calculator.
 class Calculator {

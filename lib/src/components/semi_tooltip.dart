@@ -261,7 +261,11 @@ class _SemiTooltipState extends State<SemiTooltip>
   bool get _needsOutsideBarrier =>
       widget.trigger == SemiTooltipTrigger.click ||
       widget.trigger == SemiTooltipTrigger.contextMenu ||
-      widget.trigger == SemiTooltipTrigger.focus;
+      widget.trigger == SemiTooltipTrigger.focus ||
+      // Managed-visibility custom consumers (SemiAutoComplete) need the
+      // outside tap to report `onVisibleChange(false)`; visibility itself
+      // stays caller-driven.
+      widget.trigger == SemiTooltipTrigger.custom;
 
   @override
   void initState() {
