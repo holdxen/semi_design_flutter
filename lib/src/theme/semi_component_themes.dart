@@ -17,6 +17,7 @@ import 'semi_typography_theme_data.dart';
 import 'semi_checkbox_theme_data.dart';
 import 'semi_input_theme_data.dart';
 import 'semi_input_number_theme_data.dart';
+import 'semi_pincode_theme_data.dart';
 import 'semi_autocomplete_theme_data.dart';
 
 @immutable
@@ -39,6 +40,7 @@ class SemiComponentThemes {
     this.checkbox = const SemiCheckboxThemeData(),
     this.input = const SemiInputThemeData(),
     this.inputNumber = const SemiInputNumberThemeData(),
+    this.pinCode = const SemiPinCodeThemeData(),
     this.autocomplete = const SemiAutoCompleteThemeData(),
   });
   final SemiTagThemeData tag;
@@ -58,6 +60,7 @@ class SemiComponentThemes {
   final SemiCheckboxThemeData checkbox;
   final SemiInputThemeData input;
   final SemiInputNumberThemeData inputNumber;
+  final SemiPinCodeThemeData pinCode;
   final SemiAutoCompleteThemeData autocomplete;
   SemiComponentThemes copyWith({
     SemiTagThemeData? tag,
@@ -77,6 +80,7 @@ class SemiComponentThemes {
     SemiCheckboxThemeData? checkbox,
     SemiInputThemeData? input,
     SemiInputNumberThemeData? inputNumber,
+    SemiPinCodeThemeData? pinCode,
     SemiAutoCompleteThemeData? autocomplete,
   }) => SemiComponentThemes(
     tag: tag ?? this.tag,
@@ -96,6 +100,7 @@ class SemiComponentThemes {
     checkbox: checkbox ?? this.checkbox,
     input: input ?? this.input,
     inputNumber: inputNumber ?? this.inputNumber,
+    pinCode: pinCode ?? this.pinCode,
     autocomplete: autocomplete ?? this.autocomplete,
   );
   @override
@@ -119,6 +124,7 @@ class SemiComponentThemes {
           checkbox == other.checkbox &&
           input == other.input &&
           inputNumber == other.inputNumber &&
+          pinCode == other.pinCode &&
           autocomplete == other.autocomplete;
   @override
   int get hashCode => Object.hash(
@@ -139,6 +145,7 @@ class SemiComponentThemes {
     checkbox,
     input,
     inputNumber,
+    pinCode,
     autocomplete,
   );
 }
