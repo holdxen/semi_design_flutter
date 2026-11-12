@@ -209,6 +209,9 @@ class _SemiRatingState extends State<SemiRating> {
   /// `clearedValue`; a reset also drops the hover preview.
   void _handleClick(int index, double dx, double width) {
     if (widget.disabled) return;
+    // Clicking a star focuses the rating (the browser focuses the native
+    // radio div on click).
+    _focusNode.requestFocus();
     final newValue = _starValue(index, dx, width);
     final isReset = widget.allowClear && newValue == _current;
     _updateValue(isReset ? 0 : newValue);
