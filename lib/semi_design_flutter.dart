@@ -81,6 +81,9 @@ export 'src/theme/semi_pincode_theme_data.dart';
 export 'src/components/semi_autocomplete.dart';
 export 'src/theme/semi_autocomplete_theme.dart';
 export 'src/theme/semi_autocomplete_theme_data.dart';
+export 'src/components/semi_radio.dart';
+export 'src/theme/semi_radio_theme.dart';
+export 'src/theme/semi_radio_theme_data.dart';
 
 /// A Calculator.
 class Calculator {
