@@ -1,4 +1,4 @@
-import 'package:example/pages/autocomplete.dart';
+import 'package:example/pages/input_number.dart';
 import 'package:flutter/widgets.dart';
 import 'package:semi_design_flutter/semi_design_flutter.dart';
 
@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const SemiApp(
       themeMode: SemiThemeMode.light,
-      home: SafeArea(child: AutoCompletePage()),
+      home: SafeArea(child: InputNumberPage()),
     );
   }
 }
