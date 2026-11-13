@@ -434,6 +434,19 @@ class _SemiSelectState extends State<SemiSelect> {
   int _repositionKey = 0;
 
   bool _hovering = false;
+
+  /// Hover state of the clear icon (its text turns primary while hovered,
+  /// `$color-select_clearBtn-text-hover`).
+  bool _clearHovered = false;
+
+  /// Upstream `showClear` gate: the clear button replaces the arrow only
+  /// while there is something to clear, the trigger is enabled and the
+  /// pointer hovers or the panel is open (`index.tsx` render).
+  bool _showClearSlot(SemiResolvedSelectThemeData theme) =>
+      widget.showClear &&
+      (_selections.isNotEmpty || _inputValue.isNotEmpty) &&
+      !widget.disabled &&
+      (_hovering || _open);
   bool _pressed = false;
 
   final GlobalKey _triggerKey = GlobalKey();
@@ -1218,8 +1231,17 @@ class _SemiSelectState extends State<SemiSelect> {
             ),
           ),
         ),
-        if (widget.showClear &&
-            (_selections.isNotEmpty || _inputValue.isNotEmpty))
+        if (widget.suffix != null)
+          _slotText(
+            global,
+            theme,
+            widget.suffix!,
+            isIcon: widget.suffix is Widget,
+          ),
+        // Upstream renders the clear button IN PLACE OF the arrow in the
+        // trailing slot (`showClear ? <div -clear> : arrowContent`), and
+        // only while the trigger is hovered or the panel is open.
+        if (_showClearSlot(theme))
           GestureDetector(
             key: SemiSelect.clearButtonKey,
             behavior: HitTestBehavior.opaque,
@@ -1228,12 +1250,16 @@ class _SemiSelectState extends State<SemiSelect> {
               cursor: widget.disabled
                   ? SystemMouseCursors.forbidden
                   : SystemMouseCursors.click,
+              onEnter: (_) => setState(() => _clearHovered = true),
+              onExit: (_) => setState(() => _clearHovered = false),
               child: SizedBox(
                 width: theme.widthSelectClearIcon,
                 child: Center(
                   child: SemiIconTheme(
                     data: SemiIconThemeData(
-                      color: theme.colorSelectClearBtnTextDefault,
+                      color: _clearHovered
+                          ? theme.colorSelectClearBtnTextHover
+                          : theme.colorSelectClearBtnTextDefault,
                       customSize: _SelectMetrics.clearIconSize,
                     ),
                     child: widget.clearIcon ?? const SemiIcon(SemiIcons.clear),
@@ -1241,38 +1267,32 @@ class _SemiSelectState extends State<SemiSelect> {
                 ),
               ),
             ),
-          ),
-        if (widget.suffix != null)
-          _slotText(
-            global,
-            theme,
-            widget.suffix!,
-            isIcon: widget.suffix is Widget,
-          ),
-        // `&-arrow` (32) or `&-arrow-empty` (12) when hidden.
-        SizedBox(
-          width: widget.showArrow
-              ? theme.widthSelectArrow
-              : theme.widthSelectArrowEmpty,
-          child: widget.showArrow
-              ? Center(
-                  child: SemiIconTheme(
-                    data: SemiIconThemeData(
-                      color: widget.disabled
-                          ? theme.colorSelectInputDisabledText
-                          : theme.colorSelectIconDefault,
-                      // Upstream renders the bare `IconChevronDown` at
-                      // `1em` — the trigger's font size (14 regular/small,
-                      // 16 large via `font-size-header-6`).
-                      customSize: fontSize + 2,
+          )
+        else
+          // `&-arrow` (32) or `&-arrow-empty` (12) when hidden.
+          SizedBox(
+            width: widget.showArrow
+                ? theme.widthSelectArrow
+                : theme.widthSelectArrowEmpty,
+            child: widget.showArrow
+                ? Center(
+                    child: SemiIconTheme(
+                      data: SemiIconThemeData(
+                        color: widget.disabled
+                            ? theme.colorSelectInputDisabledText
+                            : theme.colorSelectIconDefault,
+                        // Upstream renders the bare `IconChevronDown` at
+                        // `1em` — the trigger's font size (14 regular/small,
+                        // 16 large via `font-size-header-6`).
+                        customSize: fontSize,
+                      ),
+                      child:
+                          widget.arrowIcon ??
+                          const SemiIcon(SemiIcons.chevronDown),
                     ),
-                    child:
-                        widget.arrowIcon ??
-                        const SemiIcon(SemiIcons.chevronDown),
-                  ),
-                )
-              : null,
-        ),
+                  )
+                : null,
+          ),
       ],
     );
     // The multiple mode grows with its tags (`min-height` upstream); the

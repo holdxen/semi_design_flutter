@@ -179,8 +179,38 @@ void main() {
       expect(panelText('A'), findsOneWidget);
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       await _settle(tester);
+      // Upstream: the clear button replaces the arrow only while the
+      // pointer hovers (or the panel is open); at rest the arrow shows.
+      expect(find.byKey(SemiSelect.clearButtonKey), findsNothing);
+      expect(
+        find.descendant(
+          of: find.byType(SemiSelect),
+          matching: find.byWidgetPredicate(
+            (w) => w is SemiIcon && w.data == SemiIcons.chevronDown,
+          ),
+        ),
+        findsOneWidget,
+      );
+      final hover = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await hover.addPointer(
+        location: tester.getCenter(find.byType(SemiSelect)),
+      );
+      await tester.pump();
+      // Hovering swaps the arrow for the clear button (same slot).
+      expect(find.byKey(SemiSelect.clearButtonKey), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(SemiSelect),
+          matching: find.byWidgetPredicate(
+            (w) => w is SemiIcon && w.data == SemiIcons.chevronDown,
+          ),
+        ),
+        findsNothing,
+      );
       await tester.tap(find.byKey(SemiSelect.clearButtonKey));
       await _settle(tester);
+      await hover.removePointer();
+      await tester.pump();
       expect(log, ['change:null', 'clear']);
       expect(triggerText('zzz'), findsNothing);
     });
