@@ -379,11 +379,12 @@ class _SelectPageState extends State<SelectPage> {
           const SizedBox(height: 40),
           _section('创建条目', [
             _demo(
-              'allowCreate：输入新条目后选中「创建」行即可创建',
+              'multiple + allowCreate（同官网：创建后面板保持展开、列表回铺）',
               SizedBox(
                 width: 240,
                 child: SemiSelect(
                   key: const ValueKey('select-create'),
+                  multiple: true,
                   filter: true,
                   allowCreate: true,
                   options: _options,
@@ -394,11 +395,12 @@ class _SelectPageState extends State<SelectPage> {
               ),
             ),
             _demo(
-              '自定义创建项渲染（renderCreateItem）',
+              '自定义创建项渲染（renderCreateItem，同为多选）',
               SizedBox(
                 width: 240,
                 child: SemiSelect(
                   key: const ValueKey('select-create-custom'),
+                  multiple: true,
                   filter: true,
                   allowCreate: true,
                   options: _options,

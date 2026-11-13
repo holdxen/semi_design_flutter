@@ -128,7 +128,14 @@ void main() {
     expect(find.textContaining('新条目'), findsWidgets);
     await tap(tester, find.textContaining('新条目').last);
     expect(find.text('创建了：新条目'), findsOneWidget);
+    // Multiple keeps the panel open after the create tap and the cleared
+    // search re-lists the options (the official demo behaviour).
+    expect(find.byType(SemiTooltipPopup), findsOneWidget);
+    expect(find.text('剪映'), findsOneWidget);
+    expect(find.text('新条目'), findsOneWidget); // the new tag in the trigger
     // The renderCreateItem demo replaces the default 「创建」 row.
+    await tester.tapAt(const Offset(700, 500));
+    await tester.pump();
     await openPanel(tester, 'select-create-custom');
     await tester.enterText(editable('select-create-custom'), '贺岁版');
     await tester.pump();
@@ -136,6 +143,8 @@ void main() {
     expect(find.text('新建「贺岁版」'), findsOneWidget);
     await tap(tester, find.text('新建「贺岁版」'));
     expect(find.text('创建了：贺岁版'), findsOneWidget);
+    expect(find.byType(SemiTooltipPopup), findsOneWidget);
+    expect(find.text('贺岁版'), findsOneWidget); // the new tag
     expect(tester.takeException(), isNull);
   });
 
