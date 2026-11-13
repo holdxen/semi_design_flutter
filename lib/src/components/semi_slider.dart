@@ -237,8 +237,17 @@ class _SemiSliderState extends State<SemiSlider> {
     if (widget.value != null && !_sameValue(widget.value, oldWidget.value)) {
       _stateValue = _normalize(widget.value!);
       // ★ index.tsx:315 quirk: external controlled `value` changes also fire
-      // onAfterChange (verbatim raw value, not output-rounded).
-      widget.onAfterChange?.call(widget.value);
+      // onAfterChange (verbatim raw value, not output-rounded). Deferred past
+      // the build phase (SemiTooltip._schedulePostFrame idiom): didUpdateWidget
+      // runs inside the parent's build, so firing the callback synchronously
+      // would break consumers that call setState from it ("called during
+      // build") — callbacks only fire from events and post-frame.
+      final Object raw = widget.value!;
+      final ValueChanged<Object?>? after = widget.onAfterChange;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) after?.call(raw);
+      });
+      WidgetsBinding.instance.ensureVisualUpdate();
     }
   }
 
