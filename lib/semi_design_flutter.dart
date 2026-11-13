@@ -90,6 +90,9 @@ export 'src/theme/semi_rating_theme_data.dart';
 export 'src/components/semi_select.dart';
 export 'src/theme/semi_select_theme.dart';
 export 'src/theme/semi_select_theme_data.dart';
+export 'src/components/semi_slider.dart';
+export 'src/theme/semi_slider_theme.dart';
+export 'src/theme/semi_slider_theme_data.dart';
 
 /// A Calculator.
 class Calculator {

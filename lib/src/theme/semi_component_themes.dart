@@ -22,6 +22,7 @@ import 'semi_autocomplete_theme_data.dart';
 import 'semi_radio_theme_data.dart';
 import 'semi_rating_theme_data.dart';
 import 'semi_select_theme_data.dart';
+import 'semi_slider_theme_data.dart';
 
 @immutable
 class SemiComponentThemes {
@@ -48,6 +49,7 @@ class SemiComponentThemes {
     this.radio = const SemiRadioThemeData(),
     this.rating = const SemiRatingThemeData(),
     this.select = const SemiSelectThemeData(),
+    this.slider = const SemiSliderThemeData(),
   });
   final SemiTagThemeData tag;
   final SemiTypographyThemeData typography;
@@ -71,6 +73,7 @@ class SemiComponentThemes {
   final SemiRadioThemeData radio;
   final SemiRatingThemeData rating;
   final SemiSelectThemeData select;
+  final SemiSliderThemeData slider;
   SemiComponentThemes copyWith({
     SemiTagThemeData? tag,
     SemiTypographyThemeData? typography,
@@ -94,6 +97,7 @@ class SemiComponentThemes {
     SemiRadioThemeData? radio,
     SemiRatingThemeData? rating,
     SemiSelectThemeData? select,
+    SemiSliderThemeData? slider,
   }) => SemiComponentThemes(
     tag: tag ?? this.tag,
     typography: typography ?? this.typography,
@@ -117,6 +121,7 @@ class SemiComponentThemes {
     radio: radio ?? this.radio,
     rating: rating ?? this.rating,
     select: select ?? this.select,
+    slider: slider ?? this.slider,
   );
   @override
   bool operator ==(Object other) =>
@@ -143,7 +148,8 @@ class SemiComponentThemes {
           autocomplete == other.autocomplete &&
           radio == other.radio &&
           rating == other.rating &&
-          select == other.select;
+          select == other.select &&
+          slider == other.slider;
   @override
   int get hashCode => Object.hashAll([
     tag,
@@ -168,5 +174,6 @@ class SemiComponentThemes {
     radio,
     rating,
     select,
+    slider,
   ]);
 }
