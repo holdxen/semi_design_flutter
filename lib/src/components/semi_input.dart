@@ -1,6 +1,7 @@
+import 'package:flutter/rendering.dart';
+
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:ui' show SemanticsValidationResult;
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -22,6 +23,31 @@ enum SemiInputSize { small, normal, large }
 /// Upstream `ValidateStatus` (`default` / `error` / `warning` / `success`).
 /// `success` carries no dedicated visuals upstream and is semantics-only.
 enum SemiInputStatus { normal, error, warning, success }
+
+/// Wraps an [EditableText] with the standard selection gestures.
+///
+/// A bare [EditableText] only has "rudimentary" gestures (tap to place the
+/// caret, long-press to select); per its `rendererIgnoresPointer` docs, real
+/// selection behaviour (mouse/touch drag-select, double-tap word select)
+/// requires a [TextSelectionGestureDetectorBuilder] wrapper — exactly what
+/// Material's TextField does. Without it, text in our inputs could not be
+/// selected by dragging.
+class _EditableSelectionDelegate
+    implements TextSelectionGestureDetectorBuilderDelegate {
+  _EditableSelectionDelegate({
+    required this.editableTextKey,
+    required this.selectionEnabled,
+  });
+
+  @override
+  final GlobalKey<EditableTextState> editableTextKey;
+
+  @override
+  final bool selectionEnabled;
+
+  @override
+  bool get forcePressEnabled => false;
+}
 
 /// TextArea autosize bounds (upstream `AutosizeRow`). `minRows` falls back to
 /// [SemiTextArea.rows]; a null `maxRows` grows unbounded (min stays `rows`).
@@ -587,6 +613,11 @@ class _SemiInputState extends State<SemiInput> {
   /// made the caret visibly taller than the glyphs. Cached per font size.
   final Map<double, double> _caretHeights = {};
 
+  /// Key for the standard selection-gesture wrapper (see
+  /// [_EditableSelectionDelegate]).
+  final GlobalKey<EditableTextState> _editableTextKey =
+      GlobalKey<EditableTextState>();
+
   double _naturalCaretHeight(double fontSize) {
     return _caretHeights.putIfAbsent(fontSize, () {
       final painter = TextPainter(
@@ -676,6 +707,8 @@ class _SemiInputState extends State<SemiInput> {
                               child: EditableText(
                                 controller: _controller,
                                 focusNode: _focusNode,
+                                key: _editableTextKey,
+                                rendererIgnoresPointer: true,
                                 style: editStyle,
                                 cursorColor:
                                     editStyle.color ??
@@ -685,6 +718,8 @@ class _SemiInputState extends State<SemiInput> {
                                 ),
                                 backgroundCursorColor:
                                     t.colorInputDisabledTextDefault,
+                                selectionColor:
+                                    _InputMetrics.selectionHighlight(global),
                                 readOnly: widget.readonly,
                                 obscureText:
                                     widget.mode == SemiInputMode.password &&
@@ -909,7 +944,17 @@ class _SemiInputState extends State<SemiInput> {
       child: body,
     );
 
-    return SizedBox(height: _wrapperHeight(t), child: body);
+    return SizedBox(
+      height: _wrapperHeight(t),
+      // The standard selection gestures (drag-select etc.) — see
+      // [_EditableSelectionDelegate].
+      child: TextSelectionGestureDetectorBuilder(
+        delegate: _EditableSelectionDelegate(
+          editableTextKey: _editableTextKey,
+          selectionEnabled: !widget.disabled && !widget.readonly,
+        ),
+      ).buildGestureDetector(child: body),
+    );
   }
 }
 
@@ -1326,6 +1371,7 @@ class _SemiTextAreaState extends State<SemiTextArea> {
           return SizedBox(
             height: capped,
             child: _editArea(
+              global,
               t,
               textStyle,
               placeholderStyle,
@@ -1340,6 +1386,7 @@ class _SemiTextAreaState extends State<SemiTextArea> {
         return SizedBox(
           height: contentHeight,
           child: _editArea(
+            global,
             t,
             textStyle,
             placeholderStyle,
@@ -1436,11 +1483,24 @@ class _SemiTextAreaState extends State<SemiTextArea> {
           : SystemMouseCursors.text,
       onEnter: (_) => setState(() => _hovering = true),
       onExit: (_) => setState(() => _hovering = false),
-      child: decorated,
+      // The standard selection gestures (drag-select etc.) — see
+      // [_EditableSelectionDelegate].
+      child: TextSelectionGestureDetectorBuilder(
+        delegate: _EditableSelectionDelegate(
+          editableTextKey: _editableTextKey,
+          selectionEnabled: !widget.disabled && !widget.readonly,
+        ),
+      ).buildGestureDetector(child: decorated),
     );
   }
 
+  /// Key for the standard selection-gesture wrapper (see
+  /// [_EditableSelectionDelegate]).
+  final GlobalKey<EditableTextState> _editableTextKey =
+      GlobalKey<EditableTextState>();
+
   Widget _editArea(
+    SemiThemeData global,
     SemiResolvedInputThemeData t,
     TextStyle textStyle,
     TextStyle placeholderStyle,
@@ -1478,9 +1538,12 @@ class _SemiTextAreaState extends State<SemiTextArea> {
                     controller: _controller,
                     focusNode: _focusNode,
                     style: textStyle,
+                    key: _editableTextKey,
+                    rendererIgnoresPointer: true,
                     cursorColor:
                         textStyle.color ?? t.colorInputDefaultTextDefault,
                     backgroundCursorColor: t.colorInputDisabledTextDefault,
+                    selectionColor: _InputMetrics.selectionHighlight(global),
                     readOnly: widget.readonly,
                     maxLines: null,
                     keyboardType: TextInputType.multiline,
@@ -1603,4 +1666,13 @@ abstract final class _InputMetrics {
   /// (22/30/38) is the browser line-box-centering trick; Flutter centers this
   /// fixed 22px line inside the upstream-precise slots instead.
   static const double textLineHeight = 22;
+
+  /// Selection highlight tint. Upstream inputs are native `<input>`: the
+  /// browser paints its default translucent-blue selection. Flutter paints no
+  /// selection band at all when `EditableText.selectionColor` is null
+  /// (RenderEditable skips a null highlight), leaving drag-selected text
+  /// invisible — so mirror Material's `primary @ 40%` default tint from the
+  /// Semi primary. Not a sass variable (upstream has no selection token).
+  static Color selectionHighlight(SemiThemeData global) =>
+      global.colors.colorPrimary.withValues(alpha: 0.4);
 }

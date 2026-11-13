@@ -8,6 +8,7 @@ import 'dart:ui' show SemanticsValidationResult;
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:semi_design_flutter/semi_design_flutter.dart';
 
@@ -1611,5 +1612,57 @@ void main() {
         const Radius.circular(7),
       );
     });
+  });
+
+  testWidgets('drag-select works after typing (desktop mouse)', (tester) async {
+    // Regression: a bare EditableText only has rudimentary gestures; the
+    // TextSelectionGestureDetectorBuilder wrapper (TextField's recipe) is
+    // what makes mouse drag-select work — without it typed text could not
+    // be selected.
+    addTearDown(() async => tester.pumpWidget(const SizedBox.shrink()));
+    await tester.pumpWidget(host(const SemiInput(placeholder: 'pick')));
+    await tester.pump();
+    await tester.enterText(find.byType(EditableText), 'hello world');
+    await tester.pump(const Duration(milliseconds: 50));
+    final rect = tester.getRect(find.byType(EditableText));
+    final gesture = await tester.startGesture(
+      Offset(rect.left + 16, rect.center.dy),
+      kind: PointerDeviceKind.mouse,
+    );
+    await tester.pump();
+    await gesture.moveTo(Offset(rect.left + 60, rect.center.dy));
+    await tester.pump();
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<EditableText>(find.byType(EditableText))
+          .controller
+          .selection,
+      const TextSelection(baseOffset: 1, extentOffset: 4),
+    );
+  }, variant: TargetPlatformVariant.desktop());
+
+  testWidgets('selection highlight follows the theme primary', (tester) async {
+    // Regression: RenderEditable paints no selection band at all when
+    // selectionColor is null — drag-selected text was invisible ("text
+    // can't be selected"). Both fields derive the Material-convention
+    // `primary @ 40%` tint (see `_InputMetrics.selectionHighlight`).
+    addTearDown(() async => tester.pumpWidget(const SizedBox.shrink()));
+    final expected = const SemiThemeData.light().colors.colorPrimary.withValues(
+      alpha: 0.4,
+    );
+    await tester.pumpWidget(host(const SemiInput()));
+    await tester.pump();
+    expect(
+      tester.widget<EditableText>(find.byType(EditableText)).selectionColor,
+      expected,
+    );
+    await tester.pumpWidget(host(const SemiTextArea()));
+    await tester.pump();
+    expect(
+      tester.widget<EditableText>(find.byType(EditableText)).selectionColor,
+      expected,
+    );
   });
 }

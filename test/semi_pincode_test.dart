@@ -88,6 +88,19 @@ void main() {
       await tester.pumpWidget(_app(const SemiPinCode(value: '123456')));
       expect(cellTexts(tester), ['1', '2', '3', '4', '5', '6']);
     });
+
+    testWidgets('cell selection highlight is wired to the theme primary', (
+      tester,
+    ) async {
+      // Regression: RenderEditable paints no selection band when
+      // selectionColor is null — selected cell text was invisible.
+      await tester.pumpWidget(_app(const SemiPinCode(initialValue: '1')));
+      final expected = const SemiThemeData.light().colors.colorPrimary
+          .withValues(alpha: 0.4);
+      for (final edit in _edits(tester)) {
+        expect(edit.selectionColor, expected);
+      }
+    });
   });
 
   group('geometry', () {

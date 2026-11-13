@@ -682,6 +682,12 @@ class _PinCodeCellState extends State<_PinCodeCell> {
                           style.color ?? input.colorInputDefaultTextDefault,
                       backgroundCursorColor:
                           input.colorInputDisabledTextDefault,
+                      // Selection is invisible without this (see
+                      // `_InputMetrics.selectionHighlight` in semi_input.dart):
+                      // RenderEditable skips painting a null highlight.
+                      selectionColor: global.colors.colorPrimary.withValues(
+                        alpha: 0.4,
+                      ),
                       textAlign: TextAlign.center,
                       maxLines: 1,
                       keyboardType: widget.numberKeyboard

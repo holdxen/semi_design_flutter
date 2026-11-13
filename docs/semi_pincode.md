@@ -118,4 +118,5 @@ SemiPinCode(
 - **受控且 value 为空串时显示空**：上游构造 `(value || defaultValue).split('')` 空串回退 defaultValue；移植按项目惯例 `value` 非空即受控。
 - **完成末格 blur 全部格**（上游仅 blur 末格；等价）；`onBlur` 为 `VoidCallback`（上游携带 `FocusEvent`）。
 - **KeyRepeat 无动作**：上游 keydown 天然连发（按住 Backspace 连续清格）；移植仅 KeyDown 处理，repeat 忽略。
+- **单格选区高亮**：同 SemiInput 取 `colorPrimary @ 40%`（`selectionColor` 不设则 RenderEditable 不绘制选区、选中不可见）；单格为单字符 EditableText，未套选区手势包装（拖选/双击选词不适用），右键菜单/选区手柄未移植。
 - **未移植**（上游亦无）：密码模式、placeholder、readonly。未移植（有上游对应但不适用）：`id`/`tabIndex`/`aria-*`、`className`/`style`（Dart 侧外层包裹）、`onChange` 事件对象（参数即 join 字符串，同上游载荷）。

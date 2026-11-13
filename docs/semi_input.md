@@ -158,6 +158,7 @@ HARDCODES（另列，`_InputMetrics` 常量 + 溯源注释）：
 | `focusRingOutlineOffset` | input.scss `outline-offset: $width-input_icon-outlineOffset` |
 | `counterTextAlignRight` | textarea.scss `text-align: right`（RTL 翻转，AlignmentDirectional.centerEnd） |
 | `textareaClearAnchor` | textarea.scss `position: absolute; top: 0;` |
+| `selectionHighlight` | Material 惯例 `primary @ 40%`（上游是原生 `<input>`、选区色为浏览器默认，无 Sass token；不设则 RenderEditable 不绘制高亮） |
 
 ## 差异清单
 
@@ -173,6 +174,7 @@ HARDCODES（另列，`_InputMetrics` 常量 + 溯源注释）：
 - IME 软键盘换行不经按键事件：不触发 onEnterPress、`disabledEnterStartNewLine` 不拦截（与上游 DOM keypress/keydown 覆盖面一致的平台差异）。
 - 上游 `:active` 按下态（fill-2 等）未单独建模（按下即聚焦）；`colorInputIconActive`、`spacingInputIconMarginLeft` 上游 CSS 声明未引用，保留为可配置字段、当前布局未消费。
 - `mimeType`/`type=hidden` 等原生 input type、`preventScroll`、`minLength`、aria-* 透传、`onKeyDown/Up/Press` 未移植。
+- 选区（浏览器默认行为的 Flutter 重建）：裸 EditableText 手势仅 rudimentary，以 `TextSelectionGestureDetectorBuilder` + `rendererIgnoresPointer`（TextField 同款配方）支持拖选/双击选词；选区高亮色取 `colorPrimary @ 40%`（见 HARDCODES `selectionHighlight`）；原生右键菜单/选区手柄未移植（差异清单同类目）。
 
 ```dart
 SemiInput(
