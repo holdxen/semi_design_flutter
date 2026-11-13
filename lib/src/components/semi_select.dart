@@ -1260,7 +1260,9 @@ class _SemiSelectState extends State<SemiSelect> {
                       color: _clearHovered
                           ? theme.colorSelectClearBtnTextHover
                           : theme.colorSelectClearBtnTextDefault,
-                      customSize: _SelectMetrics.clearIconSize,
+                      // Upstream `<IconClear />` is `1em` too — the
+                      // trigger's font size (14 regular/small, 16 large).
+                      customSize: fontSize,
                     ),
                     child: widget.clearIcon ?? const SemiIcon(SemiIcons.clear),
                   ),
@@ -2137,8 +2139,6 @@ abstract final class _SelectMetrics {
 
   /// `font-size: 12px` on the "+N" tag already covers the fold; the tag
   /// close icon size of SemiTag (`customSize: 12`) is the tag component's.
-  static const double clearIconSize = 12;
-
   /// `@include font-size-small` in packages/semi-foundation/select/select.scss
   /// (`&-group`). The port reads the live `typography.fontSizeSmall` token
   /// (12 by default); the mixin provenance is recorded here.

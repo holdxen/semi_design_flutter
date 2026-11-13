@@ -190,7 +190,7 @@ trigger 高 24/32/40（多选 min-height、随 tags 增高）、圆角 3；bg/bo
 | `dropdownSearchBorderWidth` | select.scss `&-dropdown-search-wrapper` `border-bottom: 1px solid` | 1（颜色走 `colorSelectDropdownInputBorder`） |
 | `listHeight` | constants.ts `numbers.LIST_HEIGHT: 270` | 270（`maxHeight` 默认） |
 | `selectionTextInactiveOpacity` | select.scss `&-selection-text-inactive` `opacity: $opacity-select_selection_text_inactive` | 0.4（字段值同 `opacitySelectSelectionTextInactive`；结构注释 `selectionTextInactiveRule`） |
-| `clearIconSize` | select.scss `&-clear` 图标 glyph（icon font 12） | 12 |
+| 清除图标尺寸 | `&-clear` 内 `<IconClear />` 为 `1em`（= trigger 字号：14 regular/small、16 large） | 跟随 fontSize，不建常量 |
 | 箭头图标尺寸 | `&-arrow` 内 `<IconChevronDown>` 为 `1em`（= trigger 字号：14 regular/small、16 large） | 跟随 fontSize，不建常量 |
 | `groupFontSize` | select.scss `&-group` `@include font-size-small` | 12（resolve 到 typography.fontSizeSmall） |
 | `selectionLargeFontSize` | select.scss `&-large .&-selection` `@include font-size-header-6` | 16（`$font-size-header-6`） |

@@ -207,6 +207,16 @@ void main() {
         ),
         findsNothing,
       );
+      // Upstream renders the clear glyph at 1em of the trigger (14 here).
+      final clearTheme = tester.widget<SemiIconTheme>(
+        find
+            .descendant(
+              of: find.byKey(SemiSelect.clearButtonKey),
+              matching: find.byType(SemiIconTheme),
+            )
+            .first,
+      );
+      expect(clearTheme.data.customSize, 14);
       await tester.tap(find.byKey(SemiSelect.clearButtonKey));
       await _settle(tester);
       await hover.removePointer();
