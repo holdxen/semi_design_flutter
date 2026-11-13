@@ -1,6 +1,6 @@
 # SemiInput / SemiTextArea
 
-非 Material 输入组件（基于 EditableText），移植自上游 Semi Input / TextArea。单行 `SemiInput` 与多行 `SemiTextArea` 共享一套取值约定、校验态视觉与主题（`SemiInputThemeData`，97 对账见下文）。wrapper 固定三档高度 24/32/40（`$height-input_wrapper_*`），1px 边框（focus 仍 1px 不加粗、无位移），圆角解析 `--semi-border-radius-small`（默认 3px）。背景状态 fill-0 → hover fill-1 → focus fill-0 → disabled disabledFill；error/warning 走 danger/warning light 色系，focus 换 danger/warning 描边；borderless 非 focus 透明但 error/warning 保持描边。文本字号/行高 14/22、14/22、16/22（小/默认/大），编辑槽几何按上游精确（内槽 22/30/38 = wrapper − 2×1px）。
+非 Material 输入组件（基于 EditableText），移植自上游 Semi Input / TextArea。单行 `SemiInput` 与多行 `SemiTextArea` 共享一套取值约定、校验态视觉与主题（`SemiInputThemeData`，97 对账见下文）。wrapper 固定三档高度 24/32/40（`$height-input_wrapper_*`），1px 边框（focus 仍 1px 不加粗、无位移），圆角解析 `--semi-border-radius-small`（默认 3px）。背景状态 fill-0 → hover fill-1 → focus fill-0 → disabled disabledFill；error/warning 走 danger/warning light 色系，focus 换 danger/warning 描边；borderless 非 focus 透明但 error/warning 保持描边。文本字号 14/14/16（小/默认/大），编辑槽几何按上游精确（内槽 22/30/38 = wrapper − 2×1px）；文字行盒为字体自然度量盒、在槽内垂直居中（fluent_ui 同款做法，见差异清单）。
 
 ## API
 
@@ -14,7 +14,7 @@
 
 `SemiTextArea({key, value, initialValue, rows = 4, autosize, maxCount, showCounter, showClear, disabledEnterStartNewLine, validateStatus, disabled, readonly, borderless, placeholder, maxLength, onChanged, onEnterPress, onFocusChange, onBlur, onClear, controller, focusNode, inputStyle, semanticsLabel})`。
 
-- `autosize`: `bool` 或 `SemiTextAreaAutosize(minRows, maxRows)`。`true` 等价 minRows = rows、maxRows 无上限；对象形态 `minRows ?? rows`，`maxRows: null` 同样无上限。rows 回退高度 = rows×22 + 5/5 内边距（宽 0 的 textarea 自身描边 `$width-textarea-border` = 0）。
+- `autosize`: `bool` 或 `SemiTextAreaAutosize(minRows, maxRows)`。`true` 等价 minRows = rows、maxRows 无上限；对象形态 `minRows ?? rows`，`maxRows: null` 同样无上限。rows 回退高度 = rows×自然行高 + 5/5 内边距（行高随字体，见差异清单；宽 0 的 textarea 自身描边 `$width-textarea-border` = 0）。
 - `maxCount`/`showCounter`：`maxCount || showCounter` 才显示计数器，格式 `current/total`（无 maxCount 仅 `current`），超限（current > maxCount）danger 色。计量与 maxLength 一致为 UTF-16 code unit。
 - 无 size（上游 textarea 无尺寸档）、无 prefix/suffix/addon。
 
@@ -169,7 +169,10 @@ HARDCODES（另列，`_InputMetrics` 常量 + 溯源注释）：
 - 事件对象裁剪：无 `onKeyDown/onKeyUp/onKeyPress/onInput/onComposition*`，回调不携带 DOM 事件。
 - `hideSuffix` 简化：无 `__with-suffix-hidden` 包装变体；`showClearIgnoreDisabled` 不移植（disabled/readonly 不显示清除）。
 - textarea blur 拼音残留截断保留（并推广到 Input 的 blur 复核）。
-- 输入文本行高统一 22（计划 14/22、14/22、16/22）；上游 CSS `line-height: $height-input_*`（22/30/38）是浏览器行盒撑满居中手段，本移植以固定 22px 行盒在上游精确槽位（22/30/38）内垂直居中。**行盒由 strut 对称 half-leading 承载**（`_InputMetrics.textStrut`：文本样式不设 `TextStyle.height`，strut leading 按字体自然度量运行时计算 `(22−(ascent+descent))/fs`）——精确复刻 CSS 语义（围绕内容盒对称分配）。两个反例均实测踩坑：Flutter `TextStyle.height` 按比例放大 ascent/descent、基线下移（字形偏下 ~2px）；`StrutStyle(height: 1)` 围绕 em 方盒对称，CJK 自然盒超出 em 方盒（字形偏上 ~1.5px）。运行时方案三字体实测偏差 0.00/0.23/0.00px（Ahem/Arial/Arial Unicode）。textarea rows 同用 22 行高（rows=4 总高 100，上游按浏览器 20px 行高为 92）。
+- **文字行盒 = 字体自然度量盒（ascent+descent），在编辑槽内垂直居中**——fluent_ui TextBox 同款做法：不设 `TextStyle.height`、不用 strut，`Align` 居中自然盒（盒子即字形盒，任意字体天然居中，零行高语义坑）。**为此放弃固定 22px 行盒**（原移植计划「字号/行高 14/22、14/22、16/22」与上游钉死的 `line-height` 22/30/38、textarea 20）：
+  - textarea rows/autosize 盒高 = rows × 自然行高 + 5/5 内边距 + 2×1px 边框，**随字体/平台浮动**（测试字体 Ahem：rows=4 → 68、rows=2 → 40；CJK 字体实测约 89；上游钉死 line-height 20 为 92）；多行行距同理随字体（上游 20 恒定）。
+  - 选区高亮带高度 = 内容盒（浏览器原生亦画内容盒而非行盒，反而更贴上游）。
+  - 两个被否方案（留档防再踩）：`TextStyle.height: 22/14` 在 Flutter 里按比例放大 ascent/descent、基线下移，字形**偏下 ~2px**；`StrutStyle(height: 1, leading)` 围绕 em 方盒对称分配，CJK 自然盒超出 em 方盒，字形**偏上 ~1.5px**。CSS 的对称 half-leading 只能用运行时度量的 strut leading 精确重建（曾实现、三字体偏差 0.00/0.23/0.00px），为简化改用自然盒方案（视觉等价：单行居中偏差均为 0）。
 - 圆角解析 `theme.radius.borderRadiusSmall`（默认 3px，上游 `--semi-border-radius-small: 3px`）；移植计划文案"圆角 4"与上游 token 不符，按上游。
 - IME 软键盘换行不经按键事件：不触发 onEnterPress、`disabledEnterStartNewLine` 不拦截（与上游 DOM keypress/keydown 覆盖面一致的平台差异）。
 - 上游 `:active` 按下态（fill-2 等）未单独建模（按下即聚焦）；`colorInputIconActive`、`spacingInputIconMarginLeft` 上游 CSS 声明未引用，保留为可配置字段、当前布局未消费。

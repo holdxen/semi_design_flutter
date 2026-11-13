@@ -1141,9 +1141,8 @@ void main() {
   });
 
   group('geometry', () {
-    testWidgets('three sizes: wrapper 24/32/40, font 14/14/16, line 22', (
-      tester,
-    ) async {
+    testWidgets('three sizes: wrapper 24/32/40, font 14/14/16, natural line '
+        'box', (tester) async {
       const cases = [
         (SemiInputSize.small, 24.0, 14.0),
         (SemiInputSize.normal, 32.0, 14.0),
@@ -1158,16 +1157,19 @@ void main() {
         );
         final edit = tester.widget<EditableText>(find.byType(EditableText));
         expect(edit.style.fontSize, fontSize, reason: '$size');
-        // Line box 22 comes from the strut's symmetric half-leading; a
-        // scaled `TextStyle.height` would push the glyphs ~2px low (see
-        // `_InputMetrics.textStrut`).
+        // fluent_ui recipe (docs/semi_input.md): no forced line box — the
+        // text lays out at its font's natural metrics and that box is
+        // centered, so the glyphs are centered for any font.
         expect(edit.style.height, isNull, reason: '$size');
         final painter = TextPainter(
           text: TextSpan(text: 'x', style: edit.style),
-          strutStyle: edit.strutStyle,
           textDirection: TextDirection.ltr,
         )..layout();
-        expect(painter.height, 22, reason: '$size');
+        expect(
+          tester.getSize(find.byType(EditableText)).height,
+          painter.height,
+          reason: '$size',
+        );
         painter.dispose();
       }
     });
@@ -1356,24 +1358,26 @@ void main() {
   group('textarea rows, autosize and counter', () {
     testWidgets('rows drives the fallback height', (tester) async {
       await tester.pumpWidget(host(const SemiTextArea()));
-      // 4 rows * 22 line + 5/5 padding + 2 * 1px wrapper border.
-      expect(tester.getSize(find.byKey(SemiTextArea.wrapperKey)).height, 100);
+      // 4 rows * natural font line (14 on Ahem) + 5/5 padding + 2 * 1px
+      // wrapper border. Rows heights are font-dependent by design now — see
+      // docs/semi_input.md (the fixed 22px line box was dropped).
+      expect(tester.getSize(find.byKey(SemiTextArea.wrapperKey)).height, 68);
       await tester.pumpWidget(host(const SemiTextArea(rows: 2)));
-      expect(tester.getSize(find.byKey(SemiTextArea.wrapperKey)).height, 56);
+      expect(tester.getSize(find.byKey(SemiTextArea.wrapperKey)).height, 40);
     });
 
     testWidgets('autosize grows with content and honors min/maxRows', (
       tester,
     ) async {
       await tester.pumpWidget(host(const SemiTextArea(autosize: true)));
-      // autosize keeps the rows floor (4 rows).
-      expect(tester.getSize(find.byKey(SemiTextArea.wrapperKey)).height, 100);
+      // autosize keeps the rows floor (4 rows × natural line = 68 on Ahem).
+      expect(tester.getSize(find.byKey(SemiTextArea.wrapperKey)).height, 68);
       await tester.enterText(
         find.byType(EditableText),
         'a\nb\nc\nd\ne\nf\ng\nh',
       );
       await tester.pump();
-      expect(tester.getSize(find.byKey(SemiTextArea.wrapperKey)).height, 188);
+      expect(tester.getSize(find.byKey(SemiTextArea.wrapperKey)).height, 124);
       await tester.pumpWidget(
         host(
           const SemiTextArea(
@@ -1382,10 +1386,10 @@ void main() {
         ),
       );
       await tester.pump();
-      expect(tester.getSize(find.byKey(SemiTextArea.wrapperKey)).height, 56);
+      expect(tester.getSize(find.byKey(SemiTextArea.wrapperKey)).height, 40);
       await tester.enterText(find.byType(EditableText), '');
       await tester.pump();
-      expect(tester.getSize(find.byKey(SemiTextArea.wrapperKey)).height, 34);
+      expect(tester.getSize(find.byKey(SemiTextArea.wrapperKey)).height, 26);
     });
 
     testWidgets('counter formats current/total and turns danger past '

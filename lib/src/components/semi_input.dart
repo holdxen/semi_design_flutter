@@ -529,12 +529,7 @@ class _SemiInputState extends State<SemiInput> {
         padding: EdgeInsetsDirectional.symmetric(
           horizontal: t.spacingInputPrefixSuffixMarginX,
         ),
-        child: Text(
-          value,
-          style: style,
-          strutStyle: _InputMetrics.textStrut(style.fontSize!),
-          maxLines: 1,
-        ),
+        child: Text(value, style: style, maxLines: 1),
       );
     } else if (value is SemiIcon) {
       content = Padding(
@@ -581,12 +576,7 @@ class _SemiInputState extends State<SemiInput> {
           widthFactor: 1,
           heightFactor: 1,
           child: value is String
-              ? Text(
-                  value,
-                  style: style,
-                  strutStyle: _InputMetrics.textStrut(style.fontSize!),
-                  maxLines: 1,
-                )
+              ? Text(value, style: style, maxLines: 1)
               : value as Widget,
         ),
       ),
@@ -684,12 +674,14 @@ class _SemiInputState extends State<SemiInput> {
           ),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final scale = MediaQuery.textScalerOf(context)
-                  .scale(_InputMetrics.textLineHeight);
-              final innerHeight = constraints.maxHeight.isFinite
+              // The text lays out at its font's natural line box and the
+              // box is centered in the slot (the fluent_ui TextBox recipe) —
+              // centering the box centers the glyphs for any font. The slot
+              // only needs a bounded height for the Stack to fill.
+              final slotHeight = constraints.maxHeight.isFinite
                   ? constraints.maxHeight
-                  : _InputMetrics.textLineHeight;
-              final slotHeight = math.min(scale, innerHeight);
+                  : MediaQuery.textScalerOf(context)
+                        .scale(_InputMetrics.editSlotHeightFallback);
               return Align(
                 alignment: AlignmentDirectional.centerStart,
                 child: SizedBox(
@@ -716,9 +708,6 @@ class _SemiInputState extends State<SemiInput> {
                                 key: _editableTextKey,
                                 rendererIgnoresPointer: true,
                                 style: editStyle,
-                                strutStyle: _InputMetrics.textStrut(
-                                  _fontSize(global),
-                                ),
                                 cursorColor:
                                     editStyle.color ??
                                     t.colorInputDefaultTextDefault,
@@ -755,9 +744,6 @@ class _SemiInputState extends State<SemiInput> {
                                 child: Text(
                                   widget.placeholder!,
                                   style: placeholderStyle,
-                                  strutStyle: _InputMetrics.textStrut(
-                                    _fontSize(global),
-                                  ),
                                   maxLines: 1,
                                 ),
                               ),
@@ -1311,7 +1297,6 @@ class _SemiTextAreaState extends State<SemiTextArea> {
   ) {
     final painter = TextPainter(
       text: TextSpan(text: text, style: style),
-      strutStyle: _InputMetrics.textStrut(style.fontSize!),
       textDirection: Directionality.of(context),
       textScaler: MediaQuery.textScalerOf(context),
     )..layout(maxWidth: maxWidth);
@@ -1550,9 +1535,6 @@ class _SemiTextAreaState extends State<SemiTextArea> {
                     controller: _controller,
                     focusNode: _focusNode,
                     style: textStyle,
-                    strutStyle: _InputMetrics.textStrut(
-                      global.typography.fontSizeRegular,
-                    ),
                     key: _editableTextKey,
                     rendererIgnoresPointer: true,
                     cursorColor:
@@ -1572,13 +1554,7 @@ class _SemiTextAreaState extends State<SemiTextArea> {
                 ),
                 if (_controller.text.isEmpty && widget.placeholder != null)
                   IgnorePointer(
-                    child: Text(
-                      widget.placeholder!,
-                      style: placeholderStyle,
-                      strutStyle: _InputMetrics.textStrut(
-                        global.typography.fontSizeRegular,
-                      ),
-                    ),
+                    child: Text(widget.placeholder!, style: placeholderStyle),
                   ),
               ],
             ),
@@ -1681,41 +1657,13 @@ abstract final class _InputMetrics {
   // ignore: unused_field
   static const String textareaClearAnchor = 'position: absolute; top: 0;';
 
-  /// Port-plan text metrics (`字号/行高 14/22、14/22、16/22`): the edit slot
-  /// cap and the textarea rows/autosize math key on this fixed 22 logical px
-  /// per line. Upstream CSS
-  /// `line-height: $height-input_small/$height-input_default/$height-input_large`
-  /// (22/30/38) is the browser line-box-centering trick; Flutter centers this
-  /// box inside the upstream-precise slots instead. The glyphs themselves
-  /// render via [textStrut], not a `TextStyle.height` on 22.
-  static const double textLineHeight = 22;
-
-  /// Text renders with CSS `line-height: 22` semantics: half-leading split
-  /// evenly around the font's NATURAL ascent+descent box (what browsers do).
-  /// Flutter's `TextStyle.height` instead scales ascent/descent and drops the
-  /// baseline (glyphs ride low); a `StrutStyle(height: 1)` em-square variant
-  /// skews high for CJK fonts whose natural box exceeds the em square. A
-  /// height-free text style on this strut — leading computed from the actual
-  /// font metrics — is pixel-exact: line box exactly [textLineHeight] and the
-  /// content box centered (probe-verified on Ahem, Arial and Arial Unicode:
-  /// 0.00/0.23/0.00 px off).
-  static final Map<double, double> _strutLeading = {};
-  static StrutStyle textStrut(double fontSize) {
-    final leading = _strutLeading.putIfAbsent(fontSize, () {
-      final painter = TextPainter(
-        text: TextSpan(
-          text: 'x',
-          style: TextStyle(fontSize: fontSize),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      final line = painter.computeLineMetrics().first;
-      final natural = line.ascent + line.descent;
-      painter.dispose();
-      return math.max(0.0, textLineHeight - natural) / fontSize;
-    });
-    return StrutStyle(fontSize: fontSize, leading: leading);
-  }
+  /// Fallback height for the edit slot when the incoming constraints are
+  /// unbounded. Visually irrelevant — the text lays out at its font's natural
+  /// line box (fluent_ui TextBox recipe: no `TextStyle.height`/strut) and is
+  /// centered in the slot, so the slot only needs a bounded height for the
+  /// Stack to fill. See docs/semi_input.md for why the fixed 22px line box
+  /// was dropped.
+  static const double editSlotHeightFallback = 22;
 
   /// Selection highlight tint. Upstream inputs are native `<input>`: the
   /// browser paints its default translucent-blue selection. Flutter paints no
