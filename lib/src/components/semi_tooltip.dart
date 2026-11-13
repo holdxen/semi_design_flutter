@@ -822,6 +822,10 @@ class _PointerTapArea extends StatelessWidget {
         final down = downPosition;
         downPosition = null;
         if (down == null || onUpInside == null) return;
+        // The trigger subtree may unmount while the pointer is held (e.g. a
+        // drag reorders the list this hover tooltip sits on) — a defunct
+        // element's renderObject would throw mid-dispatch.
+        if (!context.mounted) return;
         final box = context.findRenderObject() as RenderBox?;
         if (box == null || !box.hasSize) return;
         if ((box.localToGlobal(Offset.zero) & box.size).contains(
