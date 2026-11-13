@@ -84,6 +84,7 @@ class SemiInput extends StatefulWidget {
     this.disabled = false,
     this.readonly = false,
     this.borderless = false,
+    this.bare = false,
     this.placeholder,
     this.prefix,
     this.suffix,
@@ -129,6 +130,14 @@ class SemiInput extends StatefulWidget {
   final bool disabled;
   final bool readonly;
   final bool borderless;
+
+  /// Strips the wrapper decoration entirely — transparent background, no
+  /// border in any state, zero horizontal padding (the embedded-search usage,
+  /// e.g. Select's inner input: `border: none; background-color: transparent`
+  /// including the `-wrapper-focus` override in select.scss). Unlike
+  /// [borderless] (input.scss's own borderless mode, which keeps the focus
+  /// border), this leaves nothing to draw.
+  final bool bare;
   final String? placeholder;
 
   /// String or Widget. [prefix] wins the shared prefix slot over [insetLabel];
@@ -383,6 +392,9 @@ class _SemiInputState extends State<SemiInput> {
       widget.suffix != null && !(_clearVisible && widget.hideSuffix);
 
   (Color, Color) _resolveDecoration(SemiResolvedInputThemeData t) {
+    if (widget.bare) {
+      return (const Color(0x00000000), const Color(0x00000000));
+    }
     if (widget.disabled) {
       return (t.colorInputDisabledBgDefault, t.colorInputDefaultBorderDefault);
     }
@@ -583,7 +595,9 @@ class _SemiInputState extends State<SemiInput> {
     final editStyle = _editStyle(global, t);
     final slotStyle = _slotStyle(global, t);
     final (bg, borderColor) = _resolveDecoration(t);
-    final borderWidth = _focused
+    final borderWidth = widget.bare
+        ? 0.0
+        : _focused
         ? t.widthInputWrapperFocusBorder
         : t.widthInputWrapperBorder;
     final withPrefix = widget.prefix != null || widget.insetLabel != null;
@@ -608,8 +622,8 @@ class _SemiInputState extends State<SemiInput> {
             : (_) => _focusNode.requestFocus(),
         child: Padding(
           padding: EdgeInsetsDirectional.only(
-            start: withPrefix ? 0 : t.spacingInputPaddingLeft,
-            end: suffixVisible ? 0 : t.spacingInputPaddingRight,
+            start: widget.bare || withPrefix ? 0 : t.spacingInputPaddingLeft,
+            end: widget.bare || suffixVisible ? 0 : t.spacingInputPaddingRight,
           ),
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -896,6 +910,7 @@ class SemiTextArea extends StatefulWidget {
     this.disabled = false,
     this.readonly = false,
     this.borderless = false,
+    this.bare = false,
     this.placeholder,
     this.maxLength,
     this.onChanged,
@@ -951,6 +966,9 @@ class SemiTextArea extends StatefulWidget {
   final bool disabled;
   final bool readonly;
   final bool borderless;
+
+  /// See [SemiInput.bare].
+  final bool bare;
   final String? placeholder;
 
   /// Maximum length in UTF-16 code units; `0` forces the value empty.
@@ -1218,7 +1236,9 @@ class _SemiTextAreaState extends State<SemiTextArea> {
     final t = SemiInputTheme.resolve(context);
     final editStyle = _editStyle(global, t);
     final (bg, borderColor) = _resolveDecoration(t);
-    final borderWidth = _focused
+    final borderWidth = widget.bare
+        ? 0.0
+        : _focused
         ? t.widthInputWrapperFocusBorder
         : t.widthInputWrapperBorder;
     final clearVisible = _clearVisible;

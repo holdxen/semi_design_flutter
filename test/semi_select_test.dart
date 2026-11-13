@@ -417,6 +417,29 @@ void main() {
   });
 
   group('search and filter', () {
+    testWidgets('the embedded search input never paints a wrapper box', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _app(
+          SemiSelect(placeholder: 'pick', filter: true, options: _flatOptions),
+        ),
+      );
+      await tester.tap(triggerText('pick'));
+      await _settle(tester);
+      await tester.tap(find.byType(EditableText));
+      await _settle(tester);
+      // select.scss gives the inner input `border: none` + transparent bg
+      // even on `-wrapper-focus`; a focus border here was the "two boxes".
+      final deco =
+          tester
+                  .widget<DecoratedBox>(find.byKey(SemiInput.wrapperKey))
+                  .decoration
+              as BoxDecoration;
+      expect((deco.border! as Border).top.width, 0);
+      expect(deco.color, const Color(0x00000000));
+    });
+
     testWidgets('filter: true matches label and group label substrings', (
       tester,
     ) async {
