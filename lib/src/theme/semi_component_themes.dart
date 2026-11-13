@@ -23,6 +23,7 @@ import 'semi_radio_theme_data.dart';
 import 'semi_rating_theme_data.dart';
 import 'semi_select_theme_data.dart';
 import 'semi_slider_theme_data.dart';
+import 'semi_switch_theme_data.dart';
 
 @immutable
 class SemiComponentThemes {
@@ -50,6 +51,7 @@ class SemiComponentThemes {
     this.rating = const SemiRatingThemeData(),
     this.select = const SemiSelectThemeData(),
     this.slider = const SemiSliderThemeData(),
+    this.switcher = const SemiSwitchThemeData(),
   });
   final SemiTagThemeData tag;
   final SemiTypographyThemeData typography;
@@ -74,6 +76,10 @@ class SemiComponentThemes {
   final SemiRatingThemeData rating;
   final SemiSelectThemeData select;
   final SemiSliderThemeData slider;
+
+  /// Maps to the Switch component — the field is named `switcher` because
+  /// `switch` is a Dart reserved word and cannot be an identifier.
+  final SemiSwitchThemeData switcher;
   SemiComponentThemes copyWith({
     SemiTagThemeData? tag,
     SemiTypographyThemeData? typography,
@@ -98,6 +104,7 @@ class SemiComponentThemes {
     SemiRatingThemeData? rating,
     SemiSelectThemeData? select,
     SemiSliderThemeData? slider,
+    SemiSwitchThemeData? switcher,
   }) => SemiComponentThemes(
     tag: tag ?? this.tag,
     typography: typography ?? this.typography,
@@ -122,6 +129,7 @@ class SemiComponentThemes {
     rating: rating ?? this.rating,
     select: select ?? this.select,
     slider: slider ?? this.slider,
+    switcher: switcher ?? this.switcher,
   );
   @override
   bool operator ==(Object other) =>
@@ -149,7 +157,8 @@ class SemiComponentThemes {
           radio == other.radio &&
           rating == other.rating &&
           select == other.select &&
-          slider == other.slider;
+          slider == other.slider &&
+          switcher == other.switcher;
   @override
   int get hashCode => Object.hashAll([
     tag,
@@ -175,5 +184,6 @@ class SemiComponentThemes {
     rating,
     select,
     slider,
+    switcher,
   ]);
 }
