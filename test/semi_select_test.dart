@@ -1019,6 +1019,36 @@ void main() {
       }
     });
 
+    testWidgets('arrow icon follows the trigger font size (1em)', (
+      tester,
+    ) async {
+      for (final (size, expected) in [
+        (SemiInputSize.small, 14.0),
+        (SemiInputSize.normal, 14.0),
+        (SemiInputSize.large, 16.0),
+      ]) {
+        await tester.pumpWidget(
+          _app(SemiSelect(size: size, options: _flatOptions)),
+        );
+        final arrow = tester.widget<SemiIconTheme>(
+          find
+              .descendant(
+                of: find.byType(SemiSelect),
+                matching: find.byType(SemiIconTheme),
+              )
+              .first,
+        );
+        expect(
+          arrow.data.customSize,
+          expected,
+          reason:
+              'upstream renders the arrow at 1em of the trigger '
+              '(font-size-regular 14 / font-size-header-6 16); a fixed 12 '
+              'made it visibly smaller',
+        );
+      }
+    });
+
     testWidgets('multiple tags hug the border with the 4px inset', (
       tester,
     ) async {

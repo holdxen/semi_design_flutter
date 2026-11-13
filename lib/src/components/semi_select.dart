@@ -1261,7 +1261,10 @@ class _SemiSelectState extends State<SemiSelect> {
                       color: widget.disabled
                           ? theme.colorSelectInputDisabledText
                           : theme.colorSelectIconDefault,
-                      customSize: _SelectMetrics.arrowIconSize,
+                      // Upstream renders the bare `IconChevronDown` at
+                      // `1em` — the trigger's font size (14 regular/small,
+                      // 16 large via `font-size-header-6`).
+                      customSize: fontSize + 2,
                     ),
                     child:
                         widget.arrowIcon ??
@@ -2115,10 +2118,6 @@ abstract final class _SelectMetrics {
   /// `font-size: 12px` on the "+N" tag already covers the fold; the tag
   /// close icon size of SemiTag (`customSize: 12`) is the tag component's.
   static const double clearIconSize = 12;
-
-  /// `font-size: 12px`-sized trailing arrow glyph slot width companion; the
-  /// upstream `&-arrow` icon renders at the icon font size (12 by default).
-  static const double arrowIconSize = 12;
 
   /// `@include font-size-small` in packages/semi-foundation/select/select.scss
   /// (`&-group`). The port reads the live `typography.fontSizeSmall` token
