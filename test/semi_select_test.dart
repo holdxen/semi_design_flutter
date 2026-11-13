@@ -438,6 +438,14 @@ void main() {
               as BoxDecoration;
       expect((deco.border! as Border).top.width, 0);
       expect(deco.color, const Color(0x00000000));
+      // Web inputs center their text vertically (the embedded input is
+      // `height: 100%` upstream); the editable hugs its own line height and
+      // is centered in the slot — a stretched RenderEditable top-aligns its
+      // glyphs and the typed text sat visibly high.
+      final editableRect = tester.getRect(find.byType(EditableText));
+      final wrapperRect = tester.getRect(find.byKey(SemiInput.wrapperKey));
+      expect(editableRect.height, lessThanOrEqualTo(wrapperRect.height));
+      expect(editableRect.center.dy, closeTo(wrapperRect.center.dy, 0.5));
     });
 
     testWidgets('filter: true matches label and group label substrings', (

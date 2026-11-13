@@ -649,28 +649,36 @@ class _SemiInputState extends State<SemiInput> {
                         // text width and is zero-width when empty).
                         fit: StackFit.expand,
                         children: [
-                          EditableText(
-                            controller: _controller,
-                            focusNode: _focusNode,
-                            style: editStyle,
-                            cursorColor:
-                                editStyle.color ??
-                                t.colorInputDefaultTextDefault,
-                            backgroundCursorColor:
-                                t.colorInputDisabledTextDefault,
-                            readOnly: widget.readonly,
-                            obscureText:
-                                widget.mode == SemiInputMode.password &&
-                                _eyeClosed,
-                            maxLines: 1,
-                            keyboardType: TextInputType.text,
-                            textInputAction: TextInputAction.done,
-                            onChanged: _handleChanged,
-                            onSubmitted: _handleSubmitted,
-                            inputFormatters: [
-                              if (widget.maxLength != null)
-                                _CodeUnitTruncateFormatter(widget.maxLength!),
-                            ],
+                          Align(
+                            alignment: AlignmentDirectional.center,
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: EditableText(
+                                controller: _controller,
+                                focusNode: _focusNode,
+                                style: editStyle,
+                                cursorColor:
+                                    editStyle.color ??
+                                    t.colorInputDefaultTextDefault,
+                                backgroundCursorColor:
+                                    t.colorInputDisabledTextDefault,
+                                readOnly: widget.readonly,
+                                obscureText:
+                                    widget.mode == SemiInputMode.password &&
+                                    _eyeClosed,
+                                maxLines: 1,
+                                keyboardType: TextInputType.text,
+                                textInputAction: TextInputAction.done,
+                                onChanged: _handleChanged,
+                                onSubmitted: _handleSubmitted,
+                                inputFormatters: [
+                                  if (widget.maxLength != null)
+                                    _CodeUnitTruncateFormatter(
+                                      widget.maxLength!,
+                                    ),
+                                ],
+                              ),
+                            ),
                           ),
                           if (_controller.text.isEmpty &&
                               widget.placeholder != null)
