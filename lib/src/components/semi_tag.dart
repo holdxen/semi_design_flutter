@@ -1,3 +1,4 @@
+import 'package:flutter/rendering.dart' show OverflowBoxFit;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -346,6 +347,20 @@ class _SemiTagState extends State<SemiTag> {
         child: text,
       );
     }
+    // ★ CSS lets the text line box overflow the content box into the padding;
+    // the row's tight content box would otherwise squeeze the paragraph and
+    // paint the ink ~2px low with real fonts (RenderParagraph top-anchors an
+    // over-tall paragraph). OverflowBox frees the vertical constraint — the
+    // width constraint stays (ellipsis works) — and centers the natural line
+    // box on the content box, matching the CSS model.
+    text = OverflowBox(
+      // deferToChild keeps the box hugging the text (the default `max` fit
+      // would stretch the box to the slot width and break hug-width rows).
+      fit: OverflowBoxFit.deferToChild,
+      minHeight: 0,
+      maxHeight: double.infinity,
+      child: text,
+    );
     final closeColor = widget.color == SemiTagColor.white
         ? t.colorTagWhiteIconDefault
         : _closePressed
