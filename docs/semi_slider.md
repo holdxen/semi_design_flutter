@@ -24,7 +24,7 @@ onChanged `ValueChanged<Object?>?`（double | 升序 List<double>）。onAfterCh
 
 ### 拖拽
 
-按下手柄即开会话（upstream mousedown 无 slop，本移植用 Listener 原始指针事件复刻）：捕获指针-手柄中心偏移并全程保留（手柄不跳向光标）。move 时按偏移换算值、过 `outPutValue` 后 onChanged；受控也实时跟手。★双手柄允许交叉，越过即双双塌陷：拖 'min' 过 max → `[max, max]`，拖 'max' 过 min → `[min, min]`（foundation.ts:441 以 focusPos 为键，本移植以被动手柄为键；塌陷后拖回可恢复成对值）。松开：onMouseUp 先报，onAfterChange 带 `outPutValue(currentValue)`。
+按下手柄即开会话（upstream mousedown 无 slop，本移植用 Listener 原始指针事件复刻）：捕获指针-手柄中心偏移并全程保留（手柄不跳向光标）。move 时按偏移换算值、过 `outPutValue` 后 onChanged；受控也实时跟手。★双手柄允许交叉，越过即双双塌陷：拖 'min' 过 max → `[max, max]`，拖 'max' 过 min → `[min, min]`（foundation.ts:441 以 focusPos 为键，本移植以被动手柄为键；塌陷后拖回可恢复成对值）。松开：onMouseUp 先报，onAfterChange 带 `outPutValue(currentValue)`。★手柄层序（重叠可分离的关键）：默认 左 z=0 / 右 z=1；任意手柄被按下 → 它置顶且**松手后保持**（上游 `chooseMovePos` 按下后不复位，index.tsx:431-434/488-491 的 range `zIndex` 仅以此为键）——把左压到右后再次按压拿到的仍是左，往左拖即拉开；镜像同理。残余（上游一致）：在重叠处按到上层手柄并往**交叉方向**拖，仍塌陷卡住（拖回即恢复）。
 
 ### 点击（rail / track / 刻度点 / 刻度标签）
 
@@ -140,7 +140,7 @@ onChanged `ValueChanged<Object?>?`（double | 升序 List<double>）。onAfterCh
 | `shadowKnob` | mixin.scss:14 `@include shadow-knob` — `box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 0 1px rgba(0, 0, 0, 0.3);` | 两个 BoxShadow（0,4,blur6 @0x1a000000 + blur1 @0x4d000000）落在 `.semi-slider-handle` |
 | `shadowZero` | mixin.scss:8 `@include shadow-0` — `box-shadow: none;` | 空列表：disabled handle 无阴影 |
 | `dotCenterNudge` | index.tsx:594 `calc(${markPercent * 100}% - 2px)` | 2（= 4px 刻度点半宽，居中修正） |
-| `handleZIndex` | index.tsx:374 `zIndex: chooseMovePos === 'min' && isDrag ? 2 : 1` | 2（被拖动手柄后绘、压在另一手柄上） |
+| `handleZIndex` | index.tsx:374 `zIndex: chooseMovePos === 'min' && isDrag ? 2 : 1`（单值分支）；range 分支 431-434/488-491 `zIndex: chooseMovePos === 'min' ? 2 : 1` 不限 isDrag | 0/1 层序：默认左0/右1，按下者置顶且松手保持（`_lastPressed` 复刻 `chooseMovePos` 持久语义） |
 | （调用点）boundary 字号 | slider.scss:157 `-boundary` `font-size: $font-size-small` | 12 == `theme.typography.fontSizeSmall` |
 
 ## 差异清单

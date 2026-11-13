@@ -172,6 +172,13 @@ class _SemiSliderState extends State<SemiSlider> {
   /// Handle index of the active press/drag (0 = 'min', 1 = 'max').
   int? _dragIndex;
 
+  /// Last pointer-pressed handle — persists after release and drives the
+  /// handle stacking (★ upstream `chooseMovePos` is never reset by
+  /// `onHandleUp`; index.tsx:431-434/488-491 key the range handles'
+  /// `zIndex` off it alone). Keeping the last-pressed handle on top is what
+  /// lets an overlapped pair be pulled apart the way it was pushed together.
+  int? _lastPressed;
+
   /// Hovered handle index (upstream `focusPos` tooltip visibility).
   int? _hoverIndex;
 
@@ -408,6 +415,7 @@ class _SemiSliderState extends State<SemiSlider> {
           : _stateValue;
       _dragging = true;
       _dragIndex = index;
+      _lastPressed = index;
     });
   }
 
@@ -940,9 +948,12 @@ class _SemiSliderState extends State<SemiSlider> {
     final handles = <Widget>[
       for (var i = 0; i < count; i++) _buildHandle(t, i, w, h, vertical),
     ];
-    // index.tsx:374 — `zIndex: chooseMovePos === 'min' && isDrag ? 2 : 1`
-    // (_SliderMetrics.handleZIndex): the dragged handle paints last (on top).
-    if (count == 2 && _dragIndex == 0) {
+    // ★ Handle stacking (upstream range `zIndex: chooseMovePos === 'min' ? 2
+    // : 1`, index.tsx:431-434/488-491 — NOT gated on isDrag, `chooseMovePos`
+    // is never reset by `onHandleUp`): default left z=0 / right z=1; the
+    // last pressed handle goes on top and STAYS there after release. The
+    // later child paints (and hit-tests) last = on top.
+    if (count == 2 && _lastPressed == 0) {
       return [handles[1], handles[0]];
     }
     return handles;

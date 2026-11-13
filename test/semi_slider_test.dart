@@ -841,6 +841,127 @@ void main() {
       await tester.pump();
     });
 
+    testWidgets('overlap re-grab separates the way it was pushed (last '
+        'pressed stays on top)', (tester) async {
+      // Regression: the port reset the handle stacking on release, so the max
+      // handle was always on top at an overlap — re-grabbing and pulling LEFT
+      // hit the max handle and died in the crossing collapse. Upstream keeps
+      // the last pressed handle on top forever (`chooseMovePos` is never
+      // reset; index.tsx:431-434/488-491).
+      final log = <Object?>[];
+      await tester.pumpWidget(
+        host(
+          boxed(
+            SemiSlider(
+              range: true,
+              defaultValue: [30.0, 80.0],
+              max: 274,
+              onChanged: log.add,
+            ),
+          ),
+        ),
+      );
+      final gesture = await startMouse(tester);
+      // Push the min handle onto the max handle → [80, 80].
+      await gesture.moveTo(tester.getCenter(handle(0)));
+      await gesture.down(tester.getCenter(handle(0)));
+      await gesture.moveBy(const Offset(1000, 0));
+      await tester.pump();
+      expect(log.last, [80.0, 80.0]);
+      await gesture.up();
+      await tester.pump();
+      // Re-grab the pile and pull LEFT: the min handle (last pressed) is on
+      // top and follows the pointer; the max handle stays put.
+      log.clear();
+      final pile = tester.getCenter(handle(0));
+      expect(pile, tester.getCenter(handle(1)));
+      await gesture.moveTo(pile);
+      await gesture.down(pile);
+      await gesture.moveBy(const Offset(-40, 0));
+      await tester.pump();
+      expect(log.last, [40.0, 80.0]);
+      expect(tester.getCenter(handle(0)).dx, lessThan(pile.dx));
+      expect(tester.getCenter(handle(1)).dx, pile.dx);
+      await gesture.up();
+      await tester.pump();
+    });
+
+    testWidgets('mirror: max pushed onto min separates RIGHT on re-grab', (
+      tester,
+    ) async {
+      final log = <Object?>[];
+      await tester.pumpWidget(
+        host(
+          boxed(
+            SemiSlider(
+              range: true,
+              defaultValue: [30.0, 80.0],
+              max: 274,
+              onChanged: log.add,
+            ),
+          ),
+        ),
+      );
+      final gesture = await startMouse(tester);
+      await gesture.moveTo(tester.getCenter(handle(1)));
+      await gesture.down(tester.getCenter(handle(1)));
+      await gesture.moveBy(const Offset(-1000, 0));
+      await tester.pump();
+      expect(log.last, [30.0, 30.0]);
+      await gesture.up();
+      await tester.pump();
+      log.clear();
+      final pile = tester.getCenter(handle(1));
+      await gesture.moveTo(pile);
+      await gesture.down(pile);
+      await gesture.moveBy(const Offset(40, 0));
+      await tester.pump();
+      expect(log.last, [30.0, 70.0]);
+      expect(tester.getCenter(handle(1)).dx, greaterThan(pile.dx));
+      expect(tester.getCenter(handle(0)).dx, pile.dx);
+      await gesture.up();
+      await tester.pump();
+    });
+
+    testWidgets('fresh overlap: default stacking drags max right and pins '
+        'left (upstream residual)', (tester) async {
+      final log = <Object?>[];
+      await tester.pumpWidget(
+        host(
+          boxed(
+            SemiSlider(
+              range: true,
+              defaultValue: [80.0, 80.0],
+              max: 274,
+              onChanged: log.add,
+            ),
+          ),
+        ),
+      );
+      final gesture = await startMouse(tester);
+      final pile = tester.getCenter(handle(1));
+      await gesture.moveTo(pile);
+      await gesture.down(pile);
+      await gesture.moveBy(const Offset(-40, 0));
+      await tester.pump();
+      // Default stacking (left z=0 / right z=1): the max handle gets the
+      // press — pulling LEFT crosses the stationary min and dies in the
+      // collapse (upstream-identical residual).
+      expect(log, isEmpty);
+      expect(tester.getCenter(handle(0)), pile);
+      expect(tester.getCenter(handle(1)), pile);
+      await gesture.up();
+      await tester.pump();
+      // The last-pressed max handle stays on top: pulling RIGHT separates.
+      await gesture.moveTo(pile);
+      await gesture.down(pile);
+      await gesture.moveBy(const Offset(40, 0));
+      await tester.pump();
+      expect(log.last, [80.0, 120.0]);
+      await gesture.up();
+      await tester.pump();
+    });
+
     testWidgets('controlled drag follows live; the prop snaps it back', (
       tester,
     ) async {
