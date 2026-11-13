@@ -1283,6 +1283,19 @@ void main() {
           inputH,
           reason: '$size',
         );
+        // Regression: the input text sits VERTICALLY CENTERED — a
+        // `TextStyle.height` on the input style scales the baseline down
+        // (~2px low; the SemiInput saga, docs/semi_input.md). Natural
+        // metrics + the slot's centering keep the text box equidistant.
+        final edit = tester.widget<EditableText>(find.byType(EditableText));
+        expect(edit.style.height, isNull, reason: '$size');
+        final slot = tester.getRect(find.byType(SemiInput));
+        final box = tester.getRect(find.byType(EditableText));
+        expect(
+          (box.top - slot.top) - (slot.bottom - box.bottom),
+          moreOrLessEquals(0, epsilon: 0.001),
+          reason: '$size input text must sit centered',
+        );
       }
     });
   });

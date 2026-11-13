@@ -1131,11 +1131,12 @@ class _SemiTagInputState extends State<SemiTagInput> {
           placeholder: _tags.isEmpty ? widget.placeholder : '',
           semanticsLabel: widget.semanticsLabel,
           inputStyle: TextStyle(
-            // `font-size: $font-size-regular` with `line-height:
-            // $height-tagInput_input_*` (the input box height).
+            // `font-size: $font-size-regular` (the CSS `line-height:
+            // $height-tagInput_input_*` pairing is carried by the SizedBox
+            // box height + SemiInput's centering — a `TextStyle.height` here
+            // would scale ascent/descent and drop the glyphs ~2px low, see
+            // docs/semi_input.md).
             fontSize: global.typography.fontSizeRegular,
-            height:
-                geometry.inputLineHeight / global.typography.fontSizeRegular,
           ),
           onEnterPress: _handleEnter,
           onBlur: () {
