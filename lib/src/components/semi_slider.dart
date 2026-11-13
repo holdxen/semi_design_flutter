@@ -640,6 +640,13 @@ class _SemiSliderState extends State<SemiSlider> {
 
   // -- build -----------------------------------------------------------------
 
+  /// Upstream `cursor: pointer` on the clickable parts — `.semi-slider-rail`
+  /// (slider.scss:37), `-handle` (58), `-track` (90), `-dot` (113), `-mark`
+  /// (134) and `-mark-reverse` (151). Disabled defers to the wrapper's
+  /// `not-allowed` (forbidden) cursor.
+  MouseCursor get _tapCursor =>
+      widget.disabled ? MouseCursor.defer : SystemMouseCursors.click;
+
   @override
   Widget build(BuildContext context) {
     final global = SemiTheme.of(context);
@@ -647,10 +654,13 @@ class _SemiSliderState extends State<SemiSlider> {
     final vertical = widget.vertical;
 
     final body = MouseRegion(
-      // Upstream `cursor: not-allowed` on `.semi-slider-disabled`.
+      // Upstream `cursor: not-allowed` on `.semi-slider-disabled` only —
+      // the enabled wrapper declares NO cursor (slider.scss has none on
+      // `&-wrapper`/`&-marks`/`&-boundary`); the hand is scoped to the
+      // interactive parts below, not the whole bounding rect.
       cursor: widget.disabled
           ? SystemMouseCursors.forbidden
-          : SystemMouseCursors.click,
+          : MouseCursor.defer,
       onEnter: (_) => setState(() => _wrapperHovered = true),
       onExit: (_) => setState(() => _wrapperHovered = false),
       child: LayoutBuilder(
@@ -716,26 +726,29 @@ class _SemiSliderState extends State<SemiSlider> {
       child: Padding(
         // `.semi-slider-rail` — `padding: $spacing-slider_rail-padding`.
         padding: EdgeInsets.all(t.spacingSliderRailPadding),
-        child: GestureDetector(
-          key: SemiSlider.railKey,
-          behavior: HitTestBehavior.opaque,
-          onTapUp: (d) => _handleWrapTap(d.globalPosition),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: t.colorSliderRailBgDefault,
-              borderRadius: BorderRadius.circular(t.radiusSliderRail),
-            ),
-            // `.semi-slider-rail` — `color: $color-slider_rail;
-            // font-size: $font-slider_rail-fontSize; line-height:
-            // $font-slider_rail-lineHeight;` (inherited text styling; the rail
-            // renders no text of its own upstream either).
-            child: DefaultTextStyle(
-              style: TextStyle(
-                color: t.colorSliderRail,
-                fontSize: t.fontSliderRailFontSize,
-                height: t.fontSliderRailLineHeight,
+        child: MouseRegion(
+          cursor: _tapCursor,
+          child: GestureDetector(
+            key: SemiSlider.railKey,
+            behavior: HitTestBehavior.opaque,
+            onTapUp: (d) => _handleWrapTap(d.globalPosition),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: t.colorSliderRailBgDefault,
+                borderRadius: BorderRadius.circular(t.radiusSliderRail),
               ),
-              child: const SizedBox.expand(),
+              // `.semi-slider-rail` — `color: $color-slider_rail;
+              // font-size: $font-slider_rail-fontSize; line-height:
+              // $font-slider_rail-lineHeight;` (inherited text styling; the rail
+              // renders no text of its own upstream either).
+              child: DefaultTextStyle(
+                style: TextStyle(
+                  color: t.colorSliderRail,
+                  fontSize: t.fontSliderRailFontSize,
+                  height: t.fontSliderRailLineHeight,
+                ),
+                child: const SizedBox.expand(),
+              ),
             ),
           ),
         ),
@@ -764,17 +777,20 @@ class _SemiSliderState extends State<SemiSlider> {
       left: vertical ? null : start,
       width: vertical ? t.heightSliderTrack : fill,
       height: vertical ? fill : t.heightSliderTrack,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTapUp: (d) => _handleWrapTap(d.globalPosition),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: widget.disabled
-                ? t.colorSliderTrackDisabledBg
-                : t.colorSliderTrackBgDefault,
-            borderRadius: BorderRadius.circular(t.radiusSliderTrack),
+      child: MouseRegion(
+        cursor: _tapCursor,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapUp: (d) => _handleWrapTap(d.globalPosition),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: widget.disabled
+                  ? t.colorSliderTrackDisabledBg
+                  : t.colorSliderTrackBgDefault,
+              borderRadius: BorderRadius.circular(t.radiusSliderTrack),
+            ),
+            child: const SizedBox.expand(),
           ),
-          child: const SizedBox.expand(),
         ),
       ),
     );
@@ -814,19 +830,22 @@ class _SemiSliderState extends State<SemiSlider> {
       if (!_markInRange(mark)) continue;
       final active = _isMarkActive(mark);
       final pos = _posOf(mark, len) - nudge;
-      Widget dot = GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTapUp: (d) => _handleWrapTap(d.globalPosition),
-        child: Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            color: widget.disabled
-                ? t.colorSliderDotBgDefault
-                : active
-                ? t.colorSliderDotBorderActive
-                : t.colorSliderDotBgDefault,
-            shape: BoxShape.circle,
+      Widget dot = MouseRegion(
+        cursor: _tapCursor,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapUp: (d) => _handleWrapTap(d.globalPosition),
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              color: widget.disabled
+                  ? t.colorSliderDotBgDefault
+                  : active
+                  ? t.colorSliderDotBorderActive
+                  : t.colorSliderDotBgDefault,
+              shape: BoxShape.circle,
+            ),
           ),
         ),
       );
@@ -890,14 +909,17 @@ class _SemiSliderState extends State<SemiSlider> {
           // (FractionalTranslation hit-tests through the transform).
           child: FractionalTranslation(
             translation: const Offset(-0.5, 0),
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTapUp: (d) => _handleWrapTap(d.globalPosition),
-              child: Text(
-                entry.value,
-                style: TextStyle(
-                  color: t.colorSliderMarkTextDefault,
-                  fontSize: t.fontSliderMarksFontSize,
+            child: MouseRegion(
+              cursor: _tapCursor,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTapUp: (d) => _handleWrapTap(d.globalPosition),
+                child: Text(
+                  entry.value,
+                  style: TextStyle(
+                    color: t.colorSliderMarkTextDefault,
+                    fontSize: t.fontSliderMarksFontSize,
+                  ),
                 ),
               ),
             ),
@@ -1007,6 +1029,14 @@ class _SemiSliderState extends State<SemiSlider> {
       ),
     );
     handle = MouseRegion(
+      // `.semi-slider-handle` — `cursor: pointer` (slider.scss:58); pressed
+      // is `-handle-clicked` — `cursor: grabbing` (82). Disabled defers to
+      // the wrapper's `not-allowed`.
+      cursor: widget.disabled
+          ? MouseCursor.defer
+          : _dragIndex == index
+          ? SystemMouseCursors.grabbing
+          : SystemMouseCursors.click,
       onEnter: (_) => _handleEnter(index),
       onExit: (_) => _handleLeave(index),
       child: handle,

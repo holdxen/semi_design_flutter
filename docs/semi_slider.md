@@ -1,6 +1,6 @@
 # SemiSlider
 
-非 Material 滑动条。值模型单值 `double` / range `List<double>`（长度 2），轨道几何完全按 slider.scss：wrapper 32 高（horizontal，`height-slider_wrapper`）+ 13px X 内边距；rail/track 4 高、top 14；handle 24×24 圆 + `margin-top: 4`（垂直时 `margin-left: -10` 对齐 4px 轨）；刻度点 4×4 top 14（`calc(... - 2px)` 居中）；刻度标签 top 23；boundary top 30。拖拽以指针-手柄中心偏移为准并全程保留（手柄不跳向光标）。★输出恒过 `outPutValue`（按 step 小数位取整）且 onChange 报升序副本。Tooltip 用 `SemiTooltip(trigger: custom)` + 可见性状态机；标记点/标签可点（跳最近手柄）。
+非 Material 滑动条。值模型单值 `double` / range `List<double>`（长度 2），轨道几何完全按 slider.scss：wrapper 32 高（horizontal，`height-slider_wrapper`）+ 13px X 内边距；rail/track 4 高、top 14；handle 24×24 圆 + `margin-top: 4`（垂直时 `margin-left: -10` 对齐 4px 轨）；刻度点 4×4 top 14（`calc(... - 2px)` 居中）；刻度标签 top 23；boundary top 30。拖拽以指针-手柄中心偏移为准并全程保留（手柄不跳向光标）。★输出恒过 `outPutValue`（按 step 小数位取整）且 onChange 报升序副本。Tooltip 用 `SemiTooltip(trigger: custom)` + 可见性状态机；标记点/标签可点（跳最近手柄）。光标照上游逐选择器映射（slider.scss）：手型只覆盖 `-rail`(37)/`-track`(90)/`-handle`(58)/`-dot`(113)/`-mark`(134)/`-mark-reverse`(151)，按下 handle 为 `grabbing`(82)，wrapper/边界文字无 cursor 覆盖、禁用组 `not-allowed`(218-241)——手型不铺满组件外接矩形。
 
 ## API
 

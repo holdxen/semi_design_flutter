@@ -1250,6 +1250,89 @@ void main() {
       await tester.pump();
       expect(handleDecoration(tester, 0).border, isNull);
     });
+
+    testWidgets('hand cursor covers only the interactive parts (upstream '
+        'map)', (tester) async {
+      // Upstream cursor map (slider.scss): `pointer` on -rail(37)/-handle(58)
+      // /-track(90)/-dot(113)/-mark(134)/-mark-reverse(151), `grabbing` on
+      // the pressed handle (82), and NOTHING on the wrapper — the pre-fix bug
+      // painted the hand over the whole bounding rect.
+      await tester.pumpWidget(
+        host(boxed(SemiSlider(defaultValue: 50, marks: {20: 'A', 80: 'B'}))),
+      );
+      Set<MouseCursor> ancestorCursors(Finder of) => find
+          .ancestor(of: of, matching: find.byType(MouseRegion))
+          .evaluate()
+          .map((e) => (e.widget as MouseRegion).cursor)
+          .toSet();
+      // Rail's own region + the wrapper's: exactly one hand, one default.
+      expect(ancestorCursors(rail()), {
+        SystemMouseCursors.click,
+        MouseCursor.defer,
+      });
+      expect(
+        tester
+            .widget<MouseRegion>(
+              find.descendant(
+                of: handle(0),
+                matching: find.byType(MouseRegion),
+              ),
+            )
+            .cursor,
+        SystemMouseCursors.click,
+      );
+      // Mark label region + wrapper's.
+      expect(ancestorCursors(find.text('B')), {
+        SystemMouseCursors.click,
+        MouseCursor.defer,
+      });
+      // Pressed handle → grabbing (`-handle-clicked`).
+      final gesture = await startMouse(tester);
+      final c = tester.getCenter(handle(0));
+      await gesture.moveTo(c);
+      await gesture.down(c);
+      await tester.pump();
+      expect(
+        tester
+            .widget<MouseRegion>(
+              find.descendant(
+                of: handle(0),
+                matching: find.byType(MouseRegion),
+              ),
+            )
+            .cursor,
+        SystemMouseCursors.grabbing,
+      );
+      await gesture.up();
+      await tester.pump();
+      // Disabled: parts defer to the wrapper's not-allowed.
+      await tester.pumpWidget(
+        host(
+          boxed(
+            SemiSlider(
+              defaultValue: 50,
+              marks: {20: 'A', 80: 'B'},
+              disabled: true,
+            ),
+          ),
+        ),
+      );
+      expect(ancestorCursors(rail()), {
+        MouseCursor.defer,
+        SystemMouseCursors.forbidden,
+      });
+      expect(
+        tester
+            .widget<MouseRegion>(
+              find.descendant(
+                of: handle(0),
+                matching: find.byType(MouseRegion),
+              ),
+            )
+            .cursor,
+        MouseCursor.defer,
+      );
+    });
   });
 
   group('marks and dots', () {
