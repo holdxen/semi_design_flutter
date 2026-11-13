@@ -582,6 +582,26 @@ class _SemiInputState extends State<SemiInput> {
     return width < 0 ? 0 : width;
   }
 
+  /// Web `<input>` carets span the font's natural ascent+descent, not the
+  /// CSS line box; RenderEditable defaults to the (padded) line box, which
+  /// made the caret visibly taller than the glyphs. Cached per font size.
+  final Map<double, double> _caretHeights = {};
+
+  double _naturalCaretHeight(double fontSize) {
+    return _caretHeights.putIfAbsent(fontSize, () {
+      final painter = TextPainter(
+        text: TextSpan(
+          text: 'x',
+          style: TextStyle(fontSize: fontSize),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      final height = painter.preferredLineHeight;
+      painter.dispose();
+      return height;
+    });
+  }
+
   void _focusFromSlot() {
     if (widget.disabled || _focused) return;
     _focusNode.requestFocus();
@@ -660,6 +680,9 @@ class _SemiInputState extends State<SemiInput> {
                                 cursorColor:
                                     editStyle.color ??
                                     t.colorInputDefaultTextDefault,
+                                cursorHeight: _naturalCaretHeight(
+                                  _fontSize(global),
+                                ),
                                 backgroundCursorColor:
                                     t.colorInputDisabledTextDefault,
                                 readOnly: widget.readonly,
