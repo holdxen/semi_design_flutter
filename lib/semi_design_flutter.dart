@@ -99,6 +99,9 @@ export 'src/theme/semi_switch_theme_data.dart';
 export 'src/components/semi_tag_input.dart';
 export 'src/theme/semi_tag_input_theme.dart';
 export 'src/theme/semi_tag_input_theme_data.dart';
+export 'src/components/semi_date_picker.dart';
+export 'src/theme/semi_date_picker_theme.dart';
+export 'src/theme/semi_date_picker_theme_data.dart';
 
 /// A Calculator.
 class Calculator {
