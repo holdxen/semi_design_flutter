@@ -106,7 +106,13 @@ class SemiApp extends StatelessWidget {
               fontFamilyFallback: typography.fontFamilyFallback,
               fontSize: typography.fontSizeRegular,
               fontWeight: typography.fontWeightRegular,
-              height: typography.lineHeightRegular / typography.fontSizeRegular,
+              // ★ NO `height` here: Flutter's `TextStyle.height` is not CSS
+              // line-height — it scales ascent/descent and drops the
+              // baseline (~2px low) while inflating the line box (the
+              // recurring "文字偏下/裁剪" family; docs/semi_input.md).
+              // Multi-line components carry their own line-height
+              // (SemiText/SemiTitle set it explicitly); bare texts lay out
+              // at natural metrics and center correctly.
               color: data.colors.colorText0,
             ),
             child: ColoredBox(

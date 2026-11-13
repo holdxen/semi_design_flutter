@@ -441,26 +441,29 @@ class _SemiTagState extends State<SemiTag> {
           child: Padding(
             padding: padding,
             child: LayoutBuilder(
-              builder: (context, constraints) => ClipRect(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ...children.map(
-                      (child) => constraints.hasBoundedWidth
-                          ? Flexible(child: ClipRect(child: child))
-                          : child,
-                    ),
-                    if (constraints.hasBoundedWidth)
-                      Flexible(child: text)
-                    else
-                      text,
-                    ...trailing.map(
-                      (child) => constraints.hasBoundedWidth
-                          ? Flexible(child: ClipRect(child: child))
-                          : child,
-                    ),
-                  ],
-                ),
+              // No ClipRect around the row: CSS lets the text line overflow
+              // the content box into the padding (a tall natural line box in a
+              // small tag) and clips only at the border box — the outer
+              // ClipRRect above. A content-level clip used to cut the glyph
+              // tops/bottoms (small tagInput tags looked low + clipped).
+              builder: (context, constraints) => Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ...children.map(
+                    (child) => constraints.hasBoundedWidth
+                        ? Flexible(child: ClipRect(child: child))
+                        : child,
+                  ),
+                  if (constraints.hasBoundedWidth)
+                    Flexible(child: text)
+                  else
+                    text,
+                  ...trailing.map(
+                    (child) => constraints.hasBoundedWidth
+                        ? Flexible(child: ClipRect(child: child))
+                        : child,
+                  ),
+                ],
               ),
             ),
           ),

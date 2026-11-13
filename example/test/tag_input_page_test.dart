@@ -303,6 +303,40 @@ void main() {
     expect(tester.getRect(root('taginput-size-small')).height, 24);
     expect(tester.getRect(root('taginput-size-default')).height, 32);
     expect(tester.getRect(root('taginput-size-large')).height, 40);
+    // ★ Regression: text must lay out at NATURAL metrics — under the Ahem
+    // test font the line box equals the font size. The app DefaultTextStyle
+    // used to force `height: 20/14`, which scales the baseline down and
+    // inflates the line box (the small chip's text looked low and clipped).
+    for (final key in ['taginput-size-small', 'taginput-max-tag-count']) {
+      final textFinder = find
+          .descendant(of: keyed(key), matching: find.byType(Text))
+          .first;
+      final style = tester.widget<Text>(textFinder).style;
+      expect(
+        tester.getRect(textFinder).height,
+        style?.fontSize ?? 14,
+        reason: '$key line box must hug the font size',
+      );
+    }
+    // The chip text sits centered in the chip.
+    final chipText = tester.getRect(
+      find
+          .descendant(
+            of: keyed('taginput-max-tag-count'),
+            matching: find.byType(Text),
+          )
+          .first,
+    );
+    final chip = tester.getRect(
+      find.descendant(
+        of: keyed('taginput-max-tag-count'),
+        matching: find.byKey(SemiTagInput.tagKey(0)),
+      ),
+    );
+    expect(
+      (chipText.top - chip.top) - (chip.bottom - chipText.bottom),
+      moreOrLessEquals(0, epsilon: 0.001),
+    );
     expect(tester.takeException(), isNull);
   });
 
