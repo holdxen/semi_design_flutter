@@ -1568,11 +1568,11 @@ class _SemiSelectState extends State<SemiSelect> {
       focusNode: _inputFocusNode,
       size: widget.size,
       disabled: widget.disabled,
-      // select.scss strips the inner input's wrapper decoration entirely
-      // (`border: none` even on `-wrapper-focus`, transparent bg, zero
-      // padding) — a merely borderless input still painted a focus box
-      // inside the trigger (the "two boxes" symptom).
-      bare: true,
+      // Only the TRIGGER input is stripped bare (select.scss overrides
+      // `border: none` + transparent bg on the embedded wrapper); the
+      // dropdown search keeps the regular input box — upstream styles just
+      // its wrapper (padding + divider) in `&-dropdown-search-wrapper`.
+      bare: inTrigger,
       placeholder: inTrigger ? null : widget.searchPlaceholder,
       onChanged: widget.disabled ? null : _handleTextChanged,
       onEnterPress: _handleEnterPress,

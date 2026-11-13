@@ -417,6 +417,33 @@ void main() {
   });
 
   group('search and filter', () {
+    testWidgets('the dropdown search keeps the regular input box', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _app(
+          SemiSelect(
+            placeholder: 'pick',
+            filter: true,
+            searchPosition: SemiSelectSearchPosition.dropdown,
+            options: _flatOptions,
+          ),
+        ),
+      );
+      await tester.tap(triggerText('pick'));
+      await _settle(tester);
+      // Upstream styles only the `&-dropdown-search-wrapper` (padding +
+      // divider) — the input inside keeps its box (border/bg), unlike the
+      // trigger's stripped-bare embedded input.
+      final deco =
+          tester
+                  .widget<DecoratedBox>(find.byKey(SemiInput.wrapperKey))
+                  .decoration
+              as BoxDecoration;
+      expect((deco.border! as Border).top.width, greaterThan(0));
+      expect(deco.color, isNot(const Color(0x00000000)));
+    });
+
     testWidgets('the embedded search input never paints a wrapper box', (
       tester,
     ) async {

@@ -17,15 +17,23 @@ Future<void> start(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 50));
 }
 
+/// Tap [finder] inside an open panel. No warmup tap here: an outside tap
+/// starts the panel's hide animation (select's click-outside), which raced
+/// the assertions and looked like the panel closing on selection.
 Future<void> tap(WidgetTester tester, Finder finder) async {
   await tester.ensureVisible(finder);
   await tester.pump(const Duration(milliseconds: 50));
-  // See docs/known_issues.md #1 — absorb the one dropped hit test.
-  await tester.tapAt(const Offset(700, 500));
-  await tester.pump();
   await tester.tap(finder);
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 100));
+  await tester.pump();
+}
+
+/// Panel bodies mount a few frames after `visible` flips (the tooltip
+/// overlay's entrance); pump through them before asserting panel content.
+Future<void> settlePanel(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 150));
   await tester.pump();
 }
 
@@ -123,8 +131,7 @@ void main() {
     await start(tester);
     await openPanel(tester, 'select-create');
     await tester.enterText(editable('select-create'), '新条目');
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+    await settlePanel(tester);
     expect(find.textContaining('新条目'), findsWidgets);
     await tap(tester, find.textContaining('新条目').last);
     expect(find.text('创建了：新条目'), findsOneWidget);
@@ -134,12 +141,9 @@ void main() {
     expect(find.text('剪映'), findsOneWidget);
     expect(find.text('新条目'), findsOneWidget); // the new tag in the trigger
     // The renderCreateItem demo replaces the default 「创建」 row.
-    await tester.tapAt(const Offset(700, 500));
-    await tester.pump();
     await openPanel(tester, 'select-create-custom');
     await tester.enterText(editable('select-create-custom'), '贺岁版');
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+    await settlePanel(tester);
     expect(find.text('新建「贺岁版」'), findsOneWidget);
     await tap(tester, find.text('新建「贺岁版」'));
     expect(find.text('创建了：贺岁版'), findsOneWidget);
