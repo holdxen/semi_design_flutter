@@ -44,7 +44,7 @@ onChanged `ValueChanged<Object?>?`（double | 升序 List<double>）。onAfterCh
 
 ### Tooltip
 
-每手柄 `SemiTooltip(trigger: custom, visible: 状态机, showArrow, repositionKey: 值百分比)`。状态机（foundation `computeHandleVisibleVal` + `:focus-visible`）：`tooltipVisible == true` 恒显、`== false` 恒隐（含 hover/focus）；否则悬停/拖拽该手柄、或键盘聚焦（focus-visible 门控）时显示。内容 = `tipFormatter != null ? tipFormatter(取整值) : '$value'`（String|Widget 走 `_asWidget` 先例）。
+每手柄 `SemiTooltip(trigger: custom, visible: 状态机, showArrow, repositionKey: 值百分比)`。状态机（foundation `computeHandleVisibleVal` + `:focus-visible`）：`tooltipVisible == true` 恒显、`== false` 恒隐（含 hover/focus）；否则悬停/拖拽该手柄、或键盘聚焦（focus-visible 门控）时显示。内容 = `tipFormatter != null ? tipFormatter(取整值) : '$value'`（String|Widget 走 `_asWidget` 先例）。★松手即收（foundation.ts:616 `onHandleUp` 无条件 `adapter.onHandleLeave()`）：拖拽中移出手柄的 exit 被吞（`onHandleLeave` 跳过 isDrag），release 时统一清 hover——拖到手柄外松手 tooltip 必收（否则会卡住常显）；仍停在手柄上松开也收（上游语义，重新移入再显）。键盘路径不受影响（focus-visible 门控）。
 
 ### Boundary
 

@@ -1374,6 +1374,50 @@ void main() {
       expect(handleTooltip(tester, 0).visible, isFalse);
     });
 
+    testWidgets('releasing outside the handle after a drag closes the '
+        'tooltip', (tester) async {
+      // Regression: mid-drag exits are suppressed (upstream onHandleLeave
+      // skips while isDrag), so releasing off-handle used to leave the hover
+      // state set and the tooltip stuck open forever. ★ foundation.ts:616 —
+      // `onHandleUp` unconditionally calls `adapter.onHandleLeave()`.
+      await tester.pumpWidget(
+        host(boxed(const SemiSlider(value: 33.0, min: 0, max: 100))),
+      );
+      final gesture = await startMouse(tester);
+      final c = tester.getCenter(handle(0));
+      await gesture.moveTo(c);
+      await tester.pump();
+      expect(handleTooltip(tester, 0).visible, isTrue);
+      await gesture.down(c);
+      await gesture.moveBy(const Offset(30, 0));
+      await gesture.moveTo(const Offset(5, 400)); // drag far off the handle
+      await tester.pump();
+      // Still visible mid-drag (hover is kept while isDrag).
+      expect(handleTooltip(tester, 0).visible, isTrue);
+      await gesture.up();
+      await tester.pump();
+      expect(handleTooltip(tester, 0).visible, isFalse);
+    });
+
+    testWidgets('release on the handle closes the tooltip too (upstream)', (
+      tester,
+    ) async {
+      // ★ Upstream parity: `onHandleUp` clears focusPos unconditionally, so
+      // the tooltip hides at release even while the pointer stays on the
+      // handle (re-entry shows it again).
+      await tester.pumpWidget(
+        host(boxed(const SemiSlider(value: 33.0, min: 0, max: 100))),
+      );
+      final gesture = await startMouse(tester);
+      final c = tester.getCenter(handle(0));
+      await gesture.moveTo(c);
+      await gesture.down(c);
+      await gesture.moveBy(const Offset(2, 0));
+      await gesture.up();
+      await tester.pump();
+      expect(handleTooltip(tester, 0).visible, isFalse);
+    });
+
     testWidgets('tipFormatter replaces the content; showArrow passes through', (
       tester,
     ) async {

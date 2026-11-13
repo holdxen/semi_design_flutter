@@ -440,6 +440,12 @@ class _SemiSliderState extends State<SemiSlider> {
     setState(() {
       _dragging = false;
       _dragIndex = null;
+      // ★ foundation.ts:616 — `onHandleUp` unconditionally calls
+      // `adapter.onHandleLeave()` (`focusPos: ''`): the hover state is cleared
+      // at release even though mid-drag exits are suppressed (onHandleLeave
+      // skips while isDrag). Without this, releasing outside the handle after
+      // a drag leaves `_hoverIndex` set forever and the tooltip never closes.
+      _hoverIndex = null;
     });
     widget.onMouseUp?.call();
     widget.onAfterChange?.call(out);
