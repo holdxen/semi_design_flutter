@@ -1019,6 +1019,34 @@ void main() {
       }
     });
 
+    testWidgets('multiple tags hug the border with the 4px inset', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _app(
+          SemiSelect(
+            multiple: true,
+            defaultValue: ['a', 'c'],
+            options: _flatOptions,
+          ),
+        ),
+      );
+      final triggerLeft = tester.getTopLeft(find.byType(SemiSelect)).dx;
+      final tagLeft = tester
+          .getTopLeft(
+            find
+                .descendant(
+                  of: find.byType(SemiSelect),
+                  matching: find.byType(SemiTag),
+                )
+                .first,
+          )
+          .dx;
+      // `$spacing-select_multiple_selection-marginLeft` (4px); the 12px
+      // single-selection inset must not stack on top (was 16px).
+      expect(tagLeft - triggerLeft, closeTo(4, 0.6));
+    });
+
     testWidgets('dropdownMatchSelectWidth floors the panel at the trigger '
         'width', (tester) async {
       await tester.pumpWidget(

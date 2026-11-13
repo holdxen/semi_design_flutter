@@ -1198,7 +1198,14 @@ class _SemiSelectState extends State<SemiSelect> {
         Expanded(
           child: Padding(
             padding: EdgeInsetsDirectional.only(
-              start: widget.prefix == null && widget.insetLabel == null
+              // The 12px `-selection` inset belongs to the single-selection
+              // area only (select.scss:161); multiple mode manages its own
+              // insets (4px tags / 8px empty wrapper) and stacking both made
+              // the tags sit ~16px off the border.
+              start:
+                  !widget.multiple &&
+                      widget.prefix == null &&
+                      widget.insetLabel == null
                   ? theme.spacingSelectSelectionMarginLeft
                   : 0,
               end: 0,
