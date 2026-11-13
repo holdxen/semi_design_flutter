@@ -378,16 +378,41 @@ class _SelectPageState extends State<SelectPage> {
           ]),
           const SizedBox(height: 40),
           _section('创建条目', [
-            SizedBox(
-              width: 240,
-              child: SemiSelect(
-                key: const ValueKey('select-create'),
-                filter: true,
-                allowCreate: true,
-                options: _options,
-                placeholder: '输入新条目并回车创建',
-                onCreate: (option) =>
-                    setState(() => _status = '创建了：${option.value}'),
+            _demo(
+              'allowCreate：输入新条目后选中「创建」行即可创建',
+              SizedBox(
+                width: 240,
+                child: SemiSelect(
+                  key: const ValueKey('select-create'),
+                  filter: true,
+                  allowCreate: true,
+                  options: _options,
+                  placeholder: '输入新条目并回车创建',
+                  onCreate: (option) =>
+                      setState(() => _status = '创建了：${option.value}'),
+                ),
+              ),
+            ),
+            _demo(
+              '自定义创建项渲染（renderCreateItem）',
+              SizedBox(
+                width: 240,
+                child: SemiSelect(
+                  key: const ValueKey('select-create-custom'),
+                  filter: true,
+                  allowCreate: true,
+                  options: _options,
+                  placeholder: '试试输入新条目',
+                  renderCreateItem: (input) => Row(
+                    children: [
+                      const SemiIcon(SemiIcons.plus, customSize: 14),
+                      const SizedBox(width: 6),
+                      Text('新建「$input」'),
+                    ],
+                  ),
+                  onCreate: (option) =>
+                      setState(() => _status = '创建了：${option.value}'),
+                ),
               ),
             ),
           ]),

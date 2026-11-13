@@ -128,6 +128,14 @@ void main() {
     expect(find.textContaining('新条目'), findsWidgets);
     await tap(tester, find.textContaining('新条目').last);
     expect(find.text('创建了：新条目'), findsOneWidget);
+    // The renderCreateItem demo replaces the default 「创建」 row.
+    await openPanel(tester, 'select-create-custom');
+    await tester.enterText(editable('select-create-custom'), '贺岁版');
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('新建「贺岁版」'), findsOneWidget);
+    await tap(tester, find.text('新建「贺岁版」'));
+    expect(find.text('创建了：贺岁版'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
