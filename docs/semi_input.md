@@ -169,7 +169,7 @@ HARDCODES（另列，`_InputMetrics` 常量 + 溯源注释）：
 - 事件对象裁剪：无 `onKeyDown/onKeyUp/onKeyPress/onInput/onComposition*`，回调不携带 DOM 事件。
 - `hideSuffix` 简化：无 `__with-suffix-hidden` 包装变体；`showClearIgnoreDisabled` 不移植（disabled/readonly 不显示清除）。
 - textarea blur 拼音残留截断保留（并推广到 Input 的 blur 复核）。
-- 输入文本行高统一 22（计划 14/22、14/22、16/22）；上游 CSS `line-height: $height-input_*`（22/30/38）是浏览器行盒撑满居中手段，本移植以固定 22px 行盒在上游精确槽位（22/30/38）内垂直居中。textarea rows 同用 22 行高（rows=4 总高 100，上游按浏览器 20px 行高为 92）。
+- 输入文本行高统一 22（计划 14/22、14/22、16/22）；上游 CSS `line-height: $height-input_*`（22/30/38）是浏览器行盒撑满居中手段，本移植以固定 22px 行盒在上游精确槽位（22/30/38）内垂直居中。**行盒由 strut 对称 half-leading 承载**（`_InputMetrics.textStrut`：文本样式不设 `TextStyle.height`，strut leading 按字体自然度量运行时计算 `(22−(ascent+descent))/fs`）——精确复刻 CSS 语义（围绕内容盒对称分配）。两个反例均实测踩坑：Flutter `TextStyle.height` 按比例放大 ascent/descent、基线下移（字形偏下 ~2px）；`StrutStyle(height: 1)` 围绕 em 方盒对称，CJK 自然盒超出 em 方盒（字形偏上 ~1.5px）。运行时方案三字体实测偏差 0.00/0.23/0.00px（Ahem/Arial/Arial Unicode）。textarea rows 同用 22 行高（rows=4 总高 100，上游按浏览器 20px 行高为 92）。
 - 圆角解析 `theme.radius.borderRadiusSmall`（默认 3px，上游 `--semi-border-radius-small: 3px`）；移植计划文案"圆角 4"与上游 token 不符，按上游。
 - IME 软键盘换行不经按键事件：不触发 onEnterPress、`disabledEnterStartNewLine` 不拦截（与上游 DOM keypress/keydown 覆盖面一致的平台差异）。
 - 上游 `:active` 按下态（fill-2 等）未单独建模（按下即聚焦）；`colorInputIconActive`、`spacingInputIconMarginLeft` 上游 CSS 声明未引用，保留为可配置字段、当前布局未消费。

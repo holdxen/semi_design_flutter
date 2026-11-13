@@ -1156,11 +1156,19 @@ void main() {
           height,
           reason: '$size',
         );
-        final style = tester
-            .widget<EditableText>(find.byType(EditableText))
-            .style;
-        expect(style.fontSize, fontSize, reason: '$size');
-        expect(style.height! * fontSize, 22, reason: '$size');
+        final edit = tester.widget<EditableText>(find.byType(EditableText));
+        expect(edit.style.fontSize, fontSize, reason: '$size');
+        // Line box 22 comes from the strut's symmetric half-leading; a
+        // scaled `TextStyle.height` would push the glyphs ~2px low (see
+        // `_InputMetrics.textStrut`).
+        expect(edit.style.height, isNull, reason: '$size');
+        final painter = TextPainter(
+          text: TextSpan(text: 'x', style: edit.style),
+          strutStyle: edit.strutStyle,
+          textDirection: TextDirection.ltr,
+        )..layout();
+        expect(painter.height, 22, reason: '$size');
+        painter.dispose();
       }
     });
 
