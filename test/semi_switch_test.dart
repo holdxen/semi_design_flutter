@@ -626,8 +626,16 @@ void main() {
           );
           final knobRect = tester.getRect(knob());
           expect(knobRect.size, Size(kw, kw));
-          expect(knobRect.top - trackRect.top, top);
-          expect(knobRect.left - trackRect.left, checked ? ctx : utx);
+          // CSS padding-box anchoring (switch.scss:8 border-box): the 1px
+          // track border sits inside the outer box, so absolute offsets land
+          // +1 from the outer edge — and the knob is centered (equal gaps).
+          expect(knobRect.top - trackRect.top, top + 1);
+          expect(knobRect.left - trackRect.left, checked ? ctx + 1 : utx + 1);
+          expect(
+            trackRect.bottom - knobRect.bottom,
+            knobRect.top - trackRect.top,
+            reason: '$size/$checked knob must be vertically centered',
+          );
           // Knob radius = knob width / 2 (constant — the pressed knob keeps
           // it while only the width stretches).
           expect(
@@ -645,15 +653,15 @@ void main() {
       await tester.pumpWidget(
         host(SemiSwitch(defaultChecked: false, onChanged: log.add)),
       );
-      expect(tester.getRect(knob()).left - tester.getRect(track()).left, 2.0);
+      expect(tester.getRect(knob()).left - tester.getRect(track()).left, 3.0);
       await tester.tap(track());
       await tester.pumpAndSettle();
       expect(log, [true]);
-      expect(tester.getRect(knob()).left - tester.getRect(track()).left, 18.0);
+      expect(tester.getRect(knob()).left - tester.getRect(track()).left, 19.0);
       await tester.tap(track());
       await tester.pumpAndSettle();
       expect(log, [true, false]);
-      expect(tester.getRect(knob()).left - tester.getRect(track()).left, 2.0);
+      expect(tester.getRect(knob()).left - tester.getRect(track()).left, 3.0);
     });
 
     testWidgets('Space toggles; Enter does not', (tester) async {
@@ -683,18 +691,18 @@ void main() {
       await tester.pumpAndSettle();
       // Reports the toggled value but does not land (foundation.ts:33-34).
       expect(log, [true]);
-      expect(tester.getRect(knob()).left - tester.getRect(track()).left, 2.0);
+      expect(tester.getRect(knob()).left - tester.getRect(track()).left, 3.0);
       // Display follows the prop.
       await tester.pumpWidget(
         host(SemiSwitch(checked: true, onChanged: log.add)),
       );
       await tester.pumpAndSettle();
-      expect(tester.getRect(knob()).left - tester.getRect(track()).left, 18.0);
+      expect(tester.getRect(knob()).left - tester.getRect(track()).left, 19.0);
       // ★ Releasing control keeps the last controlled value (rating
       // semi_rating.dart:122-129).
       await tester.pumpWidget(host(SemiSwitch(onChanged: log.add)));
       await tester.pumpAndSettle();
-      expect(tester.getRect(knob()).left - tester.getRect(track()).left, 18.0);
+      expect(tester.getRect(knob()).left - tester.getRect(track()).left, 19.0);
     });
   });
 
@@ -797,7 +805,7 @@ void main() {
       // Unchecked spin translate 2, vertically centered.
       expect(
         slot.left - trackRect.left,
-        resolved().spacingSwitchSpinUncheckedTranslateX,
+        resolved().spacingSwitchSpinUncheckedTranslateX + 1,
       );
       expect(slot.top - trackRect.top, (24 - 18) / 2);
       await tester.pumpWidget(
@@ -809,7 +817,7 @@ void main() {
       );
       expect(
         tester.getRect(spinSlot()).left - trackRect.left,
-        resolved().spacingSwitchSpinCheckedTranslateX,
+        resolved().spacingSwitchSpinCheckedTranslateX + 1,
       );
       // Size mapping: small/large (index.tsx:154).
       await tester.pumpWidget(
@@ -831,7 +839,7 @@ void main() {
       );
       expect(
         tester.getRect(spinSlot()).left - tester.getRect(track()).left,
-        resolved().spacingSwitchSpinUncheckedSmallTranslateX,
+        resolved().spacingSwitchSpinUncheckedSmallTranslateX + 1,
       );
       await tester.pumpWidget(
         host(const SemiSwitch(loading: true, size: SemiSwitchSize.large)),
@@ -910,7 +918,7 @@ void main() {
       var gesture = await tester.startGesture(tester.getCenter(track()));
       await tester.pumpAndSettle();
       expect(tester.getRect(knob()).width, 24.0);
-      expect(tester.getRect(knob()).left - tester.getRect(track()).left, 2.0);
+      expect(tester.getRect(knob()).left - tester.getRect(track()).left, 3.0);
       // Unchecked-pressed border -> fill-2 (`color-switch_default-bg-active`).
       expect(
         (trackFrameDecoration(tester).border! as Border).top.color,
@@ -930,8 +938,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.getRect(knob()).width, 24.0);
       // Checked-pressed translate 18 - 6 = 12 (`spacingSwitchCheckedTranslateX
-      // - widthSwitchKnobExpand`).
-      expect(tester.getRect(knob()).left - tester.getRect(track()).left, 12.0);
+      // - widthSwitchKnobExpand`); +1 = the 1px border (CSS padding box).
+      expect(tester.getRect(knob()).left - tester.getRect(track()).left, 13.0);
       // ★ The checked-pressed track BACKGROUND stays `success` (the `&-active`
       // field is effectively dead, 上游未消费).
       expect(
@@ -944,7 +952,7 @@ void main() {
       );
       await gesture.up();
       await tester.pumpAndSettle();
-      expect(tester.getRect(knob()).left - tester.getRect(track()).left, 18.0);
+      expect(tester.getRect(knob()).left - tester.getRect(track()).left, 19.0);
     });
 
     testWidgets('pressed knob widths per size (24/34/14) and small/large '
@@ -964,7 +972,7 @@ void main() {
         expect(tester.getRect(knob()).width, pressedW, reason: '$size');
         expect(
           tester.getRect(knob()).left - tester.getRect(track()).left,
-          pressedTx,
+          pressedTx + 1,
           reason: '$size',
         );
         await gesture.up();
@@ -989,7 +997,7 @@ void main() {
       expect(find.text('Off'), findsNothing);
       final trackRect = tester.getRect(track());
       // Checked text at the start side (20px box centered content).
-      expect(tester.getCenter(find.text('On')).dx, trackRect.left + 10);
+      expect(tester.getCenter(find.text('On')).dx, trackRect.left + 11);
       await tester.pumpWidget(
         host(
           const SemiSwitch(
@@ -1002,7 +1010,7 @@ void main() {
       expect(find.text('On'), findsNothing);
       expect(find.text('Off'), findsOneWidget);
       // Unchecked text at the end side (`right: 0` upstream).
-      expect(tester.getCenter(find.text('Off')).dx, trackRect.right - 10);
+      expect(tester.getCenter(find.text('Off')).dx, trackRect.right - 11);
     });
 
     testWidgets('small renders neither text', (tester) async {
@@ -1048,7 +1056,7 @@ void main() {
       expect(style.fontSize, 14.0);
       expect(
         tester.getCenter(find.text('On')).dx,
-        tester.getRect(track()).left + 13,
+        tester.getRect(track()).left + 14,
       );
     });
   });
@@ -1137,14 +1145,14 @@ void main() {
         host(const SemiSwitch(checked: true), direction: TextDirection.rtl),
       );
       final trackRect = tester.getRect(track());
-      // Checked knob at the end side: 40 - 18 - 18 = 4 (mirrored).
-      expect(tester.getRect(knob()).left - trackRect.left, 4.0);
+      // Checked knob at the end side: 40 - 19 - 18 = 3 (mirrored; +1 border).
+      expect(tester.getRect(knob()).left - trackRect.left, 3.0);
       await tester.pumpWidget(
         host(const SemiSwitch(checked: false), direction: TextDirection.rtl),
       );
       await tester.pumpAndSettle();
-      // Unchecked: 40 - 2 - 18 = 20.
-      expect(tester.getRect(knob()).left - trackRect.left, 20.0);
+      // Unchecked: 40 - 3 - 18 = 19 (+1 border).
+      expect(tester.getRect(knob()).left - trackRect.left, 19.0);
       // Texts swap sides: checked text to the visual right (directional
       // start), unchecked text to the visual left (directional end).
       await tester.pumpWidget(
@@ -1153,14 +1161,14 @@ void main() {
           direction: TextDirection.rtl,
         ),
       );
-      expect(tester.getCenter(find.text('On')).dx, trackRect.right - 10);
+      expect(tester.getCenter(find.text('On')).dx, trackRect.right - 11);
       await tester.pumpWidget(
         host(
           const SemiSwitch(checked: false, uncheckedText: 'Off'),
           direction: TextDirection.rtl,
         ),
       );
-      expect(tester.getCenter(find.text('Off')).dx, trackRect.left + 10);
+      expect(tester.getCenter(find.text('Off')).dx, trackRect.left + 11);
     });
 
     testWidgets('loading spin translates negate in RTL', (tester) async {
@@ -1171,7 +1179,7 @@ void main() {
       // Unchecked spin anchored at the end side + 2px mirror inset.
       expect(
         trackRect.right - tester.getRect(spinSlot()).right,
-        resolved().spacingSwitchSpinUncheckedTranslateX,
+        resolved().spacingSwitchSpinUncheckedTranslateX + 1,
       );
       await tester.pumpWidget(
         host(
@@ -1181,7 +1189,7 @@ void main() {
       );
       expect(
         trackRect.right - tester.getRect(spinSlot()).right,
-        resolved().spacingSwitchSpinCheckedTranslateX,
+        resolved().spacingSwitchSpinCheckedTranslateX + 1,
       );
     });
   });
@@ -1331,7 +1339,8 @@ void main() {
       // Outer patch field (knob width) still applies; the inner patch wins
       // its own field (checked translate) only.
       expect(tester.getSize(knob()), const Size(24, 24));
-      expect(tester.getRect(knob()).left - tester.getRect(track()).left, 30.0);
+      // +1: the 1px track border (CSS padding-box anchoring).
+      expect(tester.getRect(knob()).left - tester.getRect(track()).left, 31.0);
     });
   });
 }

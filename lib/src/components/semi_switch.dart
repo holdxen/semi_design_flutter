@@ -269,8 +269,10 @@ class _SemiSwitchState extends State<SemiSwitch> {
     final spinSize = g.spinSize;
     final spinTx = checked ? g.spinCheckedTx : g.spinUncheckedTx;
     final spin = Positioned(
-      // `&-loading` — `display: inline-flex; align-items: center;`
-      top: (g.trackH - spinSize) / 2,
+      // `&-loading` — `display: inline-flex; align-items: center;` (centered
+      // in the padding box — the stack is inset by the track border).
+      top:
+          (g.trackH - 2 * _SwitchMetrics.borderThicknessControl - spinSize) / 2,
       left: rtl ? null : spinTx,
       right: rtl ? spinTx : null,
       width: spinSize,
@@ -376,10 +378,13 @@ class _SemiSwitchState extends State<SemiSwitch> {
               onTap: _toggle,
               child: DecoratedBox(
                 // The frame (border + focus ring) paints as a FOREGROUND
-                // decoration: the border overlays the background edge without
-                // insetting the positioned children — knob/spin/text offsets
-                // anchor to the track's border box (the documented geometry:
-                // knob x == the translate values).
+                // decoration so the border does not inset the background.
+                // The positioned children below are inset by the 1px border:
+                // CSS absolute positioning offsets from the PADDING box
+                // (switch.scss:8 `box-sizing: border-box` puts the
+                // `$border-thickness-control` border inside the 40×24 track),
+                // so knob `top: 2px` etc. are padding-edge relative — the
+                // knob sits 3/3 centered in the outer box, not 2/4.
                 key: SemiSwitch.trackKey,
                 position: DecorationPosition.foreground,
                 decoration: BoxDecoration(
@@ -416,35 +421,46 @@ class _SemiSwitchState extends State<SemiSwitch> {
                     color: trackBg,
                     borderRadius: BorderRadius.circular(g.trackRadius),
                   ),
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      if (widget.loading) spin else knob,
-                      if (showCheckedText)
-                        PositionedDirectional(
-                          start: 0,
-                          top: 0,
-                          width: textW,
-                          height: g.trackH,
-                          child: _textSlot(
-                            widget.checkedText!,
-                            t.colorSwitchCheckedTextDefault,
-                            textSize,
+                  child: Padding(
+                    // CSS padding-box anchoring for the absolute children
+                    // (see the frame comment above).
+                    padding: EdgeInsets.all(
+                      _SwitchMetrics.borderThicknessControl,
+                    ),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        if (widget.loading) spin else knob,
+                        if (showCheckedText)
+                          PositionedDirectional(
+                            start: 0,
+                            top: 0,
+                            width: textW,
+                            height:
+                                g.trackH -
+                                2 * _SwitchMetrics.borderThicknessControl,
+                            child: _textSlot(
+                              widget.checkedText!,
+                              t.colorSwitchCheckedTextDefault,
+                              textSize,
+                            ),
                           ),
-                        ),
-                      if (showUncheckedText)
-                        PositionedDirectional(
-                          end: 0,
-                          top: 0,
-                          width: textW,
-                          height: g.trackH,
-                          child: _textSlot(
-                            widget.uncheckedText!,
-                            t.colorSwitchUncheckedTextDefault,
-                            textSize,
+                        if (showUncheckedText)
+                          PositionedDirectional(
+                            end: 0,
+                            top: 0,
+                            width: textW,
+                            height:
+                                g.trackH -
+                                2 * _SwitchMetrics.borderThicknessControl,
+                            child: _textSlot(
+                              widget.uncheckedText!,
+                              t.colorSwitchUncheckedTextDefault,
+                              textSize,
+                            ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
