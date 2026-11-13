@@ -142,6 +142,38 @@ void main() {
     expect(find.byType(SemiTooltipPopup), findsNothing);
   });
 
+  testWidgets('hover stays on without oscillating while the popup settles', (
+    tester,
+  ) async {
+    // Regression: the un-positioned popup used to sit at the trigger origin
+    // and steal the trigger's hover for a frame — hover-driven tooltips
+    // flapped on a 3-frame cycle (the mouse cursor flickered over slider
+    // handles). The un-measured popup is IgnorePointer'd until positioned.
+    await tester.pumpWidget(
+      _app(
+        SemiTooltip(
+          trigger: SemiTooltipTrigger.hover,
+          content: const Text('Hint'),
+          child: _trigger(),
+        ),
+      ),
+    );
+    final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await gesture.addPointer(location: Offset.zero);
+    addTearDown(gesture.removePointer);
+    await gesture.moveTo(tester.getCenter(find.byKey(_kTrigger)));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 110)); // 50ms delay + show
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 16));
+      expect(
+        find.byType(SemiTooltipPopup),
+        findsOneWidget,
+        reason: 'tooltip flapped on frame $i',
+      );
+    }
+  });
+
   testWidgets('focus shows and blur hides', (tester) async {
     final node = FocusNode();
     addTearDown(node.dispose);

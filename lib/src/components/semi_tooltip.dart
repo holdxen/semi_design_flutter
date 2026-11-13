@@ -568,7 +568,15 @@ class _SemiTooltipState extends State<SemiTooltip>
 
   Offset get _followerOffset {
     final r = _result;
-    if (r == null) return Offset.zero;
+    if (r == null) {
+      // Park the un-measured popup off the trigger: before the first
+      // position is computed the follower sits at the trigger origin, and
+      // the popup's MouseRegion would steal its own trigger's hover for a
+      // frame — hover-driven tooltips flapped on a 3-frame cycle (the mouse
+      // cursor flickered over slider handles). Upstream inserts the portal
+      // only after positioning; parking until measured mirrors that.
+      return const Offset(0, -1000);
+    }
     return Offset(r.left - _triggerOrigin.dx, r.top - _triggerOrigin.dy);
   }
 
