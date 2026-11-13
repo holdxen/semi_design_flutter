@@ -873,7 +873,15 @@ class _SemiTagInputState extends State<SemiTagInput> {
           ? SemanticsValidationResult.invalid
           : SemanticsValidationResult.none,
       child: MouseRegion(
-        cursor: disabled ? SystemMouseCursors.forbidden : MouseCursor.defer,
+        // The whole field reads as one input: I-beam everywhere except the
+        // tag chips (upstream `.semi-input` `cursor: text`, input.scss:47 —
+        // its flex-grown box carries the text cursor across the row) and the
+        // interactive bits below (close=pointer tag.scss:85, +N/clear=pointer
+        // tagInput.scss:178/270, drag handle=move :41). Disabled is
+        // `not-allowed` (tagInput.scss:109).
+        cursor: disabled
+            ? SystemMouseCursors.forbidden
+            : SystemMouseCursors.text,
         onEnter: (_) => setState(() => _hovering = true),
         onExit: (_) => setState(() {
           _hovering = false;
@@ -930,7 +938,15 @@ class _SemiTagInputState extends State<SemiTagInput> {
           top: _tagMarginY(t),
           bottom: _tagMarginY(t),
         ),
-        child: item,
+        child: MouseRegion(
+          // Tag chips show the plain arrow — the field's I-beam stops at the
+          // chips; inner slots override (close=pointer tag.scss:85,
+          // drag handle=move). Disabled defers to the root's not-allowed.
+          cursor: widget.disabled
+              ? MouseCursor.defer
+              : SystemMouseCursors.basic,
+          child: item,
+        ),
       ),
     );
   }
@@ -1240,7 +1256,9 @@ class _SemiTagInputState extends State<SemiTagInput> {
     // `@include all-center` on the slot; the tap focuses the input.
     return Center(
       child: MouseRegion(
-        cursor: widget.disabled ? MouseCursor.defer : SystemMouseCursors.click,
+        // The prefix/suffix rides the field's I-beam (the user-calibrated map:
+        // everything except tags shows the text cursor).
+        cursor: MouseCursor.defer,
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: widget.disabled ? null : _focusInput,

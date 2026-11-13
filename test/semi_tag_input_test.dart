@@ -1300,6 +1300,63 @@ void main() {
     });
   });
 
+  group('cursor map', () {
+    bool hasCursor(Finder scope, MouseCursor cursor) => find
+        .descendant(
+          of: scope,
+          matching: find.byWidgetPredicate(
+            (w) => w is MouseRegion && w.cursor == cursor,
+          ),
+        )
+        .evaluate()
+        .isNotEmpty;
+
+    testWidgets('field shows the I-beam; chips arrow; close hand', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(SemiTagInput(defaultValue: const ['x'], showClear: true)),
+      );
+      // The root region carries the field-wide I-beam (input.scss:47
+      // `cursor: text` upstream; the user-calibrated map).
+      expect(
+        find.ancestor(
+          of: find.byKey(SemiTagInput.rootKey),
+          matching: find.byWidgetPredicate(
+            (w) => w is MouseRegion && w.cursor == SystemMouseCursors.text,
+          ),
+        ),
+        findsOneWidget,
+      );
+      // The chip shows the plain arrow; its close button the hand
+      // (tag.scss:85 `&-close { cursor: pointer; }`).
+      final chip = find.byKey(SemiTagInput.tagKey(0));
+      expect(hasCursor(chip, SystemMouseCursors.basic), isTrue);
+      expect(hasCursor(chip, SystemMouseCursors.click), isTrue);
+    });
+
+    testWidgets('disabled: the field shows not-allowed; chips defer to it', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(const SemiTagInput(defaultValue: ['x'], disabled: true)),
+      );
+      expect(
+        find.ancestor(
+          of: find.byKey(SemiTagInput.rootKey),
+          matching: find.byWidgetPredicate(
+            (w) => w is MouseRegion && w.cursor == SystemMouseCursors.forbidden,
+          ),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        hasCursor(find.byKey(SemiTagInput.tagKey(0)), SystemMouseCursors.basic),
+        isFalse,
+      );
+    });
+  });
+
   group('RTL', () {
     testWidgets('tag margin flips (margin-left 4 / margin-right 0)', (
       tester,

@@ -395,6 +395,8 @@ class _SemiTagState extends State<SemiTag> {
       if (widget.closable)
         slot(
           MouseRegion(
+            // tag.scss:85 `&-close { cursor: pointer; }`.
+            cursor: SystemMouseCursors.click,
             onEnter: (_) => setState(() => _closeHover = true),
             onExit: (_) => setState(() {
               _closeHover = false;

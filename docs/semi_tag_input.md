@@ -64,6 +64,10 @@ small/normal/large ↔ 上游 `'small'/'default'/'large'`：根 min-height `heig
 
 `-focus` 类上游 = focusing || active（input 焦点或点入根内）；本移植以子树焦点近似：聚焦输入/子树即 `_active`（拖拽手柄、+N 展开、focus 行视觉随之出现），失焦消失。根点击 → 聚焦输入（≈上游点入置 active）。onBlur/onFocusChange 走 SemiInput 通道（输入焦点）；`SemiTagInputController.focus()/blur()` 同步（脱离后 no-op）。
 
+### 光标映射
+
+整框读作一个输入框：**除 tag 外一律 I-beam**（上游 `.semi-input` 的 `cursor: text`，input.scss:47——其 flex-grow 盒铺满行；本移植由根 MouseRegion 承载）；tag chip 为箭头（内层槽位各自覆盖）、tag 关闭钮为手（tag.scss:85 `cursor: pointer`）、+N/清除钮为手（tagInput.scss:178/270）、拖柄为 move（:41）、禁用组 not-allowed（:109）。前缀/后缀槽跟框（I-beam）。
+
 ### RTL
 
 标签外边距翻转为「margin-left 4 / margin-right 0」（rtl.scss:12-15，EdgeInsetsDirectional end:4 净效果一致）；输入首子 padding 翻转由 `SemiInput(bare)` 自身零水平内边距承接；拖拽手柄外边距方向化（end:4）。布局全程方向化。
