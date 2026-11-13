@@ -123,6 +123,26 @@ void main() {
       expect(triggerText('C'), findsOneWidget);
     });
 
+    testWidgets('unselected rows carry no tick icon at all', (tester) async {
+      await tester.pumpWidget(
+        _app(
+          SemiSelect(value: 'a', placeholder: 'pick', options: _flatOptions),
+        ),
+      );
+      await tester.tap(triggerText('A'));
+      await _settle(tester);
+      // Upstream hides the resting tick with a transparent colour; the port
+      // omits the icon outright so it can never ghost through renderers that
+      // ignore transparent currentColor (regression: every row showed a tick).
+      final ticks = find.descendant(
+        of: find.byType(SemiTooltipPopup),
+        matching: find.byWidgetPredicate(
+          (w) => w is SemiIcon && w.data == SemiIcons.tick,
+        ),
+      );
+      expect(ticks, findsOneWidget);
+    });
+
     testWidgets('renderSelectedItem replaces the display text', (tester) async {
       await tester.pumpWidget(
         _app(

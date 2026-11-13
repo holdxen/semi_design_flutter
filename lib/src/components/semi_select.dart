@@ -1953,19 +1953,24 @@ class _SelectOptionRowState extends State<_SelectOptionRow> {
             child: SizedBox(
               width: theme.widthSelectOptionTick,
               height: theme.widthSelectOptionTick,
-              child: IconTheme(
-                data: IconThemeData(
-                  // `&-selected .&-option-icon` paints the tick; the resting
-                  // `&-option-icon` color is transparent.
-                  color: widget.selected
-                      ? theme.colorSelectOptionIconActive
-                      : theme.colorSelectOptionIconDefault,
-                  size: theme.widthSelectOptionTick,
-                ),
-                child: const ExcludeSemantics(
-                  child: SemiIcon(SemiIcons.tick, excludeFromSemantics: true),
-                ),
-              ),
+              // Upstream always renders the tick and hides it with a
+              // transparent `&-option-icon` colour; an unselected row keeps
+              // the slot but drops the icon so the tick can never ghost
+              // through a renderer that ignores transparent currentColor.
+              child: widget.selected
+                  ? IconTheme(
+                      data: IconThemeData(
+                        color: theme.colorSelectOptionIconActive,
+                        size: theme.widthSelectOptionTick,
+                      ),
+                      child: const ExcludeSemantics(
+                        child: SemiIcon(
+                          SemiIcons.tick,
+                          excludeFromSemantics: true,
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
             ),
           ),
         Flexible(child: content),
