@@ -1574,6 +1574,18 @@ class _SemiSelectState extends State<SemiSelect> {
       // its wrapper (padding + divider) in `&-dropdown-search-wrapper`.
       bare: inTrigger,
       placeholder: inTrigger ? null : widget.searchPlaceholder,
+      // Upstream's dropdown search input renders an `IconSearch` prefix and
+      // a clear button (`selectInputProps`, index.tsx); the bare trigger
+      // input has neither. The icon is `1em` — the input's font size.
+      prefix: inTrigger
+          ? null
+          : SemiIcon(
+              SemiIcons.search,
+              customSize: widget.size == SemiInputSize.large
+                  ? _SelectMetrics.selectionLargeFontSize
+                  : global.typography.fontSizeRegular,
+            ),
+      showClear: !inTrigger,
       onChanged: widget.disabled ? null : _handleTextChanged,
       onEnterPress: _handleEnterPress,
     );

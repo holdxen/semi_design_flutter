@@ -442,6 +442,22 @@ void main() {
               as BoxDecoration;
       expect((deco.border! as Border).top.width, greaterThan(0));
       expect(deco.color, isNot(const Color(0x00000000)));
+      // Upstream pairs the dropdown input with an IconSearch prefix and a
+      // clear button (`selectInputProps`).
+      expect(
+        find.descendant(
+          of: find.byKey(SemiInput.wrapperKey),
+          matching: find.byWidgetPredicate(
+            (w) => w is SemiIcon && w.data == SemiIcons.search,
+          ),
+        ),
+        findsOneWidget,
+      );
+      // The clear button materialises on hover/text; assert the wiring.
+      expect(
+        tester.widget<SemiInput>(find.byType(SemiInput)).showClear,
+        isTrue,
+      );
     });
 
     testWidgets('the embedded search input never paints a wrapper box', (
