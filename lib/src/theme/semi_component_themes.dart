@@ -26,6 +26,7 @@ import 'semi_slider_theme_data.dart';
 import 'semi_switch_theme_data.dart';
 import 'semi_tag_input_theme_data.dart';
 import 'semi_date_picker_theme_data.dart';
+import 'semi_color_picker_theme_data.dart';
 
 @immutable
 class SemiComponentThemes {
@@ -56,6 +57,7 @@ class SemiComponentThemes {
     this.switcher = const SemiSwitchThemeData(),
     this.tagInput = const SemiTagInputThemeData(),
     this.datePicker = const SemiDatePickerThemeData(),
+    this.colorPicker = const SemiColorPickerThemeData(),
   });
   final SemiTagThemeData tag;
   final SemiTypographyThemeData typography;
@@ -86,6 +88,7 @@ class SemiComponentThemes {
   final SemiSwitchThemeData switcher;
   final SemiTagInputThemeData tagInput;
   final SemiDatePickerThemeData datePicker;
+  final SemiColorPickerThemeData colorPicker;
   SemiComponentThemes copyWith({
     SemiTagThemeData? tag,
     SemiTypographyThemeData? typography,
@@ -113,6 +116,7 @@ class SemiComponentThemes {
     SemiSwitchThemeData? switcher,
     SemiTagInputThemeData? tagInput,
     SemiDatePickerThemeData? datePicker,
+    SemiColorPickerThemeData? colorPicker,
   }) => SemiComponentThemes(
     tag: tag ?? this.tag,
     typography: typography ?? this.typography,
@@ -140,6 +144,7 @@ class SemiComponentThemes {
     switcher: switcher ?? this.switcher,
     tagInput: tagInput ?? this.tagInput,
     datePicker: datePicker ?? this.datePicker,
+    colorPicker: colorPicker ?? this.colorPicker,
   );
   @override
   bool operator ==(Object other) =>
@@ -170,7 +175,8 @@ class SemiComponentThemes {
           slider == other.slider &&
           switcher == other.switcher &&
           tagInput == other.tagInput &&
-          datePicker == other.datePicker;
+          datePicker == other.datePicker &&
+          colorPicker == other.colorPicker;
   @override
   int get hashCode => Object.hashAll([
     tag,
@@ -199,5 +205,6 @@ class SemiComponentThemes {
     switcher,
     tagInput,
     datePicker,
+    colorPicker,
   ]);
 }
