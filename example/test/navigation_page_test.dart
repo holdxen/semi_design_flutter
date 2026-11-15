@@ -99,18 +99,24 @@ Future<TestGesture> startMouse(WidgetTester tester) async {
 }
 
 /// Hover [finder] until [done] holds（tooltip/弹层首帧约 4-5 pump——
-/// known_issues.md #4）。collapsed/horizontal 的 Sub 弹层只能悬停打开
-///（点按标题双触发净关闭——组件 bug，见页面尾注）。
+/// known_issues.md #4）。collapsed/horizontal 的 Sub 弹层悬停/点按均可
+/// 开启（标题点按对可见性惰性——见页面尾注与 docs 差异清单 30）。
 Future<void> hoverUntil(
   WidgetTester tester,
   TestGesture gesture,
   Finder finder,
   bool Function() done,
 ) async {
+  // ★瞄准行命中区（MouseRegion 祖先）而非文字中心——collapsed 行文字按
+  // CSS overflow 可见语义溢出行盒外（SizedBox 截断宽 0），Flutter 命中检测
+  // 不越盒（上游 DOM 会命中溢出区）。
+  final aim = find
+      .ancestor(of: finder, matching: find.byType(MouseRegion))
+      .first;
   for (var i = 0; i < 2; i++) {
     await tester.ensureVisible(finder);
     await tester.pump(const Duration(milliseconds: 50));
-    await gesture.moveTo(tester.getCenter(finder));
+    await gesture.moveTo(tester.getCenter(aim));
     for (var j = 0; j < 5; j++) {
       await tester.pump(const Duration(milliseconds: 30));
       if (done()) return;
@@ -234,7 +240,11 @@ void main() {
     final item = nameOf('navigation-collapsed', '收起项一');
     await tester.ensureVisible(item);
     await tester.pump(const Duration(milliseconds: 50));
-    await gesture.moveTo(tester.getCenter(item));
+    // ★瞄准行命中区（文字溢出行盒外——见 hoverUntil 注）。
+    final aim = find
+        .ancestor(of: item, matching: find.byType(MouseRegion))
+        .first;
+    await gesture.moveTo(tester.getCenter(aim));
     for (var i = 0; i < 5; i++) {
       await tester.pump(const Duration(milliseconds: 30));
     }

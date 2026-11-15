@@ -1706,6 +1706,47 @@ void main() {
       expect(find.byKey(SemiNavigation.subPopupKey), findsOneWidget);
       expect(clicks, isNotEmpty);
     });
+
+    testWidgets('collapsed rail keeps icons at natural size and fades '
+        'labels (no squeeze-to-dot)', (tester) async {
+      await pumpHost(
+        tester,
+        // Center 松约束——否则测试 host 的紧宽会顶掉收起态 60px（同
+        // '60px width' 用例口径）。
+        Center(
+          child: nav(
+            items: [
+              SemiNavigationItem(
+                itemKey: 'x',
+                text: 'LabelX',
+                icon: const SemiIcon(SemiIcons.home),
+              ),
+              SemiNavigationItem(
+                itemKey: 'y',
+                text: 'LabelY',
+                icon: const SemiIcon(SemiIcons.folder),
+              ),
+            ],
+            defaultIsCollapsed: true,
+            footer: const SemiNavigationFooter(collapseButton: true),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      // ★图标按自然尺寸渲染——此前窄栏（内容约 44px）里 Flexible 把 16-20px
+      // 图标挤成点（用户可见「收起侧边栏后基本什么都没有」）；footer 收起
+      // 按钮图标同查（居中对齐会把图标顶出左缘——「闪一下就不见了」）。
+      final icons = find.byType(SemiIcon);
+      expect(icons, findsNWidgets(3));
+      for (var i = 0; i < 3; i++) {
+        expect(tester.getSize(icons.at(i)).width, greaterThanOrEqualTo(14));
+      }
+      // ★文字收起渐隐（nav:57-63 opacity: 0，仍在树上）。
+      final faded = tester
+          .widgetList<AnimatedOpacity>(find.byType(AnimatedOpacity))
+          .where((w) => w.opacity == 0);
+      expect(faded.length, greaterThanOrEqualTo(2));
+    });
   });
 
   group('horizontal mode', () {

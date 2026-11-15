@@ -21,6 +21,9 @@ import '../theme/semi_navigation_theme.dart';
 import '../theme/semi_navigation_theme_data.dart';
 import 'icon/semi_icon.dart';
 import 'icon/semi_icons.dart';
+
+import 'package:flutter/rendering.dart' show OverflowBoxFit;
+
 import 'semi_button.dart';
 import 'semi_dropdown.dart';
 import 'semi_tooltip.dart';
@@ -999,40 +1002,50 @@ class _SemiNavigationState extends State<SemiNavigation> {
     // zh_CN.ts:100-103 locale：'收起侧边栏' / '展开侧边栏'（缺省文案）。
     final label =
         widget.footer!.collapseText ?? (collapsed ? '展开侧边栏' : '收起侧边栏');
-    final content = Row(
-      mainAxisSize: MainAxisSize.min,
-      // CSS flexbox shrink 语义：收起态窄栏内图标/间距/标题均可收缩。
-      children: [
-        const Flexible(child: SemiIcon(SemiIcons.sidebar)),
-        // nav:564 `margin-left: $spacing-navigation_vertical_footer_semi_button_content_right-marginLeft`
-        // （收起按钮标题左侧外边距）+ nav:583-584 collapsed 标题 `opacity: 0`。
-        Flexible(
-          child: SizedBox(
+    final content = OverflowBox(
+      // CSS `overflow: visible` 语义（semi_button.dart:580 同配方）：收起窄栏
+      // 里按钮盒仅约 11px，图标按 20px 自然尺寸溢出作画（upstream flex 固定
+      // + overflow 可见）而非被压成点；内层 Flex 拿无界宽 → 无溢出报错
+      //（clipBehavior 不压 Flex 溢出报错——SDK flex.dart paint 恒画指示器）。
+      fit: OverflowBoxFit.deferToChild,
+      maxWidth: double.infinity,
+      // ★起点锚定（上游 flex-start 语义）：窄盒里若居中，96px 内容会把图标
+      // 顶出左缘被裁——收起动画中图标可见、收束后「闪一下就不见了」。
+      alignment: AlignmentDirectional.centerStart,
+      child: Flex(
+        direction: Axis.horizontal,
+        mainAxisSize: MainAxisSize.min,
+        // ★图标/间距固定不收缩；渐隐标题可收缩（收起时不可见）。
+        children: [
+          const SemiIcon(SemiIcons.sidebar),
+          // nav:564 `margin-left: $spacing-navigation_vertical_footer_semi_button_content_right-marginLeft`
+          // （收起按钮标题左侧外边距）+ nav:583-584 collapsed 标题 `opacity: 0`。
+          SizedBox(
             width: t
                 .spacingNavigationVerticalFooterSemiButtonContentRightMarginLeft,
           ),
-        ),
-        Flexible(
-          child: AnimatedOpacity(
-            // nav:566/:584 `transition: $motion-navigation_collapsed_opacity`
-            // ——渐隐动画消费 motionNavigationCollapsedOpacity 的 duration+curve
-            // 语义（nav:57-67 折叠渐隐 `opacity: 0` / `opacity: 1`）。
-            duration: _NavigationMetrics.parseMotionDuration(
-              t.motionNavigationCollapsedOpacity,
-            ),
-            curve: _NavigationMetrics.parseMotionCurve(
-              t.motionNavigationCollapsedOpacity,
-            ),
-            opacity: collapsed ? 0 : 1,
-            child: Text(
-              label,
-              // nav:396-397 collapse-btn 省略三连。
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+          Flexible(
+            child: AnimatedOpacity(
+              // nav:566/:584 `transition: $motion-navigation_collapsed_opacity`
+              // ——渐隐动画消费 motionNavigationCollapsedOpacity 的 duration+curve
+              // 语义（nav:57-67 折叠渐隐 `opacity: 0` / `opacity: 1`）。
+              duration: _NavigationMetrics.parseMotionDuration(
+                t.motionNavigationCollapsedOpacity,
+              ),
+              curve: _NavigationMetrics.parseMotionCurve(
+                t.motionNavigationCollapsedOpacity,
+              ),
+              opacity: collapsed ? 0 : 1,
+              child: Text(
+                label,
+                // nav:396-397 collapse-btn 省略三连。
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
     final button = SemiButton(
       content,
@@ -1281,20 +1294,10 @@ class _NavItemRowState extends State<_NavItemRow> {
             ),
           );
 
-    final rowChildren = <Widget>[
-      // CSS flexbox shrink 语义：窄帧（折叠动画）下各槽位可收缩不溢出。
-      for (final slot in leading) Flexible(child: slot),
-      if (showIconSlot)
-        Flexible(
-          child: _slot(
-            item.icon ?? const SizedBox.shrink(),
-            t,
-            gap: _iconGap(t),
-            color: iconColor,
-          ),
-        ),
-      if (textWidget != null) Flexible(child: textWidget),
-    ];
+    // 固定槽位估算（icon/toggle 槽 = min-width 20 + 间距 12）——供文字槽
+    // 截断上限用（略保守即可，CSS overflow 可见不裁图标）。
+    final slotExtent = t.widthNavigationIconLeftMinWidth + _iconGap(t);
+    final fixedSlots = leading.length + (showIconSlot ? 1 : 0);
 
     final row = AnimatedContainer(
       // MOTION 3 消费（nav:92 bg transition——0ms/easeIn/0ms 恒等注释口径照
@@ -1336,12 +1339,57 @@ class _NavItemRowState extends State<_NavItemRow> {
         // nav:81 `border-radius: $width-navigation_item-borderRadius`。
         borderRadius: BorderRadius.circular(t.widthNavigationItemBorderRadius),
       ),
-      child: Row(
-        // 弹层（Overlay 无界）/horizontal（横滚无界）shrink-wrap；主树 max 铺满。
-        mainAxisSize: widget.inPopup || widget.horizontal
-            ? MainAxisSize.min
-            : MainAxisSize.max,
-        children: rowChildren,
+      // 行内容 = LayoutBuilder + OverflowBox（CSS `overflow: visible` 语义，
+      // semi_button.dart:580 同配方）：★内层 Flex 拿无界宽布局——固定槽
+      // （图标 min-width 20 + 间距）按自然尺寸作画，收起窄栏（行内宽约
+      // 19px）里溢出可见而不是被挤成点，也无 RenderFlex 溢出报错（SDK
+      // flex.dart paint 恒画溢出指示、clipBehavior 不压）；文字槽按
+      // 「可用宽 − 固定槽估算」截断（ellipsis，收起渐隐不可见）。
+      child: LayoutBuilder(
+        builder: (context, bc) {
+          final avail = bc.maxWidth;
+          final textMax = !avail.isFinite
+              ? double.infinity
+              : (avail > slotExtent * fixedSlots
+                    ? avail - slotExtent * fixedSlots
+                    : 0.0);
+          return OverflowBox(
+            fit: OverflowBoxFit.deferToChild,
+            maxWidth: double.infinity,
+            alignment: AlignmentDirectional.centerStart,
+            child: Flex(
+              direction: Axis.horizontal,
+              // 弹层/horizontal shrink-wrap；主树由文字槽铺满可用余量。
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ...leading,
+                if (showIconSlot)
+                  _slot(
+                    item.icon ?? const SizedBox.shrink(),
+                    t,
+                    gap: _iconGap(t),
+                    color: iconColor,
+                  ),
+                if (textWidget != null)
+                  AnimatedOpacity(
+                    // nav:57-63 `.semi-navigation-collapsed .-item-text
+                    // { opacity: 0 }`——收起只隐文字（仍在树上），渐隐消费
+                    // motionNavigationCollapsedOpacity duration+curve。
+                    duration: _NavigationMetrics.parseMotionDuration(
+                      t.motionNavigationCollapsedOpacity,
+                    ),
+                    curve: _NavigationMetrics.parseMotionCurve(
+                      t.motionNavigationCollapsedOpacity,
+                    ),
+                    opacity: widget.collapsed ? 0 : 1,
+                    child: textMax == double.infinity
+                        ? textWidget
+                        : SizedBox(width: textMax, child: textWidget),
+                  ),
+              ],
+            ),
+          );
+        },
       ),
     );
 
@@ -1610,8 +1658,19 @@ class _NavSubTitleState extends State<_NavSubTitle> {
     final leading = <Widget>[];
     if (widget.toggleIconPosition == SemiNavigationToggleIconPosition.left &&
         animatedToggle != null) {
+      // 左置 toggle：收起同隐（见右侧 toggle 注——CSS :last-child 严格只隐
+      // 尾位，两置同隐并注明）；可收缩（渐隐不可见）。
       leading.add(
-        Flexible(child: _toggleSlot(animatedToggle, t, null, color: iconColor)),
+        AnimatedOpacity(
+          duration: _NavigationMetrics.parseMotionDuration(
+            t.motionNavigationCollapsedOpacity,
+          ),
+          curve: _NavigationMetrics.parseMotionCurve(
+            t.motionNavigationCollapsedOpacity,
+          ),
+          opacity: widget.collapsed ? 0 : 1,
+          child: _toggleSlot(animatedToggle, t, null, color: iconColor),
+        ),
       );
     }
     if (!widget.limitIndent && !widget.collapsed && !horiz) {
@@ -1632,66 +1691,17 @@ class _NavSubTitleState extends State<_NavSubTitle> {
         (!widget.horizontal && widget.level > 0);
     final textIsFirst = leading.isEmpty && !showIconSlot;
 
-    final children = <Widget>[
-      // CSS flexbox shrink 语义：窄帧（折叠动画）下各槽位可收缩不溢出
-      //（leading 槽位已包 Flexible）。
-      ...leading,
-      if (showIconSlot)
-        Flexible(
-          child: Padding(
-            padding: EdgeInsetsDirectional.only(
-              end: t.widthNavigationIconTextBetween,
-            ),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minWidth: t.widthNavigationIconLeftMinWidth,
-              ),
-              child: item.icon ?? const SizedBox.shrink(),
-            ),
-          ),
-        ),
-      Flexible(
-        child: Padding(
-          // nav:282 44px 缩进（同 item 规则——文本 first-child 才命中）。
-          padding: EdgeInsetsDirectional.only(
-            start: widget.level > 0 && textIsFirst
-                ? t.spacingNavigationItemPaddingX +
-                      t.widthNavigationIconLeft +
-                      t.widthNavigationIconTextBetween
-                : 0,
-          ),
-          child: DefaultTextStyle.merge(
-            // nav:87 `@include font-size-regular`。
-            style: TextStyle(
-              fontSize: _NavigationMetrics.fontSizeRegular,
-              fontWeight: weight,
-              color: textColor,
-            ),
-            child: item.text is Widget
-                ? item.text! as Widget
-                : Text(
-                    item.text?.toString() ?? '',
-                    // nav:94-97
-                    // `overflow: hidden; white-space: nowrap; text-overflow: ellipsis`。
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-          ),
-        ),
-      ),
-      if (widget.toggleIconPosition == SemiNavigationToggleIconPosition.right &&
-          animatedToggle != null)
-        Flexible(
-          child: _toggleSlot(
-            animatedToggle,
-            t,
-            widget.horizontal
-                ? t.spacingNavigationHorizontalIconLastMarginLeft
-                : null,
-            color: iconColor,
-          ),
-        ),
-    ];
+    // 固定槽位估算（icon/toggle 槽 = min-width 20 + 间距 12）——供文字槽
+    // 截断上限用（略保守即可，CSS overflow 可见不裁图标）。
+    final slotExtent =
+        t.widthNavigationIconLeftMinWidth + t.widthNavigationIconTextBetween;
+    final fixedSlots =
+        leading.length +
+        (showIconSlot ? 1 : 0) +
+        (widget.toggleIconPosition == SemiNavigationToggleIconPosition.right &&
+                animatedToggle != null
+            ? 1
+            : 0);
 
     final row = AnimatedContainer(
       duration: t.transitionDurationNavigationItemL1Bg,
@@ -1723,12 +1733,108 @@ class _NavSubTitleState extends State<_NavSubTitle> {
         color: bg,
         borderRadius: BorderRadius.circular(t.widthNavigationItemBorderRadius),
       ),
-      child: Row(
-        // 弹层（Overlay 无界）/horizontal（横滚无界）shrink-wrap；主树 max 铺满。
-        mainAxisSize: widget.inPopup || widget.horizontal
-            ? MainAxisSize.min
-            : MainAxisSize.max,
-        children: children,
+      // 行内容 = LayoutBuilder + OverflowBox（CSS `overflow: visible` 语义，
+      // semi_button.dart:580 同配方）：★内层 Flex 拿无界宽布局——固定槽按
+      // 自然尺寸作画（收起窄栏溢出可见而非挤成点、无 RenderFlex 溢出报错）；
+      // 文字槽按「可用宽 − 固定槽估算」截断（ellipsis，收起渐隐不可见）。
+      child: LayoutBuilder(
+        builder: (context, bc) {
+          final avail = bc.maxWidth;
+          final textMax = !avail.isFinite
+              ? double.infinity
+              : (avail > slotExtent * fixedSlots
+                    ? avail - slotExtent * fixedSlots
+                    : 0.0);
+          final textContent = Padding(
+            // nav:282 44px 缩进（同 item 规则——文本 first-child 才命中）。
+            padding: EdgeInsetsDirectional.only(
+              start: widget.level > 0 && textIsFirst
+                  ? t.spacingNavigationItemPaddingX +
+                        t.widthNavigationIconLeft +
+                        t.widthNavigationIconTextBetween
+                  : 0,
+            ),
+            child: DefaultTextStyle.merge(
+              // nav:87 `@include font-size-regular`。
+              style: TextStyle(
+                fontSize: _NavigationMetrics.fontSizeRegular,
+                fontWeight: weight,
+                color: textColor,
+              ),
+              child: item.text is Widget
+                  ? item.text! as Widget
+                  : Text(
+                      item.text?.toString() ?? '',
+                      // nav:94-97
+                      // `overflow: hidden; white-space: nowrap; text-overflow: ellipsis`。
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+            ),
+          );
+          return OverflowBox(
+            fit: OverflowBoxFit.deferToChild,
+            maxWidth: double.infinity,
+            alignment: AlignmentDirectional.centerStart,
+            child: Flex(
+              direction: Axis.horizontal,
+              // 弹层/horizontal shrink-wrap；主树由文字槽铺满可用余量。
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ...leading,
+                if (showIconSlot)
+                  Padding(
+                    padding: EdgeInsetsDirectional.only(
+                      end: t.widthNavigationIconTextBetween,
+                    ),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minWidth: t.widthNavigationIconLeftMinWidth,
+                      ),
+                      child: item.icon ?? const SizedBox.shrink(),
+                    ),
+                  ),
+                AnimatedOpacity(
+                  // nav:57-63 收起隐 `-item-text`（仍在树上）。
+                  duration: _NavigationMetrics.parseMotionDuration(
+                    t.motionNavigationCollapsedOpacity,
+                  ),
+                  curve: _NavigationMetrics.parseMotionCurve(
+                    t.motionNavigationCollapsedOpacity,
+                  ),
+                  opacity: widget.collapsed ? 0 : 1,
+                  child: textMax == double.infinity
+                      ? textContent
+                      : SizedBox(width: textMax, child: textContent),
+                ),
+                if (widget.toggleIconPosition ==
+                        SemiNavigationToggleIconPosition.right &&
+                    animatedToggle != null)
+                  AnimatedOpacity(
+                    // nav:64-70 `.semi-navigation-collapsed .-item-icon:last-child
+                    // { opacity: 0 }`（收起隐尾部 toggle 图标；toggle 元素带
+                    // `-item-icon` 基类——SubNav.tsx:171-173。左置 toggle 严格
+                    // CSS 不在 :last-child 之列，此处两置同隐并注明）。
+                    duration: _NavigationMetrics.parseMotionDuration(
+                      t.motionNavigationCollapsedOpacity,
+                    ),
+                    curve: _NavigationMetrics.parseMotionCurve(
+                      t.motionNavigationCollapsedOpacity,
+                    ),
+                    opacity: widget.collapsed ? 0 : 1,
+                    child: _toggleSlot(
+                      animatedToggle,
+                      t,
+                      widget.horizontal
+                          ? t.spacingNavigationHorizontalIconLastMarginLeft
+                          : null,
+                      color: iconColor,
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
       ),
     );
 
