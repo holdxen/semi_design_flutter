@@ -1208,6 +1208,42 @@ void main() {
   });
 
   group('range', () {
+    testWidgets('uncontrolled defaultValue is seed-only: equal-value list '
+        'churn does not roll the selection back', (tester) async {
+      late StateSetter rebuild;
+      await pumpHost(
+        tester,
+        StatefulBuilder(
+          builder: (context, setState) {
+            rebuild = setState;
+            // A fresh equal-valued literal per build — the caller-side
+            // identity churn that used to re-init and undo the selection.
+            return picker(
+              type: SemiTimePickerType.timeRange,
+              defaultValue: [
+                DateTime(2024, 1, 1, 9, 30),
+                DateTime(2024, 1, 1, 18, 45),
+              ],
+            );
+          },
+        ),
+      );
+      expect(inputText(tester), '09:30:00 ~ 18:45:00');
+      await openPicker(tester);
+      await tapRow(
+        tester,
+        find.descendant(
+          of: find.byKey(SemiTimePicker.hourListKey).at(0),
+          matching: find.text('05时'),
+        ),
+      );
+      expect(inputText(tester), '05:30:00 ~ 18:45:00');
+      // Parent rebuilds with an equal-valued but distinct list literal.
+      rebuild(() {});
+      await tester.pumpAndSettle();
+      expect(inputText(tester), '05:30:00 ~ 18:45:00');
+    });
+
     testWidgets('two independent panels with joined display', (tester) async {
       final changes = <(Object?, Object?)>[];
       await pumpHost(

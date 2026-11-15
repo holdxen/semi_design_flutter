@@ -273,10 +273,12 @@ class _SemiTimePickerState extends State<SemiTimePicker> {
     }
     // ★释放控制（value 非空→空）保留最后显示值（semi_rating 先例）；进入控制
     // 或受控值/格式变化时重建内部状态（foundation.refreshProps）。
+    // ★defaultValue 仅初值语义（上游 React 同款——getInitialState 只跑一次），
+    // 不进重建条件：范围的内联 List 字面量每次重建都是新实例（恒等比较不等），
+    // 若参与重建会把已选值回滚到种子（TimePickerPage 实测）。
     final released = oldWidget.value != null && widget.value == null;
     if (!released &&
         (oldWidget.value != widget.value ||
-            oldWidget.defaultValue != widget.defaultValue ||
             oldWidget.type != widget.type ||
             oldWidget.format != widget.format ||
             oldWidget.use12Hours != widget.use12Hours)) {

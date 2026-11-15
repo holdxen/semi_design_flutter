@@ -115,6 +115,7 @@ type `SemiTimePickerType.time`（| timeRange）。value/defaultValue `Object?`�
 22. **`$radius-timePicker_input` 未消费注记**：触发器圆角由 SemiInput input 主题承担（本移植由 SemiInput input 主题承担（字段未消费）——非死变量，上游 timePicker.scss:122 消费于 `.semi-timepicker-input`）。
 23. **受控惯例**：`value != null` 即受控（项目惯例）；★上游 truthiness（`value = value || defaultValue`，`''`/`0` 值会被 defaultValue 覆盖）——本移植 `??` 语义，`0` 时间戳/空串 value 保持受控。
 24. **invalid 落点**：上游 `handleInputChange`/`handlePanelChange` 仅非受控落 invalid（`refreshProps` 在受控值变化时重算）；本移植同口径（受控打字不置 error，blur 清 error）。
+25. **defaultValue 仅初值语义**（★照搬，上游 React `getInitialState` 只跑一次）：内部状态重建仅由受控值或结构（type/format/use12Hours）变化触发；`defaultValue` 引用变化（如范围内联 `List` 字面量每次重建都是新实例）不重置已选值。
 
 ## 用法
 
