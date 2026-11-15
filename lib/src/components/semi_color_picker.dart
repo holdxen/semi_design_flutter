@@ -5,7 +5,8 @@
 // (20 = 20 FIELDS + 0 MOTION + 0 INTERNAL — the module has no animation.scss
 // and zero dead variables). The 另列 HARDCODES (SV double-gradient overlay,
 // inset shadow, alpha checkerboard, hue rainbow, slider/handle sizes, 20x20
-// demo block, `%` suffix, `rgbaToHex` lowercase, 2px handle border) live in
+// demo block, `%` suffix, `rgbaToHex` lowercase, 2px handle border, the
+// shadow-elevated pair on the usePopover surface) live in
 // `_ColorPickerMetrics` / the call sites below, each with its raw snippet.
 //
 // Port notes (docs/semi_color_picker.md holds the full difference list):
@@ -25,6 +26,7 @@ import 'package:flutter/widgets.dart';
 import '../overlay/tooltip_positioning.dart';
 import '../theme/semi_color_picker_theme.dart';
 import '../theme/semi_color_picker_theme_data.dart';
+import '../theme/semi_theme.dart';
 import 'icon/semi_icon.dart';
 import 'icon/semi_icons.dart';
 import 'semi_button.dart';
@@ -703,12 +705,36 @@ class _SemiColorPickerState extends State<SemiColorPicker> {
     final theme = SemiColorPickerTheme.resolve(context);
     final panel = _buildPanel(theme);
     if (!widget.usePopover) return panel;
+    // `usePopover`: hover popover with a bare popup (showArrow: false,
+    // popupBare: true). Upstream mounts the panel in a `Popover` whose own
+    // surface paints the white background; `popupBare` skips that surface,
+    // so the port draws it here — the semi_select.dart `_buildPanel` recipe:
+    // popover.scss `$color-popover-bg-default: var(--semi-color-bg-3)` +
+    // `$color-popover-border-default: var(--semi-color-border)` (1px) +
+    // `$radius-popover: var(--semi-border-radius-medium)` + the
+    // `@include shadow-elevated` pair. The 8px content padding inside is
+    // colorPicker.scss `&-popover { padding:
+    // $spacing-colorPicker_popover-padding; }`.
+    final global = SemiTheme.of(context);
+    final radius = global.radius.borderRadiusMedium.value;
     return SemiTooltip(
-      // `usePopover`: hover popover with a bare popup (showArrow: false,
-      // popupBare: true); the 8px content padding is the popover theme field.
-      content: Padding(
-        padding: EdgeInsets.all(theme.spacingColorPickerPopoverPadding),
-        child: panel,
+      content: DecoratedBox(
+        decoration: BoxDecoration(
+          color: global.colors.colorBg3,
+          border: Border.all(width: 1, color: global.colors.colorBorder),
+          borderRadius: BorderRadius.circular(radius),
+          boxShadow: const [
+            _ColorPickerMetrics.shadowElevatedBlur,
+            _ColorPickerMetrics.shadowElevatedDrop,
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(radius),
+          child: Padding(
+            padding: EdgeInsets.all(theme.spacingColorPickerPopoverPadding),
+            child: panel,
+          ),
+        ),
       ),
       trigger: SemiTooltipTrigger.hover,
       showArrow: false,
@@ -1485,4 +1511,20 @@ abstract final class _ColorPickerMetrics {
 
   /// DataPart/index.tsx:68 — `minWidth: 20, minHeight: 20` demo block.
   static const double demoBlockSize = 20;
+
+  /// `0 0 1px rgba(0, 0, 0, .3)` / `0 4px 14px rgba(0, 0, 0, .1)` — the two
+  /// box-shadow layers of the `@include shadow-elevated` mixin
+  /// (packages/semi-theme-default/scss/global.scss) painting the Popover
+  /// surface that hosts the panel (popover.scss); hardcoded to the light
+  /// token values (same pair as _SelectMetrics.shadowElevated*,
+  /// docs/semi_select.md).
+  static const BoxShadow shadowElevatedBlur = BoxShadow(
+    color: Color.fromRGBO(0, 0, 0, 0.3),
+    blurRadius: 1,
+  );
+  static const BoxShadow shadowElevatedDrop = BoxShadow(
+    color: Color.fromRGBO(0, 0, 0, 0.1),
+    offset: Offset(0, 4),
+    blurRadius: 14,
+  );
 }

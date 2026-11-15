@@ -1,5 +1,5 @@
 // Behavior matrix for SemiColorPicker plus coverage for the 20 Sass
-// declarations (20 FIELDS + 0 MOTION + 0 INTERNAL) — the 11 HARDCODES
+// declarations (20 FIELDS + 0 MOTION + 0 INTERNAL) — the 12 HARDCODES
 // provenance anchors live in the widget's `_ColorPickerMetrics` / call sites.
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -892,6 +892,58 @@ void main() {
       await tester.pump();
       expect(opens, [true, false]);
     });
+
+    testWidgets('the popover paints the Popover surface (bg-3 + 1px border + '
+        'medium radius + shadow-elevated) under the panel', (tester) async {
+      await tester.pumpWidget(
+        host(
+          const SemiColorPicker(
+            usePopover: true,
+            motion: false,
+            defaultValue: SemiColorValue(h: 0, s: 100, v: 100),
+          ),
+        ),
+      );
+      final swatch = tester.getRect(
+        find.byKey(SemiColorPicker.triggerSwatchKey),
+      );
+      final gesture = await startMouse(tester);
+      await gesture.moveTo(swatch.center);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 60));
+      await tester.pump();
+      await tester.pump();
+      expect(find.byKey(SemiColorPicker.svAreaKey), findsOneWidget);
+      // The surface is the DecoratedBox ancestor of the panel content
+      // (popupBare draws no surface of its own — the port paints the
+      // Popover skin: bg + border + radius + 2 shadows).
+      final surfaces = tester
+          .widgetList<DecoratedBox>(
+            find.ancestor(
+              of: find.byKey(SemiColorPicker.svAreaKey),
+              matching: find.byType(DecoratedBox),
+            ),
+          )
+          .where((w) {
+            final d = w.decoration;
+            return d is BoxDecoration &&
+                d.color != null &&
+                d.border != null &&
+                d.borderRadius != null &&
+                (d.boxShadow?.length ?? 0) == 2;
+          })
+          .toList();
+      expect(surfaces, hasLength(1));
+      final box = surfaces.single.decoration as BoxDecoration;
+      // popover.scss `$color-popover-bg-default: var(--semi-color-bg-3)`.
+      expect(box.color, const SemiThemeData.light().colors.colorBg3);
+      // `$color-popover-border-default: var(--semi-color-border)`, 1px.
+      expect(box.border!.top.width, 1);
+      expect(
+        box.border!.top.color,
+        const SemiThemeData.light().colors.colorBorder,
+      );
+    });
   });
 
   group('topSlot / bottomSlot', () {
@@ -1126,7 +1178,7 @@ void main() {
       expect(names, hasLength(20));
     });
 
-    test('the 11 HARDCODES anchors live in the widget source', () {
+    test('the 12 HARDCODES anchors live in the widget source', () {
       final widgetSource = File('lib/src/components/semi_color_picker.dart')
           .readAsStringSync();
       const anchors = [
@@ -1146,6 +1198,7 @@ void main() {
         '}>%</span>',
         'padStart(2, \'0\').toLowerCase()',
         '2px',
+        '`0 0 1px rgba(0, 0, 0, .3)` / `0 4px 14px rgba(0, 0, 0, .1)`',
       ];
       for (final anchor in anchors) {
         expect(widgetSource, contains(anchor), reason: anchor);

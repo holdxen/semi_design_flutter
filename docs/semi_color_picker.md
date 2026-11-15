@@ -8,7 +8,7 @@
 
 `SemiColorPicker({key, value, defaultValue, alpha, width, height, defaultFormat, usePopover, child, position, autoAdjustOverflow, motion, eyeDropper, onEyeDropper, onChanged, onOpenChange, topSlot, bottomSlot})`。
 
-value `SemiColorValue?` 非空即受控；defaultValue `SemiColorValue?` 非受控种子（默认品牌值）。alpha false（渲染透明度滑条与 `%` 输入；★false 时每次提交强制 `a = 1` / 6 位 hex——见行为）。width 280（SV/滑条/数据区共宽）、height 280（SV 区高）。defaultFormat `SemiColorFormat.hex`（hex|rgba|hsva，格式 Select 的初值与选项集——labels = values）。usePopover false（true 时面板挂 hover 弹层，`SemiTooltip(trigger: hover, showArrow: false, popupBare: true, position, autoAdjustOverflow, motion)`，内容外包 `spacingColorPickerPopoverPadding` 8px 内边距）；child `Widget?` 弹层触发器（null 渲染默认 24×24 色块——`width-colorPicker-defaultTrigger` + `radiusColorPickerDefaultTrigger`，背景 = 当前 hex）。position `SemiTooltipPosition.bottom`（上游 Popover 默认）、autoAdjustOverflow true、motion true。eyeDropper true（★仅当 `onEyeDropper` 也存在时才渲染取色按钮——上游 `window.EyeDropper` 门的移植）。onEyeDropper `Future<Object?>? Function()?` 取色器宿主桥（WICG EyeDropper 无 Flutter 通道，差异清单）：返回 hex/`rgba(…)` 字符串或 `SemiColorValue`。onChanged `ValueChanged<SemiColorValue>?`。onOpenChange `ValueChanged<bool>?`（弹层开合）。topSlot/bottomSlot `Widget?` 面板内容上下插槽。静态 key：`svAreaKey`/`hueSliderKey`/`alphaSliderKey`/`swatchKey`/`triggerSwatchKey`/`colorInputKey`/`alphaInputKey`/`formatSelectKey`/`eyeDropperButtonKey`。
+value `SemiColorValue?` 非空即受控；defaultValue `SemiColorValue?` 非受控种子（默认品牌值）。alpha false（渲染透明度滑条与 `%` 输入；★false 时每次提交强制 `a = 1` / 6 位 hex——见行为）。width 280（SV/滑条/数据区共宽）、height 280（SV 区高）。defaultFormat `SemiColorFormat.hex`（hex|rgba|hsva，格式 Select 的初值与选项集——labels = values）。usePopover false（true 时面板挂 hover 弹层，`SemiTooltip(trigger: hover, showArrow: false, popupBare: true, position, autoAdjustOverflow, motion)`，内容自绘 Popover 表面——bg-3 底 + 1px border + radius-medium + shadow-elevated 双影——内包 `spacingColorPickerPopoverPadding` 8px 内边距）；child `Widget?` 弹层触发器（null 渲染默认 24×24 色块——`width-colorPicker-defaultTrigger` + `radiusColorPickerDefaultTrigger`，背景 = 当前 hex）。position `SemiTooltipPosition.bottom`（上游 Popover 默认）、autoAdjustOverflow true、motion true。eyeDropper true（★仅当 `onEyeDropper` 也存在时才渲染取色按钮——上游 `window.EyeDropper` 门的移植）。onEyeDropper `Future<Object?>? Function()?` 取色器宿主桥（WICG EyeDropper 无 Flutter 通道，差异清单）：返回 hex/`rgba(…)` 字符串或 `SemiColorValue`。onChanged `ValueChanged<SemiColorValue>?`。onOpenChange `ValueChanged<bool>?`（弹层开合）。topSlot/bottomSlot `Widget?` 面板内容上下插槽。静态 key：`svAreaKey`/`hueSliderKey`/`alphaSliderKey`/`swatchKey`/`triggerSwatchKey`/`colorInputKey`/`alphaInputKey`/`formatSelectKey`/`eyeDropperButtonKey`。
 
 回调语义：每次交互（SV/色相/透明度拖拽、文本输入合法提交、`%` 输入、取色器结果）发一次 `onChanged`（拖拽逐 move 上报，无去重——上游 mousemove 逐发）。
 
@@ -40,7 +40,7 @@ value `SemiColorValue?` 非空即受控；defaultValue `SemiColorValue?` 非受�
 
 ### usePopover 与插槽
 
-`usePopover: true`：面板挂 SemiTooltip hover 弹层（showArrow false、popupBare、position/autoAdjustOverflow/motion 透传、内容 8px 内边距），触发器 `child ?? 默认 24×24 色块`（背景 = 当前 hex），`onOpenChange(bool)` 报开合。inline（默认）直接渲染面板。topSlot/bottomSlot 包裹面板控件上下（上游 `topSlot`/`bottomSlot`）。
+`usePopover: true`：面板挂 SemiTooltip hover 弹层（showArrow false、popupBare、position/autoAdjustOverflow/motion 透传）。★popupBare 不带表面，白底由本移植自绘（上游是 Popover 组件皮肤）：`$color-popover-bg-default`(bg-3) + 1px `$color-popover-border-default`(border) + `$radius-popover`(radius-medium) + shadow-elevated 双影（popover.scss/global.scss，semi_select.dart `_buildPanel` 同方），内容再包 `spacingColorPickerPopoverPadding` 8px 内边距。触发器 `child ?? 默认 24×24 色块`（背景 = 当前 hex），`onOpenChange(bool)` 报开合。inline（默认）直接渲染面板（无表面——上游内联形态同样无 Popover 包装）。topSlot/bottomSlot 包裹面板控件上下（上游 `topSlot`/`bottomSlot`）。
 
 ### 几何
 
@@ -96,6 +96,7 @@ SV 面板 pointer（拖拽 grabbing，index.tsx:99）、把手 grab（grabbing �
 | `}>%</span>` | `%` 后缀槽（DataPart/index.tsx:101） |
 | `padStart(2, '0').toLowerCase()` | `rgbaToHex` 小写规则（convert.ts:182） |
 | 2px 把手白边 | `widthColorPickerHandleBorder` + `colorColorPickerHandleBorder`（B 表锚点，值走主题） |
+| Popover 表面皮肤（bg-3 底 + 1px border + radius-medium + `@include shadow-elevated` 双影） | usePopover 弹层白底（popover.scss `$color-popover-*` + global.scss shadow-elevated mixin；popupBare 无表面故自绘，semi_select.dart `_buildPanel` 同方） |
 
 ## 差异清单
 
@@ -106,6 +107,6 @@ SV 面板 pointer（拖拽 grabbing，index.tsx:99）、把手 grab（grabbing �
 5. **格式 Select 用 SemiSelect**（nested overlay 的 SemiOverlayPointerExempt 机制覆盖）；上游 `optionList` → `options: SemiSelectOption(value: name)`（labels = values）。
 6. **`%` 输入用 SemiInputNumber**（`hideButtons: true` + `%` 后缀槽）对位上游 `InputNumber hideButtons` + suffix span；宽度 58px 走主题字段。
 7. **InputGroup 连体边框未移植**：上游输入组（Input + InputNumber + Select）有 InputGroup 连接样式，本移植为普通 Row（各控件自带边框）。
-8. **`className`/`style`/`inputProps`/`popoverProps` 不移植**（粒度裁剪）：`position`/`autoAdjustOverflow`/`motion` 直接参数化；弹层无 `repositionKey`（hover 弹层尺寸恒定）。
+8. **`className`/`style`/`inputProps`/`popoverProps` 不移植**（粒度裁剪）：`position`/`autoAdjustOverflow`/`motion` 直接参数化；弹层无 `repositionKey`（hover 弹层尺寸恒定）。★弹层白底：上游由 Popover 组件自带表面渲染，本移植 popupBare 模式自绘同款皮肤（B 表末行）。
 9. **把手位置微差**：受控不回吐时上游把手停在原始指针点（未量化），本移植统一停在量化值点（≤1px）；无视觉可感差异。
 10. **无键盘/RTL/Form**：上游即无（仅 SemiInput/SemiSelect/SemiInputNumber 自带）；滑条数学 LTR-only，RTL 未适配（note）。
