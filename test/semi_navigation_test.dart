@@ -1853,6 +1853,36 @@ void main() {
   });
 
   group('toggleIconPosition, limitIndent, expandIcon', () {
+    testWidgets('toggle chevron stays grey while the Sub is selected '
+        '(state colors paint only the first icon)', (tester) async {
+      final t = const SemiThemeData.light();
+      await pumpHost(
+        tester,
+        nav(items: nestedItems(), defaultSelectedKeys: const ['a']),
+      );
+      await tester.pumpAndSettle();
+      // 选中子项自动附父 key → Sub 标题亮 selected；但 toggle 箭头恒灰
+      //（mixin.scss 状态系只染 `.item-icon:first-child`）。
+      final chevron = tester
+          .widgetList<SemiIcon>(find.byType(SemiIcon))
+          .firstWhere(
+            (w) =>
+                w.data == SemiIcons.chevronDown ||
+                w.data == SemiIcons.chevronUp,
+          );
+      final iconFinder = find.byWidget(chevron);
+      final styles = tester
+          .widgetList<DefaultTextStyle>(
+            find.ancestor(
+              of: iconFinder,
+              matching: find.byType(DefaultTextStyle),
+            ),
+          )
+          .map((w) => w.style.color);
+      expect(styles.any((c) => c == t.colors.colorPrimary), isFalse);
+      expect(styles.any((c) => c == t.colors.colorText2), isTrue);
+    });
+
     testWidgets('expandIcon replaces the default chevron', (tester) async {
       await pumpHost(
         tester,

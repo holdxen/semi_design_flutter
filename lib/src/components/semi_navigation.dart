@@ -22,6 +22,8 @@ import '../theme/semi_navigation_theme_data.dart';
 import 'icon/semi_icon.dart';
 import 'icon/semi_icons.dart';
 
+import 'dart:async';
+
 import 'package:flutter/rendering.dart' show OverflowBoxFit;
 
 import 'semi_button.dart';
@@ -278,6 +280,11 @@ class SemiNavigation extends StatefulWidget {
 }
 
 class _SemiNavigationState extends State<SemiNavigation> {
+  /// 标题悬停跟踪（弹层开合的假 exit 防抖用——见 `_handlePopupVisible`）。
+  final _subHover = <Object, bool>{};
+  final _subPendingClose = <Object, bool>{};
+  Timer? _subHoverTimer;
+
   /// 有效选中键（含自动附的一级父 key——index.tsx:252-258）。
   List<Object> _selectedKeys = const [];
 
@@ -489,8 +496,20 @@ class _SemiNavigationState extends State<SemiNavigation> {
 
   /// 弹层可见性变更（subNavFoundation.ts:71-90 `handleDropdownVisibleChange`
   /// ——只 notifyGlobalOpenChange 不发 onClick）。
-  void _handlePopupVisible(SemiNavigationItem item, bool visible) {
+  void _handlePopupVisible(
+    SemiNavigationItem item,
+    bool visible, {
+    bool force = false,
+  }) {
     if (visible == _openKeys.contains(item.itemKey)) {
+      return;
+    }
+    // ★假 exit 防抖（web 实测）：弹层开合瞬间 tooltip hover 区会虚报
+    // onExit（指针未动也 open→close 抖动、弹层一闪即逝）——标题仍在悬停
+    // 时挂起关闭，待真实离开（去抖后的 _subHover=false）再执行。
+    // [force] 用于组件自身的主动关闭（弹层内点条目）。
+    if (!force && !visible && (_subHover[item.itemKey] ?? false)) {
+      _subPendingClose[item.itemKey] = true;
       return;
     }
     _applyOpen(item.itemKey, visible, notifyClick: false);
@@ -856,7 +875,7 @@ class _SemiNavigationState extends State<SemiNavigation> {
           inPopup: childInPopup,
           // 弹层内点条目即收起（近似 Dropdown.Item 行为，见差异清单 23）。
           onAfterTap: (collapsed || horizontal)
-              ? () => _handlePopupVisible(item, false)
+              ? () => _handlePopupVisible(item, false, force: true)
               : null,
           t: t,
         ),
@@ -892,10 +911,35 @@ class _SemiNavigationState extends State<SemiNavigation> {
         // `DEFAULT_SUBNAV_CLOSE_DELAY: 100`。
         mouseEnterDelay: _NavigationMetrics.subNavOpenDelay,
         mouseLeaveDelay: _NavigationMetrics.subNavCloseDelay,
+        // ★弹层不走淡入动画：web 实测受控 hover 弹层动画疑似滞留 0 透明度
+        // （弹层挂载却不可见）——直出规避；上游 Dropdown 本无显式 motion 语义。
+        motion: false,
         visible: isOpen,
         onVisibleChange: (visible) => _handlePopupVisible(item, visible),
         content: popup,
-        child: title,
+        child: MouseRegion(
+          // 标题悬停跟踪（假 exit 防抖的真值来源）——enter 即真、exit 去抖
+          // 150ms 才置假：弹层开合的假 exit/enter 对在此抵消，真实离开才放行
+          // 挂起的关闭（弹层内 hover 的桥接由 tooltip 自身负责）。
+          onEnter: (_) {
+            _subHoverTimer?.cancel();
+            setState(() {
+              _subHover[item.itemKey] = true;
+              _subPendingClose.remove(item.itemKey);
+            });
+          },
+          onExit: (_) {
+            _subHoverTimer?.cancel();
+            _subHoverTimer = Timer(const Duration(milliseconds: 150), () {
+              if (!mounted) return;
+              setState(() => _subHover[item.itemKey] = false);
+              if (_subPendingClose.remove(item.itemKey) == true) {
+                _applyOpen(item.itemKey, false, notifyClick: false);
+              }
+            });
+          },
+          child: title,
+        ),
       );
     }
 
@@ -1593,6 +1637,17 @@ class _NavSubTitleState extends State<_NavSubTitle> {
       iconColor = t.colorNavigationItemL1IconDefault;
     }
 
+    // ★toggle（上/下箭头）恒灰——mixin.scss 全状态系只染 `.item-icon:first-child`
+    // （首图标），disabled mixin 才双染（`item-icon, item-icon:first-child`）；
+    // toggle 基色 nav:173/180 `$color-navigation_itemL1_icon-default`（text-2）。
+    final toggleColor = disabled
+        ? (horiz
+              ? t.colorNavigationHorizontalItemL1DisabledIconDefault
+              : t.colorNavigationItemL1DisabledIconDefault)
+        : (horiz
+              ? t.colorNavigationHorizontalItemL1IconDefault
+              : t.colorNavigationItemL1IconDefault);
+
     // 字重：顶层 sub-title 600（nav:43-45）、selected 600（nav:445）、disabled
     // 600（nav:457）、弹层 400（nav:88 基准）、弹层选中 400（nav:732-734
     // `normal` 关键字 quirk）。
@@ -1655,7 +1710,7 @@ class _NavSubTitleState extends State<_NavSubTitle> {
             t.motionNavigationCollapsedOpacity,
           ),
           opacity: widget.collapsed ? 0 : 1,
-          child: _toggleSlot(animatedToggle, t, null, color: iconColor),
+          child: _toggleSlot(animatedToggle, t, null, color: toggleColor),
         ),
       );
     }
@@ -1814,7 +1869,7 @@ class _NavSubTitleState extends State<_NavSubTitle> {
                       widget.horizontal
                           ? t.spacingNavigationHorizontalIconLastMarginLeft
                           : null,
-                      color: iconColor,
+                      color: toggleColor,
                     ),
                   ),
               ],
