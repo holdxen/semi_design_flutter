@@ -232,6 +232,7 @@ Enter 激活条目/Sub 标题（itemFoundation.ts:101-110、subNavFoundation.ts:
 27. **className/style 等裁剪**：`className`/`style`/`getDataAttr`/`prefixCls`/`linkOptions` 不移植（Flutter 无 CSS 类）。
 28. **aria 近似**：`role="menu"/"menuitem"`/`aria-expanded`/`aria-disabled` 以 Semantics(button/selected/expanded) 近似。
 29. **Form/多语言上游即无**：上游 Navigation 无 Form 语义接入；locale 仅 zh 两串硬编码（zh_CN.ts:100-103）。
+30. **弹层可见性语义**（★照搬）：collapsed/horizontal 的 Sub 弹层是 hover/tap-兜底语义（wrapDropdown `trigger: 'hover'`，SubNav.tsx:311-313）——hover/SemiTooltip touch-tap 兜底**开启**，★标题点按对弹层可见性**惰性**（上游点击只动 openKeys 不驱动弹层、仅发 onClick），关闭走移出/外点；本移植同口径（标题 tap 只发 onClick 不翻转可见性——此前 tap-toggle 会把兜底刚开的弹层立刻关掉，实测净效果恒关，已修复并有回归测试）。
 
 ## 用法
 

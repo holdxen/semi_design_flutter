@@ -1678,6 +1678,34 @@ void main() {
       expect(find.byKey(SemiNavigation.subPopupKey), findsNothing);
       expect(opens.last.isOpen, isFalse);
     });
+
+    testWidgets('collapsed Sub tap opens the popup and the title tap does not '
+        'flip it shut (tap-fallback vs toggle conflict)', (tester) async {
+      final clicks = <SemiNavigationClickInfo>[];
+      await pumpHost(
+        tester,
+        nav(
+          items: nestedItems(),
+          defaultIsCollapsed: true,
+          onClick: clicks.add,
+        ),
+      );
+      await neutralTap(tester);
+      // ★tap alone（无 hover）走 SemiTooltip touch-tap 兜底开启弹层；标题 tap
+      // 对弹层可见性惰性（上游 wrapDropdown trigger:'hover' 语义）——此前
+      // tap-toggle 会把兜底刚开的弹层立刻关掉（净效果恒关）。
+      await tester.tap(find.text('Sub1'));
+      for (var i = 0; i < 5; i++) {
+        await tester.pump(const Duration(milliseconds: 30));
+      }
+      expect(find.byKey(SemiNavigation.subPopupKey), findsOneWidget);
+      expect(find.text('ChildA'), findsOneWidget);
+      // 再点标题：可见性不翻转（关闭走移出/外点），onClick 照发。
+      await tester.tap(find.text('Sub1'));
+      await tester.pump(const Duration(milliseconds: 60));
+      expect(find.byKey(SemiNavigation.subPopupKey), findsOneWidget);
+      expect(clicks, isNotEmpty);
+    });
   });
 
   group('horizontal mode', () {

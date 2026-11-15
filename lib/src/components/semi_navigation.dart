@@ -430,6 +430,22 @@ class _SemiNavigationState extends State<SemiNavigation> {
       return;
     }
     final isOpen = _openKeys.contains(item.itemKey);
+    // ★弹层模式（collapsed/horizontal）标题点击对弹层可见性**惰性**——上游
+    // wrapDropdown 是 `trigger: 'hover'`（SubNav.tsx:311-313），弹层可见性归
+    // tooltip 内部，openKeys 不驱动它；点击只走 notifyGlobalOnClick。开启走
+    // hover/SemiTooltip touch-tap 兜底（→ `_handlePopupVisible` 同步 openKeys），
+    // 关闭走移出/外点。此前 tap-toggle 会把 tap 兜底刚开的弹层立刻关掉（净
+    // 效果恒关）。
+    if (_isCollapsed || widget.mode == SemiNavigationMode.horizontal) {
+      widget.onClick?.call(
+        SemiNavigationClickInfo(
+          itemKey: item.itemKey,
+          openKeys: List<Object>.of(_openKeys),
+          isOpen: isOpen,
+        ),
+      );
+      return;
+    }
     _applyOpen(item.itemKey, !isOpen);
   }
 
