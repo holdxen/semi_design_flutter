@@ -105,6 +105,9 @@ export 'src/theme/semi_date_picker_theme_data.dart';
 export 'src/components/semi_color_picker.dart';
 export 'src/theme/semi_color_picker_theme.dart';
 export 'src/theme/semi_color_picker_theme_data.dart';
+export 'src/components/semi_time_picker.dart';
+export 'src/theme/semi_time_picker_theme.dart';
+export 'src/theme/semi_time_picker_theme_data.dart';
 
 /// A Calculator.
 class Calculator {

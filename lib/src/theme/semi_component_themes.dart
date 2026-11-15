@@ -27,6 +27,7 @@ import 'semi_switch_theme_data.dart';
 import 'semi_tag_input_theme_data.dart';
 import 'semi_date_picker_theme_data.dart';
 import 'semi_color_picker_theme_data.dart';
+import 'semi_time_picker_theme_data.dart';
 
 @immutable
 class SemiComponentThemes {
@@ -58,6 +59,7 @@ class SemiComponentThemes {
     this.tagInput = const SemiTagInputThemeData(),
     this.datePicker = const SemiDatePickerThemeData(),
     this.colorPicker = const SemiColorPickerThemeData(),
+    this.timePicker = const SemiTimePickerThemeData(),
   });
   final SemiTagThemeData tag;
   final SemiTypographyThemeData typography;
@@ -89,6 +91,7 @@ class SemiComponentThemes {
   final SemiTagInputThemeData tagInput;
   final SemiDatePickerThemeData datePicker;
   final SemiColorPickerThemeData colorPicker;
+  final SemiTimePickerThemeData timePicker;
   SemiComponentThemes copyWith({
     SemiTagThemeData? tag,
     SemiTypographyThemeData? typography,
@@ -117,6 +120,7 @@ class SemiComponentThemes {
     SemiTagInputThemeData? tagInput,
     SemiDatePickerThemeData? datePicker,
     SemiColorPickerThemeData? colorPicker,
+    SemiTimePickerThemeData? timePicker,
   }) => SemiComponentThemes(
     tag: tag ?? this.tag,
     typography: typography ?? this.typography,
@@ -145,6 +149,7 @@ class SemiComponentThemes {
     tagInput: tagInput ?? this.tagInput,
     datePicker: datePicker ?? this.datePicker,
     colorPicker: colorPicker ?? this.colorPicker,
+    timePicker: timePicker ?? this.timePicker,
   );
   @override
   bool operator ==(Object other) =>
@@ -176,7 +181,8 @@ class SemiComponentThemes {
           switcher == other.switcher &&
           tagInput == other.tagInput &&
           datePicker == other.datePicker &&
-          colorPicker == other.colorPicker;
+          colorPicker == other.colorPicker &&
+          timePicker == other.timePicker;
   @override
   int get hashCode => Object.hashAll([
     tag,
@@ -206,5 +212,6 @@ class SemiComponentThemes {
     tagInput,
     datePicker,
     colorPicker,
+    timePicker,
   ]);
 }
