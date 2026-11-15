@@ -1049,6 +1049,37 @@ void main() {
         lessThan(200),
       );
     });
+
+    testWidgets('SV double-gradient layers fill the area (zero-size trap)', (
+      tester,
+    ) async {
+      // Regression: a childless DecoratedBox collapses to 0×0 under the
+      // loose Stack constraints — the white/black gradient layers were
+      // invisible and the SV area rendered as a flat hue. Upstream overlays
+      // both gradients on the hue base (colorPicker.scss:19); the expand
+      // children make the layers actually paint (hue-slider precedent).
+      await tester.pumpWidget(
+        host(
+          const SemiColorPicker(
+            width: 200,
+            height: 120,
+            defaultValue: SemiColorValue(h: 0, s: 100, v: 100),
+          ),
+        ),
+      );
+      final layers = find.descendant(
+        of: find.byKey(SemiColorPicker.svAreaKey),
+        matching: find.byWidgetPredicate(
+          (w) =>
+              w is DecoratedBox &&
+              (w.decoration as BoxDecoration).gradient != null,
+        ),
+      );
+      expect(layers, findsNWidgets(2));
+      for (final e in layers.evaluate()) {
+        expect((e.renderObject! as RenderBox).size, const Size(200, 120));
+      }
+    });
   });
 
   group('theme fields (20 + 0 + 0)', () {

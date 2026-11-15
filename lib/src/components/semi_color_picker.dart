@@ -917,6 +917,10 @@ class _SemiColorPickerState extends State<SemiColorPicker> {
                       children: [
                         // `linear-gradient(to right, #fff, rgba(255, 255,
                         // 255, 0))` (bottom layer).
+                        // ★ zero-size trap: a childless DecoratedBox
+                        // collapses to 0×0 in the loose Stack constraints —
+                        // the expand child is what makes the layer paint at
+                        // all (the hue slider's gradient does the same).
                         const DecoratedBox(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
@@ -925,6 +929,7 @@ class _SemiColorPickerState extends State<SemiColorPicker> {
                               colors: _ColorPickerMetrics.svWhiteGradient,
                             ),
                           ),
+                          child: SizedBox.expand(),
                         ),
                         // `linear-gradient(to top, #000, rgba(0, 0, 0, 0))`
                         // (top layer).
@@ -936,6 +941,7 @@ class _SemiColorPickerState extends State<SemiColorPicker> {
                               colors: _ColorPickerMetrics.svBlackGradient,
                             ),
                           ),
+                          child: SizedBox.expand(),
                         ),
                       ],
                     ),
