@@ -1,4 +1,4 @@
-import 'package:example/pages/anchor.dart';
+import 'package:example/pages/breadcrumb.dart';
 import 'package:flutter/widgets.dart';
 import 'package:semi_design_flutter/semi_design_flutter.dart';
 
@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const SemiApp(
       themeMode: SemiThemeMode.light,
-      home: SafeArea(child: AnchorPage()),
+      home: SafeArea(child: BreadcrumbPage()),
     );
   }
 }
