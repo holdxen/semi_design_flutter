@@ -28,6 +28,7 @@ import 'semi_tag_input_theme_data.dart';
 import 'semi_date_picker_theme_data.dart';
 import 'semi_color_picker_theme_data.dart';
 import 'semi_time_picker_theme_data.dart';
+import 'semi_transfer_theme_data.dart';
 
 @immutable
 class SemiComponentThemes {
@@ -60,6 +61,7 @@ class SemiComponentThemes {
     this.datePicker = const SemiDatePickerThemeData(),
     this.colorPicker = const SemiColorPickerThemeData(),
     this.timePicker = const SemiTimePickerThemeData(),
+    this.transfer = const SemiTransferThemeData(),
   });
   final SemiTagThemeData tag;
   final SemiTypographyThemeData typography;
@@ -92,6 +94,7 @@ class SemiComponentThemes {
   final SemiDatePickerThemeData datePicker;
   final SemiColorPickerThemeData colorPicker;
   final SemiTimePickerThemeData timePicker;
+  final SemiTransferThemeData transfer;
   SemiComponentThemes copyWith({
     SemiTagThemeData? tag,
     SemiTypographyThemeData? typography,
@@ -121,6 +124,7 @@ class SemiComponentThemes {
     SemiDatePickerThemeData? datePicker,
     SemiColorPickerThemeData? colorPicker,
     SemiTimePickerThemeData? timePicker,
+    SemiTransferThemeData? transfer,
   }) => SemiComponentThemes(
     tag: tag ?? this.tag,
     typography: typography ?? this.typography,
@@ -150,6 +154,7 @@ class SemiComponentThemes {
     datePicker: datePicker ?? this.datePicker,
     colorPicker: colorPicker ?? this.colorPicker,
     timePicker: timePicker ?? this.timePicker,
+    transfer: transfer ?? this.transfer,
   );
   @override
   bool operator ==(Object other) =>
@@ -182,7 +187,8 @@ class SemiComponentThemes {
           tagInput == other.tagInput &&
           datePicker == other.datePicker &&
           colorPicker == other.colorPicker &&
-          timePicker == other.timePicker;
+          timePicker == other.timePicker &&
+          transfer == other.transfer;
   @override
   int get hashCode => Object.hashAll([
     tag,
@@ -213,5 +219,6 @@ class SemiComponentThemes {
     datePicker,
     colorPicker,
     timePicker,
+    transfer,
   ]);
 }
