@@ -31,6 +31,7 @@ import 'semi_time_picker_theme_data.dart';
 import 'semi_transfer_theme_data.dart';
 import 'semi_anchor_theme_data.dart';
 import 'semi_breadcrumb_theme_data.dart';
+import 'semi_navigation_theme_data.dart';
 
 @immutable
 class SemiComponentThemes {
@@ -66,6 +67,7 @@ class SemiComponentThemes {
     this.transfer = const SemiTransferThemeData(),
     this.anchor = const SemiAnchorThemeData(),
     this.breadcrumb = const SemiBreadcrumbThemeData(),
+    this.navigation = const SemiNavigationThemeData(),
   });
   final SemiTagThemeData tag;
   final SemiTypographyThemeData typography;
@@ -101,6 +103,7 @@ class SemiComponentThemes {
   final SemiTransferThemeData transfer;
   final SemiAnchorThemeData anchor;
   final SemiBreadcrumbThemeData breadcrumb;
+  final SemiNavigationThemeData navigation;
   SemiComponentThemes copyWith({
     SemiTagThemeData? tag,
     SemiTypographyThemeData? typography,
@@ -133,6 +136,7 @@ class SemiComponentThemes {
     SemiTransferThemeData? transfer,
     SemiAnchorThemeData? anchor,
     SemiBreadcrumbThemeData? breadcrumb,
+    SemiNavigationThemeData? navigation,
   }) => SemiComponentThemes(
     tag: tag ?? this.tag,
     typography: typography ?? this.typography,
@@ -165,6 +169,7 @@ class SemiComponentThemes {
     transfer: transfer ?? this.transfer,
     anchor: anchor ?? this.anchor,
     breadcrumb: breadcrumb ?? this.breadcrumb,
+    navigation: navigation ?? this.navigation,
   );
   @override
   bool operator ==(Object other) =>
@@ -200,7 +205,8 @@ class SemiComponentThemes {
           timePicker == other.timePicker &&
           transfer == other.transfer &&
           anchor == other.anchor &&
-          breadcrumb == other.breadcrumb;
+          breadcrumb == other.breadcrumb &&
+          navigation == other.navigation;
   @override
   int get hashCode => Object.hashAll([
     tag,
@@ -234,5 +240,6 @@ class SemiComponentThemes {
     transfer,
     anchor,
     breadcrumb,
+    navigation,
   ]);
 }
