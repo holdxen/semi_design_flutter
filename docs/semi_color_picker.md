@@ -40,7 +40,7 @@ value `SemiColorValue?` 非空即受控；defaultValue `SemiColorValue?` 非受�
 
 ### usePopover 与插槽
 
-`usePopover: true`：面板挂 SemiTooltip hover 弹层（showArrow false、popupBare、position/autoAdjustOverflow/motion 透传）。★popupBare 不带表面，白底由本移植自绘（上游是 Popover 组件皮肤）：`$color-popover-bg-default`(bg-3) + 1px `$color-popover-border-default`(border) + `$radius-popover`(radius-medium) + shadow-elevated 双影（popover.scss/global.scss，semi_select.dart `_buildPanel` 同方），内容再包 `spacingColorPickerPopoverPadding` 8px 内边距。触发器 `child ?? 默认 24×24 色块`（背景 = 当前 hex），`onOpenChange(bool)` 报开合。inline（默认）直接渲染面板（无表面——上游内联形态同样无 Popover 包装）。topSlot/bottomSlot 包裹面板控件上下（上游 `topSlot`/`bottomSlot`）。
+`usePopover: true`：面板挂 SemiTooltip hover 弹层（showArrow false、popupBare、position/autoAdjustOverflow/motion 透传）。★popupBare 不带表面，白底由本移植自绘（上游是 Popover 组件皮肤）：`$color-popover-bg-default`(bg-3) + 1px `$color-popover-border-default`(border) + `$radius-popover`(radius-medium) + shadow-elevated 双影（popover.scss/global.scss，semi_select.dart `_buildPanel` 同方），内容再包 `spacingColorPickerPopoverPadding` 8px 内边距。触发器 `child ?? 默认 24×24 色块`（背景 = 当前 hex；★shrink-to-fit——上游 Popover 触发容器是 inline-block，本移植以 `Align(widthFactor/heightFactor: 1)` 对齐语义，紧父约束下触发器与 hover 热区仍保持自然尺寸不拉伸），`onOpenChange(bool)` 报开合。inline（默认）直接渲染面板（无表面——上游内联形态同样无 Popover 包装）。topSlot/bottomSlot 包裹面板控件上下（上游 `topSlot`/`bottomSlot`）。
 
 ### 几何
 

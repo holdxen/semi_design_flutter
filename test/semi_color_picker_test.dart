@@ -944,6 +944,26 @@ void main() {
         const SemiThemeData.light().colors.colorBorder,
       );
     });
+
+    testWidgets('the default swatch stays 24x24 under a tight parent '
+        '(shrink-to-fit trigger, inline-block semantics)', (tester) async {
+      await tester.pumpWidget(
+        host(
+          const SizedBox(
+            width: 280,
+            child: SemiColorPicker(
+              usePopover: true,
+              motion: false,
+              defaultValue: SemiColorValue(h: 0, s: 100, v: 100),
+            ),
+          ),
+        ),
+      );
+      expect(
+        tester.getSize(find.byKey(SemiColorPicker.triggerSwatchKey)),
+        const Size(24, 24),
+      );
+    });
   });
 
   group('topSlot / bottomSlot', () {

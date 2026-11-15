@@ -717,33 +717,42 @@ class _SemiColorPickerState extends State<SemiColorPicker> {
     // $spacing-colorPicker_popover-padding; }`.
     final global = SemiTheme.of(context);
     final radius = global.radius.borderRadiusMedium.value;
-    return SemiTooltip(
-      content: DecoratedBox(
-        decoration: BoxDecoration(
-          color: global.colors.colorBg3,
-          border: Border.all(width: 1, color: global.colors.colorBorder),
-          borderRadius: BorderRadius.circular(radius),
-          boxShadow: const [
-            _ColorPickerMetrics.shadowElevatedBlur,
-            _ColorPickerMetrics.shadowElevatedDrop,
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(radius),
-          child: Padding(
-            padding: EdgeInsets.all(theme.spacingColorPickerPopoverPadding),
-            child: panel,
+    return Align(
+      // Shrink-to-fit like the upstream Popover trigger container (an
+      // inline-block): the trigger keeps its natural size — the 24x24
+      // default swatch stays 24x24 (and its hover area with it) even under
+      // a tight parent instead of stretching to the parent width.
+      alignment: AlignmentDirectional.topStart,
+      widthFactor: 1,
+      heightFactor: 1,
+      child: SemiTooltip(
+        content: DecoratedBox(
+          decoration: BoxDecoration(
+            color: global.colors.colorBg3,
+            border: Border.all(width: 1, color: global.colors.colorBorder),
+            borderRadius: BorderRadius.circular(radius),
+            boxShadow: const [
+              _ColorPickerMetrics.shadowElevatedBlur,
+              _ColorPickerMetrics.shadowElevatedDrop,
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(radius),
+            child: Padding(
+              padding: EdgeInsets.all(theme.spacingColorPickerPopoverPadding),
+              child: panel,
+            ),
           ),
         ),
+        trigger: SemiTooltipTrigger.hover,
+        showArrow: false,
+        popupBare: true,
+        position: widget.position,
+        autoAdjustOverflow: widget.autoAdjustOverflow,
+        motion: widget.motion,
+        onVisibleChange: widget.onOpenChange,
+        child: widget.child ?? _buildDefaultTrigger(theme),
       ),
-      trigger: SemiTooltipTrigger.hover,
-      showArrow: false,
-      popupBare: true,
-      position: widget.position,
-      autoAdjustOverflow: widget.autoAdjustOverflow,
-      motion: widget.motion,
-      onVisibleChange: widget.onOpenChange,
-      child: widget.child ?? _buildDefaultTrigger(theme),
     );
   }
 
