@@ -29,6 +29,7 @@ import 'semi_date_picker_theme_data.dart';
 import 'semi_color_picker_theme_data.dart';
 import 'semi_time_picker_theme_data.dart';
 import 'semi_transfer_theme_data.dart';
+import 'semi_anchor_theme_data.dart';
 
 @immutable
 class SemiComponentThemes {
@@ -62,6 +63,7 @@ class SemiComponentThemes {
     this.colorPicker = const SemiColorPickerThemeData(),
     this.timePicker = const SemiTimePickerThemeData(),
     this.transfer = const SemiTransferThemeData(),
+    this.anchor = const SemiAnchorThemeData(),
   });
   final SemiTagThemeData tag;
   final SemiTypographyThemeData typography;
@@ -95,6 +97,7 @@ class SemiComponentThemes {
   final SemiColorPickerThemeData colorPicker;
   final SemiTimePickerThemeData timePicker;
   final SemiTransferThemeData transfer;
+  final SemiAnchorThemeData anchor;
   SemiComponentThemes copyWith({
     SemiTagThemeData? tag,
     SemiTypographyThemeData? typography,
@@ -125,6 +128,7 @@ class SemiComponentThemes {
     SemiColorPickerThemeData? colorPicker,
     SemiTimePickerThemeData? timePicker,
     SemiTransferThemeData? transfer,
+    SemiAnchorThemeData? anchor,
   }) => SemiComponentThemes(
     tag: tag ?? this.tag,
     typography: typography ?? this.typography,
@@ -155,6 +159,7 @@ class SemiComponentThemes {
     colorPicker: colorPicker ?? this.colorPicker,
     timePicker: timePicker ?? this.timePicker,
     transfer: transfer ?? this.transfer,
+    anchor: anchor ?? this.anchor,
   );
   @override
   bool operator ==(Object other) =>
@@ -188,7 +193,8 @@ class SemiComponentThemes {
           datePicker == other.datePicker &&
           colorPicker == other.colorPicker &&
           timePicker == other.timePicker &&
-          transfer == other.transfer;
+          transfer == other.transfer &&
+          anchor == other.anchor;
   @override
   int get hashCode => Object.hashAll([
     tag,
@@ -220,5 +226,6 @@ class SemiComponentThemes {
     colorPicker,
     timePicker,
     transfer,
+    anchor,
   ]);
 }

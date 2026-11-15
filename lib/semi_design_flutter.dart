@@ -111,6 +111,9 @@ export 'src/theme/semi_time_picker_theme_data.dart';
 export 'src/components/semi_transfer.dart';
 export 'src/theme/semi_transfer_theme.dart';
 export 'src/theme/semi_transfer_theme_data.dart';
+export 'src/components/semi_anchor.dart';
+export 'src/theme/semi_anchor_theme.dart';
+export 'src/theme/semi_anchor_theme_data.dart';
 
 /// A Calculator.
 class Calculator {
