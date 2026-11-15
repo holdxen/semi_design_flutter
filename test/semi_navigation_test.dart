@@ -1621,7 +1621,15 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(tester.getSize(find.byKey(SemiNavigation.rootKey)).width, 60);
-      // label stays in tree but fades out (nav:57-67 `opacity: 0`/`opacity: 1`)
+      // ★收起态按钮为 icon-only（CollapseButton.tsx:39-43）——locale 文案只活
+      // 在 tooltip 内容里；悬停按钮出「展开侧边栏」。
+      final g = await startMouse(tester);
+      await g.moveTo(
+        tester.getCenter(find.byKey(SemiNavigation.collapseButtonKey)),
+      );
+      for (var i = 0; i < 5; i++) {
+        await tester.pump(const Duration(milliseconds: 30));
+      }
       expect(find.text('展开侧边栏'), findsOneWidget);
       // collapse toggle
       await tester.tap(find.byKey(SemiNavigation.collapseButtonKey));

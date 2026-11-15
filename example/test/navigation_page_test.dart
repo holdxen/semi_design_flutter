@@ -231,12 +231,21 @@ void main() {
   ) async {
     await start(tester);
     expect(tester.getSize(navIn('navigation-collapsed')).width, 60);
-    // locale 缺省文案仍在树上（opacity: 0 渐隐不摘除）。
-    expect(nameOf('navigation-collapsed', '展开侧边栏'), findsOneWidget);
     // 平铺 item hover 出右侧 Tooltip（tooltip 首帧约 4-5 pump——known_issues #4）。
     final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
     await gesture.addPointer(location: Offset.zero);
     addTearDown(gesture.removePointer);
+    // ★locale 缺省文案只活在按钮 tooltip 里（收起态 icon-only——
+    // CollapseButton.tsx:39-43），悬停按钮出「展开侧边栏」。
+    await tester.ensureVisible(collapseButtonIn('navigation-collapsed'));
+    await tester.pump(const Duration(milliseconds: 50));
+    await gesture.moveTo(
+      tester.getCenter(collapseButtonIn('navigation-collapsed')),
+    );
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 30));
+    }
+    expect(find.text('展开侧边栏'), findsOneWidget);
     final item = nameOf('navigation-collapsed', '收起项一');
     await tester.ensureVisible(item);
     await tester.pump(const Duration(milliseconds: 50));
@@ -510,7 +519,18 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 400));
     expect(tester.getSize(navIn('navigation-header-footer')).width, 60);
-    // 固定串不随折叠态切换（缺省 locale 才切「收起侧边栏/展开侧边栏」）。
+    // ★收起态 icon-only（CollapseButton.tsx:39-43）——固定串不随折叠态切换，
+    // 只活在按钮 tooltip 里；悬停按钮出「收起导航」。
+    expect(find.text('收起导航'), findsNothing);
+    final g = await startMouse(tester);
+    await tester.ensureVisible(collapseButtonIn('navigation-header-footer'));
+    await tester.pump(const Duration(milliseconds: 50));
+    await g.moveTo(
+      tester.getCenter(collapseButtonIn('navigation-header-footer')),
+    );
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 30));
+    }
     expect(find.text('收起导航'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

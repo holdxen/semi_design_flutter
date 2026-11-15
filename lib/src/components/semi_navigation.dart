@@ -956,12 +956,18 @@ class _SemiNavigationState extends State<SemiNavigation> {
     } else {
       content = const SizedBox.shrink();
     }
-    final row = Row(
+    // ★footer 内容按自然尺寸溢出作画（CSS `overflow: visible` 语义）：按钮
+    // 收起态 icon-only 约 36px、展开态约 112px，都可能宽过收起窄栏的 footer
+    // 盒——用无界 OverflowBox 规避 SDK Flex 溢出报错并保持 chrome 不被压扁
+    //（此前 Flexible 钳宽把按钮背景挤成 11px 细缝）。
+    final row = OverflowBox(
+      fit: OverflowBoxFit.deferToChild,
+      maxWidth: double.infinity,
       // nav:576-578 collapsed footer：justify-content: center。
-      mainAxisAlignment: collapsed
-          ? MainAxisAlignment.center
-          : MainAxisAlignment.start,
-      children: [Flexible(child: content)],
+      alignment: collapsed
+          ? Alignment.center
+          : AlignmentDirectional.centerStart,
+      child: content,
     );
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -1002,54 +1008,34 @@ class _SemiNavigationState extends State<SemiNavigation> {
     // zh_CN.ts:100-103 locale：'收起侧边栏' / '展开侧边栏'（缺省文案）。
     final label =
         widget.footer!.collapseText ?? (collapsed ? '展开侧边栏' : '收起侧边栏');
-    final content = OverflowBox(
-      // CSS `overflow: visible` 语义（semi_button.dart:580 同配方）：收起窄栏
-      // 里按钮盒仅约 11px，图标按 20px 自然尺寸溢出作画（upstream flex 固定
-      // + overflow 可见）而非被压成点；内层 Flex 拿无界宽 → 无溢出报错
-      //（clipBehavior 不压 Flex 溢出报错——SDK flex.dart paint 恒画指示器）。
-      fit: OverflowBoxFit.deferToChild,
-      maxWidth: double.infinity,
-      // ★起点锚定（上游 flex-start 语义）：窄盒里若居中，96px 内容会把图标
-      // 顶出左缘被裁——收起动画中图标可见、收束后「闪一下就不见了」。
-      alignment: AlignmentDirectional.centerStart,
-      child: Flex(
-        direction: Axis.horizontal,
-        mainAxisSize: MainAxisSize.min,
-        // ★图标/间距固定不收缩；渐隐标题可收缩（收起时不可见）。
-        children: [
-          const SemiIcon(SemiIcons.sidebar),
-          // nav:564 `margin-left: $spacing-navigation_vertical_footer_semi_button_content_right-marginLeft`
-          // （收起按钮标题左侧外边距）+ nav:583-584 collapsed 标题 `opacity: 0`。
-          SizedBox(
-            width: t
-                .spacingNavigationVerticalFooterSemiButtonContentRightMarginLeft,
-          ),
-          Flexible(
-            child: AnimatedOpacity(
-              // nav:566/:584 `transition: $motion-navigation_collapsed_opacity`
-              // ——渐隐动画消费 motionNavigationCollapsedOpacity 的 duration+curve
-              // 语义（nav:57-67 折叠渐隐 `opacity: 0` / `opacity: 1`）。
-              duration: _NavigationMetrics.parseMotionDuration(
-                t.motionNavigationCollapsedOpacity,
-              ),
-              curve: _NavigationMetrics.parseMotionCurve(
-                t.motionNavigationCollapsedOpacity,
-              ),
-              opacity: collapsed ? 0 : 1,
-              child: Text(
-                label,
-                // nav:396-397 collapse-btn 省略三连。
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    // ★CollapseButton.tsx:39-43：isCollapsed 渲染 **icon-only** Button +
+    // 右侧 Tooltip（无文字子节点——标题只活在 tooltip 内容里）；展开态
+    // `Button icon + {text}`（:22-27/:35）。此前两态共用「图标+间距+渐隐
+    // 标题」内容盒，收起后标题的自然宽把按钮 chrome 压成 11px 细缝（hover
+    // 背景很扁、动画中闪跳）。
     final button = SemiButton(
-      content,
+      collapsed
+          ? null
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SemiIcon(SemiIcons.sidebar),
+                // nav:564 `margin-left: $spacing-navigation_vertical_footer_semi_button_content_right-marginLeft`
+                // （展开态标题左侧外边距）。
+                SizedBox(
+                  width: t
+                      .spacingNavigationVerticalFooterSemiButtonContentRightMarginLeft,
+                ),
+                Text(
+                  label,
+                  // nav:396-397 collapse-btn 省略三连。
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
       key: SemiNavigation.collapseButtonKey,
+      icon: collapsed ? const SemiIcon(SemiIcons.sidebar) : null,
       type: SemiButtonType.tertiary,
       variant: SemiButtonVariant.borderless,
       // nav:569-571 `& > .semi-button { padding-left/right: 8px }`。
