@@ -59,7 +59,7 @@ class _BreadcrumbPageState extends State<BreadcrumbPage> {
             _demo(
               'routes 数组 — SemiBreadcrumbRoute 与 String 混排（String 自动包装）、'
               'href 仅元数据；点击条目 item onClick 先、父 onClick 后'
-              '（★末项 active 不可点、点击不发 onClick）',
+              '（★末项 active 无导航但照发 onClick、hover 恒手型）',
               SemiBreadcrumb(
                 key: const ValueKey('breadcrumb-routes'),
                 routes: [
@@ -198,7 +198,7 @@ class _BreadcrumbPageState extends State<BreadcrumbPage> {
           _section('activeIndex', [
             _demo(
               'activeIndex: 1 — 中间项 active（字重 600 + text-0 色）；'
-              '★active 项点击不发 onClick（不跳转 quirk）',
+              '★active 项照发 onClick 链（upstream span 恒挂、仅无导航）',
               SemiBreadcrumb(
                 key: const ValueKey('breadcrumb-active-index'),
                 activeIndex: 1,

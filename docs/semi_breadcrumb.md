@@ -1,6 +1,6 @@
 # SemiBreadcrumb
 
-面包屑（上游 Semi Breadcrumb 全件移植）：路径导航行——双模式条目（`routes`（`SemiBreadcrumbRoute | String`，String 自动包装照 genRoutes foundation.ts:32-46）优先于 `children`（`SemiBreadcrumbItem` 数据载体）），active 规则 `activeIndex ?? 末项`（index.tsx:204/:257；★active 项即使有 href 也渲染不可点 span、cursor default——item.tsx:181 + breadcrumb.scss:67-73），折叠 `autoCollapse && len > maxItemCount`（★严格大于）且 isCollapsed 初始 true → 隐藏索引 `1..len-maxItemCount`（首项恒显、末 maxItemCount-1 项恒显），more 按钮（`SemiIcons.more`）替换隐藏区（★单向展开不可回收——handleExpand 置 false 后永不折叠；more 按钮自身渲染 separator、Enter-only 键盘 foundation.ts:26-30 `handleExpandEnterPress`，Space 不响应 quirk）。moreType：`defaultType` 点击展开全部；`popover` 点击弹面板列 restItem（restItem 间自拼 separator、hidden 项 separator 抑制 quirk 照 index.tsx:206/:258）。主题对账 **20 = 16 FIELDS + 4 MOTION + 0 INTERNAL**（variables.scss 16 + animation.scss 4 亲验——**活文件**（breadcrumb.scss:4 `@import "./animation.scss"` + :97-98 消费，0ms/ease-in/0ms/scale(1,1) 恒等）；`$module: #{$prefix}-breadcrumb` 类名胶水不计，datePicker `223 = 220 + 3 + 0`、timePicker `20 = 14 + 6 + 0`、transfer `50 = 47 + 3 + 0`、anchor `30 = 26 + 4 + 0` 先例）；★**0 死变量——首个零死变量组件**（16+4 条声明全消费，无死标）。
+面包屑（上游 Semi Breadcrumb 全件移植）：路径导航行——双模式条目（`routes`（`SemiBreadcrumbRoute | String`，String 自动包装照 genRoutes foundation.ts:32-46）优先于 `children`（`SemiBreadcrumbItem` 数据载体）），active 规则 `activeIndex ?? 末项`（index.tsx:204/:257；★active 项即使有 href 也渲染 span 无导航（item.tsx:177），但 onClick 恒挂照发（:181-189）、hover 光标恒手型——`-item-link:hover` 的 `cursor: pointer` 源序覆盖 `-item-active:hover` 的 `cursor: default`），折叠 `autoCollapse && len > maxItemCount`（★严格大于）且 isCollapsed 初始 true → 隐藏索引 `1..len-maxItemCount`（首项恒显、末 maxItemCount-1 项恒显），more 按钮（`SemiIcons.more`）替换隐藏区（★单向展开不可回收——handleExpand 置 false 后永不折叠；more 按钮自身渲染 separator、Enter-only 键盘 foundation.ts:26-30 `handleExpandEnterPress`，Space 不响应 quirk）。moreType：`defaultType` 点击展开全部；`popover` 点击弹面板列 restItem（restItem 间自拼 separator、hidden 项 separator 抑制 quirk 照 index.tsx:206/:258）。主题对账 **20 = 16 FIELDS + 4 MOTION + 0 INTERNAL**（variables.scss 16 + animation.scss 4 亲验——**活文件**（breadcrumb.scss:4 `@import "./animation.scss"` + :97-98 消费，0ms/ease-in/0ms/scale(1,1) 恒等）；`$module: #{$prefix}-breadcrumb` 类名胶水不计，datePicker `223 = 220 + 3 + 0`、timePicker `20 = 14 + 6 + 0`、transfer `50 = 47 + 3 + 0`、anchor `30 = 26 + 4 + 0` 先例）；★**0 死变量——首个零死变量组件**（16+4 条声明全消费，无死标）。
 
 ## API
 
@@ -20,7 +20,7 @@ routes 非空走 routes 模式（index.tsx:226-229 `hasRoutes` 二选一）：`S
 
 ### active
 
-`activeIndex ?? 末项`（index.tsx:204/:257，严格相等）；★active 项即使有 href 也渲染不可点 span、cursor default（item.tsx:181 + breadcrumb.scss:67-73）、**点击不发 onClick**（不跳转 quirk）；active 字重 `fontBreadcrumbActiveFontWeight`（600）、色 `colorBreadcrumbActiveTextDefault`（text-0，hover/active → `colorBreadcrumbActiveTextActive`）。
+`activeIndex ?? 末项`（index.tsx:204/:257，严格相等）；★active 项即使有 href 也渲染 span 无导航（item.tsx:177）、**onClick 恒挂照发**（:181-189）、hover 光标恒手型（`-item-link:hover` `cursor: pointer` 源序覆盖 `-item-active:hover` 的 `cursor: default`）；active 字重 `fontBreadcrumbActiveFontWeight`（600）、色 `colorBreadcrumbActiveTextDefault`（text-0，hover/active → `colorBreadcrumbActiveTextActive`）。
 
 ### 折叠与 more
 
@@ -36,7 +36,7 @@ context separator 缺省 `'/'`；★item.separator truthy 优先且**裸渲染�
 
 ### onClick 链
 
-点击条目 → 先 item.onClick 后父 onClick(route)（itemFoundation.ts:29-33 `notifyClick` + `notifyParent`）；★active 项不发（不可点 quirk）；href 仅元数据（Flutter 无 DOM anchor，应用按 route.href 自行导航）。
+点击条目 → 先 item.onClick 后父 onClick(route)（itemFoundation.ts:29-33 `notifyClick` + `notifyParent`）；★active 项照发（upstream span 恒挂 onClick，仅无导航）；href 仅元数据（Flutter 无 DOM anchor，应用按 route.href 自行导航）。
 
 ### 视觉与 RTL
 
@@ -94,7 +94,7 @@ context separator 缺省 `'/'`；★item.separator truthy 优先且**裸渲染�
 ## 差异清单
 
 ★照搬留档（quirk 原样）：
-1. **active 不跳转/不可点**：即使有 href 也渲染 span、cursor default（item.tsx:181 + breadcrumb.scss:67-73）；★点击不发 onClick（不跳转 quirk——上游 span 仍挂 onClick 但视觉不可点，本移植按不可点口径收敛不发）。
+1. **active 项无导航但照发 onClick、hover 恒手型**（★照搬）：即使有 href 也渲染 span（item.tsx:177）；onClick 恒挂（:181-189）照发事件链；★光标手型——`.semi-breadcrumb-item-link:hover` 的 `cursor: pointer`（breadcrumb.scss:100-108）与 `-item-active:hover` 的 `cursor: default`（:65-72）同特异性源序靠后胜出，官方 active 项亦是手型（noLink 无 link 类才回落 default）。
 2. **严格大于才折叠**：`len > maxItemCount`（index.tsx:235；== maxItemCount 不折叠）。
 3. **单向展开不可回收**：handleExpand 置 isCollapsed=false 后永不折叠（index.tsx:115-118）。
 4. **more 按钮 Enter-only**：foundation.ts:26-30 `handleExpandEnterPress` 只认 Enter，★Space 不响应 quirk。

@@ -95,8 +95,9 @@ class SemiBreadcrumbItem {
 /// 双模式：[routes]（`SemiBreadcrumbRoute | String`——String 自动包装照
 /// genRoutes foundation.ts:32-46）优先于 [children]。active 规则
 /// （index.tsx:204/:257）：[activeIndex] ?? 末项；★active 项即使有 href 也渲染
-/// 不可点 span、cursor default（item.tsx:181 + breadcrumb.scss:67-73）、点击不发
-/// onClick。折叠（index.tsx:163-190/:216-269）：`autoCollapse && len >
+/// span 无导航（item.tsx:177），但 onClick 恒挂照发（:181-189）、hover 光标恒
+/// 手型（`-item-link:hover` 的 `cursor: pointer` 源序覆盖 `-item-active:hover`
+/// 的 `cursor: default`）。折叠（index.tsx:163-190/:216-269）：`autoCollapse && len >
 /// maxItemCount`（★严格大于）且 isCollapsed 初始 true → 隐藏索引
 /// `1..len-maxItemCount`（首项恒显、末 maxItemCount-1 项恒显）；more 按钮
 /// （[SemiIcons.more]）替换隐藏区；★单向展开不可回收（handleExpand 置 false 后
@@ -348,7 +349,7 @@ class _SemiBreadcrumbState extends State<SemiBreadcrumb> {
                 compact: widget.compact,
                 showTooltip: widget.showTooltip,
                 itemMaxWidth: widget.itemMaxWidth,
-                onTap: active ? null : () => _handleClick(entry),
+                onTap: () => _handleClick(entry),
               ),
             ),
             if (shouldRenderSeparator)
@@ -536,7 +537,8 @@ class _BreadcrumbItemView extends StatefulWidget {
   final bool showTooltip;
   final double itemMaxWidth;
 
-  /// 点击链入口（active 为 null——不发 onClick quirk）。
+  /// 点击链入口（★upstream onClick 恒挂于 span/a——item.tsx:181-189，active
+  /// 项照发只是无导航语义）。
   final VoidCallback? onTap;
 
   @override
@@ -574,17 +576,18 @@ class _BreadcrumbItemViewState extends State<_BreadcrumbItemView> {
           : t.colorBreadcrumbDefaultTextDefault;
     }
     return MouseRegion(
-      // breadcrumb.scss:67-73 `cursor: default`（active 项）；可点项 click
-      // 光标（:102/:107 `cursor: pointer`）；noLink 无 item-link 类 → default。
-      cursor: widget.onTap != null
-          ? SystemMouseCursors.click
-          : SystemMouseCursors.basic,
+      // ★光标：非 noLink 项（含 active）恒手型——`.semi-breadcrumb-item-link:hover`
+      // 的 `cursor: pointer`（breadcrumb.scss:100-108）与
+      // `.semi-breadcrumb-item-active:hover` 的 `cursor: default`（:65-72）
+      // 同特异性、**源序靠后者胜**，官方 active 项也是手型；noLink 无
+      // item-link 类 → default。
+      cursor: noLink ? SystemMouseCursors.basic : SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hover = true),
       onExit: (_) => setState(() => _hover = false),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        // ★active 项点击不发 onClick（不跳转 quirk——item.tsx:181 active 渲染
-        // 不可点 span）。
+        // ★active 项照发 onClick 链（upstream span 恒挂 onClick——item.tsx:181-
+        // 189；仅无导航语义，item.tsx:177 `active || !hasHref ? 'span' : 'a'`）。
         onTap: widget.onTap,
         onTapDown: (_) => setState(() => _pressed = true),
         onTapUp: (_) => setState(() => _pressed = false),
@@ -734,7 +737,9 @@ abstract final class _BreadcrumbMetrics {
   // breadcrumb.scss:81 `margin-bottom: -1px`（icon 基线 quirk——调用点
   // `_BreadcrumbItemViewState._buildContent` Transform.translate 近似）。
   //
-  // breadcrumb.scss:67-73 `cursor: default`（active 项 hover/active 光标）。
+  // breadcrumb.scss:65-72 `cursor: default`（active 项 hover 规则——被
+  // :100-108 `-item-link:hover` 的 `cursor: pointer` 同特异性源序覆盖，
+  // 仅 active+noLink 生效；调用点 `_BreadcrumbItemViewState` MouseRegion）。
   //
   // breadcrumb.scss:13-14 `flex-wrap: wrap`（wrapper 换行——调用点 Wrap）。
   //

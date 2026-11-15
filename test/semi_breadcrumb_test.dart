@@ -530,9 +530,8 @@ void main() {
   });
 
   group('active 规则', () {
-    testWidgets('默认末项 active、activeIndex 覆盖、active 项点击不发 onClick（不跳转 quirk）', (
-      tester,
-    ) async {
+    testWidgets('默认末项 active、activeIndex 覆盖、active 项照发 onClick '
+        '且 hover 光标恒手型（upstream span 恒挂 onClick、link 光标覆盖）', (tester) async {
       final t = const SemiThemeData.light();
       final clicks = <SemiBreadcrumbRoute>[];
       await pumpHost(
@@ -543,11 +542,24 @@ void main() {
       // 缺省末项 active（text-0），其余 text-2。
       expect(nameColor(tester, '三'), t.colors.colorText0);
       expect(nameColor(tester, '一'), t.colors.colorText2);
+      // ★active 项 hover 光标恒手型（item.tsx:181-189 span 恒挂 onClick；
+      // `.semi-breadcrumb-item-link:hover` 的 `cursor: pointer` 源序覆盖
+      // `-item-active:hover` 的 `cursor: default`）。
+      final regions = tester
+          .widgetList<MouseRegion>(
+            find.ancestor(
+              of: find.text('三'),
+              matching: find.byType(MouseRegion),
+            ),
+          )
+          .toList();
+      expect(regions.any((r) => r.cursor == SystemMouseCursors.click), isTrue);
+      expect(regions.any((r) => r.cursor == SystemMouseCursors.basic), isFalse);
       await neutralTap(tester);
       await tester.tap(find.text('三'));
       await tester.pump();
-      // ★active 项即使有 href 也渲染不可点 span、点击不发 onClick。
-      expect(clicks, isEmpty);
+      expect(clicks, hasLength(1));
+      expect(clicks.single.name, '三');
       // activeIndex 覆盖 → 中项 active。
       await pumpHost(
         tester,
@@ -564,12 +576,13 @@ void main() {
       await neutralTap(tester);
       await tester.tap(find.text('二'));
       await tester.pump();
-      expect(clicks, isEmpty);
-      // 非 active 项可点（activeIndex 覆盖后末项不再是 active）。
+      expect(clicks, hasLength(2));
+      expect(clicks.last.name, '二');
+      // 非 active 项照常。
       await neutralTap(tester);
       await tester.tap(find.text('三'));
       await tester.pump();
-      expect(clicks, hasLength(1));
+      expect(clicks, hasLength(3));
     });
   });
 

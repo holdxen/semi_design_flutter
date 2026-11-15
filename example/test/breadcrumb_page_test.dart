@@ -323,9 +323,9 @@ void main() {
     final idleStyle = styleOf(tester, nameOf('breadcrumb-active-index', '激活一'));
     expect(idleStyle.color, t.colorBreadcrumbDefaultTextDefault);
     expect(idleStyle.fontWeight, t.fontBreadcrumbDefaultFontWeight);
-    // ★active 项点击不发 onClick（不跳转 quirk）。
+    // ★active 项照发 onClick 链（upstream span 恒挂 onClick——item.tsx:181-189）。
     await tapOnce(tester, nameOf('breadcrumb-active-index', '激活二'));
-    expect(statusContaining('onClick'), findsNothing);
+    expect(statusContaining('onClick 激活二'), findsOneWidget);
     // 非 active 照常回传。
     await tapUntil(
       tester,
