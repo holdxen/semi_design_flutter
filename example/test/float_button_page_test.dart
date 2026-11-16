@@ -83,10 +83,10 @@ void main() {
     tester,
   ) async {
     await start(tester);
+    await tester.ensureVisible(keyed('floatbutton-size-shape'));
+    await tester.pump(const Duration(milliseconds: 50));
     final sizes = <double>[];
     for (var i = 0; i < 3; i++) {
-      await tester.ensureVisible(bodyOf('floatbutton-size-shape'));
-      await tester.pump(const Duration(milliseconds: 50));
       sizes.add(tester.getSize(bodyOf('floatbutton-size-shape').at(i)).width);
     }
     expect(sizes, containsAll(<double>[24, 32, 40]));
@@ -94,20 +94,17 @@ void main() {
   });
 
   testWidgets('group demo: item callback precedes the group callback; '
-      'stopPropagation cuts the group (itemProps.test.jsx 口径)', (
-    tester,
-  ) async {
+      'stopPropagation cuts the group (itemProps.test.jsx 口径)', (tester) async {
     await start(tester);
     await tapUntil(
       tester,
       itemOf('floatbutton-group', 0),
-      () => statusContaining('group onClick value=editor').evaluate().isNotEmpty,
+      () =>
+          statusContaining('group onClick value=editor').evaluate().isNotEmpty,
     );
     // 子项回调先于组回调——日志顺序。
     expect(statusContaining('item editor'), findsOneWidget);
-    final events = tester
-        .widget<Text>(keyed('floatbutton-status'))
-        .data!;
+    final events = tester.widget<SemiText>(keyed('floatbutton-status')).data;
     expect(
       events.indexOf('item editor'),
       lessThan(events.indexOf('group onClick value=editor')),
@@ -121,7 +118,7 @@ void main() {
     );
     expect(statusContaining('item help'), findsOneWidget);
     expect(
-      tester.widget<Text>(keyed('floatbutton-status')).data,
+      tester.widget<SemiText>(keyed('floatbutton-status')).data,
       isNot(contains('group onClick value=help')),
     );
     expect(tester.takeException(), isNull);
@@ -135,10 +132,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 50));
     await tester.tap(bodyOf('floatbutton-disabled'), warnIfMissed: false);
     await tester.pump();
-    await tester.tap(
-      itemOf('floatbutton-disabled', 0),
-      warnIfMissed: false,
-    );
+    await tester.tap(itemOf('floatbutton-disabled', 0), warnIfMissed: false);
     await tester.pump(const Duration(milliseconds: 120));
     expect(statusContaining('禁用不应达'), findsNothing);
     expect(tester.takeException(), isNull);

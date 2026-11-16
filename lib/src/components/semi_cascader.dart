@@ -15,6 +15,7 @@
 // HARDCODES（另列）上游片段以注释逐字留档在 `_CascaderMetrics` / 调用点，
 // 生成器 HARDCODES 锚点断言这些片段出现在本文件。
 import '../overlay/tooltip_positioning.dart';
+
 import 'package:flutter/rendering.dart' show RenderProxyBox;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -547,6 +548,7 @@ class _SemiCascaderState extends State<SemiCascader> {
   bool _isSearching = false;
   final TextEditingController _inputController = TextEditingController();
   final FocusNode _inputFocusNode = FocusNode();
+  final FocusNode _triggerFocusNode = FocusNode(debugLabel: 'SemiCascader');
 
   // -- async load ------------------------------------------------------------
   Set<String> _loaded = <String>{};
@@ -633,6 +635,7 @@ class _SemiCascaderState extends State<SemiCascader> {
   void dispose() {
     _inputController.dispose();
     _inputFocusNode.dispose();
+    _triggerFocusNode.dispose();
     super.dispose();
   }
 
@@ -646,7 +649,7 @@ class _SemiCascaderState extends State<SemiCascader> {
     void process(SemiCascaderData node, int ind, _CascaderEntity? parent) {
       final key = parent == null
           ? node.value
-          : '$parent.key$_valueSplit${node.value}';
+          : '${parent.key}$_valueSplit${node.value}';
       final entity = _CascaderEntity(
         key: key,
         data: node,
@@ -1176,6 +1179,7 @@ class _SemiCascaderState extends State<SemiCascader> {
   /// foundation.ts:736-748 `handleClick`（触发器点击开关）。
   void _handleTriggerTap() {
     if (widget.disabled) return;
+    _triggerFocusNode.requestFocus();
     if (!_open) {
       _openMenu();
       widget.onFocus?.call();
@@ -1188,6 +1192,7 @@ class _SemiCascaderState extends State<SemiCascader> {
   void _handleTooltipVisibleChange(bool visible) {
     // SemiTooltip `onVisibleChange`：barrier 点击 = 上游 clickOutside
     // （registerClickOutsideHandler → close）；内部收起走 _closeMenu。
+    if (!mounted) return;
     if (visible == _open) return;
     if (visible) {
       _openMenu();
@@ -1591,6 +1596,7 @@ class _SemiCascaderState extends State<SemiCascader> {
           widget.mouseLeaveDelay ?? const Duration(milliseconds: 50),
       repositionKey: _rePosKey,
       child: Focus(
+        focusNode: _triggerFocusNode,
         onKeyEvent: _handleKey,
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
@@ -2079,10 +2085,13 @@ class _SemiCascaderState extends State<SemiCascader> {
       children: [
         for (final (index, key) in visibleKeys.indexed)
           Padding(
-            padding: EdgeInsets.symmetric(
-              // cascader.scss:152 `-selection-tag` margin 简写（Y Right Y Left）。
-              horizontal: theme.spacingCascaderSelectionTagMarginRight,
-              vertical: theme.spacingCascaderSelectionTagMarginY,
+            padding: EdgeInsets.only(
+              // cascader.scss:152 `-selection-tag` margin 简写
+              // `margin: Y Right Y Left`（Left=0 → first-child 亦无左距）。
+              left: theme.spacingCascaderSelectionTagMarginLeft,
+              right: theme.spacingCascaderSelectionTagMarginRight,
+              top: theme.spacingCascaderSelectionTagMarginY,
+              bottom: theme.spacingCascaderSelectionTagMarginY,
             ),
             child: _buildTag(theme, key, index),
           ),
@@ -2281,9 +2290,13 @@ class _SemiCascaderState extends State<SemiCascader> {
     final children = <Widget>[
       for (final (index, key) in visibleKeys.indexed)
         Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: theme.spacingCascaderSelectionTagMarginRight,
-            vertical: theme.spacingCascaderSelectionTagMarginY,
+          padding: EdgeInsets.only(
+            // cascader.scss:152 `-selection-tag` margin 简写
+            // `margin: Y Right Y Left`（Left=0 → first-child 亦无左距）。
+            left: theme.spacingCascaderSelectionTagMarginLeft,
+            right: theme.spacingCascaderSelectionTagMarginRight,
+            top: theme.spacingCascaderSelectionTagMarginY,
+            bottom: theme.spacingCascaderSelectionTagMarginY,
           ),
           child: _buildTag(theme, key, index),
         ),
@@ -2364,6 +2377,7 @@ class _SemiCascaderState extends State<SemiCascader> {
                   _buildEmpty(theme)
                 else
                   SizedBox(
+                    key: SemiCascader.listKey,
                     // cascader.scss:404 `height: $height-cascader_option_list`。
                     height: theme.heightCascaderOptionList,
                     child: rows != null
@@ -2435,38 +2449,39 @@ class _SemiCascaderState extends State<SemiCascader> {
         }
         return false;
       },
-      child: SingleChildScrollView(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            // cascader.scss:430 `min-width: $width-cascader_option`。
-            minWidth: theme.widthCascaderOption,
-          ),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              border: Border(
-                left: index == 0
-                    ? BorderSide.none
-                    // cascader.scss:436 `border-left: $width-cascader_option_list-border
-                    // solid $color-cascader_option_list-border-default`。
-                    : BorderSide(
-                        width: theme.widthCascaderOptionListBorder,
-                        color: theme.colorCascaderOptionListBorderDefault,
-                      ),
+      // 横向 Row 给非 flex 子级无限宽——IntrinsicWidth 收紧行宽、min-width
+      // 兜底（cascader.scss:430 `min-width: $width-cascader_option`）。
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minWidth: theme.widthCascaderOption),
+        child: IntrinsicWidth(
+          child: SingleChildScrollView(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                border: Border(
+                  left: index == 0
+                      ? BorderSide.none
+                      // cascader.scss:436 `border-left: $width-cascader_option_list-border
+                      // solid $color-cascader_option_list-border-default`。
+                      : BorderSide(
+                          width: theme.widthCascaderOptionListBorder,
+                          color: theme.colorCascaderOptionListBorderDefault,
+                        ),
+                ),
               ),
-            ),
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                // cascader.scss:433 `padding: $spacing-cacader_option_list-paddingY
-                // $spacing-cacader_option_list-paddingX`（★上游拼写 cacader）。
-                vertical: theme.spacingCacaderOptionListPaddingY,
-                horizontal: theme.spacingCacaderOptionListPaddingX,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (final entity in items) _buildOptionRow(theme, entity),
-                ],
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  // cascader.scss:433 `padding: $spacing-cacader_option_list-paddingY
+                  // $spacing-cacader_option_list-paddingX`（★上游拼写 cacader）。
+                  vertical: theme.spacingCacaderOptionListPaddingY,
+                  horizontal: theme.spacingCacaderOptionListPaddingX,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final entity in items) _buildOptionRow(theme, entity),
+                  ],
+                ),
               ),
             ),
           ),

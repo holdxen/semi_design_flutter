@@ -267,8 +267,7 @@ class _SemiPopconfirmState extends State<SemiPopconfirm> {
     // — same wing shape as the tooltip arrow), fringe
     // `fill: var(--semi-color-border)` (`path:nth-child(1)`).
     final colors = SemiTheme.of(context).colors;
-    return SemiTooltip(
-      content: _PopconfirmCard(
+    final card = _PopconfirmCard(
         title: widget.title,
         content: widget.content,
         icon: widget.icon,
@@ -282,8 +281,9 @@ class _SemiPopconfirmState extends State<SemiPopconfirm> {
         cancelLoading: widget.cancelLoading ?? _cancelPending,
         onConfirm: _handleConfirm,
         onCancel: _handleCancel,
-      ),
-      child: widget.child,
+      );
+    return SemiTooltip(
+      content: card,
       trigger: widget.trigger,
       position:
           widget.position ??
@@ -294,8 +294,9 @@ class _SemiPopconfirmState extends State<SemiPopconfirm> {
       popupBare: true,
       arrowPointAtCenter: widget.arrowPointAtCenter,
       autoAdjustOverflow: widget.autoAdjustOverflow,
-      // Popover defaults: `spacing = showArrow ? numbers.SPACING_WITH_ARROW :
-      // numbers.SPACING` (popover/index.tsx — 10 : 4).
+      // Popover defaults:
+      // `spacing = showArrow ? numbers.SPACING_WITH_ARROW : numbers.SPACING`
+      // (popover/index.tsx — 10 : 4).
       spacing: widget.spacing ?? (widget.showArrow ? 10 : 4),
       clickToHide: widget.clickToHide,
       closeOnEsc: widget.closeOnEsc,
@@ -308,6 +309,7 @@ class _SemiPopconfirmState extends State<SemiPopconfirm> {
       zIndex: widget.zIndex,
       arrowColor: colors.colorBg3,
       arrowFringeColor: colors.colorBorder,
+      child: widget.child,
     );
   }
 }
@@ -332,9 +334,9 @@ abstract final class _PopconfirmMetrics {
   }
 
   /// `$spacing-popconfirm_popover_with_arrow_inner-padding: ($spacing-popconfirm-top - $spacing-popconfirm_with_arrow-padding) ($spacing-popconfirm-top - $spacing-popconfirm_with_arrow-padding) ($spacing-popconfirm-top - $spacing-popconfirm_with_arrow-padding) ($spacing-popconfirm-bottom - $spacing-popconfirm_with_arrow-padding)` in packages/semi-foundation/popconfirm/variables.scss.
-  /// Derived at runtime from the scalar fields: 12 12 12 8 at defaults
-  /// (the same upstream left-edge quirk; rtl.scss swaps to 12 8 12 12 via
-  /// `$spacing-popconfirm_popover_with_arrow_inner_rtl-padding`).
+  /// `$spacing-popconfirm_popover_with_arrow_inner_rtl-padding: ($spacing-popconfirm-top - $spacing-popconfirm_with_arrow-padding) ($spacing-popconfirm-bottom - $spacing-popconfirm_with_arrow-padding) ($spacing-popconfirm-top - $spacing-popconfirm_with_arrow-padding) ($spacing-popconfirm-top - $spacing-popconfirm_with_arrow-padding)` in packages/semi-foundation/popconfirm/variables.scss.
+  /// Derived at runtime from the scalar fields: 12 12 12 8 at defaults (the
+  /// same upstream left-edge quirk), 12 8 12 12 mirrored for RTL.
   static EdgeInsets withArrowInnerPadding(
     SemiResolvedPopconfirmThemeData t, {
     required bool rtl,
@@ -543,9 +545,10 @@ class _PopconfirmCard extends StatelessWidget {
       // `max-width: $width-popconfirm-maxWidth` (400).
       constraints: BoxConstraints(maxWidth: t.widthPopconfirmMaxWidth),
       child: DecoratedBox(
-        // Popover wrapper skin: `$color-popover-bg-default:
-        // var(--semi-color-bg-3)`, `box-shadow: var(--semi-shadow-elevated)`
-        // and `$radius-popconfirm-popover` on the bubble
+        // Popover wrapper skin:
+        // `$color-popover-bg-default: var(--semi-color-bg-3)` and
+        // `box-shadow: var(--semi-shadow-elevated)`, with
+        // `$radius-popconfirm-popover` on the bubble
         // (`.semi-popconfirm-popover { border-radius: ... }` overrides the
         // popover radius with the popconfirm token).
         decoration: BoxDecoration(

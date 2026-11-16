@@ -60,10 +60,8 @@ const _stackKey = ValueKey('SemiFloatButtonHostStack');
 
 /// 宿主页面：Stack（★FloatButton/Group 是 PositionedDirectional——需 Stack
 /// 直接子节点位）。
-Widget floatPage(Widget float) => Stack(
-  key: _stackKey,
-  children: [const SizedBox.expand(), float],
-);
+Widget floatPage(Widget float) =>
+    Stack(key: _stackKey, children: [const SizedBox.expand(), float]);
 
 Widget floatButton({
   SemiFloatButtonShape shape = SemiFloatButtonShape.round,
@@ -105,17 +103,23 @@ Offset stackTopLeft(WidgetTester tester) =>
     tester.getTopLeft(find.byKey(_stackKey));
 
 BoxDecoration bodyBox(WidgetTester tester) =>
-    tester
-            .widget<Container>(find.byKey(SemiFloatButton.bodyKey))
-            .decoration!
+    tester.widget<Container>(find.byKey(SemiFloatButton.bodyKey)).decoration!
         as BoxDecoration;
 
 BoxDecoration groupBox(WidgetTester tester) =>
-    tester.widget<Container>(find.byKey(SemiFloatButtonGroup.groupKey)).decoration!
+    tester
+            .widget<Container>(find.byKey(SemiFloatButtonGroup.groupKey))
+            .decoration!
         as BoxDecoration;
 
+/// Text 构建的 RichText（DefaultTextStyle 解析后的生效样式）。
+RichText richTextOf(WidgetTester tester, String text) =>
+    tester.widget<RichText>(
+      find.descendant(of: find.text(text), matching: find.byType(RichText)),
+    );
+
 Color? iconColor(WidgetTester tester, {String text = 'I'}) =>
-    tester.widget<RichText>(find.text(text)).text.style?.color;
+    richTextOf(tester, text).text.style?.color;
 
 SemiResolvedFloatButtonThemeData resolved() =>
     const SemiFloatButtonThemeData().resolve(const SemiThemeData.light());
@@ -144,8 +148,7 @@ final List<(String, Object, _Patch, _Read, _Default)> fields = [
   (
     r'$spacing-floatButton_group-bottom: 24px',
     103.0,
-    (v) =>
-        SemiFloatButtonThemeData(spacingFloatButtonGroupBottom: v as double),
+    (v) => SemiFloatButtonThemeData(spacingFloatButtonGroupBottom: v as double),
     (d) => d.spacingFloatButtonGroupBottom,
     (t) => 24.0,
   ),
@@ -167,9 +170,8 @@ final List<(String, Object, _Patch, _Read, _Default)> fields = [
   (
     r'$spacing-floatButton_group-columnGap: 4px',
     106.0,
-    (v) => SemiFloatButtonThemeData(
-      spacingFloatButtonGroupColumnGap: v as double,
-    ),
+    (v) =>
+        SemiFloatButtonThemeData(spacingFloatButtonGroupColumnGap: v as double),
     (d) => d.spacingFloatButtonGroupColumnGap,
     (t) => 4.0,
   ),
@@ -265,8 +267,13 @@ final List<(String, Object, _Patch, _Read, _Default)> fields = [
   ),
   (
     r'$color-floatButton-colorful-bg:  var(--semi-color-ai-general)',
-    SemiGradient(45, const [Color(0xFF070707), Color(0xFF171717)], const [0, 1]),
-    (v) => SemiFloatButtonThemeData(colorFloatButtonColorfulBg: v as SemiGradient),
+    SemiGradient(
+      45,
+      const [Color(0xFF070707), Color(0xFF171717)],
+      const [0, 1],
+    ),
+    (v) =>
+        SemiFloatButtonThemeData(colorFloatButtonColorfulBg: v as SemiGradient),
     (d) => d.colorFloatButtonColorfulBg,
     (t) => t.colors.colorAiGeneral,
   ),
@@ -279,7 +286,11 @@ final List<(String, Object, _Patch, _Read, _Default)> fields = [
   ),
   (
     r'$color-floatButton-colorful-bg-hover:  var(--semi-color-ai-general-hover)',
-    SemiGradient(60, const [Color(0xFF090909), Color(0xFF191919)], const [0, 1]),
+    SemiGradient(
+      60,
+      const [Color(0xFF090909), Color(0xFF191919)],
+      const [0, 1],
+    ),
     (v) => SemiFloatButtonThemeData(
       colorFloatButtonColorfulBgHover: v as SemiGradient,
     ),
@@ -288,7 +299,11 @@ final List<(String, Object, _Patch, _Read, _Default)> fields = [
   ),
   (
     r'$color-floatButton-colorful-bg-active:  var(--semi-color-ai-general-active)',
-    SemiGradient(30, const [Color(0xFF0A0A0A), Color(0xFF1A1A1A)], const [0, 1]),
+    SemiGradient(
+      30,
+      const [Color(0xFF0A0A0A), Color(0xFF1A1A1A)],
+      const [0, 1],
+    ),
     (v) => SemiFloatButtonThemeData(
       colorFloatButtonColorfulBgActive: v as SemiGradient,
     ),
@@ -328,18 +343,16 @@ final List<(String, Object, _Patch, _Read, _Default)> fields = [
   (
     r'$color-floatButton_group-disabled-bg:  var(--semi-color-disabled-bg)',
     const Color(0xFF0F0F0F),
-    (v) => SemiFloatButtonThemeData(
-      colorFloatButtonGroupDisabledBg: v as Color,
-    ),
+    (v) =>
+        SemiFloatButtonThemeData(colorFloatButtonGroupDisabledBg: v as Color),
     (d) => d.colorFloatButtonGroupDisabledBg,
     (t) => t.colors.colorDisabledBg,
   ),
   (
     r'$color-floatButton_group-disabled-text:  var(--semi-color-disabled-text)',
     const Color(0xFF101010),
-    (v) => SemiFloatButtonThemeData(
-      colorFloatButtonGroupDisabledText: v as Color,
-    ),
+    (v) =>
+        SemiFloatButtonThemeData(colorFloatButtonGroupDisabledText: v as Color),
     (d) => d.colorFloatButtonGroupDisabledText,
     (t) => t.colors.colorDisabledText,
   ),
@@ -410,26 +423,21 @@ final List<(String, Object, _Patch, _Read, _Default)> fields = [
   (
     r'$font-floatButton_group_item-fontSize: 14px',
     118.0,
-    (v) => SemiFloatButtonThemeData(
-      fontFloatButtonGroupItemFontSize: v as double,
-    ),
+    (v) =>
+        SemiFloatButtonThemeData(fontFloatButtonGroupItemFontSize: v as double),
     (d) => d.fontFloatButtonGroupItemFontSize,
     (t) => 14.0,
   ),
   (
     r'$shadow-floatButton_group: var(--semi-shadow-elevated)',
-    SemiShadows([
-      const SemiShadowLayer(false, 1, 2, 3, 4, Color(0xFF111111)),
-    ]),
+    SemiShadows([const SemiShadowLayer(false, 1, 2, 3, 4, Color(0xFF111111))]),
     (v) => SemiFloatButtonThemeData(shadowFloatButtonGroup: v as SemiShadows),
     (d) => d.shadowFloatButtonGroup,
     (t) => t.shadows.shadowElevated,
   ),
   (
     r'$shadow-floatButton: var(--semi-shadow-elevated)',
-    SemiShadows([
-      const SemiShadowLayer(false, 5, 6, 7, 8, Color(0xFF121212)),
-    ]),
+    SemiShadows([const SemiShadowLayer(false, 5, 6, 7, 8, Color(0xFF121212))]),
     (v) => SemiFloatButtonThemeData(shadowFloatButton: v as SemiShadows),
     (d) => d.shadowFloatButton,
     (t) => t.shadows.shadowElevated,
@@ -447,7 +455,11 @@ void main() {
       expect(fields, hasLength(39));
       for (final (sass, value, make, read, expected) in fields) {
         final patch = make(value);
-        expect(const SemiFloatButtonThemeData().merge(patch), patch, reason: sass);
+        expect(
+          const SemiFloatButtonThemeData().merge(patch),
+          patch,
+          reason: sass,
+        );
         expect(patch.copyWith(), patch, reason: sass);
         expect(patch.copyWith().hashCode, patch.hashCode, reason: sass);
         expect(patch.merge(null), patch, reason: sass);
@@ -534,17 +546,14 @@ void main() {
           ifAbsent: () => 1,
         );
       }
-      expect(
-        counts,
-        {
-          'Color': 13,
-          'SemiGradient': 3,
-          'SemiShadows': 2,
-          'FontWeight': 1,
-          'double': 18,
-          'int': 2,
-        },
-      );
+      expect(counts, {
+        'Color': 13,
+        'SemiGradient': 3,
+        'SemiShadows': 2,
+        'FontWeight': 1,
+        'double': 18,
+        'int': 2,
+      });
     });
 
     test('2 dead FIELDS (上游未消费) + 2 z 留档不消费', () {
@@ -587,9 +596,7 @@ void main() {
           SemiTheme(
             data: const SemiThemeData.light(),
             child: SemiFloatButtonTheme(
-              data: const SemiFloatButtonThemeData(
-                spacingFloatButtonRight: 64,
-              ),
+              data: const SemiFloatButtonThemeData(spacingFloatButtonRight: 64),
               child: SemiFloatButtonTheme(
                 data: const SemiFloatButtonThemeData(
                   spacingFloatButtonBottom: 16,
@@ -640,18 +647,27 @@ void main() {
       await tester.pumpWidget(
         host(
           floatPage(
-            floatButton(shape: SemiFloatButtonShape.square, icon: const Text('I')),
+            floatButton(
+              shape: SemiFloatButtonShape.square,
+              icon: const Text('I'),
+            ),
           ),
         ),
       );
       await tester.pumpAndSettle();
       expect(bodyBox(tester).borderRadius, BorderRadius.circular(8));
-      expect(bodyBox(tester).borderRadius, BorderRadius.circular(t.radiusFloatButtonSquare));
+      expect(
+        bodyBox(tester).borderRadius,
+        BorderRadius.circular(t.radiusFloatButtonSquare),
+      );
 
       await tester.pumpWidget(
         host(
           floatPage(
-            floatButton(shape: SemiFloatButtonShape.round, icon: const Text('I')),
+            floatButton(
+              shape: SemiFloatButtonShape.round,
+              icon: const Text('I'),
+            ),
           ),
         ),
       );
@@ -669,39 +685,33 @@ void main() {
       final t = resolved();
       final gesture = await startMouse(tester);
       await tester.pumpWidget(
-        host(
-          floatPage(floatButton(icon: const Text('I'), onClick: () {})),
-        ),
+        host(floatPage(floatButton(icon: const Text('I'), onClick: () {}))),
       );
       await tester.pumpAndSettle();
       expect(bodyBox(tester).color, t.colorFloatButtonBg);
       expect(iconColor(tester), t.colorFloatButtonText);
 
-      await gesture.moveTo(tester.getCenter(find.byKey(SemiFloatButton.bodyKey)));
+      await gesture.moveTo(
+        tester.getCenter(find.byKey(SemiFloatButton.bodyKey)),
+      );
       await tester.pump();
       expect(bodyBox(tester).color, t.colorFloatButtonBgHover);
 
-      await gesture.down(
-        tester.getCenter(find.byKey(SemiFloatButton.bodyKey)),
-      );
+      await gesture.down(tester.getCenter(find.byKey(SemiFloatButton.bodyKey)));
       await tester.pump();
       expect(bodyBox(tester).color, t.colorFloatButtonBgActive);
       await gesture.up();
       await tester.pump();
 
       await tester.pumpWidget(
-        host(
-          floatPage(floatButton(disabled: true, icon: const Text('I'))),
-        ),
+        host(floatPage(floatButton(disabled: true, icon: const Text('I')))),
       );
       await tester.pumpAndSettle();
       expect(bodyBox(tester).color, t.colorFloatButtonDisabledBg);
       expect(iconColor(tester), t.colorFloatButtonDisabledText);
     });
 
-    testWidgets('colorful 渐变三态 + 白字（ai-general 渐变 token）', (
-      tester,
-    ) async {
+    testWidgets('colorful 渐变三态 + 白字（ai-general 渐变 token）', (tester) async {
       final t = resolved();
       final gesture = await startMouse(tester);
       await tester.pumpWidget(
@@ -716,13 +726,13 @@ void main() {
       expect(gradient().colors, t.colorFloatButtonColorfulBg.colors);
       expect(iconColor(tester), t.colorFloatButtonColorfulText);
 
-      await gesture.moveTo(tester.getCenter(find.byKey(SemiFloatButton.bodyKey)));
+      await gesture.moveTo(
+        tester.getCenter(find.byKey(SemiFloatButton.bodyKey)),
+      );
       await tester.pump();
       expect(gradient().colors, t.colorFloatButtonColorfulBgHover.colors);
 
-      await gesture.down(
-        tester.getCenter(find.byKey(SemiFloatButton.bodyKey)),
-      );
+      await gesture.down(tester.getCenter(find.byKey(SemiFloatButton.bodyKey)));
       await tester.pump();
       expect(gradient().colors, t.colorFloatButtonColorfulBgActive.colors);
       await gesture.up();
@@ -793,13 +803,13 @@ void main() {
   });
 
   group('点击与禁用', () {
-    testWidgets('点击回传 onClick；disabled 断路（index.tsx:30 口径）', (
-      tester,
-    ) async {
+    testWidgets('点击回传 onClick；disabled 断路（index.tsx:30 口径）', (tester) async {
       var clicks = 0;
       await tester.pumpWidget(
         host(
-          floatPage(floatButton(icon: const Text('I'), onClick: () => clicks++)),
+          floatPage(
+            floatButton(icon: const Text('I'), onClick: () => clicks++),
+          ),
         ),
       );
       await tester.pumpAndSettle();
@@ -810,12 +820,19 @@ void main() {
       await tester.pumpWidget(
         host(
           floatPage(
-            floatButton(disabled: true, icon: const Text('I'), onClick: () => clicks++),
+            floatButton(
+              disabled: true,
+              icon: const Text('I'),
+              onClick: () => clicks++,
+            ),
           ),
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(SemiFloatButton.bodyKey), warnIfMissed: false);
+      await tester.tap(
+        find.byKey(SemiFloatButton.bodyKey),
+        warnIfMissed: false,
+      );
       await tester.pump();
       expect(clicks, 1);
     });
@@ -824,7 +841,9 @@ void main() {
       var clicks = 0;
       await tester.pumpWidget(
         host(
-          floatPage(floatButton(icon: const Text('I'), onClick: () => clicks++)),
+          floatPage(
+            floatButton(icon: const Text('I'), onClick: () => clicks++),
+          ),
         ),
       );
       await tester.pumpAndSettle();
@@ -848,7 +867,11 @@ void main() {
       await tester.pumpWidget(
         host(
           floatPage(
-            floatButton(icon: const Text('I'), semanticsLabel: '悬浮'),
+            // 语义测试用无文本图标（Text 会把 label 并入文字节点）。
+            floatButton(
+              icon: const SizedBox(width: 16, height: 16),
+              semanticsLabel: '悬浮',
+            ),
           ),
         ),
       );
@@ -874,19 +897,14 @@ void main() {
       );
       await tester.pumpAndSettle();
       final positioned = tester.widget<PositionedDirectional>(
-        find.ancestor(
-          of: find.byType(SemiBadge),
-          matching: find.byType(PositionedDirectional),
-        ),
+        find.byKey(SemiFloatButton.badgeAnchorKey),
       );
       // floatButton.scss:64-65 `top: calc(0.29 * $radius-floatButton_square)`。
       expect(positioned.top, closeTo(0.29 * 8, 0.001));
       expect(positioned.end, closeTo(0.29 * 8, 0.001));
     });
 
-    testWidgets('圆形：inset = 0.29 * 0.5 * 边长（三尺寸 calc 口径）', (
-      tester,
-    ) async {
+    testWidgets('圆形：inset = 0.29 * 0.5 * 边长（三尺寸 calc 口径）', (tester) async {
       for (final (size, edge) in [
         (SemiFloatButtonSize.small, 24.0),
         (SemiFloatButtonSize.defaultSize, 32.0),
@@ -905,10 +923,7 @@ void main() {
         );
         await tester.pumpAndSettle();
         final positioned = tester.widget<PositionedDirectional>(
-          find.ancestor(
-            of: find.byType(SemiBadge),
-            matching: find.byType(PositionedDirectional),
-          ),
+          find.byKey(SemiFloatButton.badgeAnchorKey),
         );
         expect(
           positioned.top,
@@ -994,9 +1009,7 @@ void main() {
       expect(translation.translation, const Offset(-0.5, -0.5));
     });
 
-    testWidgets('主题覆盖 spacing 生效（全局 SemiComponentThemes）', (
-      tester,
-    ) async {
+    testWidgets('主题覆盖 spacing 生效（全局 SemiComponentThemes）', (tester) async {
       await tester.binding.setSurfaceSize(const Size(1200, 1200));
       await tester.pumpWidget(
         SemiTheme(
@@ -1043,34 +1056,36 @@ void main() {
         content: '帮助',
         onClick: first,
       ),
-      SemiFloatButtonGroupItem(value: 'search', icon: const Text('S'), content: '搜索'),
+      SemiFloatButtonGroupItem(
+        value: 'search',
+        icon: const Text('S'),
+        content: '搜索',
+      ),
     ];
 
-    testWidgets('组盒：padding 6 / 圆角 8 / 背景与阴影（floatButton.scss:124-134）',
-        (tester) async {
+    testWidgets('组盒：padding 6 / 圆角 8 / 背景与阴影（floatButton.scss:124-134）', (
+      tester,
+    ) async {
       final t = resolved();
-      await tester.pumpWidget(
-        host(floatPage(floatGroup(items: items()))),
-      );
+      await tester.pumpWidget(host(floatPage(floatGroup(items: items()))));
       await tester.pumpAndSettle();
       final container = tester.widget<Container>(
         find.byKey(SemiFloatButtonGroup.groupKey),
       );
       expect(container.padding, const EdgeInsets.all(6));
-      expect(container.padding, EdgeInsets.all(t.spacingFloatButtonGroupPadding));
+      expect(
+        container.padding,
+        EdgeInsets.all(t.spacingFloatButtonGroupPadding),
+      );
       final box = groupBox(tester);
       expect(box.color, t.colorFloatButtonGroupBg);
       expect(box.borderRadius, BorderRadius.circular(8));
       expect(box.boxShadow, t.shadowFloatButtonGroup.toBoxShadows());
     });
 
-    testWidgets('子项行：padding 12×6 / 圆角 4 / 文字样式四件 / 内容间距 8', (
-      tester,
-    ) async {
+    testWidgets('子项行：padding 12×6 / 圆角 4 / 文字样式四件 / 内容间距 8', (tester) async {
       final t = resolved();
-      await tester.pumpWidget(
-        host(floatPage(floatGroup(items: items()))),
-      );
+      await tester.pumpWidget(host(floatPage(floatGroup(items: items()))));
       await tester.pumpAndSettle();
       final itemContainer = tester.widget<Container>(
         find.descendant(
@@ -1087,7 +1102,7 @@ void main() {
         BorderRadius.circular(4),
       );
       // `content` 文字走 DefaultTextStyle 级联（color/fontSize/height/fontWeight）。
-      final style = tester.widget<RichText>(find.text('帮助')).text.style!;
+      final style = richTextOf(tester, '帮助').text.style!;
       expect(style.color, t.colorFloatButtonGroupItemText);
       expect(style.fontSize, t.fontFloatButtonGroupItemFontSize);
       expect(
@@ -1137,9 +1152,7 @@ void main() {
       expect(groupValue, 'help');
     });
 
-    testWidgets('stopPropagation 断组回调（itemProps.test.jsx 口径）', (
-      tester,
-    ) async {
+    testWidgets('stopPropagation 断组回调（itemProps.test.jsx 口径）', (tester) async {
       final calls = <String>[];
       await tester.pumpWidget(
         host(
@@ -1234,17 +1247,13 @@ void main() {
       await tester.pump();
     });
 
-    testWidgets('value 缺省回传 null（`item.dataset.value` 口径）', (
-      tester,
-    ) async {
+    testWidgets('value 缺省回传 null（`item.dataset.value` 口径）', (tester) async {
       String? groupValue = 'sentinel';
       await tester.pumpWidget(
         host(
           floatPage(
             floatGroup(
-              items: const [
-                SemiFloatButtonGroupItem(content: '帮助'),
-              ],
+              items: const [SemiFloatButtonGroupItem(content: '帮助')],
               onClick: (value, event) => groupValue = value,
             ),
           ),
@@ -1256,14 +1265,10 @@ void main() {
       expect(groupValue, isNull);
     });
 
-    testWidgets('子项 hover/active 底色（floatButton.scss:149-155）', (
-      tester,
-    ) async {
+    testWidgets('子项 hover/active 底色（floatButton.scss:149-155）', (tester) async {
       final t = resolved();
       final gesture = await startMouse(tester);
-      await tester.pumpWidget(
-        host(floatPage(floatGroup(items: items()))),
-      );
+      await tester.pumpWidget(host(floatPage(floatGroup(items: items()))));
       await tester.pumpAndSettle();
       BoxDecoration itemBox() =>
           tester
@@ -1276,7 +1281,9 @@ void main() {
                   .decoration!
               as BoxDecoration;
       expect(itemBox().color, isNull);
-      await gesture.moveTo(tester.getCenter(find.byKey(SemiFloatButtonGroup.itemKey(0))));
+      await gesture.moveTo(
+        tester.getCenter(find.byKey(SemiFloatButtonGroup.itemKey(0))),
+      );
       await tester.pump();
       expect(itemBox().color, t.colorFloatButtonGroupItemBgHover);
       await gesture.down(
@@ -1305,7 +1312,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(
-        find.ancestor(
+        find.descendant(
           of: find.byKey(SemiFloatButtonGroup.itemKey(0)),
           matching: find.byType(SemiBadge),
         ),
@@ -1314,24 +1321,19 @@ void main() {
       expect(find.text('3'), findsOneWidget);
     });
 
-    testWidgets('★组/子项禁用无视觉差（quirk——`-disabled` 无样式规则，死变量为证）',
-        (tester) async {
+    testWidgets('★组/子项禁用无视觉差（quirk——`-disabled` 无样式规则，死变量为证）', (tester) async {
       final t = resolved();
       await tester.pumpWidget(
-        host(
-          floatPage(
-            floatGroup(disabled: true, items: items()),
-          ),
-        ),
+        host(floatPage(floatGroup(disabled: true, items: items()))),
       );
       await tester.pumpAndSettle();
       // 背景/文字样式与非禁用一致。
       expect(groupBox(tester).color, t.colorFloatButtonGroupBg);
-      final style = tester.widget<RichText>(find.text('帮助')).text.style!;
+      final style = richTextOf(tester, '帮助').text.style!;
       expect(style.color, t.colorFloatButtonGroupItemText);
       // 光标保持 pointer（:137 无禁用覆盖）。
       final region = tester.widget<MouseRegion>(
-        find.ancestor(
+        find.descendant(
           of: find.byKey(SemiFloatButtonGroup.itemKey(0)),
           matching: find.byType(MouseRegion),
         ),
@@ -1339,19 +1341,17 @@ void main() {
       expect(region.cursor, SystemMouseCursors.click);
     });
 
-    testWidgets('组定位：end 24 / bottom 24 + 子项 gap 4（columnGap）', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        host(floatPage(floatGroup(items: items()))),
-      );
+    testWidgets('组定位：end 24 / bottom 24 + 子项 gap 4（columnGap）', (tester) async {
+      await tester.pumpWidget(host(floatPage(floatGroup(items: items()))));
       await tester.pumpAndSettle();
       final stack = stackTopLeft(tester);
       final rect = tester.getRect(find.byKey(SemiFloatButtonGroup.groupKey));
       expect(rect.right, stack.dx + 900 - 24);
       expect(rect.bottom, stack.dy + 900 - 24);
       final first = tester.getRect(find.byKey(SemiFloatButtonGroup.itemKey(0)));
-      final second = tester.getRect(find.byKey(SemiFloatButtonGroup.itemKey(1)));
+      final second = tester.getRect(
+        find.byKey(SemiFloatButtonGroup.itemKey(1)),
+      );
       expect(second.left - first.right, 4);
     });
   });

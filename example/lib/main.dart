@@ -8,6 +8,7 @@ import 'package:example/pages/breadcrumb.dart';
 import 'package:example/pages/button.dart';
 import 'package:example/pages/card.dart';
 import 'package:example/pages/carousel.dart';
+import 'package:example/pages/cascader.dart';
 import 'package:example/pages/checkbox.dart';
 import 'package:example/pages/collapse.dart';
 import 'package:example/pages/collapsible.dart';
@@ -20,16 +21,20 @@ import 'package:example/pages/dropdown.dart';
 import 'package:example/pages/empty.dart';
 import 'package:example/pages/float_button.dart';
 import 'package:example/pages/highlight.dart';
+import 'package:example/pages/image.dart';
 import 'package:example/pages/input.dart';
 import 'package:example/pages/input_number.dart';
 import 'package:example/pages/modal.dart';
 import 'package:example/pages/navigation.dart';
+import 'package:example/pages/notification.dart';
 import 'package:example/pages/overflow_list.dart';
 import 'package:example/pages/pagination.dart';
 import 'package:example/pages/pincode.dart';
+import 'package:example/pages/popconfirm.dart';
 import 'package:example/pages/progress.dart';
 import 'package:example/pages/radio.dart';
 import 'package:example/pages/rating.dart';
+import 'package:example/pages/scroll_list.dart';
 import 'package:example/pages/select.dart';
 import 'package:example/pages/side_sheet.dart';
 import 'package:example/pages/skeleton.dart';
@@ -42,6 +47,7 @@ import 'package:example/pages/tag.dart';
 import 'package:example/pages/tag_input.dart';
 import 'package:example/pages/time_picker.dart';
 import 'package:example/pages/timeline.dart';
+import 'package:example/pages/toast.dart';
 import 'package:example/pages/tooltip.dart';
 import 'package:example/pages/tree.dart';
 import 'package:example/pages/tree_select.dart';
@@ -123,6 +129,7 @@ const List<DemoGroup> demoGroups = [
       'doc-autocomplete.svg',
       AutoCompletePage(),
     ),
+    DemoSpec('cascader', 'Cascader 级联选择', 'doc-cascader.svg', CascaderPage()),
     DemoSpec('checkbox', 'Checkbox 复选框', 'doc-checkbox.svg', CheckboxPage()),
     DemoSpec(
       'colorPicker',
@@ -182,12 +189,7 @@ const List<DemoGroup> demoGroups = [
     DemoSpec('steps', 'Steps 步骤', 'doc-steps.svg', StepsPage()),
     DemoSpec('tabs', 'Tabs 标签栏', 'doc-tabs.svg', TabsPage()),
     DemoSpec('tree', 'Tree 树形控件', 'doc-tree.svg', TreePage()),
-    DemoSpec(
-      'treeSelect',
-      'TreeSelect 树选择器',
-      'doc-tree.svg',
-      TreeSelectPage(),
-    ),
+    DemoSpec('treeSelect', 'TreeSelect 树选择器', 'doc-tree.svg', TreeSelectPage()),
   ]),
   DemoGroup('展示类', [
     DemoSpec('avatar', 'Avatar 头像', 'doc-avatar.svg', AvatarPage()),
@@ -216,6 +218,7 @@ const List<DemoGroup> demoGroups = [
       'doc-highlight.svg',
       HighlightPage(),
     ),
+    DemoSpec('image', 'Image 图片', 'doc-image.svg', ImagePage()),
     DemoSpec('modal', 'Modal 模态对话框', 'doc-modal.svg', ModalPage()),
     DemoSpec(
       'sideSheet',
@@ -229,14 +232,33 @@ const List<DemoGroup> demoGroups = [
       'doc-overflowList.svg',
       OverflowListPage(),
     ),
+    DemoSpec(
+      'scrollList',
+      'ScrollList 滚动列表',
+      'doc-scrolllist.svg',
+      ScrollListPage(),
+    ),
     DemoSpec('tag', 'Tag 标签', 'doc-tag.svg', TagPage()),
     DemoSpec('timeline', 'Timeline 时间轴', 'doc-timeline.svg', TimelinePage()),
     DemoSpec('tooltip', 'Tooltip 工具提示', 'doc-tooltip.svg', TooltipPage()),
   ]),
   DemoGroup('反馈类', [
+    DemoSpec(
+      'notification',
+      'Notification 通知',
+      'doc-notification.svg',
+      NotificationPage(),
+    ),
+    DemoSpec(
+      'popconfirm',
+      'Popconfirm 气泡确认框',
+      'doc-popconfirm.svg',
+      PopconfirmPage(),
+    ),
     DemoSpec('progress', 'Progress 进度条', 'doc-progress.svg', ProgressPage()),
     DemoSpec('skeleton', 'Skeleton 骨架屏', 'doc-skeleton.svg', SkeletonPage()),
     DemoSpec('spin', 'Spin 加载器', 'doc-spin.svg', SpinPage()),
+    DemoSpec('toast', 'Toast 轻提示', 'doc-toast.svg', ToastPage()),
   ]),
 ];
 

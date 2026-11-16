@@ -244,9 +244,8 @@ class SemiScrollList extends StatelessWidget {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(t.radiusScrollList),
             child: DefaultTextStyle(
-              style: DefaultTextStyle.of(
-                context,
-              ).style.copyWith(fontSize: 14, height: 20 / 14),
+              style: DefaultTextStyle.of(context).style
+                  .copyWith(fontSize: 14, height: 20 / 14),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -365,7 +364,8 @@ class _SemiScrollItemState extends State<SemiScrollItem> {
   /// `padding-bottom` ——仅非 cycled 出现（`list-outer-nocycle > ul:before`）。
   bool get _spacers => !_cycled;
 
-  double get _itemExtent => _resolved?.heightScrollListItem ?? _itemExtentFallback;
+  double get _itemExtent =>
+      _resolved?.heightScrollListItem ?? _itemExtentFallback;
 
   double get _spacer => _resolved?.spacingScrollListItemUlPaddingBottom ?? 132;
 
@@ -444,8 +444,9 @@ class _SemiScrollItemState extends State<SemiScrollItem> {
   /// scrollToNode 公式：`targetTop = node.offsetTop - (wrapperHeight -
   /// itemHeight) / 2`。
   double _targetOffset(int virtual) {
-    final viewport =
-        _controller.hasClients ? _controller.position.viewportDimension : 0.0;
+    final viewport = _controller.hasClients
+        ? _controller.position.viewportDimension
+        : 0.0;
     final target = _rowOffset(virtual) - (viewport - _itemExtent) / 2;
     return _clampOffset(target);
   }
@@ -539,7 +540,8 @@ class _SemiScrollItemState extends State<SemiScrollItem> {
   /// (this._cachedSelectedNode !== node) {`）。
   void _selectVirtual(int virtual) {
     final dataIndex = _dataOf(virtual);
-    final changed = _settledVirtual == null || _dataOf(_settledVirtual!) != dataIndex;
+    final changed =
+        _settledVirtual == null || _dataOf(_settledVirtual!) != dataIndex;
     setState(() => _settledVirtual = virtual);
     // scrollToCenter 公式 `scrollRect.top + scrollRect.height / 2 -
     // selectedRect.height / 2` → 目标 = 行中线对齐视口中线（_targetOffset）。
@@ -587,7 +589,8 @@ class _SemiScrollItemState extends State<SemiScrollItem> {
   String _label(int dataIndex) {
     final item = widget.list[dataIndex];
     // JS String() 语义：整数值不带 `.0`（badge `_formatNum` 先例）。
-    var text = item.text ??
+    var text =
+        item.text ??
         (item.value == null
             ? ''
             : item.value is num &&
@@ -611,7 +614,9 @@ class _SemiScrollItemState extends State<SemiScrollItem> {
     final slot = _ScrollItemSlot.maybeOf(context);
     final isLast = slot == null || slot.index == slot.count - 1;
 
-    final content = _isWheel ? _buildWheel(context, t, global) : _buildNormal(context, t, global);
+    final content = _isWheel
+        ? _buildWheel(context, t, global)
+        : _buildNormal(context, t, global);
 
     if (isLast) return content;
     // 分隔描边（`&:not(:last-child)`）：normal `border-right:
@@ -661,10 +666,7 @@ class _SemiScrollItemState extends State<SemiScrollItem> {
         // `$spacing-scrollList_item_ul-padding`（0 值字段照用即消费）；
         // `padding-bottom` 由首尾留白块承接（见上）。
         padding: EdgeInsets.all(t.spacingScrollListItemUlPadding),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: children,
-        ),
+        child: Column(mainAxisSize: MainAxisSize.min, children: children),
       ),
     );
   }
@@ -757,7 +759,8 @@ class _SemiScrollItemState extends State<SemiScrollItem> {
             // `$spacing-scrollList_item_wheel_list_shade_post-marginTop`、
             // height: 50%、opacity: 0.5。
             Positioned(
-              top: height * 0.5 +
+              top:
+                  height * 0.5 +
                   t.spacingScrollListItemWheelListShadePostMarginTop,
               left: 0,
               right: 0,

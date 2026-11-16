@@ -179,9 +179,8 @@ class _FloatButtonPageState extends State<FloatButtonPage> {
               _stack(
                 key: const ValueKey('floatbutton-group'),
                 float: SemiFloatButtonGroup(
-                  onClick:
-                      (value, event) =>
-                          _push('group onClick value=$value'),
+                  onClick: (value, event) =>
+                      _push('group onClick value=$value'),
                   items: [
                     _item('editor', '编辑', SemiIcons.edit),
                     _item('search', '搜索', SemiIcons.search),
@@ -219,8 +218,7 @@ class _FloatButtonPageState extends State<FloatButtonPage> {
                     ),
                     SemiFloatButtonGroup(
                       disabled: true,
-                      onClick:
-                          (value, event) => _push('group 禁用不应达'),
+                      onClick: (value, event) => _push('group 禁用不应达'),
                       items: [
                         _item('editor', '编辑', SemiIcons.edit),
                         _item('search', '搜索', SemiIcons.search),

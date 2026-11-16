@@ -930,7 +930,7 @@ class SemiTooltipPopup extends StatelessWidget {
           content,
           Positioned.fill(
             child: IgnorePointer(
-              child: CustomPaint(painter: _arrowPainter(context, result!)),
+              child: CustomPaint(painter: _arrowPainter(context, result)),
             ),
           ),
         ],
@@ -974,7 +974,7 @@ class SemiTooltipPopup extends StatelessWidget {
         box,
         Positioned.fill(
           child: IgnorePointer(
-            child: CustomPaint(painter: _arrowPainter(context, result!)),
+            child: CustomPaint(painter: _arrowPainter(context, result)),
           ),
         ),
       ],

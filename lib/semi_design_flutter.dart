@@ -184,6 +184,12 @@ export 'src/theme/semi_float_button_theme_data.dart';
 export 'src/components/semi_scroll_list.dart';
 export 'src/theme/semi_scroll_list_theme.dart';
 export 'src/theme/semi_scroll_list_theme_data.dart';
+export 'src/components/semi_notification.dart';
+export 'src/theme/semi_notification_theme.dart';
+export 'src/theme/semi_notification_theme_data.dart';
+export 'src/components/semi_toast.dart';
+export 'src/theme/semi_toast_theme.dart';
+export 'src/theme/semi_toast_theme_data.dart';
 
 /// A Calculator.
 class Calculator {

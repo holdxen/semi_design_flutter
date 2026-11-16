@@ -46,6 +46,7 @@ import 'semi_carousel_theme_data.dart';
 import 'semi_modal_theme_data.dart';
 import 'semi_popconfirm_theme_data.dart';
 import 'semi_banner_theme_data.dart';
+import 'semi_notification_theme_data.dart';
 import 'semi_badge_theme_data.dart';
 import 'semi_avatar_theme_data.dart';
 import 'semi_cropper_theme_data.dart';
@@ -53,6 +54,7 @@ import 'semi_side_sheet_theme_data.dart';
 import 'semi_scroll_list_theme_data.dart';
 import 'semi_float_button_theme_data.dart';
 import 'semi_image_theme_data.dart';
+import 'semi_toast_theme_data.dart';
 
 @immutable
 class SemiComponentThemes {
@@ -103,6 +105,7 @@ class SemiComponentThemes {
     this.modal = const SemiModalThemeData(),
     this.popconfirm = const SemiPopconfirmThemeData(),
     this.banner = const SemiBannerThemeData(),
+    this.notification = const SemiNotificationThemeData(),
     this.badge = const SemiBadgeThemeData(),
     this.avatar = const SemiAvatarThemeData(),
     this.cropper = const SemiCropperThemeData(),
@@ -110,6 +113,7 @@ class SemiComponentThemes {
     this.scrollList = const SemiScrollListThemeData(),
     this.floatButton = const SemiFloatButtonThemeData(),
     this.image = const SemiImageThemeData(),
+    this.toast = const SemiToastThemeData(),
   });
   final SemiTagThemeData tag;
   final SemiTypographyThemeData typography;
@@ -160,6 +164,7 @@ class SemiComponentThemes {
   final SemiModalThemeData modal;
   final SemiPopconfirmThemeData popconfirm;
   final SemiBannerThemeData banner;
+  final SemiNotificationThemeData notification;
   final SemiBadgeThemeData badge;
   final SemiAvatarThemeData avatar;
   final SemiCropperThemeData cropper;
@@ -167,6 +172,7 @@ class SemiComponentThemes {
   final SemiScrollListThemeData scrollList;
   final SemiFloatButtonThemeData floatButton;
   final SemiImageThemeData image;
+  final SemiToastThemeData toast;
   SemiComponentThemes copyWith({
     SemiTagThemeData? tag,
     SemiTypographyThemeData? typography,
@@ -214,6 +220,7 @@ class SemiComponentThemes {
     SemiModalThemeData? modal,
     SemiPopconfirmThemeData? popconfirm,
     SemiBannerThemeData? banner,
+    SemiNotificationThemeData? notification,
     SemiBadgeThemeData? badge,
     SemiAvatarThemeData? avatar,
     SemiCropperThemeData? cropper,
@@ -221,6 +228,7 @@ class SemiComponentThemes {
     SemiScrollListThemeData? scrollList,
     SemiFloatButtonThemeData? floatButton,
     SemiImageThemeData? image,
+    SemiToastThemeData? toast,
   }) => SemiComponentThemes(
     tag: tag ?? this.tag,
     typography: typography ?? this.typography,
@@ -268,6 +276,7 @@ class SemiComponentThemes {
     modal: modal ?? this.modal,
     popconfirm: popconfirm ?? this.popconfirm,
     banner: banner ?? this.banner,
+    notification: notification ?? this.notification,
     badge: badge ?? this.badge,
     avatar: avatar ?? this.avatar,
     cropper: cropper ?? this.cropper,
@@ -275,6 +284,7 @@ class SemiComponentThemes {
     scrollList: scrollList ?? this.scrollList,
     floatButton: floatButton ?? this.floatButton,
     image: image ?? this.image,
+    toast: toast ?? this.toast,
   );
   @override
   bool operator ==(Object other) =>
@@ -326,13 +336,15 @@ class SemiComponentThemes {
           modal == other.modal &&
           popconfirm == other.popconfirm &&
           banner == other.banner &&
+          notification == other.notification &&
           badge == other.badge &&
           avatar == other.avatar &&
           cropper == other.cropper &&
           sideSheet == other.sideSheet &&
           scrollList == other.scrollList &&
           floatButton == other.floatButton &&
-          image == other.image;
+          image == other.image &&
+          toast == other.toast;
   @override
   int get hashCode => Object.hashAll([
     tag,
@@ -381,6 +393,7 @@ class SemiComponentThemes {
     modal,
     popconfirm,
     banner,
+    notification,
     badge,
     avatar,
     cropper,
@@ -388,5 +401,6 @@ class SemiComponentThemes {
     scrollList,
     floatButton,
     image,
+    toast,
   ]);
 }

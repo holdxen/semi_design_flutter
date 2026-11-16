@@ -86,9 +86,7 @@ class SemiFloatButtonGroupItem {
     this.href,
     this.target,
     this.onClick,
-  }) : assert(
-         content == null || content is String || content is Widget,
-       );
+  }) : assert(content == null || content is String || content is Widget);
 
   /// 子项标识（上游 `value` → `data-value`；组回调回传，无值则 null——
   /// `item.dataset.value` 口径）。
@@ -174,6 +172,10 @@ class SemiFloatButton extends StatefulWidget {
   /// 按钮主体盒（测试度量锚点）。
   static const Key bodyKey = ValueKey('SemiFloatButtonBody');
 
+  /// badge 挪位锚（测试度量锚点——外层定位是 PositionedDirectional，
+  /// badge 挪位层同型，需独立锚点区分）。
+  static const Key badgeAnchorKey = ValueKey('SemiFloatButtonBadgeAnchor');
+
   @override
   State<SemiFloatButton> createState() => _SemiFloatButtonState();
 }
@@ -219,12 +221,11 @@ class _SemiFloatButtonState extends State<SemiFloatButton> {
     double width,
   ) {
     if (widget.colorful) {
-      final gradient =
-          _pressed
-              ? t.colorFloatButtonColorfulBgActive
-              : _hovering
-              ? t.colorFloatButtonColorfulBgHover
-              : t.colorFloatButtonColorfulBg;
+      final gradient = _pressed
+          ? t.colorFloatButtonColorfulBgActive
+          : _hovering
+          ? t.colorFloatButtonColorfulBgHover
+          : t.colorFloatButtonColorfulBg;
       return (
         bg: null,
         gradient: gradient.forSize(Size.square(width)),
@@ -239,12 +240,11 @@ class _SemiFloatButtonState extends State<SemiFloatButton> {
       );
     }
     return (
-      bg:
-          _pressed
-              ? t.colorFloatButtonBgActive
-              : _hovering
-              ? t.colorFloatButtonBgHover
-              : t.colorFloatButtonBg,
+      bg: _pressed
+          ? t.colorFloatButtonBgActive
+          : _hovering
+          ? t.colorFloatButtonBgHover
+          : t.colorFloatButtonBg,
       gradient: null,
       text: t.colorFloatButtonText,
     );
@@ -303,14 +303,14 @@ class _SemiFloatButtonState extends State<SemiFloatButton> {
         children: [
           body,
           PositionedDirectional(
+            key: SemiFloatButton.badgeAnchorKey,
             top: inset,
             end: inset,
             child: FractionalTranslation(
               // 默认角（rightTop/ltr、leftTop/rtl）的 translate 居中标注。
-              translation:
-                  Directionality.of(context) == TextDirection.rtl
-                      ? const Offset(-0.5, -0.5)
-                      : const Offset(0.5, -0.5),
+              translation: Directionality.of(context) == TextDirection.rtl
+                  ? const Offset(-0.5, -0.5)
+                  : const Offset(0.5, -0.5),
               child: SemiBadge(
                 count: badge.count,
                 dot: badge.dot,
@@ -343,18 +343,16 @@ class _SemiFloatButtonState extends State<SemiFloatButton> {
           child: MouseRegion(
             // floatButton.scss:12 `cursor: pointer`；:34 `cursor: not-allowed`
             // （禁用 → forbidden）。
-            cursor:
-                widget.disabled
-                    ? SystemMouseCursors.forbidden
-                    : SystemMouseCursors.click,
+            cursor: widget.disabled
+                ? SystemMouseCursors.forbidden
+                : SystemMouseCursors.click,
             onEnter: (_) => setState(() => _hovering = true),
             onExit: (_) => setState(() => _hovering = false),
             child: Listener(
               behavior: HitTestBehavior.opaque,
-              onPointerDown:
-                  widget.disabled
-                      ? null
-                      : (_) => setState(() => _pressed = true),
+              onPointerDown: widget.disabled
+                  ? null
+                  : (_) => setState(() => _pressed = true),
               onPointerUp: (_) => setState(() => _pressed = false),
               onPointerCancel: (_) => setState(() => _pressed = false),
               child: GestureDetector(
@@ -476,11 +474,7 @@ class SemiFloatButtonGroup extends StatelessWidget {
 /// 组子项行（hover/active 底色——floatButton.scss:149-155 `&:hover` /
 /// `&:active`）。
 class _GroupItemView extends StatefulWidget {
-  const _GroupItemView({
-    super.key,
-    required this.item,
-    required this.onTap,
-  });
+  const _GroupItemView({super.key, required this.item, required this.onTap});
 
   final SemiFloatButtonGroupItem item;
   final VoidCallback onTap;
@@ -516,6 +510,65 @@ class _GroupItemViewState extends State<_GroupItemView> {
     final item = widget.item;
     final t = SemiFloatButtonTheme.resolve(context);
     final Object? content = item.content;
+    // floatButtonGroup.tsx:79-87 `<Badge {...item.badge}><div item/></Badge>`
+    // ——badge 包裹可点行（badge 在点击目标之外，dot 命中不触发子项回调）。
+    Widget row = GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: widget.onTap,
+      child: Container(
+        // floatButton.scss:136-147 `&-item`（`padding:
+        // $spacing-floatButton_group_item-paddingY
+        // $spacing-floatButton_group_item-paddingX`；`column-gap:
+        // $spacing-floatButton_group_item-columnGap`；`font-style:
+        // normal` → TextStyle 注释留档）。
+        padding: EdgeInsets.symmetric(
+          vertical: t.spacingFloatButtonGroupItemPaddingY,
+          horizontal: t.spacingFloatButtonGroupItemPaddingX,
+        ),
+        decoration: BoxDecoration(
+          color: _pressed
+              ? t.colorFloatButtonGroupItemBgActive
+              : _hovering
+              ? t.colorFloatButtonGroupItemBgHover
+              : null,
+          borderRadius: BorderRadius.circular(
+            t.radiusFloatButtonGroupItemBorderRadius,
+          ),
+        ),
+        // `color: $color-floatButton_group_item-text` + font 三件
+        // （fontSize/fontWeight/lineHeight）→ DefaultTextStyle 级联
+        // （icon currentColor / Text 同源）。
+        child: DefaultTextStyle(
+          style: TextStyle(
+            color: t.colorFloatButtonGroupItemText,
+            fontSize: t.fontFloatButtonGroupItemFontSize,
+            height:
+                t.fontFloatButtonGroupItemLineHeight /
+                t.fontFloatButtonGroupItemFontSize,
+            fontWeight: t.fontFloatButtonGroupItemFontWeight,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            spacing: t.spacingFloatButtonGroupItemColumnGap,
+            children: [
+              if (item.icon != null) item.icon!,
+              if (content != null)
+                content is Widget ? content : Text('$content'),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (item.badge case final badge?) {
+      row = SemiBadge(
+        count: badge.count,
+        dot: badge.dot,
+        type: badge.type,
+        variant: badge.variant,
+        overflowCount: badge.overflowCount,
+        child: row,
+      );
+    }
     return Semantics(
       button: true,
       enabled: !item.disabled,
@@ -532,54 +585,7 @@ class _GroupItemViewState extends State<_GroupItemView> {
             onPointerDown: (_) => setState(() => _pressed = true),
             onPointerUp: (_) => setState(() => _pressed = false),
             onPointerCancel: (_) => setState(() => _pressed = false),
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: widget.onTap,
-              child: Container(
-                // floatButton.scss:136-147 `&-item`（`padding:
-                // $spacing-floatButton_group_item-paddingY
-                // $spacing-floatButton_group_item-paddingX`；`column-gap:
-                // $spacing-floatButton_group_item-columnGap`；`font-style:
-                // normal` → TextStyle 注释留档）。
-                padding: EdgeInsets.symmetric(
-                  vertical: t.spacingFloatButtonGroupItemPaddingY,
-                  horizontal: t.spacingFloatButtonGroupItemPaddingX,
-                ),
-                decoration: BoxDecoration(
-                  color:
-                      _pressed
-                          ? t.colorFloatButtonGroupItemBgActive
-                          : _hovering
-                          ? t.colorFloatButtonGroupItemBgHover
-                          : null,
-                  borderRadius: BorderRadius.circular(
-                    t.radiusFloatButtonGroupItemBorderRadius,
-                  ),
-                ),
-                // `color: $color-floatButton_group_item-text` + font 三件
-                // （fontSize/fontWeight/lineHeight）→ DefaultTextStyle 级联
-                // （icon currentColor / Text 同源）。
-                child: DefaultTextStyle(
-                  style: TextStyle(
-                    color: t.colorFloatButtonGroupItemText,
-                    fontSize: t.fontFloatButtonGroupItemFontSize,
-                    height:
-                        t.fontFloatButtonGroupItemLineHeight /
-                        t.fontFloatButtonGroupItemFontSize,
-                    fontWeight: t.fontFloatButtonGroupItemFontWeight,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    spacing: t.spacingFloatButtonGroupItemColumnGap,
-                    children: [
-                      if (item.icon != null) item.icon!,
-                      if (content != null)
-                        content is Widget ? content : Text('$content'),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+            child: row,
           ),
         ),
       ),

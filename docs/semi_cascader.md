@@ -217,5 +217,5 @@ treeData `List<SemiCascaderData>`（引用变化触发实体重建——建议 c
 20. **受控 value 口径**：`value` 非 null 即受控（TreeSelect 约定；上游 `'value' in props` 的显式 null 受控无对应）。
 21. **not-exist 值合成实体照抄**（foundation.ts:579-601）：值不在 treeData 中时 `not-exist-<val>` 前缀口径原样；多选未知值丢弃（上游 getRealKeys 口径）。
 22. **动画 delay 并入 duration**：`transition_delay-cascader_option-bg` 在 AnimatedContainer 无对应——并入时长近似（缺省 0 不影响）。
-23. **Tag margin 简写消费**：`$spacing-cascader_selection_tag-margin*` 的 CSS `margin: Y Right Y Left`（Left=0/Right=2）以 horizontal=Right、vertical=Y 近似（Left=0 不影响布局）。
+23. **Tag margin 简写四向全消费**：`$spacing-cascader_selection_tag-margin*` 的 CSS `margin: Y Right Y Left`（Top/Bottom=Y、Right=2、Left=0；`&:first-child` 另设 margin-left 0——同值不重复消费）。
 24. **选项 hover/pressed 逐行状态**：React CSS `:hover/:active` → Flutter 逐行 MouseRegion/Listener 状态跟踪（视觉等效）。
