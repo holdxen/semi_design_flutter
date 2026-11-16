@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../overlay/dialog_engine/helper/navigator_observer.dart';
 import '../theme/semi_theme.dart';
 import '../theme/semi_theme_data.dart';
 
@@ -51,6 +52,10 @@ class SemiApp extends StatelessWidget {
   final Iterable<Locale> supportedLocales;
   final bool debugShowCheckedModeBanner;
 
+  /// Stable engine binder — one observer instance survives rebuilds.
+  static final SmartNavigatorObserver _dialogEngineObserver =
+      SmartNavigatorObserver();
+
   @override
   Widget build(BuildContext context) {
     // Validate the caller's configuration before installing our own builder.
@@ -72,9 +77,22 @@ class SemiApp extends StatelessWidget {
               initialRoute == null &&
               navigatorObservers.isEmpty),
     );
+    // Builder-only apps have no Navigator (child == null) — WidgetsApp
+    // rejects observers without one; the engine binds manually there.
+    final hasNavigator =
+        home != null ||
+        routes.isNotEmpty ||
+        onGenerateRoute != null ||
+        onUnknownRoute != null;
     return WidgetsApp(
       navigatorKey: navigatorKey,
-      navigatorObservers: navigatorObservers,
+      // The dialog engine (vendored flutter_smart_dialog — SemiModal substrate)
+      // binds itself to the navigator's ambient overlay through this observer,
+      // so dialogs work with zero app-level init (PROVENANCE.md).
+      navigatorObservers: [
+        ...navigatorObservers,
+        if (hasNavigator) _dialogEngineObserver,
+      ],
       home: home,
       routes: routes,
       onGenerateRoute: onGenerateRoute,

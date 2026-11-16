@@ -1,0 +1,9 @@
+# Vendored from flutter_smart_dialog 5.3.1 (MIT) — see PROVENANCE.md.
+# Upstream enum/constant naming (e.g. `routeClose_nonAnimation`) is kept
+# verbatim for provenance, so identifier-style lints are scoped off here.
+analyzer:
+  errors:
+    constant_identifier_names: ignore
+    unnecessary_underscores: ignore
+    library_names: ignore
+    dangling_library_doc_comments: ignore

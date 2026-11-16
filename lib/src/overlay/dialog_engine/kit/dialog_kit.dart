@@ -1,0 +1,48 @@
+import 'package:semi_design_flutter/src/overlay/dialog_engine/helper/dialog_proxy.dart';
+
+import '../config/enum_config.dart';
+import '../smart_dialog.dart';
+
+class DialogKit {
+  static DialogKit? _instance;
+
+  static DialogKit get instance => _instance ??= DialogKit._();
+
+  DialogKit._();
+
+  bool checkExist({String? tag, required Set<SmartAllDialogType> dialogTypes}) {
+    var dialogProxy = DialogProxy.instance;
+    if (tag != null) {
+      for (var element in dialogProxy.dialogQueue) {
+        if (element.tag == tag) {
+          return true;
+        }
+      }
+      for (var element in dialogProxy.notifyQueue) {
+        if (element.tag == tag) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    var result = false;
+    if (dialogTypes.contains(SmartAllDialogType.custom)) {
+      result = SmartDialog.config.custom.isExist || result;
+    }
+    if (dialogTypes.contains(SmartAllDialogType.attach)) {
+      result = SmartDialog.config.attach.isExist || result;
+    }
+    if (dialogTypes.contains(SmartAllDialogType.notify)) {
+      result = SmartDialog.config.notify.isExist || result;
+    }
+    if (dialogTypes.contains(SmartAllDialogType.loading)) {
+      result = SmartDialog.config.loading.isExist || result;
+    }
+    if (dialogTypes.contains(SmartAllDialogType.toast)) {
+      result = SmartDialog.config.toast.isExist || result;
+    }
+
+    return result;
+  }
+}
