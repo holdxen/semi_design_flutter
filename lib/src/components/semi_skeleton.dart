@@ -257,12 +257,11 @@ class _SkeletonShimmerScope extends InheritedWidget {
 
 /// 静态底色 / active 三段扫光渐变。
 class _SkeletonFill extends StatelessWidget {
-  const _SkeletonFill({this.width, this.height, this.borderRadius, this.child});
+  const _SkeletonFill({this.width, this.height, this.borderRadius});
 
   final double? width;
   final double? height;
   final BorderRadius? borderRadius;
-  final Widget? child;
 
   @override
   Widget build(BuildContext context) {
@@ -274,7 +273,6 @@ class _SkeletonFill extends StatelessWidget {
         gradient: shimmer == null ? null : _shimmerGradient(theme, t),
         borderRadius: borderRadius,
       ),
-      child: child,
     );
     final content = shimmer == null
         ? paint(0)
