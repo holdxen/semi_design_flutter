@@ -123,6 +123,9 @@ export 'src/theme/semi_navigation_theme_data.dart';
 export 'src/components/semi_pagination.dart';
 export 'src/theme/semi_pagination_theme.dart';
 export 'src/theme/semi_pagination_theme_data.dart';
+export 'src/components/semi_tree.dart';
+export 'src/theme/semi_tree_theme.dart';
+export 'src/theme/semi_tree_theme_data.dart';
 
 /// A Calculator.
 class Calculator {
