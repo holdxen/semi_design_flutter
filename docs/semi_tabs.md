@@ -31,7 +31,7 @@ tabList `List<SemiTabData>`。activeKey `String?`（非 null 即受控：点击/
 
 ### 溢出
 
-`collapsible` → 横条放入横向滚动容器（滚动条隐藏），两端箭头（chevron，RTL 翻转；间距 4、内边距 8、边框宽 0、禁用色）按滚动位置启用，点击滚动 80px。`more: n` → 只渲染前 `length - n` 项，尾部「更多」触发器（text-2 色 + chevron-down，图标外边距 8/8/0/0，形态同页签 padding）hover 弹出 SemiDropdown，列表最大高 300（可滚动），行高 32、padding 8/12、hover fill-0、选中 primary + 加粗 + tick；点击行切换。`collapsible` 与 `more` 同时给时 collapsible 优先（TabBar.tsx render）。
+`collapsible` → 横条放入横向滚动容器（滚动条隐藏），两端箭头（chevron，RTL 翻转；间距 4、内边距 8、边框宽 0、禁用色、圆角 3——`.semi-button` 基座 `$radius-button`）按滚动位置启用，点击滚动 80px。`more: n` → 只渲染前 `length - n` 项，尾部「更多」触发器（text-2 色 + chevron-down，图标外边距 8/8/0/0，形态同页签 padding）hover 弹出 SemiDropdown，列表最大高 300（可滚动），行高 32、padding 8/12、hover fill-0、选中 primary + 加粗 + tick；点击行切换。`collapsible` 与 `more` 同时给时 collapsible 优先（TabBar.tsx render）。
 
 ### 内容
 

@@ -1768,6 +1768,12 @@ class _TabsArrowState extends State<_TabsArrow> {
             padding: EdgeInsets.all(t.spacingTabsTabPaneArrow),
             decoration: BoxDecoration(
               color: background,
+              // 箭头是 `<Button theme="borderless">`（TabBar.tsx:258）——
+              // `.semi-button` 基座圆角 `$radius-button:
+              // var(--semi-border-radius-small)`（button.scss:17）。
+              borderRadius: BorderRadius.circular(
+                SemiTheme.of(context).radius.borderRadiusSmall.value,
+              ),
               border: Border.all(
                 color: border,
                 width: t.widthTabsTabPaneArrowBorder,

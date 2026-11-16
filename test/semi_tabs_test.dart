@@ -1866,6 +1866,38 @@ void main() {
       }
     });
 
+    testWidgets('collapse arrows carry the button radius (not square)', (
+      tester,
+    ) async {
+      final t = const SemiTabsThemeData().resolve(const SemiThemeData.light());
+      await pumpHost(
+        tester,
+        SemiTabs(
+          tabList: [
+            for (var i = 0; i < 8; i++)
+              SemiTabData(itemKey: '$i', tab: 'Tab $i', content: Text('p$i')),
+          ],
+          collapsible: true,
+          tabPaneMotion: false,
+        ),
+        width: 300,
+      );
+      // 上游箭头是 `<Button theme="borderless">`（TabBar.tsx）——背景圆角来自
+      // `.semi-button` 基座 `$radius-button: var(--semi-border-radius-small)`，
+      // 不能是方角。
+      final radius = BorderRadius.circular(
+        const SemiThemeData.light().radius.borderRadiusSmall.value,
+      );
+      final arrows = find.byWidgetPredicate(
+        (w) =>
+            w is Container &&
+            w.padding == EdgeInsets.all(t.spacingTabsTabPaneArrow) &&
+            w.decoration is BoxDecoration &&
+            (w.decoration as BoxDecoration).borderRadius == radius,
+      );
+      expect(arrows, findsNWidgets(2));
+    });
+
     testWidgets('keyboard arrows move focus and Enter activates', (
       tester,
     ) async {
