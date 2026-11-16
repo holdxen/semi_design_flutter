@@ -350,11 +350,7 @@ void main() {
       await pumpHost(tester);
       await setModal(
         tester,
-        const SemiModal(
-          visible: true,
-          title: '标题',
-          content: Text('body'),
-        ),
+        const SemiModal(visible: true, title: '标题', content: Text('body')),
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 250));
@@ -452,6 +448,30 @@ void main() {
       expect(tester.getSize(contentBox).width, resolve().widthModalLarge);
       await widthOf(SemiModalSize.fullWidth);
       expect(tester.getSize(contentBox).width, 1200 - 64);
+      await pumpClosed(tester);
+    });
+
+    testWidgets('fullScreen fills the viewport and drops the top margin', (
+      tester,
+    ) async {
+      await pumpHost(tester);
+      await setModal(
+        tester,
+        const SemiModal(
+          visible: true,
+          motion: false,
+          fullScreen: true,
+          title: '全屏',
+          content: Text('body'),
+        ),
+      );
+      await pumpOpen(tester);
+      // 上游 isFullScreen：width/height 100% + margin unset（top 走
+      // `$spacing-modal_content_fullscreen-top` = 0）。
+      final box = tester.getRect(find.byKey(const ValueKey('semi-modal-box')));
+      expect(box.width, 1200);
+      expect(box.height, 900);
+      expect(box.top, 0);
       await pumpClosed(tester);
     });
 

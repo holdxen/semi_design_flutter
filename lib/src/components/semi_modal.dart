@@ -67,6 +67,7 @@ class SemiModalHandle {
     bool? centered,
     bool? maskClosable,
     bool? closeOnEsc,
+    bool? fullScreen,
   }) => _update(
     (c) => c.copyWith(
       title: title,
@@ -84,6 +85,7 @@ class SemiModalHandle {
       centered: centered,
       maskClosable: maskClosable,
       closeOnEsc: closeOnEsc,
+      fullScreen: fullScreen,
     ),
   );
 }
@@ -228,6 +230,7 @@ class SemiModal extends StatefulWidget {
     bool? centered,
     bool? maskClosable,
     bool? closeOnEsc,
+    bool fullScreen = false,
     VoidCallback? afterClose,
     bool motion = true,
     bool footerFill = false,
@@ -249,6 +252,7 @@ class SemiModal extends StatefulWidget {
     centered: centered,
     maskClosable: maskClosable,
     closeOnEsc: closeOnEsc,
+    fullScreen: fullScreen,
     afterClose: afterClose,
     motion: motion,
     footerFill: footerFill,
@@ -272,6 +276,7 @@ class SemiModal extends StatefulWidget {
     bool? centered,
     bool? maskClosable,
     bool? closeOnEsc,
+    bool fullScreen = false,
     VoidCallback? afterClose,
     bool motion = true,
     bool footerFill = false,
@@ -293,6 +298,7 @@ class SemiModal extends StatefulWidget {
     centered: centered,
     maskClosable: maskClosable,
     closeOnEsc: closeOnEsc,
+    fullScreen: fullScreen,
     afterClose: afterClose,
     motion: motion,
     footerFill: footerFill,
@@ -316,6 +322,7 @@ class SemiModal extends StatefulWidget {
     bool? centered,
     bool? maskClosable,
     bool? closeOnEsc,
+    bool fullScreen = false,
     VoidCallback? afterClose,
     bool motion = true,
     bool footerFill = false,
@@ -337,6 +344,7 @@ class SemiModal extends StatefulWidget {
     centered: centered,
     maskClosable: maskClosable,
     closeOnEsc: closeOnEsc,
+    fullScreen: fullScreen,
     afterClose: afterClose,
     motion: motion,
     footerFill: footerFill,
@@ -360,6 +368,7 @@ class SemiModal extends StatefulWidget {
     bool? centered,
     bool? maskClosable,
     bool? closeOnEsc,
+    bool fullScreen = false,
     VoidCallback? afterClose,
     bool motion = true,
     bool footerFill = false,
@@ -381,6 +390,7 @@ class SemiModal extends StatefulWidget {
     centered: centered,
     maskClosable: maskClosable,
     closeOnEsc: closeOnEsc,
+    fullScreen: fullScreen,
     afterClose: afterClose,
     motion: motion,
     footerFill: footerFill,
@@ -404,6 +414,7 @@ class SemiModal extends StatefulWidget {
     bool? centered,
     bool? maskClosable,
     bool? closeOnEsc,
+    bool fullScreen = false,
     VoidCallback? afterClose,
     bool motion = true,
     bool footerFill = false,
@@ -425,6 +436,7 @@ class SemiModal extends StatefulWidget {
     centered: centered,
     maskClosable: maskClosable,
     closeOnEsc: closeOnEsc,
+    fullScreen: fullScreen,
     afterClose: afterClose,
     motion: motion,
     footerFill: footerFill,
@@ -450,6 +462,7 @@ class SemiModal extends StatefulWidget {
     bool? centered,
     bool? maskClosable,
     bool? closeOnEsc,
+    bool fullScreen = false,
     VoidCallback? afterClose,
     required bool motion,
     required bool footerFill,
@@ -476,6 +489,7 @@ class SemiModal extends StatefulWidget {
         centered: centered,
         maskClosable: maskClosable,
         closeOnEsc: closeOnEsc,
+        fullScreen: fullScreen,
         motion: motion,
         footerFill: footerFill,
       ),
@@ -827,6 +841,7 @@ class _ModalConfig {
     bool? centered,
     bool? maskClosable,
     bool? closeOnEsc,
+    bool? fullScreen,
   }) => _ModalConfig(
     title: title ?? this.title,
     content: content ?? this.content,
@@ -845,7 +860,7 @@ class _ModalConfig {
     centered: centered ?? this.centered,
     maskClosable: maskClosable ?? this.maskClosable,
     closeOnEsc: closeOnEsc ?? this.closeOnEsc,
-    fullScreen: fullScreen,
+    fullScreen: fullScreen ?? this.fullScreen,
     motion: motion,
     footerFill: footerFill,
   );
@@ -964,8 +979,14 @@ class _ModalContent extends StatelessWidget {
 
     final box = Container(
       key: const ValueKey('semi-modal-box'),
-      width: config.width ?? _sizeWidth(t, context),
-      height: config.height,
+      // 上游 `isFullScreen` 最后覆写 `width/height: 100%`（优先于 width/
+      // height props）——铺满视口。
+      width: config.fullScreen
+          ? MediaQuery.sizeOf(context).width
+          : (config.width ?? _sizeWidth(t, context)),
+      height: config.fullScreen
+          ? MediaQuery.sizeOf(context).height
+          : config.height,
       padding: EdgeInsets.symmetric(
         vertical: t.spacingModalContentPaddingY,
         horizontal: t.spacingModalContentPaddingX,
@@ -1014,12 +1035,25 @@ class _ModalContent extends StatelessWidget {
     );
 
     // 非 centered：距容器顶 marginY 80（`margin: 80px auto`）。
-    final placed = config.centered == true
-        ? box
-        : Padding(
-            padding: EdgeInsetsDirectional.only(top: t.spacingModalMarginY),
-            child: box,
-          );
+    final Widget placed;
+    if (config.fullScreen) {
+      // `-content-fullScreen { margin: unset; top:
+      // $spacing-modal_content_fullscreen-top }`（0）。
+      placed = Padding(
+        padding: EdgeInsetsDirectional.only(
+          top: t.spacingModalContentFullscreenTop,
+        ),
+        child: box,
+      );
+    } else if (config.centered == true) {
+      placed = box;
+    } else {
+      // 非 centered：距容器顶 marginY 80（`margin: 80px auto`）。
+      placed = Padding(
+        padding: EdgeInsetsDirectional.only(top: t.spacingModalMarginY),
+        child: box,
+      );
+    }
     // 上游 `role="dialog" aria-modal="true"` → Semantics container 语义。
     return Semantics(
       container: true,
