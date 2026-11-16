@@ -48,6 +48,9 @@
 //   内容脉冲。
 // - avatar.scss:438 top/left: `-1 *  $width-avatar_additional-border - $spacing-avatar_additional-borderGap`
 //   环外扩偏移。
+import 'dart:ui' as ui;
+
+import 'package:flutter/semantics.dart' show OrdinalSortKey;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -55,7 +58,6 @@ import '../theme/semi_avatar_theme.dart';
 import '../theme/semi_avatar_theme_data.dart';
 import '../theme/semi_theme.dart';
 import '../theme/semi_theme_data.dart';
-import '../tokens/token_types.dart';
 
 /// 头像形状（上游 `shape: 'circle' | 'square'`，缺省 circle）。
 enum SemiAvatarShape { circle, square }
@@ -389,6 +391,8 @@ class _SemiAvatarState extends State<SemiAvatar>
       label: label,
       button: clickable,
       onTap: widget.onTap,
+      // 上游 aria-label 覆盖内容文本（excludeSemantics 等价）。
+      excludeSemantics: true,
       child: Focus(
         focusNode: _focus,
         canRequestFocus: clickable,
@@ -683,8 +687,8 @@ class _SemiAvatarState extends State<SemiAvatar>
         child: DecoratedBox(
           decoration: BoxDecoration(
             color: slot.bgColor ?? t.colorAvatarBottomSlotBg,
-            borderRadius: global.radius.borderRadiusCircle.resolveRadius(
-              Size.square(d),
+            borderRadius: BorderRadius.all(
+              global.radius.borderRadiusCircle.resolveRadius(Size.square(d)),
             ),
           ),
           child: Center(
@@ -810,7 +814,6 @@ class SemiAvatarGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final global = SemiTheme.of(context);
     final t = SemiAvatarTheme.resolve(context);
     final box = _boxOf(size, t);
     final borderWidth = _groupBorderOf(size, t);
@@ -839,33 +842,38 @@ class SemiAvatarGroup extends StatelessWidget {
     return Semantics(
       // avatarGroup.tsx:92 `role='list'`。
       container: true,
+      explicitChildNodes: true,
       child: SizedBox(
         width: n == 0 ? 0 : n * box + (n - 1) * margin,
         height: box,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            for (final i in order)
-              Positioned(
-                left: i * (box + margin),
-                top: 0,
-                width: box,
-                height: box,
-                child: Semantics(
-                  // index.tsx:394 `role: 'listitem'`。
-                  sortKey: OrdinalSortKey(i.toDouble()),
-                  child: _GroupItem(
-                    box: box,
-                    radius: shape == SemiAvatarShape.circle
-                        ? box / 2
-                        : _radiusOf(size, t),
-                    borderColor: t.colorAvatarDefaultBorderDefault,
-                    borderWidth: borderWidth,
-                    child: items[i],
+        child: _AvatarGroupScope(
+          size: size,
+          shape: shape,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              for (final i in order)
+                Positioned(
+                  left: i * (box + margin),
+                  top: 0,
+                  width: box,
+                  height: box,
+                  child: Semantics(
+                    // index.tsx:394 `role: 'listitem'`。
+                    sortKey: OrdinalSortKey(i.toDouble()),
+                    child: _GroupItem(
+                      box: box,
+                      radius: shape == SemiAvatarShape.circle
+                          ? box / 2
+                          : _radiusOf(size, t),
+                      borderColor: t.colorAvatarDefaultBorderDefault,
+                      borderWidth: borderWidth,
+                      child: items[i],
+                    ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1072,7 +1080,7 @@ class _TopSlotShieldPainter extends CustomPainter {
     canvas.drawPath(path, shadow);
     canvas.restore();
     final fill = Paint()
-      ..shader = Gradient.linear(
+      ..shader = ui.Gradient.linear(
         const Offset(17.671, 31.7392),
         const Offset(17.671, 47.9333),
         [gradientStart, gradientEnd],

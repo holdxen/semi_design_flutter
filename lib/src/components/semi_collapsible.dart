@@ -14,6 +14,7 @@
 // 生成器 HARDCODES 锚点断言这些片段出现在本文件。
 import 'dart:math' as math;
 
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 import '../theme/semi_collapsible_theme.dart';

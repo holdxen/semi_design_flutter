@@ -42,9 +42,11 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
 import '../theme/semi_cropper_theme.dart';
+import '../theme/semi_cropper_theme_data.dart';
 
 /// 裁切框形状（上游 `strings.shape`，缺省 `rect`）。
 enum SemiCropperShape {
@@ -144,11 +146,15 @@ class SemiCropper extends StatefulWidget {
   /// 缩放步长（滚轮每格）。
   final double zoomStep;
 
-  /// 实时预览（上游 `preview: () => HTMLElement`）。
+  /// 实时预览布局（上游 `preview: () => HTMLElement` 容器制）。
   ///
-  /// `cropView` 为裁切区域视图，在给定约束内按上游 `updatePreview` 适配
-  /// 数学自缩放；放到任意位置即可。
-  final Widget Function(BuildContext context, Widget cropView)? previewBuilder;
+  /// 返回同时放置 [cropper] 与 [cropView] 的子树；`cropView` 为裁切区域
+  /// 视图，在给定约束内按上游 `updatePreview` 适配数学自缩放。
+  final Widget Function(
+    BuildContext context,
+    Widget cropper,
+    Widget cropView,
+  )? previewBuilder;
 
   /// 裁切输出控制器。
   final SemiCropperController? controller;
@@ -156,6 +162,8 @@ class SemiCropper extends StatefulWidget {
   static const maskKey = ValueKey<String>('semi-cropper-mask');
   static const boxKey = ValueKey<String>('semi-cropper-box');
   static const viewBoxKey = ValueKey<String>('semi-cropper-view-box');
+  static const imageKey = ValueKey<String>('semi-cropper-image');
+  static const cropViewKey = ValueKey<String>('semi-cropper-crop-view');
   static Key cornerKey(String dir) =>
       ValueKey<String>('semi-cropper-corner-$dir');
 
@@ -209,7 +217,6 @@ class _SemiCropperState extends State<SemiCropper> {
   ({double xMin, double xMax, double yMin, double yMax})? _moveRange;
   (double, double)? _rangeX;
   (double, double)? _rangeY;
-  bool _initial = false;
 
   // 上游 state。
   _CropRect _imgData = const _CropRect(0, 0, Offset.zero);
@@ -243,15 +250,13 @@ class _SemiCropperState extends State<SemiCropper> {
 
   @override
   void dispose() {
-    _listener = null;
-    _stream?.dispose();
+    if (_listener != null) _stream?.removeListener(_listener!);
     widget.controller?._detach(this);
     super.dispose();
   }
 
   void _resolveImage() {
-    _stream?.removeListener(_listener!);
-    _stream?.dispose();
+    if (_listener != null) _stream?.removeListener(_listener!);
     final stream = widget.image.resolve(ImageConfiguration.empty);
     _listener = ImageStreamListener(_onImage, onError: (error, stack) {});
     stream.addListener(_listener!);
@@ -259,13 +264,20 @@ class _SemiCropperState extends State<SemiCropper> {
   }
 
   void _onImage(ImageInfo info, bool synchronousCall) {
-    setState(() {
+    // 同步回调（缓存命中，initState/didUpdateWidget 期间）不能 setState。
+    void apply() {
       _image = info.image;
       _handleImageLoad(
         info.image.width.toDouble(),
         info.image.height.toDouble(),
       );
-    });
+    }
+
+    if (synchronousCall) {
+      apply();
+    } else {
+      setState(apply);
+    }
   }
 
   /// 上游 foundation.ts handleImageLoad：适配容器的初始显示尺寸 + 初始裁切框。
@@ -306,11 +318,11 @@ class _SemiCropperState extends State<SemiCropper> {
   }
 
   /// 上游 ResizeObserver（ObserverProperty.Width）handleResize：仅宽向变化
-  /// 触发，按宽比缩放图片与裁切框。LayoutBuilder 首帧记录尺寸（上游 init）。
+  /// 触发，按宽比缩放图片与裁切框。LayoutBuilder 首帧记录尺寸（上游 init +
+  /// ResizeObserver 立即回调的 `initial` 跳过并入首帧，行为等价）。
   void _handleLayout(Size size) {
     if (_containerData == Size.zero) {
       _containerData = size;
-      _initial = true;
       if (_image != null && !_loaded) {
         _handleImageLoad(
           _image!.width.toDouble(),
@@ -320,11 +332,6 @@ class _SemiCropperState extends State<SemiCropper> {
       return;
     }
     if (size.width == _containerData.width) {
-      _containerData = size;
-      return;
-    }
-    if (!_initial) {
-      _initial = true;
       _containerData = size;
       return;
     }
@@ -472,23 +479,24 @@ class _SemiCropperState extends State<SemiCropper> {
       if (value >= widget.minZoom) next = value;
     }
     if (next == null) return;
+    final zoom = next;
     final offset = event.localPosition;
     final scaleCenter = Offset(offset.dx, -offset.dy);
     // 计算新的中心点位置（y 翻转）
     final currentPoint = Offset(_imgData.center.dx, -_imgData.center.dy);
     final newCenterPoint = Offset(
-      (currentPoint.dx - scaleCenter.dx) / _zoom * next + scaleCenter.dx,
-      -((currentPoint.dy - scaleCenter.dy) / _zoom * next + scaleCenter.dy),
+      (currentPoint.dx - scaleCenter.dx) / _zoom * zoom + scaleCenter.dx,
+      -((currentPoint.dy - scaleCenter.dy) / _zoom * zoom + scaleCenter.dy),
     );
     setState(() {
       _imgData = _CropRect(
-        _imgData.width / _zoom * next,
-        _imgData.height / _zoom * next,
+        _imgData.width / _zoom * zoom,
+        _imgData.height / _zoom * zoom,
         newCenterPoint,
       );
-      _zoom = next;
+      _zoom = zoom;
     });
-    widget.onZoomChange?.call(next);
+    widget.onZoomChange?.call(zoom);
   }
 
   /// 上游 getMoveParamByDir。
@@ -837,8 +845,8 @@ class _SemiCropperState extends State<SemiCropper> {
 
     // 计算包含旋转后的图片的矩形容器的宽高
     final angle = _rotate * math.pi / 180;
-    final sine = angle.sin().abs();
-    final cosine = angle.cos().abs();
+    final sine = math.sin(angle).abs();
+    final cosine = math.cos(angle).abs();
     final imgWidth = _originalWidth;
     final imgHeight = _originalHeight;
     final containerWidth = imgWidth * cosine + imgHeight * sine;
@@ -965,7 +973,7 @@ class _SemiCropperState extends State<SemiCropper> {
     draw(canvas, width, height);
     return recorder
         .endRecording()
-        .toImage(width.round().clamp(1, 1 << 20), height.round().clamp(1, 1 << 20));
+        .toImage(math.max(1, width.round()), math.max(1, height.round()));
   }
 
   /// 上游 updatePreview：预览容器内按裁切框适配缩放。
@@ -1007,6 +1015,7 @@ class _SemiCropperState extends State<SemiCropper> {
         final imgX = _imgData.left - cropperBox.left;
         final imgY = _imgData.top - cropperBox.top;
         return SizedBox(
+          key: SemiCropper.cropViewKey,
           width: previewWidth,
           height: previewHeight,
           child: ClipRect(
@@ -1041,121 +1050,25 @@ class _SemiCropperState extends State<SemiCropper> {
     // 受控 zoom/rotate 同步（getDerivedStateFromProps 等价位置）。
     _syncControlledProps();
     final t = SemiCropperTheme.resolve(context);
-    final imgX = _imgData.left;
-    final imgY = _imgData.top;
-    final boxX = _cropperBox.left;
-    final boxY = _cropperBox.top;
-    final cropperImgX = imgX - boxX;
-    final cropperImgY = imgY - boxY;
-
-    final imageLayer = Positioned(
-      left: imgX,
-      top: imgY,
-      width: _imgData.width,
-      height: _imgData.height,
-      child: Transform.rotate(
-        // transformOrigin: 'center'
-        angle: _rotate * math.pi / 180,
-        child: RawImage(
-          image: _image,
-          fit: BoxFit.fill,
-          filterQuality: FilterQuality.low,
-        ),
-      ),
-    );
-
-    // 遮罩层（cursor: move;; 双分号 quirk）：拖动平移图片。
-    final mask = Positioned.fill(
-      child: Listener(
-        key: SemiCropper.maskKey,
-        behavior: HitTestBehavior.opaque,
-        onPointerDown: (e) {
-          if (_dragMode != _DragMode.none) return;
-          _dragMode = _DragMode.imgMove;
-          _handleMaskDown(e.localPosition);
-        },
-        child: ColoredBox(color: t.colorCropperMaskBg),
-      ),
-    );
-
-    final corners = _buildCorners(t);
-    final isRound = widget.shape == SemiCropperShape.round;
-
-    // 裁切框（outline 外描边语义：画在盒外）。
-    final box = Positioned(
-      left: boxX,
-      top: boxY,
-      width: _cropperBox.width,
-      height: _cropperBox.height,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned.fill(
-            child: IgnorePointer(
-              child: CustomPaint(
-                painter: _CropperBoxOutlinePainter(
-                  color: t.colorCropperBoxOutline,
-                  strokeWidth: t.widthCropperBoxOutline,
-                  oval: isRound,
-                ),
-              ),
-            ),
-          ),
-          Listener(
-            key: SemiCropper.boxKey,
-            behavior: HitTestBehavior.opaque,
-            onPointerDown: (e) {
-              // 角柄命中（target.dataset.dir）不移动裁切框。
-              if (_dragMode != _DragMode.none) return;
-              _dragMode = _DragMode.boxMove;
-              _handleBoxDown(e.localPosition);
-            },
-            child: ClipPath(
-              // `-view-box-round` border-radius: 50%（round/roundRect）。
-              clipper: widget.shape == SemiCropperShape.rect
-                  ? null
-                  : const _OvalClipper(),
-              child: ClipRect(
-                child: SizedBox(
-                  width: _cropperBox.width,
-                  height: _cropperBox.height,
-                  child: Stack(
-                    key: SemiCropper.viewBoxKey,
-                    clipBehavior: Clip.hardEdge,
-                    children: [
-                      Positioned(
-                        left: cropperImgX,
-                        top: cropperImgY,
-                        width: _imgData.width,
-                        height: _imgData.height,
-                        child: Transform.rotate(
-                          angle: _rotate * math.pi / 180,
-                          child: RawImage(
-                            image: _image,
-                            fit: BoxFit.fill,
-                            filterQuality: FilterQuality.low,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          if (_loaded && widget.showResizeBox) ...corners,
-        ],
-      ),
-    );
-
-    return Semantics(
+    final content = Semantics(
       container: true,
       label: '图片裁切',
       child: MouseRegion(
         cursor: SystemMouseCursors.move,
         child: Listener(
           behavior: HitTestBehavior.opaque,
-          onPointerDown: (_) => _dragMode = _DragMode.none,
+          onPointerDown: (e) {
+            // down 自叶向根派发：子级先定模式，这里统一以容器坐标记起点。
+            switch (_dragMode) {
+              case _DragMode.imgMove:
+                _handleMaskDown(e.localPosition);
+              case _DragMode.boxMove:
+                _handleBoxDown(e.localPosition);
+              case _DragMode.cornerResize:
+              case _DragMode.none:
+                break;
+            }
+          },
           onPointerMove: (e) {
             if (!e.down) return;
             switch (_dragMode) {
@@ -1174,16 +1087,105 @@ class _SemiCropperState extends State<SemiCropper> {
           onPointerSignal: (e) {
             if (e is PointerScrollEvent) _handleWheel(e);
           },
+          // 几何全部在 builder 内组装（resize 数学当帧生效）。
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final size = constraints.biggest;
-              _handleLayout(size);
+              if (!constraints.hasBoundedWidth ||
+                  !constraints.hasBoundedHeight) {
+                // 上游容器 style 显式宽高；Flutter 需父级给有界约束。
+                return const SizedBox.shrink();
+              }
+              _handleLayout(constraints.biggest);
+              final imgX = _imgData.left;
+              final imgY = _imgData.top;
+              final boxX = _cropperBox.left;
+              final boxY = _cropperBox.top;
+              final cropperImgX = imgX - boxX;
+              final cropperImgY = imgY - boxY;
+
+              final imageLayer = Positioned(
+                left: imgX,
+                top: imgY,
+                width: _imgData.width,
+                height: _imgData.height,
+                child: Transform.rotate(
+                  // transformOrigin: 'center'
+                  angle: _rotate * math.pi / 180,
+                  child: RawImage(
+                    image: _image,
+                    fit: BoxFit.fill,
+                    filterQuality: FilterQuality.low,
+                  ),
+                ),
+              );
+
+              // 遮罩层（cursor: move;; 双分号 quirk）：拖动平移图片。
+              final mask = Positioned.fill(
+                child: Listener(
+                  key: SemiCropper.maskKey,
+                  behavior: HitTestBehavior.opaque,
+                  onPointerDown: (e) {
+                    if (_dragMode != _DragMode.none) return;
+                    _dragMode = _DragMode.imgMove;
+                    _handleMaskDown(e.localPosition);
+                  },
+                  child: ColoredBox(color: t.colorCropperMaskBg),
+                ),
+              );
+
+              // `-view-box-round` border-radius: 50%（round/roundRect）。
+              final viewClip = widget.shape == SemiCropperShape.rect
+                  ? ClipRect(child: _viewBox(cropperImgX, cropperImgY))
+                  : ClipOval(child: _viewBox(cropperImgX, cropperImgY));
+
+              // 裁切框（outline 外描边语义：画在盒外）。
+              final box = Positioned(
+                left: boxX,
+                top: boxY,
+                width: _cropperBox.width,
+                height: _cropperBox.height,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: CustomPaint(
+                          painter: _CropperBoxOutlinePainter(
+                            color: t.colorCropperBoxOutline,
+                            strokeWidth: t.widthCropperBoxOutline,
+                            oval: widget.shape == SemiCropperShape.round,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned.fill(
+                      child: Listener(
+                        key: SemiCropper.boxKey,
+                        behavior: HitTestBehavior.opaque,
+                        onPointerDown: (e) {
+                          // 角柄命中（target.dataset.dir）不移动裁切框。
+                          if (_dragMode != _DragMode.none) return;
+                          _dragMode = _DragMode.boxMove;
+                        },
+                        child: viewClip,
+                      ),
+                    ),
+                    if (_loaded && widget.showResizeBox)
+                      ..._buildCorners(t),
+                  ],
+                ),
+              );
+
               return Stack(
                 clipBehavior: Clip.none,
                 fit: StackFit.expand,
                 children: [
                   // 图片层（img-wrapper overflow: hidden）。
-                  ClipRect(child: Stack(children: [imageLayer])),
+                  Positioned.fill(
+                    child: ClipRect(
+                      child: Stack(clipBehavior: Clip.none, children: [imageLayer]),
+                    ),
+                  ),
                   mask,
                   box,
                 ],
@@ -1191,6 +1193,37 @@ class _SemiCropperState extends State<SemiCropper> {
             },
           ),
         ),
+      ),
+    );
+    final previewBuilder = widget.previewBuilder;
+    if (previewBuilder == null) return content;
+    return previewBuilder(context, content, _buildCropView());
+  }
+
+  /// 视口内同一张图按裁切框相对位移（`-view-box` + `-view-img`）。
+  Widget _viewBox(double cropperImgX, double cropperImgY) {
+    return SizedBox(
+      width: _cropperBox.width,
+      height: _cropperBox.height,
+      child: Stack(
+        key: SemiCropper.viewBoxKey,
+        clipBehavior: Clip.hardEdge,
+        children: [
+          Positioned(
+            left: cropperImgX,
+            top: cropperImgY,
+            width: _imgData.width,
+            height: _imgData.height,
+            child: Transform.rotate(
+              angle: _rotate * math.pi / 180,
+              child: RawImage(
+                image: _image,
+                fit: BoxFit.fill,
+                filterQuality: FilterQuality.low,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1215,18 +1248,6 @@ class _SemiCropperState extends State<SemiCropper> {
     final half = size / 2;
     final boxWidth = _cropperBox.width;
     final boxHeight = _cropperBox.height;
-    // round 仅四边中点柄（roundCorner）。
-    const placements = <String, (double? left, double? top, double? right,
-        double? bottom)>{
-      'tl': (-half, -half, null, null),
-      'tm': (null, -half, null, null),
-      'tr': (null, -half, -half, null),
-      'ml': (-half, null, null, null),
-      'mr': (null, null, -half, null),
-      'bl': (-half, null, null, -half),
-      'bm': (null, null, null, -half),
-      'br': (null, null, -half, -half),
-    };
     const cursors = <String, MouseCursor>{
       'tl': SystemMouseCursors.resizeUpLeft,
       'tm': SystemMouseCursors.resizeUp,
@@ -1278,17 +1299,6 @@ class _SemiCropperState extends State<SemiCropper> {
         ),
     ];
   }
-}
-
-/// `-view-box-round`：`border-radius: 50%` 椭圆裁切。
-class _OvalClipper extends CustomClipper<Path> {
-  const _OvalClipper();
-
-  @override
-  Path getClip(Size size) => Path()..addOval(Offset.zero & size);
-
-  @override
-  bool shouldReclip(_OvalClipper oldClipper) => false;
 }
 
 /// 裁切框 outline 外描边（CSS `outline: w solid` 画在盒外）。

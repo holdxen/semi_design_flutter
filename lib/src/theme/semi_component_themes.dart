@@ -44,6 +44,8 @@ import 'semi_carousel_theme_data.dart';
 import 'semi_modal_theme_data.dart';
 import 'semi_banner_theme_data.dart';
 import 'semi_badge_theme_data.dart';
+import 'semi_avatar_theme_data.dart';
+import 'semi_cropper_theme_data.dart';
 
 @immutable
 class SemiComponentThemes {
@@ -92,6 +94,8 @@ class SemiComponentThemes {
     this.modal = const SemiModalThemeData(),
     this.banner = const SemiBannerThemeData(),
     this.badge = const SemiBadgeThemeData(),
+    this.avatar = const SemiAvatarThemeData(),
+    this.cropper = const SemiCropperThemeData(),
   });
   final SemiTagThemeData tag;
   final SemiTypographyThemeData typography;
@@ -140,6 +144,8 @@ class SemiComponentThemes {
   final SemiModalThemeData modal;
   final SemiBannerThemeData banner;
   final SemiBadgeThemeData badge;
+  final SemiAvatarThemeData avatar;
+  final SemiCropperThemeData cropper;
   SemiComponentThemes copyWith({
     SemiTagThemeData? tag,
     SemiTypographyThemeData? typography,
@@ -185,6 +191,8 @@ class SemiComponentThemes {
     SemiModalThemeData? modal,
     SemiBannerThemeData? banner,
     SemiBadgeThemeData? badge,
+    SemiAvatarThemeData? avatar,
+    SemiCropperThemeData? cropper,
   }) => SemiComponentThemes(
     tag: tag ?? this.tag,
     typography: typography ?? this.typography,
@@ -230,6 +238,8 @@ class SemiComponentThemes {
     modal: modal ?? this.modal,
     banner: banner ?? this.banner,
     badge: badge ?? this.badge,
+    avatar: avatar ?? this.avatar,
+    cropper: cropper ?? this.cropper,
   );
   @override
   bool operator ==(Object other) =>
@@ -278,7 +288,9 @@ class SemiComponentThemes {
           carousel == other.carousel &&
           modal == other.modal &&
           banner == other.banner &&
-          badge == other.badge;
+          badge == other.badge &&
+          avatar == other.avatar &&
+          cropper == other.cropper;
   @override
   int get hashCode => Object.hashAll([
     tag,
@@ -325,5 +337,7 @@ class SemiComponentThemes {
     modal,
     banner,
     badge,
+    avatar,
+    cropper,
   ]);
 }

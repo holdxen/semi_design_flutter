@@ -156,6 +156,12 @@ export 'src/theme/semi_banner_theme_data.dart';
 export 'src/components/semi_badge.dart';
 export 'src/theme/semi_badge_theme.dart';
 export 'src/theme/semi_badge_theme_data.dart';
+export 'src/components/semi_avatar.dart';
+export 'src/theme/semi_avatar_theme.dart';
+export 'src/theme/semi_avatar_theme_data.dart';
+export 'src/components/semi_cropper.dart';
+export 'src/theme/semi_cropper_theme.dart';
+export 'src/theme/semi_cropper_theme_data.dart';
 
 /// A Calculator.
 class Calculator {

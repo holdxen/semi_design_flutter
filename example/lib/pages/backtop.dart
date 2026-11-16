@@ -151,7 +151,7 @@ class _BackTopPageState extends State<BackTopPage> {
           _section('RTL', [
             _demo(
               'Directionality.rtl——rtl.scss:7-8 `right: auto; left: '
-              '$spacing-backtop-right` → 按钮翻到左下角。',
+              r'$spacing-backtop-right` → 按钮翻到左下角。',
               Directionality(
                 textDirection: TextDirection.rtl,
                 child: _stack(
