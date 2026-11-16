@@ -135,6 +135,9 @@ export 'src/theme/semi_tree_theme_data.dart';
 export 'src/components/semi_tree_select.dart';
 export 'src/theme/semi_tree_select_theme.dart';
 export 'src/theme/semi_tree_select_theme_data.dart';
+export 'src/components/semi_cascader.dart';
+export 'src/theme/semi_cascader_theme.dart';
+export 'src/theme/semi_cascader_theme_data.dart';
 export 'src/components/semi_steps.dart';
 export 'src/theme/semi_steps_theme.dart';
 export 'src/theme/semi_steps_theme_data.dart';
@@ -153,6 +156,9 @@ export 'src/theme/semi_carousel_theme.dart';
 export 'src/theme/semi_carousel_theme_data.dart';
 export 'src/theme/semi_modal_theme.dart';
 export 'src/theme/semi_modal_theme_data.dart';
+export 'src/components/semi_popconfirm.dart';
+export 'src/theme/semi_popconfirm_theme.dart';
+export 'src/theme/semi_popconfirm_theme_data.dart';
 export 'src/components/semi_banner.dart';
 export 'src/theme/semi_banner_theme.dart';
 export 'src/theme/semi_banner_theme_data.dart';
@@ -166,6 +172,18 @@ export 'src/components/semi_cropper.dart';
 export 'src/theme/semi_cropper_theme.dart';
 export 'src/theme/semi_cropper_theme_data.dart';
 export 'src/components/semi_overflow_list.dart';
+export 'src/components/semi_side_sheet.dart';
+export 'src/theme/semi_side_sheet_theme.dart';
+export 'src/theme/semi_side_sheet_theme_data.dart';
+export 'src/components/semi_image.dart';
+export 'src/theme/semi_image_theme.dart';
+export 'src/theme/semi_image_theme_data.dart';
+export 'src/components/semi_float_button.dart';
+export 'src/theme/semi_float_button_theme.dart';
+export 'src/theme/semi_float_button_theme_data.dart';
+export 'src/components/semi_scroll_list.dart';
+export 'src/theme/semi_scroll_list_theme.dart';
+export 'src/theme/semi_scroll_list_theme_data.dart';
 
 /// A Calculator.
 class Calculator {

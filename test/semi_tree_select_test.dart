@@ -7,7 +7,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -832,8 +831,9 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(rowText('B'));
       await tester.pumpAndSettle();
+      // ★已选中再点：仍发 onSelect 恒 true、不发 onChange；clickToHide 照常收起。
       expect(events.where((e) => e.startsWith('change:')), hasLength(1));
-      expect(events.last, 'select:b:true');
+      expect(events.where((e) => e == 'select:b:true'), hasLength(2));
     });
 
     testWidgets('multiple related cascade, autoMergeValue/leafOnly payloads', (
@@ -903,9 +903,13 @@ void main() {
         ),
       );
       expect(find.text('B'), findsOneWidget); // tag
-      final handle = tester.ensureSemantics();
-      await tester.tap(find.bySemanticsLabel('Close B'));
-      handle.dispose();
+      // 标签关闭按钮 = 标签内唯一图标（SemiIcons.close）。
+      await tester.tap(
+        find.descendant(
+          of: find.byType(SemiTag),
+          matching: find.byType(SemiIcon),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(last, <String>[]);
       expect(events, ['select:b:false']);
@@ -1038,11 +1042,14 @@ void main() {
       expect(find.text('D'), findsOneWidget); // trigger 回填
       await tester.tap(find.byType(SemiTreeSelect));
       await tester.pumpAndSettle();
-      await tester.tap(rowText('D'));
+      // 点未选中的 A 行：onChange('a') 照发；★已选中再点不发 onChange（上游同）。
+      await tester.tap(rowText('A'));
       await tester.pumpAndSettle();
-      expect(last, 'd'); // 回调照发
+      expect(last, 'a'); // 回调照发
       expect(find.text('D'), findsOneWidget); // 受控不改显示
-      // 受控展开：A 的箭头只回调。
+      // 受控展开：重开面板后 A 的箭头只回调、不改展开态。
+      await tester.tap(find.text('D'));
+      await tester.pumpAndSettle();
       await tester.tap(expandArrow('a'));
       await tester.pumpAndSettle();
       expect(expands, ['a']);
@@ -1084,6 +1091,9 @@ void main() {
       await tester.tap(find.byType(SemiTreeSelect));
       await tester.pumpAndSettle();
       await tester.tap(expandArrow('p'));
+      // 弹层内容更新走 SemiTooltip post-frame（一帧延迟）——双 pump 后 Spin 上屏
+      //（Spin 自带循环动画，不能 pumpAndSettle）。
+      await tester.pump();
       await tester.pump();
       expect(find.byType(SemiSpin), findsOneWidget);
       gate.complete();

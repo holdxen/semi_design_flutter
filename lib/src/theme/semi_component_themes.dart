@@ -37,16 +37,22 @@ import 'semi_navigation_theme_data.dart';
 import 'semi_pagination_theme_data.dart';
 import 'semi_tree_theme_data.dart';
 import 'semi_tree_select_theme_data.dart';
+import 'semi_cascader_theme_data.dart';
 import 'semi_steps_theme_data.dart';
 import 'semi_upload_theme_data.dart';
 import 'semi_skeleton_theme_data.dart';
 import 'semi_tabs_theme_data.dart';
 import 'semi_carousel_theme_data.dart';
 import 'semi_modal_theme_data.dart';
+import 'semi_popconfirm_theme_data.dart';
 import 'semi_banner_theme_data.dart';
 import 'semi_badge_theme_data.dart';
 import 'semi_avatar_theme_data.dart';
 import 'semi_cropper_theme_data.dart';
+import 'semi_side_sheet_theme_data.dart';
+import 'semi_scroll_list_theme_data.dart';
+import 'semi_float_button_theme_data.dart';
+import 'semi_image_theme_data.dart';
 
 @immutable
 class SemiComponentThemes {
@@ -88,16 +94,22 @@ class SemiComponentThemes {
     this.pagination = const SemiPaginationThemeData(),
     this.tree = const SemiTreeThemeData(),
     this.treeSelect = const SemiTreeSelectThemeData(),
+    this.cascader = const SemiCascaderThemeData(),
     this.steps = const SemiStepsThemeData(),
     this.upload = const SemiUploadThemeData(),
     this.skeleton = const SemiSkeletonThemeData(),
     this.tabs = const SemiTabsThemeData(),
     this.carousel = const SemiCarouselThemeData(),
     this.modal = const SemiModalThemeData(),
+    this.popconfirm = const SemiPopconfirmThemeData(),
     this.banner = const SemiBannerThemeData(),
     this.badge = const SemiBadgeThemeData(),
     this.avatar = const SemiAvatarThemeData(),
     this.cropper = const SemiCropperThemeData(),
+    this.sideSheet = const SemiSideSheetThemeData(),
+    this.scrollList = const SemiScrollListThemeData(),
+    this.floatButton = const SemiFloatButtonThemeData(),
+    this.image = const SemiImageThemeData(),
   });
   final SemiTagThemeData tag;
   final SemiTypographyThemeData typography;
@@ -139,16 +151,22 @@ class SemiComponentThemes {
   final SemiPaginationThemeData pagination;
   final SemiTreeThemeData tree;
   final SemiTreeSelectThemeData treeSelect;
+  final SemiCascaderThemeData cascader;
   final SemiStepsThemeData steps;
   final SemiUploadThemeData upload;
   final SemiSkeletonThemeData skeleton;
   final SemiTabsThemeData tabs;
   final SemiCarouselThemeData carousel;
   final SemiModalThemeData modal;
+  final SemiPopconfirmThemeData popconfirm;
   final SemiBannerThemeData banner;
   final SemiBadgeThemeData badge;
   final SemiAvatarThemeData avatar;
   final SemiCropperThemeData cropper;
+  final SemiSideSheetThemeData sideSheet;
+  final SemiScrollListThemeData scrollList;
+  final SemiFloatButtonThemeData floatButton;
+  final SemiImageThemeData image;
   SemiComponentThemes copyWith({
     SemiTagThemeData? tag,
     SemiTypographyThemeData? typography,
@@ -187,16 +205,22 @@ class SemiComponentThemes {
     SemiPaginationThemeData? pagination,
     SemiTreeThemeData? tree,
     SemiTreeSelectThemeData? treeSelect,
+    SemiCascaderThemeData? cascader,
     SemiStepsThemeData? steps,
     SemiUploadThemeData? upload,
     SemiSkeletonThemeData? skeleton,
     SemiTabsThemeData? tabs,
     SemiCarouselThemeData? carousel,
     SemiModalThemeData? modal,
+    SemiPopconfirmThemeData? popconfirm,
     SemiBannerThemeData? banner,
     SemiBadgeThemeData? badge,
     SemiAvatarThemeData? avatar,
     SemiCropperThemeData? cropper,
+    SemiSideSheetThemeData? sideSheet,
+    SemiScrollListThemeData? scrollList,
+    SemiFloatButtonThemeData? floatButton,
+    SemiImageThemeData? image,
   }) => SemiComponentThemes(
     tag: tag ?? this.tag,
     typography: typography ?? this.typography,
@@ -235,16 +259,22 @@ class SemiComponentThemes {
     pagination: pagination ?? this.pagination,
     tree: tree ?? this.tree,
     treeSelect: treeSelect ?? this.treeSelect,
+    cascader: cascader ?? this.cascader,
     steps: steps ?? this.steps,
     upload: upload ?? this.upload,
     skeleton: skeleton ?? this.skeleton,
     tabs: tabs ?? this.tabs,
     carousel: carousel ?? this.carousel,
     modal: modal ?? this.modal,
+    popconfirm: popconfirm ?? this.popconfirm,
     banner: banner ?? this.banner,
     badge: badge ?? this.badge,
     avatar: avatar ?? this.avatar,
     cropper: cropper ?? this.cropper,
+    sideSheet: sideSheet ?? this.sideSheet,
+    scrollList: scrollList ?? this.scrollList,
+    floatButton: floatButton ?? this.floatButton,
+    image: image ?? this.image,
   );
   @override
   bool operator ==(Object other) =>
@@ -287,16 +317,22 @@ class SemiComponentThemes {
           pagination == other.pagination &&
           tree == other.tree &&
           treeSelect == other.treeSelect &&
+          cascader == other.cascader &&
           steps == other.steps &&
           upload == other.upload &&
           skeleton == other.skeleton &&
           tabs == other.tabs &&
           carousel == other.carousel &&
           modal == other.modal &&
+          popconfirm == other.popconfirm &&
           banner == other.banner &&
           badge == other.badge &&
           avatar == other.avatar &&
-          cropper == other.cropper;
+          cropper == other.cropper &&
+          sideSheet == other.sideSheet &&
+          scrollList == other.scrollList &&
+          floatButton == other.floatButton &&
+          image == other.image;
   @override
   int get hashCode => Object.hashAll([
     tag,
@@ -336,15 +372,21 @@ class SemiComponentThemes {
     pagination,
     tree,
     treeSelect,
+    cascader,
     steps,
     upload,
     skeleton,
     tabs,
     carousel,
     modal,
+    popconfirm,
     banner,
     badge,
     avatar,
     cropper,
+    sideSheet,
+    scrollList,
+    floatButton,
+    image,
   ]);
 }

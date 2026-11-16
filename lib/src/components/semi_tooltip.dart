@@ -64,6 +64,8 @@ class SemiTooltip extends StatefulWidget {
     this.motion = true,
     this.zIndex = 1060,
     this.repositionKey,
+    this.arrowColor,
+    this.arrowFringeColor,
   });
 
   /// Popup body. Rendered inside the overlay with the tooltip theme text style.
@@ -130,6 +132,16 @@ class SemiTooltip extends StatefulWidget {
 
   /// Changing this value forces a reposition.
   final Object? repositionKey;
+
+  /// Arrow fill override (null keeps `colorTooltipArrowIconDefault`). The
+  /// popover-family bare popups (SemiPopconfirm) pass their bubble background
+  /// so the wing reads as part of their own surface.
+  final Color? arrowColor;
+
+  /// Optional outline pass painted under the wing fill (popover arrow
+  /// `path:nth-child(1)`, `fill: var(--semi-color-border)`). Null keeps the
+  /// single-fill tooltip arrow.
+  final Color? arrowFringeColor;
 
   @override
   State<SemiTooltip> createState() => _SemiTooltipState();
@@ -300,7 +312,9 @@ class _SemiTooltipState extends State<SemiTooltip>
     if (widget.content != oldWidget.content ||
         widget.showArrow != oldWidget.showArrow ||
         widget.popupBare != oldWidget.popupBare ||
-        widget.clickToHide != oldWidget.clickToHide) {
+        widget.clickToHide != oldWidget.clickToHide ||
+        widget.arrowColor != oldWidget.arrowColor ||
+        widget.arrowFringeColor != oldWidget.arrowFringeColor) {
       _schedulePostFrame(() => _entry?.markNeedsBuild());
     }
   }
@@ -659,6 +673,8 @@ class _SemiTooltipState extends State<SemiTooltip>
                                 positionResult: result,
                                 showArrow: widget.showArrow,
                                 popupBare: widget.popupBare,
+                                arrowColor: widget.arrowColor,
+                                arrowFringeColor: widget.arrowFringeColor,
                               ),
                             ),
                           ),
@@ -871,6 +887,8 @@ class SemiTooltipPopup extends StatelessWidget {
     required this.positionResult,
     this.showArrow = true,
     this.popupBare = false,
+    this.arrowColor,
+    this.arrowFringeColor,
   });
 
   /// Popup body.
@@ -885,6 +903,12 @@ class SemiTooltipPopup extends StatelessWidget {
   /// Skip the bubble decoration (SemiTooltip.popupBare).
   final bool popupBare;
 
+  /// Arrow fill override (SemiTooltip.arrowColor).
+  final Color? arrowColor;
+
+  /// Optional outline pass under the wing fill (SemiTooltip.arrowFringeColor).
+  final Color? arrowFringeColor;
+
   /// Placement after auto-adjust (may be one of the four `*Over` states).
   TooltipPlacement? get placement => positionResult?.placement;
 
@@ -894,7 +918,24 @@ class SemiTooltipPopup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (popupBare) return content;
+    final result = positionResult;
+    final withArrow = showArrow && result != null;
+    if (popupBare) {
+      // Bare popups paint their own surface; the arrow still rides along the
+      // measured content edge (SemiPopconfirm's popover wing).
+      if (!withArrow) return content;
+      return Stack(
+        clipBehavior: Clip.none,
+        children: [
+          content,
+          Positioned.fill(
+            child: IgnorePointer(
+              child: CustomPaint(painter: _arrowPainter(context, result!)),
+            ),
+          ),
+        ],
+      );
+    }
     final theme = SemiTooltipTheme.resolve(context);
     final rtl = Directionality.maybeOf(context) == TextDirection.rtl;
     final padding = EdgeInsets.fromLTRB(
@@ -926,41 +967,46 @@ class SemiTooltipPopup extends StatelessWidget {
         ),
       ),
     );
-    final result = positionResult;
-    if (!showArrow || result == null) return box;
-    final tokens = SemiTheme.of(context).tooltip;
+    if (!withArrow) return box;
     return Stack(
       clipBehavior: Clip.none,
       children: [
         box,
         Positioned.fill(
           child: IgnorePointer(
-            child: CustomPaint(
-              painter: _TooltipArrowPainter(
-                placement: result.placement,
-                arrowOffset: result.arrowOffset,
-                // Upstream paints the triangle with the wrapper background so
-                // it reads as part of the bubble; the dedicated arrow color
-                // token defaults to the same channel.
-                color: theme.colorTooltipArrowIconDefault,
-                span: theme.widthTooltipArrow,
-                verticalSpan: theme.heightTooltipArrowVertical,
-                thickness: theme.heightTooltipArrow,
-                verticalThickness: theme.widthTooltipArrowVertical,
-                overlapX: theme.arrowOffsetX,
-                overlapY: theme.arrowOffsetY,
-                fallbackOffsetX: tokens.tooltipArrowOffsetX,
-                fallbackOffsetY: tokens.tooltipArrowOffsetY,
-                cornerInsetHorizontal: theme.arrowAdjustedOffsetX,
-                cornerInsetVertical:
-                    _TooltipMetrics.verticalRate *
-                        theme.heightTooltipArrowVertical +
-                    theme.arrowAdjustedOffsetY,
-              ),
-            ),
+            child: CustomPaint(painter: _arrowPainter(context, result!)),
           ),
         ),
       ],
+    );
+  }
+
+  _TooltipArrowPainter _arrowPainter(
+    BuildContext context,
+    TooltipPositionResult result,
+  ) {
+    final theme = SemiTooltipTheme.resolve(context);
+    final tokens = SemiTheme.of(context).tooltip;
+    return _TooltipArrowPainter(
+      placement: result.placement,
+      arrowOffset: result.arrowOffset,
+      // Upstream paints the triangle with the wrapper background so
+      // it reads as part of the bubble; the dedicated arrow color
+      // token defaults to the same channel.
+      color: arrowColor ?? theme.colorTooltipArrowIconDefault,
+      fringeColor: arrowFringeColor,
+      span: theme.widthTooltipArrow,
+      verticalSpan: theme.heightTooltipArrowVertical,
+      thickness: theme.heightTooltipArrow,
+      verticalThickness: theme.widthTooltipArrowVertical,
+      overlapX: theme.arrowOffsetX,
+      overlapY: theme.arrowOffsetY,
+      fallbackOffsetX: tokens.tooltipArrowOffsetX,
+      fallbackOffsetY: tokens.tooltipArrowOffsetY,
+      cornerInsetHorizontal: theme.arrowAdjustedOffsetX,
+      cornerInsetVertical:
+          _TooltipMetrics.verticalRate * theme.heightTooltipArrowVertical +
+          theme.arrowAdjustedOffsetY,
     );
   }
 }
@@ -980,11 +1026,16 @@ class _TooltipArrowPainter extends CustomPainter {
     required this.fallbackOffsetY,
     required this.cornerInsetHorizontal,
     required this.cornerInsetVertical,
+    this.fringeColor,
   });
 
   final TooltipPlacement placement;
   final TooltipArrowOffset arrowOffset;
   final Color color;
+
+  /// Optional outline pass painted under the fill (popover arrow
+  /// `path:nth-child(1)`); null keeps the single-fill tooltip arrow.
+  final Color? fringeColor;
 
   /// Along-edge arrow dimension (24 both ways upstream).
   final double span;
@@ -1043,30 +1094,44 @@ class _TooltipArrowPainter extends CustomPainter {
     // scaled to the theme dimensions and rotated 180° for the opposite edge,
     // exactly like arrow.scss does with `transform: rotate(180deg)`.
     canvas.save();
-    switch (edge) {
-      case TooltipArrowEdge.bottom:
-        canvas
-          ..translate(center - alongSpan / 2, size.height - overlapY)
-          ..scale(alongSpan / 24, thick / 7);
-        canvas.drawPath(tooltipArrowWingHorizontal(), paint);
-      case TooltipArrowEdge.top:
-        canvas
-          ..translate(center + alongSpan / 2, overlapY)
-          ..rotate(math.pi)
-          ..scale(alongSpan / 24, thick / 7);
-        canvas.drawPath(tooltipArrowWingHorizontal(), paint);
-      case TooltipArrowEdge.right:
-        canvas
-          ..translate(size.width - overlapY, center - alongSpan / 2)
-          ..scale(thick / 7, alongSpan / 24);
-        canvas.drawPath(tooltipArrowWingVertical(), paint);
-      case TooltipArrowEdge.left:
-        canvas
-          ..translate(overlapY, center + alongSpan / 2)
-          ..rotate(math.pi)
-          ..scale(thick / 7, alongSpan / 24);
-        canvas.drawPath(tooltipArrowWingVertical(), paint);
+    void drawWing(Path horizontal, Path vertical) {
+      switch (edge) {
+        case TooltipArrowEdge.bottom:
+          canvas
+            ..translate(center - alongSpan / 2, size.height - overlapY)
+            ..scale(alongSpan / 24, thick / 7);
+          canvas.drawPath(horizontal, paint);
+        case TooltipArrowEdge.top:
+          canvas
+            ..translate(center + alongSpan / 2, overlapY)
+            ..rotate(math.pi)
+            ..scale(alongSpan / 24, thick / 7);
+          canvas.drawPath(horizontal, paint);
+        case TooltipArrowEdge.right:
+          canvas
+            ..translate(size.width - overlapY, center - alongSpan / 2)
+            ..scale(thick / 7, alongSpan / 24);
+          canvas.drawPath(vertical, paint);
+        case TooltipArrowEdge.left:
+          canvas
+            ..translate(overlapY, center + alongSpan / 2)
+            ..rotate(math.pi)
+            ..scale(thick / 7, alongSpan / 24);
+          canvas.drawPath(vertical, paint);
+      }
     }
+
+    final fringe = fringeColor;
+    if (fringe != null) {
+      // Popover arrow `path:nth-child(1)` — the outline pass, painted under
+      // the fill so only its 0.5–1px rim shows around the wing.
+      paint.color = fringe;
+      drawWing(tooltipArrowFringeHorizontal(), tooltipArrowFringeVertical());
+      canvas.restore();
+      canvas.save();
+    }
+    paint.color = color;
+    drawWing(tooltipArrowWingHorizontal(), tooltipArrowWingVertical());
     canvas.restore();
   }
 
@@ -1075,6 +1140,7 @@ class _TooltipArrowPainter extends CustomPainter {
       placement != oldDelegate.placement ||
       arrowOffset != oldDelegate.arrowOffset ||
       color != oldDelegate.color ||
+      fringeColor != oldDelegate.fringeColor ||
       span != oldDelegate.span ||
       verticalSpan != oldDelegate.verticalSpan ||
       thickness != oldDelegate.thickness ||

@@ -2194,8 +2194,13 @@ class _SemiTreeSelectState extends State<SemiTreeSelect> {
             child: IgnorePointer(
               ignoring: widget.disabled,
               child: GestureDetector(
-                // index.tsx:939 `onClick={this.foundation.onClickSingleTriggerSearchItem}`。
-                onTap: _focusInput,
+                // index.tsx:939 `onClick={this.foundation.onClickSingleTriggerSearchItem}`
+                // ——★上游 DOM 冒泡：span onClick 后触发器 onClick 照发
+                // （handleClick 开/关面板）。Flutter 子手势不冒泡——此处补发。
+                onTap: () {
+                  _handleTriggerTap();
+                  _focusInput();
+                },
                 behavior: HitTestBehavior.opaque,
                 child: Align(
                   alignment: AlignmentDirectional.centerStart,
@@ -2244,7 +2249,20 @@ class _SemiTreeSelectState extends State<SemiTreeSelect> {
           maxHeight: _tagInputMinHeight(theme),
           minWidth: _TreeSelectMetrics.tagInputMinWidth,
         ),
-        child: _buildSearchInput(theme, inTrigger: true),
+        // ★上游 DOM 冒泡：TagInput 内点击也会冒泡到触发器 onClick（handleClick）
+        // ——Flutter 子手势不冒泡，Listener 补发「仅收起时打开」。
+        child: Listener(
+          behavior: HitTestBehavior.translucent,
+          onPointerDown: (_) {
+            if (!_open) _handleTriggerTap();
+          },
+          child: _buildSearchInput(
+            theme,
+            inTrigger: true,
+            // 上游 TagInput `placeholder={placeholder}`（index.tsx:1282）。
+            placeholderOverride: widget.placeholder ?? '',
+          ),
+        ),
       ),
     ];
     final wrap = Wrap(
@@ -2283,14 +2301,20 @@ class _SemiTreeSelectState extends State<SemiTreeSelect> {
   Widget _buildSearchInput(
     SemiResolvedTreeSelectThemeData theme, {
     required bool inTrigger,
+    String? placeholderOverride,
   }) {
     if (widget.searchRender == false) {
       return const SizedBox.shrink();
     }
-    final placeholder = inTrigger
-        ? ''
-        : widget.searchPlaceholder ??
-              _TreeSelectMetrics.localeSearchPlaceholder;
+    // 单选触发器搜索的占位由回填浮层承担（input placeholder 空）；多选触发器
+    // 搜索的占位在内联输入上（上游 TagInput `placeholder` prop——renderTagInput
+    // :1282）。弹层搜索用 searchPlaceholder ?? locale。
+    final placeholder =
+        placeholderOverride ??
+        (inTrigger
+            ? ''
+            : widget.searchPlaceholder ??
+                  _TreeSelectMetrics.localeSearchPlaceholder);
     final custom = widget.searchRender;
     if (custom is SemiTreeSelectSearchBuilder) {
       return custom(

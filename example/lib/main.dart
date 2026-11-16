@@ -18,6 +18,7 @@ import 'package:example/pages/descriptions.dart';
 import 'package:example/pages/divider.dart';
 import 'package:example/pages/dropdown.dart';
 import 'package:example/pages/empty.dart';
+import 'package:example/pages/float_button.dart';
 import 'package:example/pages/highlight.dart';
 import 'package:example/pages/input.dart';
 import 'package:example/pages/input_number.dart';
@@ -30,6 +31,7 @@ import 'package:example/pages/progress.dart';
 import 'package:example/pages/radio.dart';
 import 'package:example/pages/rating.dart';
 import 'package:example/pages/select.dart';
+import 'package:example/pages/side_sheet.dart';
 import 'package:example/pages/skeleton.dart';
 import 'package:example/pages/slider.dart';
 import 'package:example/pages/spin.dart';
@@ -42,6 +44,7 @@ import 'package:example/pages/time_picker.dart';
 import 'package:example/pages/timeline.dart';
 import 'package:example/pages/tooltip.dart';
 import 'package:example/pages/tree.dart';
+import 'package:example/pages/tree_select.dart';
 import 'package:example/pages/typography.dart';
 import 'package:example/pages/upload.dart';
 import 'package:flutter/widgets.dart';
@@ -102,6 +105,12 @@ const List<DemoGroup> demoGroups = [
       TypographyPage(),
     ),
     DemoSpec('divider', 'Divider 分割线', 'doc-divider.svg', DividerPage()),
+    DemoSpec(
+      'floatButton',
+      'FloatButton 悬浮按钮',
+      'doc-floatButton.svg',
+      FloatButtonPage(),
+    ),
   ]),
   // 官方侧栏 itemsArr：基础 → Plus 组件 → 输入类。
   DemoGroup('Plus 组件', [
@@ -173,6 +182,12 @@ const List<DemoGroup> demoGroups = [
     DemoSpec('steps', 'Steps 步骤', 'doc-steps.svg', StepsPage()),
     DemoSpec('tabs', 'Tabs 标签栏', 'doc-tabs.svg', TabsPage()),
     DemoSpec('tree', 'Tree 树形控件', 'doc-tree.svg', TreePage()),
+    DemoSpec(
+      'treeSelect',
+      'TreeSelect 树选择器',
+      'doc-tree.svg',
+      TreeSelectPage(),
+    ),
   ]),
   DemoGroup('展示类', [
     DemoSpec('avatar', 'Avatar 头像', 'doc-avatar.svg', AvatarPage()),
@@ -202,6 +217,12 @@ const List<DemoGroup> demoGroups = [
       HighlightPage(),
     ),
     DemoSpec('modal', 'Modal 模态对话框', 'doc-modal.svg', ModalPage()),
+    DemoSpec(
+      'sideSheet',
+      'SideSheet 侧边栏',
+      'doc-sideSheet.svg',
+      SideSheetPage(),
+    ),
     DemoSpec(
       'overflowList',
       'OverflowList 折叠列表',
