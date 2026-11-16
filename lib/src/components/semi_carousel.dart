@@ -514,7 +514,10 @@ class _SemiCarouselState extends State<SemiCarousel>
       iconBuilder: (color) => widget.prevArrowIcon != null
           ? IconTheme.merge(
               data: IconThemeData(color: color, size: size),
-              child: widget.prevArrowIcon!,
+              child: DefaultTextStyle.merge(
+                style: TextStyle(color: color, fontSize: size),
+                child: widget.prevArrowIcon!,
+              ),
             )
           : SemiIcon(SemiIcons.chevronLeft, customSize: size, color: color),
       semanticLabel: 'Previous index',
@@ -536,7 +539,10 @@ class _SemiCarouselState extends State<SemiCarousel>
       iconBuilder: (color) => widget.nextArrowIcon != null
           ? IconTheme.merge(
               data: IconThemeData(color: color, size: size),
-              child: widget.nextArrowIcon!,
+              child: DefaultTextStyle.merge(
+                style: TextStyle(color: color, fontSize: size),
+                child: widget.nextArrowIcon!,
+              ),
             )
           : SemiIcon(SemiIcons.chevronRight, customSize: size, color: color),
       semanticLabel: 'Next index',

@@ -39,7 +39,7 @@ pane 文本色 text-0；内容区 padding 上下 5 / 左右 0（左向改为左�
 
 ### 键盘 / RTL
 
-条内每项是焦点节点：左右/上下箭头移动焦点（RTL 左右互换、首尾环绕）、Enter/Space 选中、Delete/Backspace 关闭可关闭项、Home/End 首尾（foundation.ts:76-132）。焦点环用 2px 前景内描边（outline offset -1/-2 近似）。RTL：Directionality 翻转项顺序/内边距/外边距，图标间距左右互换，箭头图标方向对调（scaleX(-1) 等价），左向轨道线换边。
+条内每项是焦点节点：左右/上下箭头移动焦点（RTL 左右互换、首尾环绕）、Enter/Space 选中、Delete/Backspace 关闭可关闭项、Home/End 首尾（foundation.ts:76-132）。焦点环用 2px 前景内描边（outline offset -1/-2 近似），走 `:focus-visible` 门控（`_keyboardUsed`：任意按键置位、按下页签清位）——键盘聚焦才画，点击聚焦不画。RTL：Directionality 翻转项顺序/内边距/外边距，图标间距左右互换，箭头图标方向对调（scaleX(-1) 等价），左向轨道线换边。
 
 ## 主题（144 对账）
 
@@ -227,7 +227,7 @@ pane 文本色 text-0；内容区 padding 上下 5 / 左右 0（左向改为左�
 - **关闭**：不自动删项（与上游一致）；关闭图标点击不冒泡到选中。
 - **左向内容**：CSS `height: 100%` 在 Flutter 为自适应高度（父级 Row 拉伸决定）。
 - **slash 分割线**：CSS 渐变斜线 → 1px `CustomPaint` 线（像素级近似）。
-- **焦点环**：outline + offset → 前景内描边（2px，紧贴边框）。
+- **焦点环**：outline + offset → 前景内描边（2px，紧贴边框）；`:focus-visible` 门控（`_keyboardUsed` 先例），鼠标点击聚焦不画环。
 
 ## 用法
 

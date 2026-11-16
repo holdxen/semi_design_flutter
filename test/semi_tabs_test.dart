@@ -1658,6 +1658,35 @@ void main() {
       expect(find.text('pane2'), findsOneWidget);
     });
 
+    testWidgets('focus ring is focus-visible gated (no ring on click)', (
+      tester,
+    ) async {
+      await pumpHost(
+        tester,
+        const SemiTabs(tabList: tabs3, tabPaneMotion: false),
+      );
+      Finder ring() => find.byWidgetPredicate(
+        (w) =>
+            w is CustomPaint &&
+            w.painter.runtimeType.toString() == '_FocusRingPainter',
+      );
+      // 点击聚焦不画焦点环（`:focus-visible`）。
+      await tester.tap(find.text('Tab 1'));
+      await tester.pump();
+      expect(ring(), findsNothing);
+      // 键盘移动焦点才画环。
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pump();
+      expect(ring(), findsOneWidget);
+      // 鼠标按回清键盘模态，环消失（button 先例）。
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.text('Tab 2')),
+      );
+      await tester.pump();
+      expect(ring(), findsNothing);
+      await gesture.up();
+    });
+
     testWidgets('RTL mirrors the tab order', (tester) async {
       const list = [
         SemiTabData(itemKey: '1', tab: 'Tab 1', content: Text('pane1')),

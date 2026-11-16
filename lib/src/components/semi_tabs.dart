@@ -784,6 +784,30 @@ class _TabItemState extends State<_TabItem> {
   bool _pressed = false;
   bool _focused = false;
 
+  /// Mirrors the browser `:focus-visible` heuristic (the button
+  /// `_keyboardUsed` gate): the outline only paints after keyboard input,
+  /// never after mouse interaction.
+  bool _keyboardUsed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    HardwareKeyboard.instance.addHandler(_handleHardwareKey);
+  }
+
+  @override
+  void dispose() {
+    HardwareKeyboard.instance.removeHandler(_handleHardwareKey);
+    super.dispose();
+  }
+
+  bool _handleHardwareKey(KeyEvent event) {
+    if (event is KeyDownEvent && !_keyboardUsed && mounted) {
+      setState(() => _keyboardUsed = true);
+    }
+    return false;
+  }
+
   bool get _disabled => widget.data.disabled;
 
   Color get _textColor {
@@ -1150,10 +1174,12 @@ class _TabItemState extends State<_TabItem> {
       child: core,
     );
 
-    if (_focused) {
+    if (_focused && _keyboardUsed) {
       // `&:focus-visible { outline: $width-tabs-outline solid
       // $color-tabs_tab-outline-focus; outline-offset: $width-tabs-outline-offset
       // }`（line 用 `$width-tabs_bar_line-outline-offset`，负值 = 内缩）。
+      // 环走 `:focus-visible` 门控（`_keyboardUsed`，button 先例）：点击聚焦
+      // 不画、键盘聚焦才画。
       final inset =
           (widget.type == SemiTabsType.line
                   ? t.widthTabsBarLineOutlineOffset
@@ -1195,7 +1221,12 @@ class _TabItemState extends State<_TabItem> {
         child: Listener(
           onPointerDown: _disabled
               ? null
-              : (_) => setState(() => _pressed = true),
+              : (_) => setState(() {
+                    // 按下清键盘模态（rating/checkbox tap-down 先例）——
+                    // 鼠标点击聚焦不画焦点环（`:focus-visible`）。
+                    _pressed = true;
+                    _keyboardUsed = false;
+                  }),
           onPointerUp: (_) {
             if (_pressed) setState(() => _pressed = false);
           },

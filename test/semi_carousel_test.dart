@@ -962,6 +962,28 @@ void main() {
       expect(find.byKey(const ValueKey('carousel-indicator-0')), findsNothing);
     });
 
+    testWidgets('custom arrow icons inherit the light theme colour', (
+      tester,
+    ) async {
+      await pumpHost(
+        tester,
+        const SemiCarousel(
+          autoPlay: false,
+          nextArrowIcon: SemiIcon(SemiIcons.arrowRight),
+          children: slides,
+        ),
+      );
+      final icon = tester.element(
+        find.byWidgetPredicate(
+          (widget) => widget is SemiIcon && widget.data == SemiIcons.arrowRight,
+        ),
+      );
+      expect(
+        DefaultTextStyle.of(icon).style.color,
+        const SemiThemeData.light().palette.white.toColor(0.4),
+      );
+    });
+
     testWidgets('a local theme patch drives indicator geometry', (
       tester,
     ) async {
