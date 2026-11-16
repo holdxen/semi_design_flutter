@@ -132,6 +132,9 @@ export 'src/theme/semi_steps_theme_data.dart';
 export 'src/components/semi_upload.dart';
 export 'src/theme/semi_upload_theme.dart';
 export 'src/theme/semi_upload_theme_data.dart';
+export 'src/components/semi_skeleton.dart';
+export 'src/theme/semi_skeleton_theme.dart';
+export 'src/theme/semi_skeleton_theme_data.dart';
 
 /// A Calculator.
 class Calculator {
