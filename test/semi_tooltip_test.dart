@@ -142,6 +142,58 @@ void main() {
     expect(find.byType(SemiTooltipPopup), findsNothing);
   });
 
+  testWidgets('hover tooltip ignores synthetic enter under an idle cursor', (
+    tester,
+  ) async {
+    // 宿主 body 经 ValueListenable 交换（Overlay.initialEntries 重建不换
+    // 内容，二次 pumpWidget 换不掉子树）。
+    final body = ValueNotifier<Widget>(_trigger());
+    Widget host() => SemiTheme(
+      data: const SemiThemeData.light(),
+      child: Directionality(
+        textDirection: TextDirection.ltr,
+        child: Overlay(
+          initialEntries: [
+            OverlayEntry(
+              builder: (context) => ValueListenableBuilder<Widget>(
+                valueListenable: body,
+                builder: (context, value, _) =>
+                    Align(alignment: Alignment.center, child: value),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    // 光标真实移动到位（无 tooltip 的触发器）。
+    await tester.pumpWidget(host());
+    final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await gesture.addPointer(location: Offset.zero);
+    addTearDown(gesture.removePointer);
+    final triggerCenter = tester.getCenter(find.byKey(_kTrigger));
+    await gesture.moveTo(triggerCenter);
+    await tester.pump();
+    // 光标不动，带 tooltip 的触发器换新出现在光标下（收起侧边栏场景）：
+    // Flutter 会合成 MouseRegion enter，web mouseenter 不触发——tooltip
+    // 不应弹出。
+    body.value = SemiTooltip(
+      trigger: SemiTooltipTrigger.hover,
+      motion: false,
+      content: const Text('Hint'),
+      child: _trigger(),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byType(SemiTooltipPopup), findsNothing);
+    // 真实移动才算 hover 意图，tooltip 正常显示。
+    await gesture.moveTo(triggerCenter + const Offset(1, 0));
+    await tester.pump(const Duration(milliseconds: 60));
+    await tester.pump();
+    await tester.pump();
+    expect(find.byType(SemiTooltipPopup), findsOneWidget);
+  });
+
   testWidgets('hover stays on without oscillating while the popup settles', (
     tester,
   ) async {

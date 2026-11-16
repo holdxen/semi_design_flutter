@@ -126,7 +126,7 @@ bottomLeft   bottom   bottomRight  （下方三位置，translateY=0）
 
 ## 交互与 Escape
 
-- `hover`：50/50 延时，trigger 与 popup 各有 `MouseRegion` 共享同一计时器，间隙移动 50ms 内不关闭。
+- `hover`：50/50 延时，trigger 与 popup 各有 `MouseRegion` 共享同一计时器，间隙移动 50ms 内不关闭。**显示只认真实指针移动**（`onPointerHover`，web mouseenter 语义）：布局变化把控件推到静止光标下时 Flutter 会合成 MouseRegion enter（如收起侧边栏后按钮在光标下换新），不触发显示——否则闪一下 tooltip。
 - `click`：点击显示；外部点击（trigger/popup 之外）触发 `onClickOutSide` 并关闭。
 - `focus`：聚焦显示、失焦隐藏（延时同 hover）。
 - `custom`：纯受控，仅 `visible` 驱动。
@@ -142,6 +142,7 @@ bottomLeft   bottom   bottomRight  （下方三位置，translateY=0）
 ## 差异清单
 
 - **受控语义**：`visible` 非空即完全受控——交互事件只回调 `onVisibleChange`，不自行改显隐（web 为半受控，事件直接改内部状态）。
+- **hover 显示只认真实指针移动**：Flutter 的 `MouseRegion.onEnter` 会在布局变化时为静止光标合成触发（web mouseenter 不会——如收起侧边栏后按钮在光标下换新），故显示挂 `Listener.onPointerHover`（只随真实移动），`MouseRegion` 仅管 `onExit` 隐藏，对齐 web 语义。
 - **zIndex**：参数保留但不生效；弹层插入 `Overlay` 顶层同层、按插入序叠放（web 也无全局 z-index 互斥）。
 - **滚动跟随**：位置跟随由 `CompositedTransformFollower` 承担，翻转判定不随滚动重算（web 滚动时重算 `calcPosition`）。
 - **未移植**：`getPopupContainer`（固定 ambient Overlay）、`keepDOM`、`wrapWhenSpecial`（disabled/loading 包裹）、`guardFocus`、`returnFocusOnClose`、`preventScroll`、`disableFocusListener`、`disableArrowKeyDown`、自定义箭头节点（`showArrow` 仅支持 bool）、`spacing: {x, y}` 扩展（仅标量）、`margin`（固定 0）、`afterClose`、`condition`、`role`/`wrapperClassName`/`stopPropagation` 等。

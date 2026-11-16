@@ -235,6 +235,10 @@ class _SemiTooltipState extends State<SemiTooltip>
   bool _showScheduled = false;
   bool _disposed = false;
 
+  /// hover 展示只认真实指针移动（web mouseenter 语义）：布局变化把触发器推
+  /// 到静止光标下时 Flutter 会合成 MouseRegion enter，上游不会弹 tooltip。
+  bool _hoverArmed = false;
+
   /// Scope for popups nested inside this popup (exists while the entry lives).
   SemiOverlayPointerExemptScope? _exemptScope;
 
@@ -781,10 +785,22 @@ class _SemiTooltipState extends State<SemiTooltip>
       child: child,
     );
     if (widget.trigger == SemiTooltipTrigger.hover) {
-      child = MouseRegion(
-        onEnter: (_) => _delayShow(),
-        onExit: (_) => _delayHide(),
-        child: child,
+      // `onPointerHover` 只随真实指针移动触发（合成 enter 无 hover 事件），
+      // 对齐 web mouseenter：收起侧边栏后光标不动不闪「展开侧边栏」。
+      child = Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerHover: (_) {
+          if (_hoverArmed) return;
+          _hoverArmed = true;
+          _delayShow();
+        },
+        child: MouseRegion(
+          onExit: (_) {
+            _hoverArmed = false;
+            _delayHide();
+          },
+          child: child,
+        ),
       );
     }
     return CompositedTransformTarget(
