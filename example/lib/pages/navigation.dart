@@ -219,7 +219,17 @@ class _NavigationPageState extends State<NavigationPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SemiText(_status, key: const ValueKey('navigation-status')),
+          // ★定高日志行：事件追加变行会把下方内容整体下推——指针静止但条目
+          // 移走即触发悬停区 exit（弹层开→关抖动、页面「自己漂移」的根源）。
+          SizedBox(
+            height: 60,
+            child: SingleChildScrollView(
+              child: SemiText(
+                _status,
+                key: const ValueKey('navigation-status'),
+              ),
+            ),
+          ),
           const SizedBox(height: 24),
           _section('垂直基础', [
             _demo(
@@ -246,7 +256,7 @@ class _NavigationPageState extends State<NavigationPage> {
             _demo(
               'defaultIsCollapsed: true — 60px 图标栏（文字渐隐 opacity: 0 仍'
               '在树上）；平铺 item hover 出右侧 Tooltip；Sub 悬停/点按弹出层菜单'
-              '（弹层内点条目即收起；★标题点按对可见性惰性——关闭走移出/外点）；footer '
+              '（弹层内点条目即收起；★标题点按未开则开、已开不关——关闭走移出/外点）；footer '
               '收起按钮缺省 locale '
               '「展开侧边栏」→ 点击展开 240px（onCollapseChange 回传新值）',
               SizedBox(

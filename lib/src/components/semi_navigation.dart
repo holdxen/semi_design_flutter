@@ -280,185 +280,6 @@ class SemiNavigation extends StatefulWidget {
 }
 
 class _SemiNavigationState extends State<SemiNavigation> {
-  /// 标题悬停跟踪（弹层开合的假 exit 防抖用——见 `_handlePopupVisible`）。
-  final _subHover = <Object, bool>{};
-  final _subPendingClose = <Object, bool>{};
-  Timer? _subHoverTimer;
-
-  /// 有效选中键（含自动附的一级父 key——index.tsx:252-258）。
-  List<Object> _selectedKeys = const [];
-
-  /// 有效展开键（foundation.ts:174-188 `getWillOpenKeys`）。
-  List<Object> _openKeys = const [];
-
-  /// 折叠态（index.tsx:190 `Boolean(isControlled ? isCollapsed : defaultIsCollapsed)`）。
-  bool _isCollapsed = false;
-
-  /// itemKey -> 父键链（foundation.ts:71-113 `buildItemKeysMap`）。
-  final Map<Object, List<Object>> _itemKeysMap = {};
-
-  bool get _selectedControlled => widget.selectedKeys != null;
-
-  /// ★openKeys 受控仅 vertical 未折叠生效（index.tsx:407 quirk）。
-  bool get _openKeysControlled =>
-      widget.openKeys != null &&
-      widget.mode == SemiNavigationMode.vertical &&
-      !_isCollapsed;
-
-  bool get _isHorizontal => widget.mode == SemiNavigationMode.horizontal;
-
-  @override
-  void initState() {
-    super.initState();
-    _isCollapsed = widget.isCollapsed ?? widget.defaultIsCollapsed ?? false;
-    _rebuildKeys();
-  }
-
-  @override
-  void didUpdateWidget(SemiNavigation old) {
-    super.didUpdateWidget(old);
-    if (widget.isCollapsed != null && widget.isCollapsed != _isCollapsed) {
-      _isCollapsed = widget.isCollapsed!;
-    }
-    if (old.items != widget.items) {
-      _rebuildKeys();
-      return;
-    }
-    // componentDidUpdate（index.tsx:221-236）：selectedKeys 变更重算选中+自动
-    // 展开祖先；openKeys 受控变更直接替换。
-    if (widget.selectedKeys != null &&
-        widget.selectedKeys != old.selectedKeys) {
-      setState(() {
-        _selectedKeys = _withParentKeys(widget.selectedKeys!);
-        _openKeys = _willOpenKeys();
-      });
-    } else if (widget.openKeys != null && widget.openKeys != old.openKeys) {
-      setState(() {
-        _openKeys = List<Object>.of(widget.openKeys!);
-      });
-    }
-  }
-
-  /// items 归一化 + key map + 初始选中/展开（foundation.ts:122-145 `init`）。
-  void _rebuildKeys() {
-    _itemKeysMap.clear();
-    _buildItemKeysMap(widget.items, const []);
-    final input = widget.selectedKeys ?? widget.defaultSelectedKeys;
-    _selectedKeys = _withParentKeys(input ?? const []);
-    _openKeys = _willOpenKeys();
-  }
-
-  static SemiNavigationItem _normalize(Object raw) {
-    // NavItem.ts:12-24：非对象条目 → {text: options, itemKey: options}。
-    if (raw is String) {
-      return SemiNavigationItem(itemKey: raw, text: raw);
-    }
-    return raw as SemiNavigationItem;
-  }
-
-  void _buildItemKeysMap(List<Object> items, List<Object> parentKeys) {
-    for (final raw in items) {
-      final item = _normalize(raw);
-      _itemKeysMap[item.itemKey] = List<Object>.of(parentKeys);
-      if (item.items != null && item.items!.isNotEmpty) {
-        _buildItemKeysMap(item.items!, [...parentKeys, item.itemKey]);
-      }
-    }
-  }
-
-  /// ★选中子项自动附一级父 key（foundation.ts:210-229
-  /// `selectLevelZeroParentKeys`——只附最顶层父键）。
-  List<Object> _withParentKeys(List<Object> keys) {
-    final result = List<Object>.of(keys);
-    for (final key in keys) {
-      final parents = _itemKeysMap[key];
-      if (parents != null && parents.isNotEmpty) {
-        final levelZero = parents.first;
-        if (!result.contains(levelZero)) {
-          result.add(levelZero);
-        }
-      }
-    }
-    return result;
-  }
-
-  /// getWillOpenKeys（foundation.ts:174-188）：★无 openKeys/defaultOpenKeys 输入
-  /// 且 vertical 且有选中输入时自动展开选中项祖先。
-  List<Object> _willOpenKeys() {
-    final input = widget.openKeys ?? widget.defaultOpenKeys;
-    if (input != null) {
-      return List<Object>.of(input);
-    }
-    if (widget.mode != SemiNavigationMode.vertical) {
-      return List<Object>.of(_openKeys);
-    }
-    final selectedInput = widget.selectedKeys ?? widget.defaultSelectedKeys;
-    if (selectedInput == null) {
-      return List<Object>.of(_openKeys);
-    }
-    final merged = List<Object>.of(_openKeys);
-    for (final key in selectedInput) {
-      for (final parent in _itemKeysMap[key] ?? const <Object>[]) {
-        if (!merged.contains(parent)) {
-          merged.add(parent);
-        }
-      }
-    }
-    return merged;
-  }
-
-  /// itemFoundation.ts:67-96 `handleClick`：单选替换、★已选中再点不触发不移除、
-  /// onSelect 载荷 `selectedKeys = [itemKey]`（:83）。
-  void _handleItemTap(SemiNavigationItem item) {
-    if (item.disabled) {
-      return;
-    }
-    final already = _selectedKeys.contains(item.itemKey);
-    if (!_selectedControlled && !already) {
-      setState(() {
-        _selectedKeys = _withParentKeys([item.itemKey]);
-      });
-    }
-    if (!already) {
-      widget.onSelect?.call(
-        SemiNavigationSelectInfo(
-          itemKey: item.itemKey,
-          selectedKeys: <Object>[item.itemKey],
-          text: item.text,
-        ),
-      );
-    }
-    // notifyGlobalOnClick（itemFoundation.ts:93）：item 路 {itemKey, text}。
-    widget.onClick?.call(
-      SemiNavigationClickInfo(itemKey: item.itemKey, text: item.text),
-    );
-  }
-
-  /// subNavFoundation.ts:97-125 `handleClick`（Sub 标题点击 toggle）。
-  void _handleSubTitleTap(SemiNavigationItem item) {
-    if (item.disabled) {
-      return;
-    }
-    final isOpen = _openKeys.contains(item.itemKey);
-    // ★弹层模式（collapsed/horizontal）标题点击对弹层可见性**惰性**——上游
-    // wrapDropdown 是 `trigger: 'hover'`（SubNav.tsx:311-313），弹层可见性归
-    // tooltip 内部，openKeys 不驱动它；点击只走 notifyGlobalOnClick。开启走
-    // hover/SemiTooltip touch-tap 兜底（→ `_handlePopupVisible` 同步 openKeys），
-    // 关闭走移出/外点。此前 tap-toggle 会把 tap 兜底刚开的弹层立刻关掉（净
-    // 效果恒关）。
-    if (_isCollapsed || widget.mode == SemiNavigationMode.horizontal) {
-      widget.onClick?.call(
-        SemiNavigationClickInfo(
-          itemKey: item.itemKey,
-          openKeys: List<Object>.of(_openKeys),
-          isOpen: isOpen,
-        ),
-      );
-      return;
-    }
-    _applyOpen(item.itemKey, !isOpen);
-  }
-
   /// 打开/收起 Sub 并通知（updateOpen + notifyGlobalOpenChange +
   /// notifyGlobalOnClick——subNavFoundation.ts:111-125）。
   void _applyOpen(Object itemKey, bool isOpen, {bool notifyClick = true}) {
@@ -495,25 +316,36 @@ class _SemiNavigationState extends State<SemiNavigation> {
   }
 
   /// 弹层可见性变更（subNavFoundation.ts:71-90 `handleDropdownVisibleChange`
-  /// ——只 notifyGlobalOpenChange 不发 onClick）。
-  void _handlePopupVisible(
-    SemiNavigationItem item,
-    bool visible, {
-    bool force = false,
-  }) {
+  /// ——只 notifyGlobalOpenChange 不发 onClick）。trigger: custom 下仅
+  /// 外点/显式关闭走这里；hover 开合由 `_subHoverEnter`/`_subHoverExit` 自管。
+  void _handlePopupVisible(SemiNavigationItem item, bool visible) {
     if (visible == _openKeys.contains(item.itemKey)) {
-      return;
-    }
-    // ★假 exit 防抖（web 实测）：弹层开合瞬间 tooltip hover 区会虚报
-    // onExit（指针未动也 open→close 抖动、弹层一闪即逝）——标题仍在悬停
-    // 时挂起关闭，待真实离开（去抖后的 _subHover=false）再执行。
-    // [force] 用于组件自身的主动关闭（弹层内点条目）。
-    if (!force && !visible && (_subHover[item.itemKey] ?? false)) {
-      _subPendingClose[item.itemKey] = true;
       return;
     }
     _applyOpen(item.itemKey, visible, notifyClick: false);
   }
+
+  /// 弹层模式 Sub 悬停进入（标题或弹层内容）——即开/保持。
+  void _subHoverEnter(SemiNavigationItem item) {
+    _subHoverTimer?.cancel();
+    _subHover[item.itemKey] = true;
+    _subHoverStamps[item.itemKey] = DateTime.now();
+    // 单开切换：悬停另一个 Sub 时收起先前的。
+    for (final key in List<Object>.of(_openKeys)) {
+      if (key != item.itemKey) {
+        _applyOpen(key, false, notifyClick: false);
+      }
+    }
+    if (!_openKeys.contains(item.itemKey)) {
+      _applyOpen(item.itemKey, true, notifyClick: false);
+    }
+  }
+
+  /// 弹层模式 Sub 悬停离开——★仅记账**不关**（确定性语义）：web 端 hover
+  /// 重挂/过期位置的假 exit 无法与真实离开可靠区分（实测每次开合都伴随
+  /// 一对假 exit），关弹层只走三条确定路径：悬停另一个 Sub（单开切换）、
+  /// 外点（tooltip 外点屏障）、弹层内点条目。
+  void _subHoverExit(SemiNavigationItem item) {}
 
   /// foundation.ts:261-268 `handleCollapseChange`。
   void _toggleCollapsed() {
@@ -875,7 +707,7 @@ class _SemiNavigationState extends State<SemiNavigation> {
           inPopup: childInPopup,
           // 弹层内点条目即收起（近似 Dropdown.Item 行为，见差异清单 23）。
           onAfterTap: (collapsed || horizontal)
-              ? () => _handlePopupVisible(item, false, force: true)
+              ? () => _handlePopupVisible(item, false)
               : null,
           t: t,
         ),
@@ -902,42 +734,34 @@ class _SemiNavigationState extends State<SemiNavigation> {
         ),
       );
       return SemiDropdown(
-        trigger: SemiTooltipTrigger.hover,
+        // ★trigger: custom + 自管悬停：web 实测 tooltip 自带 hover 会虚报
+        // exit（open→close 抖动、弹层一闪即逝）——弃用其 hover 语义，标题与
+        // 弹层内容共用 `_subHoverEnter/Exit` 悬停区（真实离开才关）。
+        trigger: SemiTooltipTrigger.custom,
         // SubNav.tsx:336：horizontal 顶层 bottomLeft、其余 rightTop。
+        // ★rightTop → right（垂直居中贴右，视觉同官方贴右）：web 实测
+        // rightTop 弹层不渲染（right/bottomLeft 均正常——收起按钮 tooltip
+        // 与水平弹层为证），疑 tooltip 定位管线 rightTop 分支 web 特异。
         position: !horizontal || inPopup
-            ? SemiTooltipPosition.rightTop
+            ? SemiTooltipPosition.right
             : SemiTooltipPosition.bottomLeft,
-        // constants.ts:25-26 `DEFAULT_SUBNAV_OPEN_DELAY: 0` /
-        // `DEFAULT_SUBNAV_CLOSE_DELAY: 100`。
-        mouseEnterDelay: _NavigationMetrics.subNavOpenDelay,
-        mouseLeaveDelay: _NavigationMetrics.subNavCloseDelay,
-        // ★弹层不走淡入动画：web 实测受控 hover 弹层动画疑似滞留 0 透明度
-        // （弹层挂载却不可见）——直出规避；上游 Dropdown 本无显式 motion 语义。
+        // ★弹层不走淡入动画（web 受控弹层动画滞留 0 透明度的规避）。
         motion: false,
         visible: isOpen,
         onVisibleChange: (visible) => _handlePopupVisible(item, visible),
-        content: popup,
+        content: MouseRegion(
+          key: _subPopupKeys.putIfAbsent(item.itemKey, GlobalKey.new),
+          // 弹层内容悬停桥（进弹层保持、离开计时关闭）。
+          onEnter: (_) => _subHoverEnter(item),
+          onExit: (e) =>
+              _subHoverExit(item, _subPopupKeys[item.itemKey]!, e.position),
+          child: popup,
+        ),
         child: MouseRegion(
-          // 标题悬停跟踪（假 exit 防抖的真值来源）——enter 即真、exit 去抖
-          // 150ms 才置假：弹层开合的假 exit/enter 对在此抵消，真实离开才放行
-          // 挂起的关闭（弹层内 hover 的桥接由 tooltip 自身负责）。
-          onEnter: (_) {
-            _subHoverTimer?.cancel();
-            setState(() {
-              _subHover[item.itemKey] = true;
-              _subPendingClose.remove(item.itemKey);
-            });
-          },
-          onExit: (_) {
-            _subHoverTimer?.cancel();
-            _subHoverTimer = Timer(const Duration(milliseconds: 150), () {
-              if (!mounted) return;
-              setState(() => _subHover[item.itemKey] = false);
-              if (_subPendingClose.remove(item.itemKey) == true) {
-                _applyOpen(item.itemKey, false, notifyClick: false);
-              }
-            });
-          },
+          key: _subTitleKeys.putIfAbsent(item.itemKey, GlobalKey.new),
+          onEnter: (_) => _subHoverEnter(item),
+          onExit: (e) =>
+              _subHoverExit(item, _subTitleKeys[item.itemKey]!, e.position),
           child: title,
         ),
       );
@@ -1985,7 +1809,9 @@ abstract final class _NavigationMetrics {
   static const Duration tooltipHideDelay = Duration(milliseconds: 100);
 
   /// constants.ts:25 `DEFAULT_SUBNAV_OPEN_DELAY: 0`（ms）——
-  /// `SUBNAV_OPEN_DELAY: 0`。
+  /// `SUBNAV_OPEN_DELAY: 0`。悬停即开（零延迟）由 `_subHoverEnter` 直开
+  /// 体现，字段留档（HARDCODES 锚点）。
+  // ignore: unused_field
   static const Duration subNavOpenDelay = Duration.zero;
 
   /// constants.ts:26 `DEFAULT_SUBNAV_CLOSE_DELAY: 100`（ms）——
