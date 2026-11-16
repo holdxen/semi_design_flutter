@@ -99,7 +99,7 @@ class _SideSheetPageState extends State<SideSheetPage> {
               visible: _placementVisible,
               placement: _placement,
               title: '标题',
-              content: Text('placement: ${_placement.name}。'),
+              content: Text('这是一段 placement: ${_placement.name} 的内容。'),
               onCancel: () => setState(() => _placementVisible = false),
             ),
           ]),

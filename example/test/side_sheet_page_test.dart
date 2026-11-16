@@ -31,14 +31,21 @@ String statusText(WidgetTester tester) =>
             .map((t) => t.data ?? '')
             .join();
 
+/// 入场落定（引擎入库帧 + 内容首建帧后 180ms 滑入动画才起步——需补拍
+/// 完成滑移，否则内容盒平移出屏，tap 会 warnIfMissed）。
+Future<void> openSettled(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 250));
+  await tester.pump(const Duration(milliseconds: 250));
+}
+
 void main() {
   testWidgets('declarative sheet opens and reports ok', (tester) async {
     await start(tester);
     expect(statusText(tester), '点击按钮查看交互。');
     await tester.tap(find.text('打开侧边栏'));
-    await tester.pump();
-    await tester.pump();
-    await tester.pump();
+    await openSettled(tester);
     expect(find.text('这是一段侧边栏内容。'), findsOneWidget);
     await tester.tap(find.text('确定'));
     await tester.pump();
@@ -53,16 +60,14 @@ void main() {
     await start(tester);
     for (final name in const ['top', 'right', 'bottom', 'left']) {
       await tester.tap(find.text(name));
-      await tester.pump();
-      await tester.pump();
-      await tester.pump();
-      expect(find.text('placement: $name。'), findsOneWidget);
+      await openSettled(tester);
+      expect(find.text('这是一段 placement: $name 的内容。'), findsOneWidget);
       // 中带 (600, 2000)：四向 sheet 都不覆盖（left/right 全高但宽 448，
       // top/bottom 全宽但高 448）——点蒙层关闭。
       await tester.tapAt(const Offset(600, 2000));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 250));
-      expect(find.text('placement: $name。'), findsNothing);
+      expect(find.text('这是一段 placement: $name 的内容。'), findsNothing);
     }
   });
 
@@ -72,9 +77,7 @@ void main() {
       expect(find.text(name), findsOneWidget);
     }
     await tester.tap(find.text('large'));
-    await tester.pump();
-    await tester.pump();
-    await tester.pump();
+    await openSettled(tester);
     expect(find.text('尺寸 large'), findsOneWidget);
     await tester.tapAt(const Offset(600, 2000));
     await tester.pump();
@@ -86,9 +89,7 @@ void main() {
   ) async {
     await start(tester);
     await tester.tap(find.text('自定义 title/footer'));
-    await tester.pump();
-    await tester.pump();
-    await tester.pump();
+    await openSettled(tester);
     expect(find.text('自定义 title'), findsOneWidget);
     expect(find.text('知道了'), findsOneWidget);
     await tester.tap(find.text('知道了'));
@@ -97,10 +98,21 @@ void main() {
     expect(statusText(tester), '自定义 footer 点击。');
 
     await tester.tap(find.text('无蒙层 fixed（mask: false）'));
-    await tester.pump();
-    await tester.pump();
-    await tester.pump();
+    await openSettled(tester);
     expect(find.text('无蒙层：投影 + 点击穿透。'), findsOneWidget);
+
+    // 体内收尾：关 fixed sheet + 冲引擎计时器（_verifyInvariants 在 teardown
+    // 前——上游 SmartDialogTestState.reset 先例）。
+    await tester.tap(
+      find.byWidgetPredicate(
+        (w) => w is SemiButton && w.child == null && w.icon != null,
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 250));
+    SmartDialogTestState.reset();
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump();
   });
 
   testWidgets('closeOnEsc sheet reports afterVisibleChange true and false', (
@@ -114,6 +126,9 @@ void main() {
 
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 250));
+    // `(false)` 在 show Future 完成链（出场动画 + 引擎收尾帧）后补发。
+    await tester.pump(const Duration(milliseconds: 250));
     await tester.pump(const Duration(milliseconds: 250));
     expect(statusText(tester), 'afterVisibleChange: false。');
   });

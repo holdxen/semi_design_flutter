@@ -37,10 +37,8 @@ class _PopoverPageState extends State<PopoverPage> {
     child: SemiText(label),
   );
 
-  Widget _content(String text) => Padding(
-    padding: const EdgeInsets.all(12),
-    child: SemiText(text),
-  );
+  Widget _content(String text) =>
+      Padding(padding: const EdgeInsets.all(12), child: SemiText(text));
 
   @override
   Widget build(BuildContext context) {
@@ -57,9 +55,8 @@ class _PopoverPageState extends State<PopoverPage> {
             const SizedBox(height: 12),
             SemiPopover(
               content: _content('Hi Bytedancer, this is a popover.'),
-              onVisibleChange: (v) => setState(
-                () => _status = '基础用法 onVisibleChange: $v',
-              ),
+              onVisibleChange: (v) =>
+                  setState(() => _status = '基础用法 onVisibleChange: $v'),
               child: _target('basic-target', 'Hover 我'),
             ),
           ]),
@@ -77,18 +74,16 @@ class _PopoverPageState extends State<PopoverPage> {
                 SemiPopover(
                   trigger: SemiTooltipTrigger.click,
                   content: _content('点击触发的气泡卡片。'),
-                  onVisibleChange: (v) => setState(
-                    () => _status = '点击用法 onVisibleChange: $v',
-                  ),
+                  onVisibleChange: (v) =>
+                      setState(() => _status = '点击用法 onVisibleChange: $v'),
                   child: _target('click-target', '点击我'),
                 ),
                 SemiPopover(
                   trigger: SemiTooltipTrigger.click,
                   visible: _visible,
                   content: _content('受控气泡：开关在使用方手里。'),
-                  onVisibleChange: (v) => setState(
-                    () => _status = '受控 onVisibleChange: $v（只回调）',
-                  ),
+                  onVisibleChange: (v) =>
+                      setState(() => _status = '受控 onVisibleChange: $v（只回调）'),
                   child: _target('controlled-target', '受控气泡'),
                 ),
                 _action(
@@ -115,9 +110,8 @@ class _PopoverPageState extends State<PopoverPage> {
                   trigger: SemiTooltipTrigger.click,
                   showArrow: true,
                   content: _content('带箭头的气泡卡片（外层 12px 内边距）。'),
-                  onVisibleChange: (v) => setState(
-                    () => _status = '带箭头 onVisibleChange: $v',
-                  ),
+                  onVisibleChange: (v) =>
+                      setState(() => _status = '带箭头 onVisibleChange: $v'),
                   child: _target('arrow-target', '默认箭头'),
                 ),
                 SemiPopover(

@@ -33,7 +33,8 @@ Widget _app(
       child: Overlay(
         initialEntries: [
           OverlayEntry(
-            builder: (context) => Align(alignment: Alignment.center, child: body),
+            builder: (context) =>
+                Align(alignment: Alignment.center, child: body),
           ),
         ],
       ),
@@ -158,21 +159,26 @@ void main() {
       expect(full.merge(null), full);
       expect(const SemiPopoverThemeData().merge(full), full);
       expect(full == full.copyWith(), isTrue);
-      expect(full.merge(const SemiPopoverThemeData(radiusPopover: 1)).radiusPopover, 1);
+      expect(
+        full.merge(const SemiPopoverThemeData(radiusPopover: 1)).radiusPopover,
+        1,
+      );
     });
 
     test('SemiComponentThemes wires the popover slot', () {
       const patch = SemiPopoverThemeData(radiusPopover: 3);
       const themes = SemiComponentThemes(popover: patch);
       expect(themes.copyWith().popover, patch);
-      expect(const SemiComponentThemes().copyWith(popover: patch).popover, patch);
+      expect(
+        const SemiComponentThemes().copyWith(popover: patch).popover,
+        patch,
+      );
       expect(themes == themes.copyWith(), isTrue);
     });
 
     test('widget source keeps the provenance anchors', () {
-      final widget = File(
-        'lib/src/components/semi_popover.dart',
-      ).readAsStringSync();
+      final widget = File('lib/src/components/semi_popover.dart')
+          .readAsStringSync();
       // INTERNAL snippets (`_PopoverMetrics`).
       expect(widget, contains('\$horizontal-rate: 0.24'));
       expect(widget, contains('\$filter-popover-bg: none'));
@@ -185,95 +191,94 @@ void main() {
           '\$color-popover-border-default;',
         ),
       );
-      expect(
-        widget,
-        contains('showArrow ? <Arrow {...arrowProps} /> : false'),
-      );
+      expect(widget, contains('showArrow ? <Arrow {...arrowProps} /> : false'));
     });
   });
 
   group('widget behavior', () {
-    testWidgets('hover shows the card; spacing defaults to 4 without the arrow', (
-      tester,
-    ) async {
-      final log = <bool>[];
-      await tester.pumpWidget(
-        _app(
-          SemiPopover(
-            content: const Text('气泡内容'),
-            onVisibleChange: log.add,
-            child: _trigger(),
+    testWidgets(
+      'hover shows the card; spacing defaults to 4 without the arrow',
+      (tester) async {
+        final log = <bool>[];
+        await tester.pumpWidget(
+          _app(
+            SemiPopover(
+              content: const Text('气泡内容'),
+              onVisibleChange: log.add,
+              child: _trigger(),
+            ),
           ),
-        ),
-      );
-      await _hover(tester);
-      expect(find.text('气泡内容'), findsOneWidget);
-      expect(log, [true]);
-      final shell = tester.widget<SemiTooltip>(find.byType(SemiTooltip));
-      expect(shell.trigger, SemiTooltipTrigger.hover);
-      expect(shell.position, SemiTooltipPosition.bottom);
-      expect(shell.showArrow, isFalse);
-      expect(shell.popupBare, isTrue);
-      expect(shell.spacing, 4);
-      expect(shell.closeOnEsc, isTrue);
-      expect(shell.zIndex, 1030);
-      expect(shell.arrowBoundingOffsetY, 6);
-      // No arrow: the wrapper carries no padding upstream.
-      final padding = tester.widget<Padding>(
-        find.descendant(
-          of: find.byType(SemiTooltipPopup),
-          matching: find.byType(Padding),
-        ),
-      );
-      expect(padding.padding, EdgeInsets.zero);
-    });
+        );
+        await _hover(tester);
+        expect(find.text('气泡内容'), findsOneWidget);
+        expect(log, [true]);
+        final shell = tester.widget<SemiTooltip>(find.byType(SemiTooltip));
+        expect(shell.trigger, SemiTooltipTrigger.hover);
+        expect(shell.position, SemiTooltipPosition.bottom);
+        expect(shell.showArrow, isFalse);
+        expect(shell.popupBare, isTrue);
+        expect(shell.spacing, 4);
+        expect(shell.closeOnEsc, isTrue);
+        expect(shell.zIndex, 1030);
+        expect(shell.arrowBoundingOffsetY, 6);
+        // No arrow: the wrapper carries no padding upstream.
+        final padding = tester.widget<Padding>(
+          find.descendant(
+            of: find.byType(SemiTooltipPopup),
+            matching: find.byType(Padding),
+          ),
+        );
+        expect(padding.padding, EdgeInsets.zero);
+      },
+    );
 
-    testWidgets('showArrow paints the 24x8 popover wing with the 12px padding', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        _app(
-          SemiPopover(
-            content: const Text('气泡内容'),
-            showArrow: true,
-            child: _trigger(),
+    testWidgets(
+      'showArrow paints the 24x8 popover wing with the 12px padding',
+      (tester) async {
+        await tester.pumpWidget(
+          _app(
+            SemiPopover(
+              content: const Text('气泡内容'),
+              showArrow: true,
+              child: _trigger(),
+            ),
           ),
-        ),
-      );
-      await _hover(tester);
-      expect(find.text('气泡内容'), findsOneWidget);
-      final shell = tester.widget<SemiTooltip>(find.byType(SemiTooltip));
-      expect(shell.spacing, 10);
-      final padding = tester.widget<Padding>(
-        find.descendant(
-          of: find.byType(SemiTooltipPopup),
-          matching: find.byType(Padding),
-        ),
-      );
-      expect(padding.padding, const EdgeInsets.all(12));
-      final popup = tester.widget<SemiTooltipPopup>(
-        find.byType(SemiTooltipPopup),
-      );
-      expect(popup.showArrow, isTrue);
-      expect(popup.placement, isNotNull);
-      // `numbers.ARROW_BOUNDING` box: thickness is the icon box height (8 —
-      // the fringe pass overhangs the 7px wing), span the 24px width.
-      final painter =
-          tester
-                  .widget<CustomPaint>(
-                    find.descendant(
-                      of: find.byType(SemiTooltipPopup),
-                      matching: find.byType(CustomPaint),
-                    ),
-                  )
-                  .painter
-              as dynamic;
-      expect(painter.thickness, 8);
-      expect(painter.verticalThickness, 8);
-      expect(painter.span, 24);
-      expect(painter.verticalSpan, 24);
-      expect(tester.takeException(), isNull);
-    });
+        );
+        await _hover(tester);
+        expect(find.text('气泡内容'), findsOneWidget);
+        final shell = tester.widget<SemiTooltip>(find.byType(SemiTooltip));
+        expect(shell.spacing, 10);
+        final padding = tester.widget<Padding>(
+          find.descendant(
+            of: find.byType(SemiTooltipPopup),
+            matching: find.byType(Padding),
+          ),
+        );
+        expect(padding.padding, const EdgeInsets.all(12));
+        final popup = tester.widget<SemiTooltipPopup>(
+          find.byType(SemiTooltipPopup),
+        );
+        expect(popup.showArrow, isTrue);
+        expect(popup.placement, isNotNull);
+        // `numbers.ARROW_BOUNDING` box: thickness is the icon box height (8 —
+        // the fringe pass overhangs the 7px wing), span the 24px width.
+        final painter =
+            tester
+                    .widget<CustomPaint>(
+                      find.descendant(
+                        of: find.byType(SemiTooltipPopup),
+                        matching: find.byType(CustomPaint),
+                      ),
+                    )
+                    .painter
+                as dynamic;
+        expect(painter.thickness, 8);
+        expect(painter.verticalThickness, 8);
+        expect(painter.span, 24);
+        expect(painter.verticalSpan, 24);
+        expect(tester.takeException(), isNull);
+      },
+    );
 
     testWidgets('the shell patch carries the popover arrow box and motion', (
       tester,
@@ -302,7 +307,9 @@ void main() {
       expect(resolved.animationDurationOut, const Duration(milliseconds: 100));
     });
 
-    testWidgets('local SemiPopoverTheme patches reach the card', (tester) async {
+    testWidgets('local SemiPopoverTheme patches reach the card', (
+      tester,
+    ) async {
       const patch = SemiPopoverThemeData(
         radiusPopover: 3,
         spacingPopoverWithArrowPadding: 20,

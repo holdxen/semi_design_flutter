@@ -469,17 +469,9 @@ class _SideSheetContent extends StatelessWidget {
       child: Semantics(
         // 上游 `role="dialog"`（inner-wrap）。
         container: true,
-        child: Focus(
-          autofocus: true,
-          onKeyEvent: (node, event) {
-            if (event is KeyDownEvent &&
-                closeOnEsc &&
-                event.logicalKey == LogicalKeyboardKey.escape) {
-              onClose();
-              return KeyEventResult.handled;
-            }
-            return KeyEventResult.ignored;
-          },
+        child: _SideSheetFocus(
+          closeOnEsc: closeOnEsc,
+          onClose: onClose,
           // `margin: $spacing-sideSheet-margin`（0——根外边距）。
           child: Padding(
             padding: EdgeInsets.all(t.spacingSideSheetMargin),
@@ -489,4 +481,60 @@ class _SideSheetContent extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 对话框焦点槽（上游 inner-wrap `tabIndex={-1}` 聚焦语义）。
+///
+/// 入场抢焦不用 `Focus(autofocus: true)`：其走 `FocusScope.of(context)
+/// .autofocus()`，`_Autofocus.applyIfValid` 要求 `scope.focusedChild == null`
+/// ——弹层外路由的 ModalScope 已占焦时被丢弃（Esc 静默失效）。这里挂载后
+/// 显式 `requestFocus()`（`_doRequestFocus` 无条件抢焦）。
+class _SideSheetFocus extends StatefulWidget {
+  const _SideSheetFocus({
+    required this.closeOnEsc,
+    required this.onClose,
+    required this.child,
+  });
+
+  final bool closeOnEsc;
+  final VoidCallback onClose;
+  final Widget child;
+
+  @override
+  State<_SideSheetFocus> createState() => _SideSheetFocusState();
+}
+
+class _SideSheetFocusState extends State<_SideSheetFocus> {
+  final FocusNode _node = FocusNode(debugLabel: 'SemiSideSheet');
+
+  @override
+  void initState() {
+    super.initState();
+    // 首帧后抢焦（build 相位不做焦点迁移）。
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _node.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _node.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Focus(
+    focusNode: _node,
+    autofocus: true,
+    onKeyEvent: (node, event) {
+      if (event is KeyDownEvent &&
+          widget.closeOnEsc &&
+          event.logicalKey == LogicalKeyboardKey.escape) {
+        widget.onClose();
+        return KeyEventResult.handled;
+      }
+      return KeyEventResult.ignored;
+    },
+    child: widget.child,
+  );
 }

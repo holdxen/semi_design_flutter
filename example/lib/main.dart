@@ -250,12 +250,7 @@ const List<DemoGroup> demoGroups = [
       'doc-notification.svg',
       NotificationPage(),
     ),
-    DemoSpec(
-      'popover',
-      'Popover 气泡卡片',
-      'doc-popover.svg',
-      PopoverPage(),
-    ),
+    DemoSpec('popover', 'Popover 气泡卡片', 'doc-popover.svg', PopoverPage()),
     DemoSpec(
       'popconfirm',
       'Popconfirm 气泡确认框',

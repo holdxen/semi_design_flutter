@@ -35,10 +35,7 @@ Future<void> tapUntil(
 
 String statusText(WidgetTester tester) => tester
     .widgetList<Text>(
-      find.descendant(
-        of: keyed('popover-status'),
-        matching: find.byType(Text),
-      ),
+      find.descendant(of: keyed('popover-status'), matching: find.byType(Text)),
     )
     .map((t) => t.data ?? '')
     .join();
@@ -129,7 +126,9 @@ void main() {
       () => find.text('带箭头的气泡卡片（外层 12px 内边距）。').evaluate().isNotEmpty,
     );
     expect(find.byType(SemiTooltipPopup), findsOneWidget);
-    final popup = tester.widget<SemiTooltipPopup>(find.byType(SemiTooltipPopup));
+    final popup = tester.widget<SemiTooltipPopup>(
+      find.byType(SemiTooltipPopup),
+    );
     expect(popup.showArrow, isTrue);
 
     await tapUntil(
