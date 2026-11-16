@@ -274,6 +274,18 @@ void main() {
     );
     expect(find.byKey(SemiNavigation.subPopupKey), findsOneWidget);
     expect(find.text('收起子一'), findsOneWidget);
+    // ★弹层条目文字可见——收起渐隐只命中导航根子树，不得泄漏进弹层
+    // （否则弹层空白只剩悬浮条变底色）。
+    final fading = tester.widgetList<AnimatedOpacity>(
+      find.ancestor(
+        of: find.text('收起子一'),
+        matching: find.byType(AnimatedOpacity),
+      ),
+    );
+    expect(fading, isNotEmpty);
+    for (final w in fading) {
+      expect(w.opacity, 1.0);
+    }
     expect(statusContaining('onOpenChange 收起Sub open:true'), findsOneWidget);
     // 弹层内点条目即收起（差异清单 23）。
     await tapUntil(

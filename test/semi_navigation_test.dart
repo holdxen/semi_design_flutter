@@ -1687,6 +1687,129 @@ void main() {
       expect(opens.last.isOpen, isFalse);
     });
 
+    testWidgets('collapsed Sub popup labels stay visible and keep the dropdown '
+        'surface', (tester) async {
+      final gesture = await startMouse(tester);
+      final items = <Object>[
+        const SemiNavigationItem(
+          itemKey: 's',
+          text: 'SubWithIcon',
+          icon: SemiIcon(SemiIcons.folder),
+          items: <Object>[
+            SemiNavigationItem(itemKey: 'a', text: 'ChildA'),
+            SemiNavigationItem(itemKey: 'b', text: 'ChildB'),
+          ],
+        ),
+      ];
+      await pumpHost(
+        tester,
+        Center(child: nav(items: items, defaultIsCollapsed: true)),
+      );
+      await tester.pumpAndSettle();
+      final icon = find
+          .descendant(of: rowOf('SubWithIcon'), matching: find.byType(SemiIcon))
+          .first;
+      await gesture.moveTo(tester.getCenter(icon));
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 30));
+      }
+      final popup = find.byKey(SemiNavigation.subPopupKey);
+      expect(popup, findsOneWidget);
+      expect(find.text('ChildA'), findsOneWidget);
+      // ★弹层条目文字不得被收起渐隐（此前继承 collapsed → opacity 0：
+      // 弹层「已打开却整片空白」，只剩条目悬浮条在弹层原位变底色）。
+      final fading = tester.widgetList<AnimatedOpacity>(
+        find.ancestor(
+          of: find.text('ChildA'),
+          matching: find.byType(AnimatedOpacity),
+        ),
+      );
+      expect(fading, isNotEmpty);
+      for (final w in fading) {
+        expect(w.opacity, 1.0);
+      }
+      // 弹层表面走 Dropdown `-wrapper`（bg3 / 圆角 / 两道阴影）。
+      final dropdownTheme = const SemiDropdownThemeData().resolve(
+        const SemiThemeData.light(),
+      );
+      final surface = tester.widget<DecoratedBox>(
+        find.ancestor(of: popup, matching: find.byType(DecoratedBox)).first,
+      );
+      final decoration = surface.decoration as BoxDecoration;
+      expect(decoration.color, dropdownTheme.colorDropdownBgDefault);
+      expect(
+        decoration.borderRadius,
+        BorderRadius.circular(dropdownTheme.radiusDropdown),
+      );
+      expect(decoration.boxShadow, hasLength(2));
+    });
+
+    testWidgets('collapsed nested Sub opens a nested popup with visible '
+        'labels and a chevron_right toggle', (tester) async {
+      final gesture = await startMouse(tester);
+      final items = <Object>[
+        const SemiNavigationItem(
+          itemKey: 's1',
+          text: 'Outer',
+          icon: SemiIcon(SemiIcons.folder),
+          items: <Object>[
+            SemiNavigationItem(
+              itemKey: 's2',
+              text: 'InnerSub',
+              items: <Object>[
+                SemiNavigationItem(itemKey: 'c', text: 'GrandChild'),
+              ],
+            ),
+          ],
+        ),
+      ];
+      await pumpHost(
+        tester,
+        Center(child: nav(items: items, defaultIsCollapsed: true)),
+      );
+      await tester.pumpAndSettle();
+      final outerIcon = find
+          .descendant(of: rowOf('Outer'), matching: find.byType(SemiIcon))
+          .first;
+      await gesture.moveTo(tester.getCenter(outerIcon));
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 30));
+      }
+      expect(find.text('InnerSub'), findsOneWidget);
+      // 弹层内子层 toggle 恒 chevron_right（SubNav.tsx:206-225）。
+      final toggles = tester
+          .widgetList<SemiIcon>(
+            find.descendant(
+              of: find.byKey(SemiNavigation.subPopupKey),
+              matching: find.byType(SemiIcon),
+            ),
+          )
+          .map((icon) => icon.data);
+      expect(toggles, contains(SemiIcons.chevronRight));
+      // 悬停弹层内的子标题 → 打开嵌套弹层（pointer-exempt scope 接住）。
+      final innerAim = find
+          .ancestor(
+            of: find.text('InnerSub'),
+            matching: find.byType(MouseRegion),
+          )
+          .first;
+      await gesture.moveTo(tester.getCenter(innerAim));
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 30));
+      }
+      expect(find.text('GrandChild'), findsOneWidget);
+      final fading = tester.widgetList<AnimatedOpacity>(
+        find.ancestor(
+          of: find.text('GrandChild'),
+          matching: find.byType(AnimatedOpacity),
+        ),
+      );
+      expect(fading, isNotEmpty);
+      for (final w in fading) {
+        expect(w.opacity, 1.0);
+      }
+    });
+
     testWidgets('collapsed Sub tap toggles the popup via the hover-trigger '
         'touch fallback; onClick rides along', (tester) async {
       final clicks = <SemiNavigationClickInfo>[];

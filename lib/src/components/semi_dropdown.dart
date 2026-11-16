@@ -204,7 +204,13 @@ class _SemiDropdownState extends State<SemiDropdown> {
             nodes: widget.menu!,
             focusOnShow: widget.trigger == SemiTooltipTrigger.click,
           )
-        : (widget.content ?? const SizedBox.shrink());
+        // Custom `content` renders (SemiNavigation's Sub list, SemiBreadcrumb's
+        // overflow panel) live in the same upstream `-wrapper` as the menu, so
+        // they paint the wrapper surface too (bg3 / medium radius / elevated
+        // shadow); otherwise the render floats without a popup card.
+        : _DropdownWrapperSurface(
+            child: widget.content ?? const SizedBox.shrink(),
+          );
     return SemiTooltip(
       content: _DropdownScope(
         level: level + 1,
@@ -247,6 +253,32 @@ const double _kSpacing = 4;
 
 /// Upstream `numbers.NESTED_SPACING: 2` (same file).
 const double _kNestedSpacing = 2;
+
+/// The `-wrapper` popup surface of `dropdown.scss` (background `bg3`, medium
+/// radius and the two `shadow-elevated` layers). Menu mode carries the same
+/// decoration inside [_SemiDropdownMenu]; this wrapper serves the custom
+/// `content` path, which upstream portals into the same `-wrapper`.
+class _DropdownWrapperSurface extends StatelessWidget {
+  const _DropdownWrapperSurface({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = SemiDropdownTheme.resolve(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.colorDropdownBgDefault,
+        borderRadius: BorderRadius.circular(theme.radiusDropdown),
+        boxShadow: const [
+          _DropdownMetrics.shadowElevatedBlur,
+          _DropdownMetrics.shadowElevatedDrop,
+        ],
+      ),
+      child: child,
+    );
+  }
+}
 
 /// Mirrors upstream `DropdownContext` (`packages/semi-ui/dropdown/context.ts`):
 /// the menu level and the group-level `showTick` are provided around the

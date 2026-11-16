@@ -70,6 +70,10 @@ DecoratedBox(bg3 / 圆角 medium / shadow-elevated 两行)   ← 容器
       divider 1px border 色、上下 margin 4
 ```
 
+★`menu` 与 `content` 两条路径同住上游 `-wrapper`：`content` 形态同样套这层表面
+（bg3 / 圆角 / 两道阴影，`_DropdownWrapperSurface`）；此前 content 裸内容漂浮
+无卡片——SemiNavigation 的 Sub 列表与 SemiBreadcrumb 的溢出面板同步修正。
+
 - item 行 `Row(center)`：对勾列（12×12 + 右距 9）→ icon（12×12 + 右距 9）→ label（`Flexible`，280 换行）。非 `active` 行的对勾位是同尺寸透明占位（上游 `IconTick color: transparent`）。
 - 背景：hover/键盘高亮 `fill-0`、按下 `fill-1`；`active` 行跳过 hover/按下填充；`disabled` 透明底 + 禁色。`animationDuration/animationCurve`（item 背景过渡，实际 0ms/easeOut）驱动 `AnimatedContainer`。
 - RTL（rtl.scss）：全部 `EdgeInsetsDirectional`——withTick 左 padding 与 icon/对勾右距自动翻转到右侧。

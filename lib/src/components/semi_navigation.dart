@@ -810,7 +810,10 @@ class _SemiNavigationState extends State<SemiNavigation> {
       last: last,
       limitIndent: widget.limitIndent,
       toggleIconPosition: widget.toggleIconPosition,
-      collapsed: _isCollapsed && !horizontal,
+      // ★弹层内容在 portal 外——上游 `.semi-navigation-collapsed` 只命中导航
+      // 根子树：收起渐隐（文字/尾图标 opacity 0）不得作用于弹层条目，否则
+      // 弹层「已打开但整片空白」。
+      collapsed: _isCollapsed && !horizontal && !inPopup,
       t: t,
       onTap: () {
         _handleItemTap(item);
@@ -830,6 +833,9 @@ class _SemiNavigationState extends State<SemiNavigation> {
   }) {
     final isOpen = _openKeys.contains(item.itemKey);
     final collapsed = _isCollapsed && !horizontal;
+    // ★收起渐隐只命中导航根子树：弹层（portal）内的标题不参与（同
+    // `_buildItem` 的 collapsed 口径）；`collapsed` 另作弹层分支开关。
+    final collapsedLabel = collapsed && !inPopup;
     Widget title = _NavSubTitle(
       item: item,
       level: level,
@@ -837,7 +843,7 @@ class _SemiNavigationState extends State<SemiNavigation> {
       selected: _selectedKeys.contains(item.itemKey),
       horizontal: horizontal,
       inPopup: inPopup,
-      collapsed: collapsed,
+      collapsed: collapsedLabel,
       limitIndent: widget.limitIndent,
       toggleIconPosition: widget.toggleIconPosition,
       expandIcon: widget.expandIcon,
@@ -1647,24 +1653,24 @@ class _NavSubTitleState extends State<_NavSubTitle> {
       weight = t.fontNavigationSubFontWeight;
     }
 
-    // SubNav.tsx:206-225 toggle 图标选择（collapsed 子层 chevron_right；顶层无；
-    // horizontal 子层 chevron_right、顶层 expandIcon ?? chevron_down）。
+    // SubNav.tsx:206-225 toggle 图标选择（弹层子层 chevron_right；收起栏顶层无；
+    // horizontal 顶层与 vertical expandIcon ?? chevron_down）。★弹层判定优先于
+    // 收起渐隐——弹层条目的 `collapsed` 已置 false（portal 外不受收起样式）。
     final Widget? toggle;
-    if (widget.collapsed) {
-      toggle = widget.inPopup ? const SemiIcon(SemiIcons.chevronRight) : null;
-    } else if (widget.horizontal) {
-      toggle = widget.inPopup
-          ? const SemiIcon(SemiIcons.chevronRight)
-          : (widget.expandIcon ?? const SemiIcon(SemiIcons.chevronDown));
+    if (widget.inPopup) {
+      toggle = const SemiIcon(SemiIcons.chevronRight);
+    } else if (widget.collapsed) {
+      toggle = null;
     } else {
       toggle = widget.expandIcon ?? const SemiIcon(SemiIcons.chevronDown);
     }
     // 旋转动画（nav:343-350 硬编码——HARDCODE；horizontal 不旋转 fix#1198，
-    // SubNav.tsx:217-218）。
+    // SubNav.tsx:217-218；弹层内 chevron_right 也不旋转）。
     final Widget? animatedToggle;
     if (toggle != null &&
         !widget.horizontal &&
         !widget.collapsed &&
+        !widget.inPopup &&
         widget.subNavMotion) {
       animatedToggle = AnimatedRotation(
         turns: widget.isOpen ? -0.5 : 0,

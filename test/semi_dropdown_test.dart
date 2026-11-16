@@ -104,6 +104,44 @@ void main() {
       expect(decoration.boxShadow, hasLength(2));
     });
 
+    testWidgets('custom content renders inside the same wrapper surface', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _app(
+          SemiDropdown(
+            trigger: SemiTooltipTrigger.click,
+            motion: false,
+            content: const Padding(
+              padding: EdgeInsets.all(8),
+              child: Text('panel'),
+            ),
+            child: _trigger('open'),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await _settle(tester);
+      expect(find.text('panel'), findsOneWidget);
+      // ★`render` 内容与 menu 同住上游 `-wrapper`：content 形态同样要有
+      // bg3/圆角/两道阴影（此前裸内容漂浮无卡片）。
+      final wrapper = tester.widget<DecoratedBox>(
+        find
+            .descendant(
+              of: find.byType(SemiTooltipPopup),
+              matching: find.byType(DecoratedBox),
+            )
+            .first,
+      );
+      final decoration = wrapper.decoration as BoxDecoration;
+      expect(decoration.color, resolved.colorDropdownBgDefault);
+      expect(
+        decoration.borderRadius,
+        BorderRadius.circular(resolved.radiusDropdown),
+      );
+      expect(decoration.boxShadow, hasLength(2));
+    });
+
     testWidgets('an empty menu renders the empty shell', (tester) async {
       await tester.pumpWidget(
         _app(

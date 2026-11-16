@@ -32,7 +32,7 @@ vertical（240px，nav:5-11）：Sub 内联折叠展开（subNavMotion true → 
 
 ### 弹层菜单
 
-collapsed/horizontal 的 Sub 走 SemiDropdown content 自绘列表（★自决点：SemiDropdownItemData menu 形态承载不了 nav item 六态色与 min-width 150——取 content 自绘；嵌套 Sub 由 SemiDropdown 的 pointer-exempt scope 接住，SemiOverlayPointerExemptScope 先例）。弹层项 min-width `widthNavigationDropdownItemNavItemMinWidth`（150）；位置 horizontal 顶层 bottomLeft、其余 right（★web 实测 rightTop 弹层不渲染——right/bottomLeft 正常，以 right 绕行留档）；延迟 `SUBNAV_OPEN_DELAY: 0`/`SUBNAV_CLOSE_DELAY: 100`（constants.ts）；弹层可见性变更走 onOpenChange（不发 onClick——subNavFoundation.ts:71-90）。
+collapsed/horizontal 的 Sub 走 SemiDropdown content 自绘列表（★自决点：SemiDropdownItemData menu 形态承载不了 nav item 六态色与 min-width 150——取 content 自绘；嵌套 Sub 由 SemiDropdown 的 pointer-exempt scope 接住，SemiOverlayPointerExemptScope 先例）。弹层项 min-width `widthNavigationDropdownItemNavItemMinWidth`（150）；位置 horizontal 顶层 bottomLeft、其余 right（★web 实测 rightTop 弹层不渲染——right/bottomLeft 正常，以 right 绕行留档）；延迟 `SUBNAV_OPEN_DELAY: 0`/`SUBNAV_CLOSE_DELAY: 100`（constants.ts）；弹层可见性变更走 onOpenChange（不发 onClick——subNavFoundation.ts:71-90）。★弹层条目**不做收起渐隐**：上游 `.semi-navigation-collapsed` 只命中导航根子树，portal 弹层在根子树之外（collapsed 只隐根树文字/尾图标；误传进弹层会让条目文字 opacity 0——弹层「已打开却空白」、悬浮只剩行底色变化）；弹层表面走 Dropdown `-wrapper`（bg3/圆角 medium/shadow-elevated 两行，同 SemiDropdown menu 形态）。
 
 ### 视觉与 RTL
 
@@ -225,14 +225,14 @@ Enter 激活条目/Sub 标题（itemFoundation.ts:101-110、subNavFoundation.ts:
 20. **subNavMotion 对象形态收敛 bool**：上游 `boolean | object | func`（CSSAnimation motion 对象）→ `bool`（true=高度+fade 近似、false=瞬时）。
 21. **delay 参数默认化**：subNavOpenDelay/subNavCloseDelay/tooltipShowDelay/tooltipHideDelay 参数不开放——固定 constants.ts 缺省（0/100/0/100ms）。
 22. **link 不导航**：Flutter 无 DOM anchor——link 仅元数据，点击走 onClick 链由应用导航（上游 `<a href>` DOM 跳转，itemFoundation.ts:101-110 Enter 时 `window.open`/`location.href`）。
-23. **弹层自绘列表**：SemiDropdown content 自绘（menu 形态承载不了六态色/min-width 150）；弹层内色系统一 itemL1 系近似（上游弹层 hover 走 Dropdown.Item 样式 + 零散 scoped 规则，映射不完整）；弹层内点击条目即收起（近似 Dropdown.Item 行为）。
+23. **弹层自绘列表**：SemiDropdown content 自绘（menu 形态承载不了六态色/min-width 150）；弹层内色系统一 itemL1 系近似（上游弹层 hover 走 Dropdown.Item 样式 + 零散 scoped 规则，映射不完整）；弹层内点击条目即收起（近似 Dropdown.Item 行为）。★弹层表面复用 Dropdown `-wrapper`（bg3/圆角 medium/shadow-elevated 两行）；弹层条目不受收起渐隐（portal 在 `.semi-navigation-collapsed` 根子树之外）。
 24. **Sub 内联展开动画近似**：上游 Collapsible CSS 高度+fade 无 token——200ms/easeInOut 近似。
 25. **折叠动画 String 简写解析**：`$motion-navigation_width`/`_padding`/`_padding_rtl`/`_collapsed_opacity` 简写原文存 String 字段；折叠动画解析其 duration+curve 语义（cubic-bezier 负控制点直入 Cubic；padding 过渡与宽度过渡并入 AnimatedContainer/AnimatedPadding 双段近似）。
 26. **collapseText 函数形态收敛**：上游 `(collapsed) => ReactNode` → `String?` 固定串（collapsed=>String 或固定串；缺省 locale）。
 27. **className/style 等裁剪**：`className`/`style`/`getDataAttr`/`prefixCls`/`linkOptions` 不移植（Flutter 无 CSS 类）。
 28. **aria 近似**：`role="menu"/"menuitem"`/`aria-expanded`/`aria-disabled` 以 Semantics(button/selected/expanded) 近似。
 29. **Form/多语言上游即无**：上游 Navigation 无 Form 语义接入；locale 仅 zh 两串硬编码（zh_CN.ts:100-103）。
-30. **弹层可见性语义**（★照搬+自管 hover）：collapsed/horizontal 的 Sub 弹层为 hover 语义（wrapDropdown `trigger: 'hover'`，SubNav.tsx:311-313）；★web 实测 tooltip 自带 hover 会虚报 exit（open→close 抖动、弹层一闪即逝）——本移植改 `trigger: custom` 自管悬停（标题/弹层内容共享 `_subHoverEnter/Exit` 悬停区；★web hover 重挂虚报 exit 无法可靠辨别「真移出」——exit 不关，`subNavCloseDelay` 100ms 定时关闭亦弃）；标题点按未开则开（替代 touch-tap 兜底）、已开不关（上游点击对可见性惰性）；关闭只走：悬停另一个 Sub（单开切换）/ 外点（tooltip 屏障）/ 弹层内点条目。
+30. **弹层可见性语义**（照上游 wrapDropdown `trigger: 'hover'`）：collapsed/horizontal 的 Sub 弹层为**非受控 hover 弹层**（`SUBNAV_OPEN_DELAY` 0 / `SUBNAV_CLOSE_DELAY` 100、`clickToHide` 点条目收起，SubNav.tsx:311-339）；`visible` 受控路径只在 openKeys 受控时启用，而该开关要求 vertical 未折叠、与弹层分支互斥，是死分支（曾走 `trigger: custom` + `visible` 自管悬停：web 受控弹层滞留 0 透明度「开了画不出来」，已回退非受控 hover，与 tooltip 同一显示路径）；标题点按对可见性惰性（touch 走 hover 兜底 tap-toggle，仅发 onClick）。
 
 ## 用法
 
