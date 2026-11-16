@@ -1596,6 +1596,51 @@ void main() {
       expect(selected.right.color, const Color(0x00000000));
     });
 
+    testWidgets('card mask erases the track line on non-bg-1 backgrounds', (
+      tester,
+    ) async {
+      // 上游用 bg-1 盖线：条坐在灰面板上时会露一条白线；移植端改擦除轨道
+      // 线——选中项底部应透出面板底色、轨道线在项下断开。
+      const panel = Color(0xFFF7F8FA);
+      const key = ValueKey('shot');
+      await pumpHost(
+        tester,
+        RepaintBoundary(
+          key: key,
+          child: Container(
+            color: panel,
+            child: const SemiTabs(tabList: tabs3, type: SemiTabsType.card),
+          ),
+        ),
+      );
+      expect(
+        tabCardPainter(tester, 'Tab 1').maskSide,
+        SemiTabsCardMaskSide.bottom,
+      );
+      final boundary =
+          tester.renderObject(find.byKey(key)) as RenderRepaintBoundary;
+      final image = await boundary.toImage();
+      final bytes = (await image.toByteData())!;
+      final origin = tester.getTopLeft(find.byKey(key));
+      Color at(Offset global) {
+        final o = global - origin;
+        final i = (o.dy.round() * image.width + o.dx.round()) * 4;
+        return Color.fromARGB(
+          bytes.getUint8(i + 3),
+          bytes.getUint8(i),
+          bytes.getUint8(i + 1),
+          bytes.getUint8(i + 2),
+        );
+      }
+
+      final selected = tester.getRect(tabContainer('Tab 1'));
+      final idle = tester.getRect(tabContainer('Tab 2'));
+      // 选中项底边 = 遮线带 → 擦除后透出面板底色（不是白线、不是轨道线）。
+      expect(at(Offset(selected.center.dx, selected.bottom - 0.5)), panel);
+      // 未选中项底下轨道线仍在。
+      expect(at(Offset(idle.center.dx, idle.bottom - 0.5)), isNot(panel));
+    });
+
     testWidgets('button selected tab paints primary-light bg + primary text', (
       tester,
     ) async {

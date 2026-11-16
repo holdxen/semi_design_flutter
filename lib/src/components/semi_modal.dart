@@ -934,10 +934,13 @@ class _ModalContent extends StatelessWidget {
             // `margin: $spacing-modal_header-marginY`（confirm 走
             // `$spacing-modal_confirm_header-marginBottom`）。
             margin: EdgeInsetsDirectional.only(
-              top: isConfirm ? 0 : t.spacingModalHeaderMarginY,
+              top: t.spacingModalHeaderMarginY,
               bottom: isConfirm
+                  // confirm 仅覆写 `margin-bottom`（顶部 24 保持）。
                   ? t.spacingModalConfirmHeaderMarginBottom
                   : t.spacingModalHeaderMarginY,
+              start: t.spacingModalHeaderMarginX,
+              end: t.spacingModalHeaderMarginX,
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1089,7 +1092,9 @@ class _ModalContent extends StatelessWidget {
       return Container(
         margin: EdgeInsetsDirectional.only(
           top: t.spacingModalFooterMarginY,
-          bottom: t.spacingModalFooterMarginX,
+          bottom: t.spacingModalFooterMarginY,
+          start: t.spacingModalFooterMarginX,
+          end: t.spacingModalFooterMarginX,
         ),
         child: customFooter,
       );
@@ -1120,7 +1125,9 @@ class _ModalContent extends StatelessWidget {
     return Container(
       margin: EdgeInsetsDirectional.only(
         top: t.spacingModalFooterMarginY,
-        bottom: t.spacingModalFooterMarginX,
+        bottom: t.spacingModalFooterMarginY,
+        start: t.spacingModalFooterMarginX,
+        end: t.spacingModalFooterMarginX,
       ),
       // `text-align: right`（rtl.scss 翻为 left）。
       child: Row(

@@ -475,6 +475,85 @@ void main() {
       await pumpClosed(tester);
     });
 
+    testWidgets('header and footer carry the upstream default margins', (
+      tester,
+    ) async {
+      await pumpHost(tester);
+      final t = resolve();
+      await setModal(
+        tester,
+        const SemiModal(
+          visible: true,
+          motion: false,
+          title: '标题',
+          content: Text('body'),
+        ),
+      );
+      await pumpOpen(tester);
+      // `margin: $spacing-modal_header-marginY $spacing-modal_header-marginX`
+      // 与 `margin: $spacing-modal_footer-marginY ...`（24/0 上下同）。
+      final headerMargin = EdgeInsetsDirectional.only(
+        top: t.spacingModalHeaderMarginY,
+        bottom: t.spacingModalHeaderMarginY,
+        start: t.spacingModalHeaderMarginX,
+        end: t.spacingModalHeaderMarginX,
+      );
+      final footerMargin = EdgeInsetsDirectional.only(
+        top: t.spacingModalFooterMarginY,
+        bottom: t.spacingModalFooterMarginY,
+        start: t.spacingModalFooterMarginX,
+        end: t.spacingModalFooterMarginX,
+      );
+      // header/footer 的 margin 数值相同（24/0）——按槽位归属定位。
+      expect(
+        find.ancestor(
+          of: find.text('标题'),
+          matching: find.byWidgetPredicate(
+            (w) => w is Container && w.margin == headerMargin,
+          ),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.ancestor(
+          of: find.text('取消'),
+          matching: find.byWidgetPredicate(
+            (w) => w is Container && w.margin == footerMargin,
+          ),
+        ),
+        findsOneWidget,
+      );
+      await pumpClosed(tester);
+    });
+
+    testWidgets('confirm header keeps the top margin and overrides only the '
+        'bottom', (tester) async {
+      await pumpHost(tester);
+      final t = resolve();
+      final handle = SemiModal.confirm(
+        title: '标题',
+        content: const Text('body'),
+        motion: false,
+      );
+      await pumpOpen(tester);
+      await pumpOpen(tester);
+      // confirm 仅覆写 `margin-bottom`（8），顶部 24 保持。
+      final confirmHeaderMargin = EdgeInsetsDirectional.only(
+        top: t.spacingModalHeaderMarginY,
+        bottom: t.spacingModalConfirmHeaderMarginBottom,
+        start: t.spacingModalHeaderMarginX,
+        end: t.spacingModalHeaderMarginX,
+      );
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is Container && w.margin == confirmHeaderMargin,
+        ),
+        findsOneWidget,
+      );
+      handle.destroy();
+      await pumpClosed(tester);
+    });
+
     testWidgets('custom header and footer replace the defaults', (
       tester,
     ) async {

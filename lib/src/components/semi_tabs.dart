@@ -36,6 +36,10 @@
 //   （`&:hover` 列表 (0-4-0) 压过 `.tab:hover`）。
 // - 竖向选中遮线条是 `::after` 盒外覆盖（`right: -1px`，RTL `left: -1px`），
 //   页签自身 `border-right: none`（RTL `border-left: none`）。
+// - 遮线（top `border-bottom: bg-1` / left `::after`）：上游用 bg-1 盖住
+//   轨道线，只在条坐 bg-1 时成立（灰面板上露白线）；移植端以遮线色为源色
+//   dstOut 擦除轨道线（条包 RepaintBoundary 隔离擦除），背景无关、bg-1 上
+//   像素级等价。
 // - ★RTL quirk：`.semi-rtl` 的 `.tab` 规则 (0-4-0) 压过 `.tab-active` →
 //   竖向选中页签边框整体变透明；`border-radius` 不随 RTL 翻转。
 // - `outline: 2px` + `outline-offset: -2px`（line 为 -1px）：环带 = 盒边内
@@ -396,9 +400,14 @@ class _SemiTabsState extends State<SemiTabs> {
       }
     }
     final decoration = _barDecoration(t);
-    return decoration == null
+    final result = decoration == null
         ? bar
         : DecoratedBox(decoration: decoration, child: bar);
+    // card 的遮线带以 dstOut 擦除轨道线——条单独一层隔离擦除范围（否则会
+    // 连组件背后的面板一起擦穿）。
+    return widget.type == SemiTabsType.card
+        ? RepaintBoundary(child: result)
+        : result;
   }
 
   BoxDecoration? _barDecoration(SemiResolvedTabsThemeData t) {
@@ -953,7 +962,8 @@ class _TabItemState extends State<_TabItem> {
   /// computed style 对账）。
   ///
   /// top：未选中 `border-bottom: none`、选中 `border-bottom: bg-1`——两态
-  /// 等高（8+0 = 7+1），选中的 bg-1 底边与条底轨道线同像素行才能盖线。
+  /// 等高（8+0 = 7+1）；底边即遮线带，只作布局占位（盖线改由遮线带擦除，
+  /// 见 [SemiTabsCardPainter]）。
   /// left：`border-right: none`（RTL `border-left: none`），选中遮线条是
   /// 盒外 `::after`；★RTL 选中项边框被 `.tab` 规则刷成透明（上游 quirk）。
   ({BorderSide top, BorderSide right, BorderSide bottom, BorderSide left})
@@ -993,14 +1003,19 @@ class _TabItemState extends State<_TabItem> {
     );
   }
 
-  /// 竖向选中的 `::after` 遮线条（`right: -1px` / RTL `left: -1px`）。
+  /// 选中项的遮线带（上游 top 的 `border-bottom: bg-1` / left 的 `::after`）：
+  /// 以遮线色为源色擦除轨道线（背景无关），见 [SemiTabsCardPainter]。
   ({SemiTabsCardMaskSide side, Color color})? _cardMask(
     SemiResolvedTabsThemeData t,
   ) {
-    if (widget.type != SemiTabsType.card ||
-        widget.position != SemiTabsPosition.left ||
-        !widget.selected) {
+    if (widget.type != SemiTabsType.card || !widget.selected) {
       return null;
+    }
+    if (widget.position == SemiTabsPosition.top) {
+      return (
+        side: SemiTabsCardMaskSide.bottom,
+        color: t.colorTabsTabCardSelectedBgDefault,
+      );
     }
     return (
       side: Directionality.of(context) == TextDirection.rtl
@@ -1257,9 +1272,18 @@ class _TabItemState extends State<_TabItem> {
       ),
     );
 
+    core = Transform.scale(
+      // tabs.scss `transform: scale($transform_scale-tabs_tab_*-item)`（token =
+      // scale(1,1) 恒等）。
+      scaleX: transform.scaleX,
+      scaleY: transform.scaleY,
+      child: core,
+    );
+
     if (widget.type == SemiTabsType.card) {
-      // 盒边描边贴圆角弧走（ClipRRect 裁直角边框会把角切平）；竖向选中的
-      // `::after` 遮线条画在盒外内侧。
+      // 盒边描边贴圆角弧走（ClipRRect 裁直角边框会把角切平）；选中项的
+      // 遮线带画在 Transform 之外（同一条 RepaintBoundary 画布上，dstOut
+      // 擦除才够得着条底/条侧的轨道线）。
       final sides = _cardSides(t);
       final mask = _cardMask(t);
       core = CustomPaint(
@@ -1275,14 +1299,6 @@ class _TabItemState extends State<_TabItem> {
         child: core,
       );
     }
-
-    core = Transform.scale(
-      // tabs.scss `transform: scale($transform_scale-tabs_tab_*-item)`（token =
-      // scale(1,1) 恒等）。
-      scaleX: transform.scaleX,
-      scaleY: transform.scaleY,
-      child: core,
-    );
 
     if (_focused && _keyboardUsed) {
       // `&:focus-visible { outline: $width-tabs-outline solid
@@ -1367,16 +1383,29 @@ class _TabItemState extends State<_TabItem> {
   }
 }
 
-/// 竖向选中遮线条所在的盒外侧（`::after { right: -1px }` / RTL
-/// `left: -1px`）。
-enum SemiTabsCardMaskSide { right, left }
+/// 选中项遮线带的位置（上游 top 的 `border-bottom` / left 的 `::after`）。
+enum SemiTabsCardMaskSide {
+  /// 盒底带（top 选中，与 bottom 边同位）。
+  bottom,
 
-/// card 形态页签的四边描边 + 竖向选中遮线条（tabs.scss card 页签的
+  /// 盒外内侧竖条（left 选中 `::after { right: -1px }`）。
+  right,
+
+  /// 盒外内侧竖条（RTL `::after { left: -1px }`）。
+  left,
+}
+
+/// card 形态页签的四边描边 + 选中项遮线带（tabs.scss card 页签的
 /// `border: … solid` / `border-…: none` / `border-radius` / `::after`）。
 ///
 /// Flutter `BoxDecoration` 不允许非均匀颜色 + 圆角（`BoxBorder.paint` 只在
 /// 全同色时走圆角路径），这里按 CSS 盒模型逐边填充：圆角邻边 45° 分角、
 /// 直角邻边 miter 对角，描边贴着圆角弧走。
+///
+/// 遮线带：上游用 bg-1 盖住轨道线（`border-bottom: bg-1` / `::after`），
+/// 只有条坐在 bg-1 上时才成立——灰色面板上会露一条白线；这里以遮线色为
+/// 源色 `dstOut` **擦除**轨道线，露出组件背后的任意背景（bg-1 上像素级
+/// 等价；遮线色透明 → 不擦除，与上游「盖一层透明」同语义）。
 class SemiTabsCardPainter extends CustomPainter {
   const SemiTabsCardPainter({
     required this.top,
@@ -1389,7 +1418,7 @@ class SemiTabsCardPainter extends CustomPainter {
   });
 
   /// 四边（`BorderSide.none` 即上游 `border-…: none`；宽度计入盒内边距由
-  /// 调用方算，这里只负责画）。
+  /// 调用方算，这里只负责画）。bottom 边只作布局占位——遮线带按擦除绘制。
   final BorderSide top;
   final BorderSide right;
   final BorderSide bottom;
@@ -1398,12 +1427,14 @@ class SemiTabsCardPainter extends CustomPainter {
   /// `border-radius`（顶部两角 / 左侧两角；★RTL 不翻转——上游同）。
   final BorderRadius borderRadius;
 
-  /// 竖向选中的 `::after` 遮线条：`right: -1px`（RTL `left: -1px`），画在
-  /// 盒外内侧、盖住条侧轨道线。
+  /// 选中项的遮线带（位置见 [SemiTabsCardMaskSide]）。
   final SemiTabsCardMaskSide? maskSide;
+
+  /// 遮线源色（`$color-tabs_tab_card_selected-bg-default`，上游的盖线色）。
   final Color? maskColor;
 
-  /// 遮线条宽 1px（tabs.scss:452 `width: 1px` 硬编码）。
+  /// 遮线带宽 1px（top 即 `border-bottom` 宽、left 即 tabs.scss:452
+  /// `width: 1px` 硬编码）。
   static const double maskWidth = 1;
 
   @override
@@ -1415,17 +1446,27 @@ class SemiTabsCardPainter extends CustomPainter {
     if (maskSide == null || maskColor == null || maskColor!.a == 0) {
       return;
     }
-    // `::after { top: 0; bottom: 0 }`（盒外内侧）。
     final rect = switch (maskSide!) {
+      SemiTabsCardMaskSide.bottom =>
+        Offset(0, size.height - maskWidth) & Size(size.width, maskWidth),
       SemiTabsCardMaskSide.right =>
         Offset(size.width, 0) & Size(maskWidth, size.height),
       SemiTabsCardMaskSide.left =>
         Offset(-maskWidth, 0) & Size(maskWidth, size.height),
     };
-    canvas.drawRect(rect, Paint()..color = maskColor!);
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..color = maskColor!
+        ..blendMode = BlendMode.dstOut,
+    );
   }
 
   void _paintEdge(Canvas canvas, Size size, _CardEdge edge) {
+    // 遮线带（top 的盒底带）由 [paint] 擦除绘制，不走普通描边。
+    if (edge == _CardEdge.bottom && maskSide == SemiTabsCardMaskSide.bottom) {
+      return;
+    }
     // 画到局部坐标「上边」：局部 x 沿该边走，局部左/右即邻边。
     final (side, length, radiusA, radiusB, adjA, adjB) = switch (edge) {
       _CardEdge.top => (
