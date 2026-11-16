@@ -66,6 +66,7 @@ class SemiTooltip extends StatefulWidget {
     this.repositionKey,
     this.arrowColor,
     this.arrowFringeColor,
+    this.arrowBoundingOffsetY = tooltipArrowBoundingOffsetY,
   });
 
   /// Popup body. Rendered inside the overlay with the tooltip theme text style.
@@ -142,6 +143,10 @@ class SemiTooltip extends StatefulWidget {
   /// `path:nth-child(1)`, `fill: var(--semi-color-border)`). Null keeps the
   /// single-fill tooltip arrow.
   final Color? arrowFringeColor;
+
+  /// Small-trigger arrow correction constant (upstream `arrowBounding.offsetY`
+  /// — 2 for the tooltip, 6 for the popover family).
+  final double arrowBoundingOffsetY;
 
   @override
   State<SemiTooltip> createState() => _SemiTooltipState();
@@ -306,7 +311,8 @@ class _SemiTooltipState extends State<SemiTooltip>
     }
     if (widget.repositionKey != oldWidget.repositionKey ||
         widget.position != oldWidget.position ||
-        widget.spacing != oldWidget.spacing) {
+        widget.spacing != oldWidget.spacing ||
+        widget.arrowBoundingOffsetY != oldWidget.arrowBoundingOffsetY) {
       _schedulePostFrame(_reposition);
     }
     if (widget.content != oldWidget.content ||
@@ -574,6 +580,7 @@ class _SemiTooltipState extends State<SemiTooltip>
       cornerInsetVertical:
           _TooltipMetrics.verticalRate * resolved.heightTooltipArrowVertical +
           resolved.arrowAdjustedOffsetY,
+      arrowBoundingOffsetY: widget.arrowBoundingOffsetY,
     );
   }
 
@@ -1041,7 +1048,9 @@ class _TooltipArrowPainter extends CustomPainter {
   final double span;
   final double verticalSpan;
 
-  /// Perpendicular arrow dimension (7 both ways upstream).
+  /// Perpendicular arrow dimension: the upstream icon element box height
+  /// (`height: $height-tooltip_arrow` — 7 for the tooltip wing, 8 for the
+  /// popover-family box whose fringe pass overhangs the 7px wing by 1px).
   final double thickness;
   final double verticalThickness;
 
@@ -1092,31 +1101,37 @@ class _TooltipArrowPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
     // The upstream arrow is the curved "wing" from TriangleArrow(.Vertical).tsx
     // scaled to the theme dimensions and rotated 180° for the opposite edge,
-    // exactly like arrow.scss does with `transform: rotate(180deg)`.
+    // exactly like arrow.scss does with `transform: rotate(180deg)`. Native
+    // shape boxes: the wing path is 24x7 (7x24 vertical); with the fringe pass
+    // (`path:nth-child(1)`, 24x8) the box grows 1px past the wing — that 8 is
+    // the upstream `height: $height-tooltip_arrow` in the popover scope, so
+    // [thickness] is normalized by the drawn shape's box height.
+    final nativeBox = fringeColor != null ? 8 : 7;
+    final boxScale = thick / nativeBox;
     canvas.save();
     void drawWing(Path horizontal, Path vertical) {
       switch (edge) {
         case TooltipArrowEdge.bottom:
           canvas
             ..translate(center - alongSpan / 2, size.height - overlapY)
-            ..scale(alongSpan / 24, thick / 7);
+            ..scale(alongSpan / 24, boxScale);
           canvas.drawPath(horizontal, paint);
         case TooltipArrowEdge.top:
           canvas
             ..translate(center + alongSpan / 2, overlapY)
             ..rotate(math.pi)
-            ..scale(alongSpan / 24, thick / 7);
+            ..scale(alongSpan / 24, boxScale);
           canvas.drawPath(horizontal, paint);
         case TooltipArrowEdge.right:
           canvas
             ..translate(size.width - overlapY, center - alongSpan / 2)
-            ..scale(thick / 7, alongSpan / 24);
+            ..scale(boxScale, alongSpan / 24);
           canvas.drawPath(vertical, paint);
         case TooltipArrowEdge.left:
           canvas
             ..translate(overlapY, center + alongSpan / 2)
             ..rotate(math.pi)
-            ..scale(thick / 7, alongSpan / 24);
+            ..scale(boxScale, alongSpan / 24);
           canvas.drawPath(vertical, paint);
       }
     }

@@ -30,6 +30,7 @@ import 'package:example/pages/notification.dart';
 import 'package:example/pages/overflow_list.dart';
 import 'package:example/pages/pagination.dart';
 import 'package:example/pages/pincode.dart';
+import 'package:example/pages/popover.dart';
 import 'package:example/pages/popconfirm.dart';
 import 'package:example/pages/progress.dart';
 import 'package:example/pages/radio.dart';
@@ -248,6 +249,12 @@ const List<DemoGroup> demoGroups = [
       'Notification 通知',
       'doc-notification.svg',
       NotificationPage(),
+    ),
+    DemoSpec(
+      'popover',
+      'Popover 气泡卡片',
+      'doc-popover.svg',
+      PopoverPage(),
     ),
     DemoSpec(
       'popconfirm',

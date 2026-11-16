@@ -44,6 +44,7 @@ import 'semi_skeleton_theme_data.dart';
 import 'semi_tabs_theme_data.dart';
 import 'semi_carousel_theme_data.dart';
 import 'semi_modal_theme_data.dart';
+import 'semi_popover_theme_data.dart';
 import 'semi_popconfirm_theme_data.dart';
 import 'semi_banner_theme_data.dart';
 import 'semi_notification_theme_data.dart';
@@ -103,6 +104,7 @@ class SemiComponentThemes {
     this.tabs = const SemiTabsThemeData(),
     this.carousel = const SemiCarouselThemeData(),
     this.modal = const SemiModalThemeData(),
+    this.popover = const SemiPopoverThemeData(),
     this.popconfirm = const SemiPopconfirmThemeData(),
     this.banner = const SemiBannerThemeData(),
     this.notification = const SemiNotificationThemeData(),
@@ -162,6 +164,7 @@ class SemiComponentThemes {
   final SemiTabsThemeData tabs;
   final SemiCarouselThemeData carousel;
   final SemiModalThemeData modal;
+  final SemiPopoverThemeData popover;
   final SemiPopconfirmThemeData popconfirm;
   final SemiBannerThemeData banner;
   final SemiNotificationThemeData notification;
@@ -218,6 +221,7 @@ class SemiComponentThemes {
     SemiTabsThemeData? tabs,
     SemiCarouselThemeData? carousel,
     SemiModalThemeData? modal,
+    SemiPopoverThemeData? popover,
     SemiPopconfirmThemeData? popconfirm,
     SemiBannerThemeData? banner,
     SemiNotificationThemeData? notification,
@@ -274,6 +278,7 @@ class SemiComponentThemes {
     tabs: tabs ?? this.tabs,
     carousel: carousel ?? this.carousel,
     modal: modal ?? this.modal,
+    popover: popover ?? this.popover,
     popconfirm: popconfirm ?? this.popconfirm,
     banner: banner ?? this.banner,
     notification: notification ?? this.notification,
@@ -334,6 +339,7 @@ class SemiComponentThemes {
           tabs == other.tabs &&
           carousel == other.carousel &&
           modal == other.modal &&
+          popover == other.popover &&
           popconfirm == other.popconfirm &&
           banner == other.banner &&
           notification == other.notification &&
@@ -391,6 +397,7 @@ class SemiComponentThemes {
     tabs,
     carousel,
     modal,
+    popover,
     popconfirm,
     banner,
     notification,

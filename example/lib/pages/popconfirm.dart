@@ -189,7 +189,7 @@ class _PopconfirmPageState extends State<PopconfirmPage> {
                 title: const Text('局部主题'),
                 content: const Text('maxWidth 240 / footer 顶距 12 / 圆角 12。'),
                 onConfirm: () => setState(() => _status = '局部主题确认'),
-                child: _target('theme-target', '局部主题'),
+                child: _target('theme-target', '主题补丁'),
               ),
             ),
           ]),

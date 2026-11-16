@@ -12,8 +12,8 @@
 // variables.scss 22 declarations + animation.scss 4). 37 HARDCODES anchors,
 // 63 = 20 + 4 + 2 + 37 provenance entries. ★0 死变量（26 声明全部被
 // popover.scss / 共享 tooltip arrow.scss（popover.scss `@import
-// '../tooltip/arrow.scss'`）/ animation.scss 消费）；本地 19 条进入渲染路径，
-// 5 条（`unset` quirk + `&-title` 三件套）经注释留档（上游消费方为无渲染方的
+// '../tooltip/arrow.scss'`）/ animation.scss 消费）；本地 20 条进入渲染路径，
+// 4 条（`unset` quirk + `&-title` 三件套）经注释留档（上游消费方为无渲染方的
 // CSS 规则 / 箭头 `color` 属性）。
 //
 // Theme-field consumption (24 = 20 FIELDS + 4 MOTION):
@@ -43,9 +43,10 @@ import 'dart:math' as math;
 import 'package:flutter/widgets.dart';
 
 import '../theme/semi_popover_theme.dart';
-import '../theme/semi_popover_theme_data.dart';
 import '../theme/semi_theme.dart';
+import '../theme/semi_tooltip_theme.dart';
 import '../theme/semi_tooltip_theme_data.dart';
+import '../overlay/tooltip_positioning.dart';
 import 'semi_tooltip.dart';
 
 /// Arrow tint overrides (upstream `arrowStyle`, popover/index.tsx ArrowStyle).
@@ -56,9 +57,11 @@ import 'semi_tooltip.dart';
 /// `get(arrowStyle, 'borderOpacity')` on the fringe pass; `popStyle` is the
 /// unported `style` prop, so the CSS fills
 /// (`fill: $color-popover-arrow-bg` / `fill: $color-popover-arrow-border`)
-/// are the local defaults. Upstream `showArrow ? <Arrow {...arrowProps} /> :
-/// false` passes a render node to Tooltip; the local shell only supports the
-/// bool form and paints the two-path arrow itself.
+/// are the local defaults. Upstream passes a render node to Tooltip; the
+/// local shell only supports the bool form and paints the two-path arrow
+/// itself.
+// Upstream snippet (raw — angle brackets read as HTML in doc comments):
+// showArrow ? <Arrow {...arrowProps} /> : false
 @immutable
 class SemiPopoverArrowStyle {
   const SemiPopoverArrowStyle({
@@ -85,11 +88,21 @@ class SemiPopoverArrowStyle {
           borderOpacity == other.borderOpacity;
 
   @override
-  int get hashCode =>
-      Object.hash(borderColor, backgroundColor, borderOpacity);
+  int get hashCode => Object.hash(borderColor, backgroundColor, borderOpacity);
 }
 
 /// 气泡卡片。Hover（默认）触发的轻量浮层，内容任意。
+///
+/// Upstream defaultProps (popover/index.tsx getDefaultPropsFromGlobalConfig):
+/// `prefixCls: cssClasses.PREFIX`, `arrowBounding: numbers.ARROW_BOUNDING`
+/// (`offsetY: 6`), `showArrow: false`, `autoAdjustOverflow: true`,
+/// `zIndex: numbers.DEFAULT_Z_INDEX`, `motion: true`, `trigger: 'hover'`,
+/// `position: 'bottom'`, `closeOnEsc: true`, `returnFocusOnClose: true`,
+/// `guardFocus: true`, `disableFocusListener: true`, plus the legacy
+/// `cancelText: 'No'` / `okText: 'Yes'` (PopConfirm leftovers — nothing
+/// consumes them in popover/index.tsx). `role = trigger === 'click' ||
+/// trigger === 'custom' ? 'dialog' : 'tooltip'` is unported (the shell keeps
+/// no ARIA roles).
 ///
 /// Builds on [SemiTooltip] (`popupBare: true`) with the popover-family surface
 /// (bg-3 + shadow-elevated + medium radius) from popover.scss. Upstream
@@ -200,7 +213,6 @@ class SemiPopover extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = SemiPopoverTheme.resolve(context);
-    final global = SemiTheme.of(context);
     // Popover shadows the tooltip arrow variables in its own scope
     // (`$height-tooltip_arrow: $height-popover_arrow` …) so the shared
     // tooltip/arrow.scss positions the 24x8 icon box and the zoomIn/zoomOut
@@ -213,10 +225,9 @@ class SemiPopover extends StatelessWidget {
       widthTooltipArrowVertical: t.widthTooltipArrowVertical,
       arrowAdjustedOffsetY: t.spacingTooltipArrowAdjustedOffsetY,
       arrowAdjustedOffsetX: t.spacingTooltipArrowAdjustedOffsetX,
-      // `animation: #{$module}-zoomIn $animation_duration-popover-in
-      // $animation_function-popover-in;` /
-      // `animation: #{$module}-zoomOut $animation_duration-popover-out
-      // $animation_function-popover-out;` (&-animation-show/hide).
+      // &-animation-show/hide motion lines (verbatim upstream):
+      // animation: #{$module}-zoomIn $animation_duration-popover-in $animation_function-popover-in;
+      // animation: #{$module}-zoomOut $animation_duration-popover-out $animation_function-popover-out;
       animationDurationIn: t.animationDurationPopoverIn,
       animationDurationOut: t.animationDurationPopoverOut,
       animationFunctionIn: t.animationFunctionPopoverIn,
@@ -266,6 +277,7 @@ class SemiPopover extends StatelessWidget {
 
 /// The 2 Sass declarations kept out of the theme: the arrow correction factor
 /// and the backdrop filter. See docs/semi_popover.md for the full mapping.
+// ignore: unused_element
 abstract final class _PopoverMetrics {
   /// `$horizontal-rate: 0.24` in packages/semi-foundation/popover/variables.scss.
   /// Sass-side correction factor behind `spacingTooltipArrowAdjustedOffsetX`
@@ -296,6 +308,11 @@ class _PopoverCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = SemiPopoverTheme.resolve(context);
     final global = SemiTheme.of(context);
+    // Styling hooks without a renderer in current semi-ui (provenance only):
+    // `&-title` — `padding: $spacing-popover_title-padding;` and
+    // border-bottom: $width-popover_title-border solid $color-popover-border-default;
+    // (content-side class convention) — and rtl.scss `direction: rtl` on the
+    // card (Directionality covers it).
     // `padding: $spacing-popover_withArrow-padding;` on
     // `.semi-popover-with-arrow`; without the arrow the wrapper carries no
     // padding upstream.

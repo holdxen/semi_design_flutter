@@ -26,7 +26,7 @@ void main() {
       expect(tester.takeException(), isNull);
     }
     expect(find.byType(SemiScrollList), findsNWidgets(5));
-    expect(find.byType(SemiScrollItem), findsNWidgets(6));
+    expect(find.byType(SemiScrollItem), findsNWidgets(7));
   });
 
   testWidgets('normal 点选联动受控文案', (tester) async {

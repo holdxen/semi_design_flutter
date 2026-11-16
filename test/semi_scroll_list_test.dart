@@ -8,7 +8,7 @@ Widget host(Widget child, {bool rtl = false, SemiThemeData? theme}) =>
       child: Directionality(
         textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
         child: Center(
-          // 根宽随父约束（`width: 100%`）——测试给定宽盒。
+          // 根宽随父约束（`width: 100%`）——测试给定宽盒；列高随 body（300）。
           child: SizedBox(width: 320, child: child),
         ),
       ),
@@ -94,11 +94,15 @@ void main() {
     final selections = <SemiScrollItemSelection>[];
     await tester.pumpWidget(
       host(
-        SemiScrollItem(
-          mode: SemiScrollItemMode.normal,
-          list: items(6, disabled: 2),
-          type: 'col',
-          onSelect: selections.add,
+        SemiScrollList(
+          children: [
+            SemiScrollItem(
+              mode: SemiScrollItemMode.normal,
+              list: items(6, disabled: 2),
+              type: 'col',
+              onSelect: selections.add,
+            ),
+          ],
         ),
       ),
     );
@@ -126,11 +130,15 @@ void main() {
   testWidgets('transform 只作用于 selectedIndex 行（严格相等门）', (tester) async {
     await tester.pumpWidget(
       host(
-        SemiScrollItem(
-          mode: SemiScrollItemMode.normal,
-          list: items(3),
-          selectedIndex: 1,
-          transform: (value, text) => '选中:$value',
+        SemiScrollList(
+          children: [
+            SemiScrollItem(
+              mode: SemiScrollItemMode.normal,
+              list: items(3),
+              selectedIndex: 1,
+              transform: (value, text) => '选中:$value',
+            ),
+          ],
         ),
       ),
     );
@@ -196,7 +204,13 @@ void main() {
 
   testWidgets('行高取 heightScrollListItem（36）与主题覆盖', (tester) async {
     await tester.pumpWidget(
-      host(SemiScrollItem(mode: SemiScrollItemMode.normal, list: items(3))),
+      host(
+        SemiScrollList(
+          children: [
+            SemiScrollItem(mode: SemiScrollItemMode.normal, list: items(3)),
+          ],
+        ),
+      ),
     );
     await tester.pump();
     // `$height-scrollList_item: 36px`（box-sizing: border-box 等价）。
@@ -204,7 +218,11 @@ void main() {
 
     await tester.pumpWidget(
       host(
-        SemiScrollItem(mode: SemiScrollItemMode.normal, list: items(3)),
+        SemiScrollList(
+          children: [
+            SemiScrollItem(mode: SemiScrollItemMode.normal, list: items(3)),
+          ],
+        ),
         theme: const SemiThemeData.light(
           components: SemiComponentThemes(
             scrollList: SemiScrollListThemeData(heightScrollListItem: 48),
@@ -222,10 +240,14 @@ void main() {
     final selections = <SemiScrollItemSelection>[];
     await tester.pumpWidget(
       host(
-        SemiScrollItem(
-          list: items(6),
-          selectedIndex: 0,
-          onSelect: selections.add,
+        SemiScrollList(
+          children: [
+            SemiScrollItem(
+              list: items(6),
+              selectedIndex: 0,
+              onSelect: selections.add,
+            ),
+          ],
         ),
       ),
     );
@@ -247,10 +269,14 @@ void main() {
     final selections = <SemiScrollItemSelection>[];
     await tester.pumpWidget(
       host(
-        SemiScrollItem(
-          list: items(6),
-          selectedIndex: 0,
-          onSelect: selections.add,
+        SemiScrollList(
+          children: [
+            SemiScrollItem(
+              list: items(6),
+              selectedIndex: 0,
+              onSelect: selections.add,
+            ),
+          ],
         ),
       ),
     );
@@ -292,17 +318,21 @@ void main() {
     final selections = <SemiScrollItemSelection>[];
     await tester.pumpWidget(
       host(
-        SemiScrollItem(
-          list: [
-            for (var i = 0; i < 6; i++)
-              SemiScrollItemData(
-                value: i,
-                text: '行$i',
-                disabled: i == 1 || i == 2,
-              ),
+        SemiScrollList(
+          children: [
+            SemiScrollItem(
+              list: [
+                for (var i = 0; i < 6; i++)
+                  SemiScrollItemData(
+                    value: i,
+                    text: '行$i',
+                    disabled: i == 1 || i == 2,
+                  ),
+              ],
+              selectedIndex: 0,
+              onSelect: selections.add,
+            ),
           ],
-          selectedIndex: 0,
-          onSelect: selections.add,
         ),
       ),
     );
@@ -331,11 +361,15 @@ void main() {
     final selections = <SemiScrollItemSelection>[];
     await tester.pumpWidget(
       host(
-        SemiScrollItem(
-          cycled: true,
-          list: items(3),
-          selectedIndex: 1,
-          onSelect: selections.add,
+        SemiScrollList(
+          children: [
+            SemiScrollItem(
+              cycled: true,
+              list: items(3),
+              selectedIndex: 1,
+              onSelect: selections.add,
+            ),
+          ],
         ),
       ),
     );
@@ -364,10 +398,14 @@ void main() {
   testWidgets('wheel selectedIndex prop 变化滚动定位并通知', (tester) async {
     final selections = <SemiScrollItemSelection>[];
     Widget build(int selectedIndex) => host(
-      SemiScrollItem(
-        list: items(6),
-        selectedIndex: selectedIndex,
-        onSelect: selections.add,
+      SemiScrollList(
+        children: [
+          SemiScrollItem(
+            list: items(6),
+            selectedIndex: selectedIndex,
+            onSelect: selections.add,
+          ),
+        ],
       ),
     );
     await tester.pumpWidget(build(0));
@@ -394,10 +432,14 @@ void main() {
     final selections = <SemiScrollItemSelection>[];
     await tester.pumpWidget(
       host(
-        SemiScrollItem(
-          list: items(6),
-          selectedIndex: 0,
-          onSelect: selections.add,
+        SemiScrollList(
+          children: [
+            SemiScrollItem(
+              list: items(6),
+              selectedIndex: 0,
+              onSelect: selections.add,
+            ),
+          ],
         ),
       ),
     );

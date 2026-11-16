@@ -20,6 +20,8 @@ import 'package:flutter/widgets.dart';
 import '../theme/semi_popconfirm_theme.dart';
 import '../theme/semi_popconfirm_theme_data.dart';
 import '../theme/semi_theme.dart';
+import '../theme/semi_tooltip_theme.dart';
+import '../theme/semi_tooltip_theme_data.dart';
 import '../overlay/tooltip_positioning.dart';
 import 'icon/semi_icon.dart';
 import 'icon/semi_icons.dart';
@@ -268,48 +270,59 @@ class _SemiPopconfirmState extends State<SemiPopconfirm> {
     // `fill: var(--semi-color-border)` (`path:nth-child(1)`).
     final colors = SemiTheme.of(context).colors;
     final card = _PopconfirmCard(
-        title: widget.title,
-        content: widget.content,
-        icon: widget.icon,
-        withArrow: widget.showArrow,
-        showCloseIcon: widget.showCloseIcon,
-        okText: widget.okText,
-        cancelText: widget.cancelText,
-        okType: widget.okType,
-        cancelType: widget.cancelType,
-        okLoading: widget.okLoading ?? _confirmPending,
-        cancelLoading: widget.cancelLoading ?? _cancelPending,
-        onConfirm: _handleConfirm,
-        onCancel: _handleCancel,
-      );
-    return SemiTooltip(
-      content: card,
-      trigger: widget.trigger,
-      position:
-          widget.position ??
-          (Directionality.maybeOf(context) == TextDirection.rtl
-              ? SemiTooltipPosition.bottomRight
-              : SemiTooltipPosition.bottomLeft),
-      showArrow: widget.showArrow,
-      popupBare: true,
-      arrowPointAtCenter: widget.arrowPointAtCenter,
-      autoAdjustOverflow: widget.autoAdjustOverflow,
-      // Popover defaults:
-      // `spacing = showArrow ? numbers.SPACING_WITH_ARROW : numbers.SPACING`
-      // (popover/index.tsx — 10 : 4).
-      spacing: widget.spacing ?? (widget.showArrow ? 10 : 4),
-      clickToHide: widget.clickToHide,
-      closeOnEsc: widget.closeOnEsc,
-      visible: _visible,
-      onVisibleChange: _handleVisibleChange,
-      onEscKeyDown: widget.onEscKeyDown,
-      onClickOutSide: widget.onClickOutSide,
-      motion: widget.motion,
-      // `z-index: $z-popover` (popover.scss wrapper = 1030).
-      zIndex: widget.zIndex,
-      arrowColor: colors.colorBg3,
-      arrowFringeColor: colors.colorBorder,
-      child: widget.child,
+      title: widget.title,
+      content: widget.content,
+      icon: widget.icon,
+      withArrow: widget.showArrow,
+      showCloseIcon: widget.showCloseIcon,
+      okText: widget.okText,
+      cancelText: widget.cancelText,
+      okType: widget.okType,
+      cancelType: widget.cancelType,
+      okLoading: widget.okLoading ?? _confirmPending,
+      cancelLoading: widget.cancelLoading ?? _cancelPending,
+      onConfirm: _handleConfirm,
+      onCancel: _handleCancel,
+    );
+    return SemiTooltipTheme(
+      // PopConfirm renders on the Popover card upstream, so its arrow is the
+      // popover arrow: `numbers.ARROW_BOUNDING` (24x8 box — the fringe pass
+      // `path:nth-child(1)` overhangs the 7px wing by 1px).
+      data: const SemiTooltipThemeData(
+        heightTooltipArrow: 8,
+        widthTooltipArrow: 24,
+        heightTooltipArrowVertical: 24,
+        widthTooltipArrowVertical: 8,
+      ),
+      child: SemiTooltip(
+        content: card,
+        trigger: widget.trigger,
+        position:
+            widget.position ??
+            (Directionality.maybeOf(context) == TextDirection.rtl
+                ? SemiTooltipPosition.bottomRight
+                : SemiTooltipPosition.bottomLeft),
+        showArrow: widget.showArrow,
+        popupBare: true,
+        arrowPointAtCenter: widget.arrowPointAtCenter,
+        autoAdjustOverflow: widget.autoAdjustOverflow,
+        // Popover defaults:
+        // `spacing = showArrow ? numbers.SPACING_WITH_ARROW : numbers.SPACING`
+        // (popover/index.tsx — 10 : 4).
+        spacing: widget.spacing ?? (widget.showArrow ? 10 : 4),
+        clickToHide: widget.clickToHide,
+        closeOnEsc: widget.closeOnEsc,
+        visible: _visible,
+        onVisibleChange: _handleVisibleChange,
+        onEscKeyDown: widget.onEscKeyDown,
+        onClickOutSide: widget.onClickOutSide,
+        motion: widget.motion,
+        // `z-index: $z-popover` (popover.scss wrapper = 1030).
+        zIndex: widget.zIndex,
+        arrowColor: colors.colorBg3,
+        arrowFringeColor: colors.colorBorder,
+        child: widget.child,
+      ),
     );
   }
 }
@@ -330,7 +343,12 @@ abstract final class _PopconfirmMetrics {
   }) {
     final edge = rtl ? t.spacingPopconfirmTop : t.spacingPopconfirmBottom;
     final other = rtl ? t.spacingPopconfirmBottom : t.spacingPopconfirmTop;
-    return EdgeInsets.fromLTRB(edge, t.spacingPopconfirmTop, other, t.spacingPopconfirmTop);
+    return EdgeInsets.fromLTRB(
+      edge,
+      t.spacingPopconfirmTop,
+      other,
+      t.spacingPopconfirmTop,
+    );
   }
 
   /// `$spacing-popconfirm_popover_with_arrow_inner-padding: ($spacing-popconfirm-top - $spacing-popconfirm_with_arrow-padding) ($spacing-popconfirm-top - $spacing-popconfirm_with_arrow-padding) ($spacing-popconfirm-top - $spacing-popconfirm_with_arrow-padding) ($spacing-popconfirm-bottom - $spacing-popconfirm_with_arrow-padding)` in packages/semi-foundation/popconfirm/variables.scss.
@@ -342,7 +360,8 @@ abstract final class _PopconfirmMetrics {
     required bool rtl,
   }) {
     final inset = t.spacingPopconfirmTop - t.spacingPopconfirmWithArrowPadding;
-    final edge = t.spacingPopconfirmBottom - t.spacingPopconfirmWithArrowPadding;
+    final edge =
+        t.spacingPopconfirmBottom - t.spacingPopconfirmWithArrowPadding;
     return EdgeInsets.fromLTRB(
       rtl ? inset : edge,
       inset,
@@ -493,7 +512,8 @@ class _PopconfirmCard extends StatelessWidget {
             child: Padding(
               // `body_p-margin/-padding` (both 0) reset the `<p>` box.
               padding: EdgeInsets.all(
-                t.spacingPopconfirmBodyPMargin + t.spacingPopconfirmBodyPPadding,
+                t.spacingPopconfirmBodyPMargin +
+                    t.spacingPopconfirmBodyPPadding,
               ),
               child: DefaultTextStyle.merge(
                 // The popover wrapper sets `@include font-size-regular` (14)
