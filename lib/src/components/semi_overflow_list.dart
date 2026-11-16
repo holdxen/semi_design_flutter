@@ -277,7 +277,8 @@ class _SemiOverflowListState<T> extends State<SemiOverflowList<T>> {
   }) {
     _lastOverflowCount = _isScrollMode ? 0 : -1;
     _maxCount = 0;
-    _pivot = -1;
+    // ★上游 getDerivedStateFromProps 不重置 pivot —— items 更新后首帧仍按
+    // 旧 pivot 判定可见（不闪隐，index.tsx:128-190 无 pivot 字段）。
     _overflowStatus = _OverflowStatus.calculating;
     if (_isScrollMode) {
       if (itemsChanged && oldItems != null) {
@@ -377,19 +378,20 @@ class _SemiOverflowListState<T> extends State<SemiOverflowList<T>> {
 
   /// 上游 index.tsx:387-407 `onItemResize` —— 首测登记；宽度变化或
   /// `itemSizeMap.size === maxCount`（"已经按照最大值maxCount渲染完毕，触发
-  /// 真正的渲染"）时置 calculating 重算。
+  /// 真正的渲染"）时置 calculating 重算。上游 ResizeObserver 仅在尺寸事件
+  /// 时回调，此处每布局上报、值不变不触发（等价）。
   void _onItemLayout(String key, Size size) {
+    if (_isScrollMode) _scheduleVisibility();
     final width = size.width;
     final stored = _itemSizeMap[key];
-    if (stored == null || stored == 0) {
-      _itemSizeMap[key] = width;
-      if (_itemSizeMap.length == _maxCount) _scheduleCompute();
-    } else if (stored != width) {
-      // 某个 item 发生 resize 后，重新计算。
-      _itemSizeMap[key] = width;
-      _scheduleCompute();
+    if (stored == width) return;
+    _itemSizeMap[key] = width;
+    if (stored == null) {
+      if (_itemSizeMap.length == _maxCount) _markCalculating();
+      return;
     }
-    if (_isScrollMode) _scheduleVisibility();
+    // 某个 item 发生 resize 后，重新计算。
+    _markCalculating();
   }
 
   /// 上游 index.tsx:304-310 —— 溢出节点宽度进 `overflowWidth` 并置
@@ -397,7 +399,7 @@ class _SemiOverflowListState<T> extends State<SemiOverflowList<T>> {
   void _onOverflowLayout(Size size) {
     if (_overflowWidth != size.width) {
       _overflowWidth = size.width;
-      _scheduleCompute();
+      _markCalculating();
     }
   }
 
@@ -405,8 +407,15 @@ class _SemiOverflowListState<T> extends State<SemiOverflowList<T>> {
   void _syncContainerWidth(double width) {
     if (_containerWidth != width) {
       _containerWidth = width;
-      _scheduleCompute();
+      _markCalculating();
     }
+  }
+
+  /// 上游各测量触发 `setState({ overflowStatus: 'calculating' })` —— 状态置回
+  /// 重算中并排队计算（index.tsx:252/308/395/403）。
+  void _markCalculating() {
+    _overflowStatus = _OverflowStatus.calculating;
+    _scheduleCompute();
   }
 
   // -- collapse 算法（foundation.handleCollapseOverflow:129-176）------------
@@ -578,15 +587,28 @@ class _SemiOverflowListState<T> extends State<SemiOverflowList<T>> {
         // "calculating" && this.state.pivot < 0 ? "hidden" : "visible"`。
         final measuring =
             _overflowStatus == _OverflowStatus.calculating && _pivot < 0;
+        // CSS `overflow: visible` —— 超宽子项画出容器外（minVisibleItems
+        // 强保 / 瞬态测量帧），OverflowBox 在有界轴上放行子项约束复现该语义
+        //（无界轴无溢出可言，透传约束避免无限尺寸）。
         return Visibility(
           visible: !measuring,
           maintainSize: true,
           maintainAnimation: true,
           maintainState: true,
-          // `display: flex; flex-wrap: nowrap`（overflowList.scss:3-5）。
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: children,
+          child: OverflowBox(
+            alignment: AlignmentDirectional.topStart,
+            // deferToChild：随子项定尺寸（fit: max 在无界轴上会取无限大）。
+            fit: OverflowBoxFit.deferToChild,
+            minWidth: 0,
+            maxWidth: constraints.hasBoundedWidth ? double.infinity : null,
+            minHeight: 0,
+            maxHeight: constraints.hasBoundedHeight ? double.infinity : null,
+            // `display: flex; flex-wrap: nowrap`（overflowList.scss:3-5）。
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: children,
+            ),
           ),
         );
       },

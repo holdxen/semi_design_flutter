@@ -36,6 +36,7 @@ import 'semi_breadcrumb_theme_data.dart';
 import 'semi_navigation_theme_data.dart';
 import 'semi_pagination_theme_data.dart';
 import 'semi_tree_theme_data.dart';
+import 'semi_tree_select_theme_data.dart';
 import 'semi_steps_theme_data.dart';
 import 'semi_upload_theme_data.dart';
 import 'semi_skeleton_theme_data.dart';
@@ -86,6 +87,7 @@ class SemiComponentThemes {
     this.navigation = const SemiNavigationThemeData(),
     this.pagination = const SemiPaginationThemeData(),
     this.tree = const SemiTreeThemeData(),
+    this.treeSelect = const SemiTreeSelectThemeData(),
     this.steps = const SemiStepsThemeData(),
     this.upload = const SemiUploadThemeData(),
     this.skeleton = const SemiSkeletonThemeData(),
@@ -136,6 +138,7 @@ class SemiComponentThemes {
   final SemiNavigationThemeData navigation;
   final SemiPaginationThemeData pagination;
   final SemiTreeThemeData tree;
+  final SemiTreeSelectThemeData treeSelect;
   final SemiStepsThemeData steps;
   final SemiUploadThemeData upload;
   final SemiSkeletonThemeData skeleton;
@@ -183,6 +186,7 @@ class SemiComponentThemes {
     SemiNavigationThemeData? navigation,
     SemiPaginationThemeData? pagination,
     SemiTreeThemeData? tree,
+    SemiTreeSelectThemeData? treeSelect,
     SemiStepsThemeData? steps,
     SemiUploadThemeData? upload,
     SemiSkeletonThemeData? skeleton,
@@ -230,6 +234,7 @@ class SemiComponentThemes {
     navigation: navigation ?? this.navigation,
     pagination: pagination ?? this.pagination,
     tree: tree ?? this.tree,
+    treeSelect: treeSelect ?? this.treeSelect,
     steps: steps ?? this.steps,
     upload: upload ?? this.upload,
     skeleton: skeleton ?? this.skeleton,
@@ -281,6 +286,7 @@ class SemiComponentThemes {
           navigation == other.navigation &&
           pagination == other.pagination &&
           tree == other.tree &&
+          treeSelect == other.treeSelect &&
           steps == other.steps &&
           upload == other.upload &&
           skeleton == other.skeleton &&
@@ -329,6 +335,7 @@ class SemiComponentThemes {
     navigation,
     pagination,
     tree,
+    treeSelect,
     steps,
     upload,
     skeleton,

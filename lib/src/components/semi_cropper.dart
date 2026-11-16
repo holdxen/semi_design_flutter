@@ -77,7 +77,9 @@ class SemiCropperController {
   Future<ui.Image> getCropperImage() {
     final state = _state;
     if (state == null) {
-      throw StateError('SemiCropperController is not attached to a SemiCropper');
+      throw StateError(
+        'SemiCropperController is not attached to a SemiCropper',
+      );
     }
     return state._getCropperImage();
   }
@@ -150,11 +152,8 @@ class SemiCropper extends StatefulWidget {
   ///
   /// 返回同时放置 [cropper] 与 [cropView] 的子树；`cropView` 为裁切区域
   /// 视图，在给定约束内按上游 `updatePreview` 适配数学自缩放。
-  final Widget Function(
-    BuildContext context,
-    Widget cropper,
-    Widget cropView,
-  )? previewBuilder;
+  final Widget Function(BuildContext context, Widget cropper, Widget cropView)?
+  previewBuilder;
 
   /// 裁切输出控制器。
   final SemiCropperController? controller;
@@ -186,11 +185,7 @@ double _getMiddle(double value, (double, double) range) =>
     value.clamp(range.$1, range.$2).toDouble();
 
 /// 上游 utils.ts `getAspectHW`：等比内收 (width, height)。
-(double, double) _getAspectHW(
-  double width,
-  double height,
-  double aspect,
-) {
+(double, double) _getAspectHW(double width, double height, double aspect) {
   if (width / height > aspect) {
     width = height * aspect;
   } else {
@@ -324,10 +319,7 @@ class _SemiCropperState extends State<SemiCropper> {
     if (_containerData == Size.zero) {
       _containerData = size;
       if (_image != null && !_loaded) {
-        _handleImageLoad(
-          _image!.width.toDouble(),
-          _image!.height.toDouble(),
-        );
+        _handleImageLoad(_image!.width.toDouble(), _image!.height.toDouble());
       }
       return;
     }
@@ -374,7 +366,11 @@ class _SemiCropperState extends State<SemiCropper> {
         final width = xMax - xMin;
         final height = width / aspectRatio;
         yMax = yMin + height;
-        return _CropRect(width, height, Offset((xMax + xMin) / 2, (yMax + yMin) / 2));
+        return _CropRect(
+          width,
+          height,
+          Offset((xMax + xMin) / 2, (yMax + yMin) / 2),
+        );
       }
       if (yMax > newContainerData.height) {
         yMax = newContainerData.height;
@@ -384,7 +380,11 @@ class _SemiCropperState extends State<SemiCropper> {
         final height = yMax - yMin;
         final width = height * aspectRatio;
         xMax = xMin + width;
-        return _CropRect(width, height, Offset((xMax + xMin) / 2, (yMax + yMin) / 2));
+        return _CropRect(
+          width,
+          height,
+          Offset((xMax + xMin) / 2, (yMax + yMin) / 2),
+        );
       }
     } else {
       if (xMax > newContainerData.width) {
@@ -445,10 +445,7 @@ class _SemiCropperState extends State<SemiCropper> {
       _zoom = newZoom;
       changed = true;
       // 同上（y 翻转）
-      final scaleCenter = Offset(
-        _cropperBox.center.dx,
-        -_cropperBox.center.dy,
-      );
+      final scaleCenter = Offset(_cropperBox.center.dx, -_cropperBox.center.dy);
       final currentImgCenter = Offset(center.dx, -center.dy);
       width = width / oldZoom * newZoom;
       height = height / oldZoom * newZoom;
@@ -548,7 +545,8 @@ class _SemiCropperState extends State<SemiCropper> {
         final leftHalfWidth = box.center.dx;
         final rightHalfWidth = containerWidth - box.center.dx;
         width =
-            2 * (leftHalfWidth < rightHalfWidth ? leftHalfWidth : rightHalfWidth);
+            2 *
+            (leftHalfWidth < rightHalfWidth ? leftHalfWidth : rightHalfWidth);
         (width, height) = _getAspectHW(width, height, aspectRatio);
         _rangeX = (box.center.dx - width / 2, box.center.dx + width / 2);
         _rangeY = (yMax - height, yMax);
@@ -564,8 +562,11 @@ class _SemiCropperState extends State<SemiCropper> {
         width = xMax;
         final topHalfHeight = box.center.dy;
         final bottomHalfHeight = containerHeight - box.center.dy;
-        height = 2 *
-            (topHalfHeight < bottomHalfHeight ? topHalfHeight : bottomHalfHeight);
+        height =
+            2 *
+            (topHalfHeight < bottomHalfHeight
+                ? topHalfHeight
+                : bottomHalfHeight);
         (width, height) = _getAspectHW(width, height, aspectRatio);
         _rangeX = (xMax - width, xMax);
         _rangeY = (box.center.dy - height / 2, box.center.dy + height / 2);
@@ -574,7 +575,8 @@ class _SemiCropperState extends State<SemiCropper> {
         width = containerWidth - xMin;
         final topHalfHeight2 = box.center.dy;
         final bottomHalfHeight2 = containerHeight - box.center.dy;
-        height = 2 *
+        height =
+            2 *
             (topHalfHeight2 < bottomHalfHeight2
                 ? topHalfHeight2
                 : bottomHalfHeight2);
@@ -593,7 +595,8 @@ class _SemiCropperState extends State<SemiCropper> {
         height = containerHeight - yMin;
         final leftHalfWidth2 = box.center.dx;
         final rightHalfWidth2 = containerWidth - box.center.dx;
-        width = 2 *
+        width =
+            2 *
             (leftHalfWidth2 < rightHalfWidth2
                 ? leftHalfWidth2
                 : rightHalfWidth2);
@@ -654,66 +657,42 @@ class _SemiCropperState extends State<SemiCropper> {
       case 'tl':
         height = _rangeY!.$2 - offsetY;
         width = height * aspectRatio;
-        center = Offset(
-          _rangeX!.$2 - width / 2,
-          _rangeY!.$2 - height / 2,
-        );
+        center = Offset(_rangeX!.$2 - width / 2, _rangeY!.$2 - height / 2);
         break;
       case 'tm':
         height = _rangeY!.$2 - offsetY;
         width = height * aspectRatio;
-        center = Offset(
-          box.center.dx,
-          _rangeY!.$2 - height / 2,
-        );
+        center = Offset(box.center.dx, _rangeY!.$2 - height / 2);
         break;
       case 'tr':
         height = _rangeY!.$2 - offsetY;
         width = height * aspectRatio;
-        center = Offset(
-          _rangeX!.$1 + width / 2,
-          _rangeY!.$2 - height / 2,
-        );
+        center = Offset(_rangeX!.$1 + width / 2, _rangeY!.$2 - height / 2);
         break;
       case 'ml':
         width = _rangeX!.$2 - offsetX;
         height = width / aspectRatio;
-        center = Offset(
-          _rangeX!.$2 - width / 2,
-          box.center.dy,
-        );
+        center = Offset(_rangeX!.$2 - width / 2, box.center.dy);
         break;
       case 'mr':
         width = offsetX - _rangeX!.$1;
         height = width / aspectRatio;
-        center = Offset(
-          _rangeX!.$1 + width / 2,
-          box.center.dy,
-        );
+        center = Offset(_rangeX!.$1 + width / 2, box.center.dy);
         break;
       case 'bl':
         height = offsetY - _rangeY!.$1;
         width = height * aspectRatio;
-        center = Offset(
-          _rangeX!.$2 - width / 2,
-          _rangeY!.$1 + height / 2,
-        );
+        center = Offset(_rangeX!.$2 - width / 2, _rangeY!.$1 + height / 2);
         break;
       case 'bm':
         height = offsetY - _rangeY!.$1;
         width = height * aspectRatio;
-        center = Offset(
-          box.center.dx,
-          _rangeY!.$1 + height / 2,
-        );
+        center = Offset(box.center.dx, _rangeY!.$1 + height / 2);
         break;
       case 'br':
         height = offsetY - _rangeY!.$1;
         width = height * aspectRatio;
-        center = Offset(
-          _rangeX!.$1 + width / 2,
-          _rangeY!.$1 + height / 2,
-        );
+        center = Offset(_rangeX!.$1 + width / 2, _rangeY!.$1 + height / 2);
         break;
     }
     if (height == 0 && width == 0) {
@@ -785,10 +764,14 @@ class _SemiCropperState extends State<SemiCropper> {
     final offsetX = local.dx - start.dx;
     final offsetY = local.dy - start.dy;
     final range = _moveRange!;
-    final newCenterPointX =
-        _getMiddle(box.center.dx + offsetX, (range.xMin, range.xMax));
-    final newCenterPointY =
-        _getMiddle(box.center.dy + offsetY, (range.yMin, range.yMax));
+    final newCenterPointX = _getMiddle(box.center.dx + offsetX, (
+      range.xMin,
+      range.xMax,
+    ));
+    final newCenterPointY = _getMiddle(box.center.dy + offsetY, (
+      range.yMin,
+      range.yMax,
+    ));
     _cropperBoxMoveStart = local;
     setState(() {
       _cropperBox = _CropRect(
@@ -874,41 +857,37 @@ class _SemiCropperState extends State<SemiCropper> {
         relativeCropLeft > containerWidth ||
         relativeCropTop > containerHeight) {
       // 没有交集，直接返回空白图片
-      return _record(
-        relativeWidth,
-        relativeHeight,
-        (canvas, width, height) {
-          canvas.drawRect(
-            Rect.fromLTWH(0, 0, width, height),
-            Paint()..color = fill,
-          );
-        },
-      );
-    }
-
-    final full = await _record(
-      containerWidth,
-      containerHeight,
-      (canvas, width, height) {
+      return _record(relativeWidth, relativeHeight, (canvas, width, height) {
         canvas.drawRect(
           Rect.fromLTWH(0, 0, width, height),
           Paint()..color = fill,
         );
-        final halfWidth = width / 2;
-        final halfHeight = height / 2;
-        canvas.translate(halfWidth, halfHeight);
-        canvas.rotate(_rotate * math.pi / 180);
-        canvas.translate(-halfWidth, -halfHeight);
-        final imgX = (width - imgWidth) / 2;
-        final imgY = (height - imgHeight) / 2;
-        canvas.drawImageRect(
-          image,
-          Rect.fromLTWH(0, 0, imgWidth, imgHeight),
-          Rect.fromLTWH(imgX, imgY, imgWidth, imgHeight),
-          Paint()..filterQuality = FilterQuality.none,
-        );
-      },
-    );
+      });
+    }
+
+    final full = await _record(containerWidth, containerHeight, (
+      canvas,
+      width,
+      height,
+    ) {
+      canvas.drawRect(
+        Rect.fromLTWH(0, 0, width, height),
+        Paint()..color = fill,
+      );
+      final halfWidth = width / 2;
+      final halfHeight = height / 2;
+      canvas.translate(halfWidth, halfHeight);
+      canvas.rotate(_rotate * math.pi / 180);
+      canvas.translate(-halfWidth, -halfHeight);
+      final imgX = (width - imgWidth) / 2;
+      final imgY = (height - imgHeight) / 2;
+      canvas.drawImageRect(
+        image,
+        Rect.fromLTWH(0, 0, imgWidth, imgHeight),
+        Rect.fromLTWH(imgX, imgY, imgWidth, imgHeight),
+        Paint()..filterQuality = FilterQuality.none,
+      );
+    });
 
     // 为了避免裁剪时候，超出被裁切的画布的部分颜色不正常，需要将裁切区域限制在画布范围内。
     // 相对位置会在后续进行修正
@@ -935,30 +914,30 @@ class _SemiCropperState extends State<SemiCropper> {
       realHeight = relativeCropBottom;
     }
 
-    final result = await _record(
-      relativeWidth,
-      relativeHeight,
-      (canvas, width, height) {
-        canvas.drawRect(
-          Rect.fromLTWH(0, 0, width, height),
-          Paint()..color = fill,
-        );
-        // putImageData 的整像素替换语义（BlendMode.src 贴图）。
-        canvas.drawImageRect(
-          full,
-          Rect.fromLTWH(realLeft, realTop, realWidth, realHeight),
-          Rect.fromLTWH(
-            relativeCropLeft < 0 ? -relativeCropLeft : 0,
-            relativeCropTop < 0 ? -relativeCropTop : 0,
-            realWidth,
-            realHeight,
-          ),
-          Paint()
-            ..blendMode = BlendMode.src
-            ..filterQuality = FilterQuality.none,
-        );
-      },
-    );
+    final result = await _record(relativeWidth, relativeHeight, (
+      canvas,
+      width,
+      height,
+    ) {
+      canvas.drawRect(
+        Rect.fromLTWH(0, 0, width, height),
+        Paint()..color = fill,
+      );
+      // putImageData 的整像素替换语义（BlendMode.src 贴图）。
+      canvas.drawImageRect(
+        full,
+        Rect.fromLTWH(realLeft, realTop, realWidth, realHeight),
+        Rect.fromLTWH(
+          relativeCropLeft < 0 ? -relativeCropLeft : 0,
+          relativeCropTop < 0 ? -relativeCropTop : 0,
+          realWidth,
+          realHeight,
+        ),
+        Paint()
+          ..blendMode = BlendMode.src
+          ..filterQuality = FilterQuality.none,
+      );
+    });
     full.dispose();
     return result;
   }
@@ -971,9 +950,10 @@ class _SemiCropperState extends State<SemiCropper> {
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
     draw(canvas, width, height);
-    return recorder
-        .endRecording()
-        .toImage(math.max(1, width.round()), math.max(1, height.round()));
+    return recorder.endRecording().toImage(
+      math.max(1, width.round()),
+      math.max(1, height.round()),
+    );
   }
 
   /// 上游 updatePreview：预览容器内按裁切框适配缩放。
@@ -1096,6 +1076,8 @@ class _SemiCropperState extends State<SemiCropper> {
                 return const SizedBox.shrink();
               }
               _handleLayout(constraints.biggest);
+              // 受控 zoom/rotate 在布局派生之后再同步一次（加载首帧）。
+              _syncControlledProps();
               final imgX = _imgData.left;
               final imgY = _imgData.top;
               final boxX = _cropperBox.left;
@@ -1112,6 +1094,7 @@ class _SemiCropperState extends State<SemiCropper> {
                   // transformOrigin: 'center'
                   angle: _rotate * math.pi / 180,
                   child: RawImage(
+                    key: SemiCropper.imageKey,
                     image: _image,
                     fit: BoxFit.fill,
                     filterQuality: FilterQuality.low,
@@ -1127,7 +1110,6 @@ class _SemiCropperState extends State<SemiCropper> {
                   onPointerDown: (e) {
                     if (_dragMode != _DragMode.none) return;
                     _dragMode = _DragMode.imgMove;
-                    _handleMaskDown(e.localPosition);
                   },
                   child: ColoredBox(color: t.colorCropperMaskBg),
                 ),
@@ -1138,16 +1120,24 @@ class _SemiCropperState extends State<SemiCropper> {
                   ? ClipRect(child: _viewBox(cropperImgX, cropperImgY))
                   : ClipOval(child: _viewBox(cropperImgX, cropperImgY));
 
+              // `$half_corner_width`：角柄外悬半格——盒层扩一圈让角柄可命中
+              //（RenderBox.hitTest 不收自身边界外的子级）。
+              final pad = t.widthCropperBoxCorner / 2;
+
               // 裁切框（outline 外描边语义：画在盒外）。
               final box = Positioned(
-                left: boxX,
-                top: boxY,
-                width: _cropperBox.width,
-                height: _cropperBox.height,
+                left: boxX - pad,
+                top: boxY - pad,
+                width: _cropperBox.width + pad * 2,
+                height: _cropperBox.height + pad * 2,
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    Positioned.fill(
+                    Positioned(
+                      left: pad,
+                      top: pad,
+                      width: _cropperBox.width,
+                      height: _cropperBox.height,
                       child: IgnorePointer(
                         child: CustomPaint(
                           painter: _CropperBoxOutlinePainter(
@@ -1158,7 +1148,11 @@ class _SemiCropperState extends State<SemiCropper> {
                         ),
                       ),
                     ),
-                    Positioned.fill(
+                    Positioned(
+                      left: pad,
+                      top: pad,
+                      width: _cropperBox.width,
+                      height: _cropperBox.height,
                       child: Listener(
                         key: SemiCropper.boxKey,
                         behavior: HitTestBehavior.opaque,
@@ -1171,7 +1165,7 @@ class _SemiCropperState extends State<SemiCropper> {
                       ),
                     ),
                     if (_loaded && widget.showResizeBox)
-                      ..._buildCorners(t),
+                      ..._buildCorners(t, pad),
                   ],
                 ),
               );
@@ -1183,7 +1177,10 @@ class _SemiCropperState extends State<SemiCropper> {
                   // 图片层（img-wrapper overflow: hidden）。
                   Positioned.fill(
                     child: ClipRect(
-                      child: Stack(clipBehavior: Clip.none, children: [imageLayer]),
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [imageLayer],
+                      ),
                     ),
                   ),
                   mask,
@@ -1242,7 +1239,7 @@ class _SemiCropperState extends State<SemiCropper> {
     _dragMode = _DragMode.none;
   }
 
-  List<Widget> _buildCorners(SemiResolvedCropperThemeData t) {
+  List<Widget> _buildCorners(SemiResolvedCropperThemeData t, double pad) {
     // `$half_corner_width: calc($width-cropper_box_corner / 2)` 半宽外偏。
     final size = t.widthCropperBoxCorner;
     final half = size / 2;
@@ -1264,22 +1261,23 @@ class _SemiCropperState extends State<SemiCropper> {
     return [
       for (final dir in dirs)
         Positioned(
+          // 各偏移 + pad：盒层扩一圈后的坐标（半格外悬可命中）。
           left: switch (dir) {
-            'tl' || 'ml' || 'bl' => -half,
-            'tm' || 'bm' => boxWidth / 2 - half,
+            'tl' || 'ml' || 'bl' => -half + pad,
+            'tm' || 'bm' => boxWidth / 2 - half + pad,
             _ => null,
           },
           top: switch (dir) {
-            'tl' || 'tm' || 'tr' => -half,
-            'ml' || 'mr' => boxHeight / 2 - half,
+            'tl' || 'tm' || 'tr' => -half + pad,
+            'ml' || 'mr' => boxHeight / 2 - half + pad,
             _ => null,
           },
           right: switch (dir) {
-            'tr' || 'mr' || 'br' => -half,
+            'tr' || 'mr' || 'br' => -half + pad,
             _ => null,
           },
           bottom: switch (dir) {
-            'bl' || 'bm' || 'br' => -half,
+            'bl' || 'bm' || 'br' => -half + pad,
             _ => null,
           },
           width: size,

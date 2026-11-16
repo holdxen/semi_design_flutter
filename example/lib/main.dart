@@ -8,7 +8,9 @@ import 'package:example/pages/card.dart';
 import 'package:example/pages/carousel.dart';
 import 'package:example/pages/checkbox.dart';
 import 'package:example/pages/collapse.dart';
+import 'package:example/pages/collapsible.dart';
 import 'package:example/pages/color_picker.dart';
+import 'package:example/pages/cropper.dart';
 import 'package:example/pages/date_picker.dart';
 import 'package:example/pages/descriptions.dart';
 import 'package:example/pages/divider.dart';
@@ -19,6 +21,7 @@ import 'package:example/pages/input.dart';
 import 'package:example/pages/input_number.dart';
 import 'package:example/pages/modal.dart';
 import 'package:example/pages/navigation.dart';
+import 'package:example/pages/overflow_list.dart';
 import 'package:example/pages/pagination.dart';
 import 'package:example/pages/pincode.dart';
 import 'package:example/pages/progress.dart';
@@ -98,6 +101,10 @@ const List<DemoGroup> demoGroups = [
     ),
     DemoSpec('divider', 'Divider 分割线', 'doc-divider.svg', DividerPage()),
   ]),
+  // 官方侧栏 itemsArr：基础 → Plus 组件 → 输入类。
+  DemoGroup('Plus 组件', [
+    DemoSpec('cropper', 'Cropper 图片裁切', 'doc-cropper.svg', CropperPage()),
+  ]),
   DemoGroup('输入类', [
     DemoSpec(
       'autocomplete',
@@ -171,6 +178,12 @@ const List<DemoGroup> demoGroups = [
     DemoSpec('carousel', 'Carousel 轮播图', 'doc-carousel.svg', CarouselPage()),
     DemoSpec('collapse', 'Collapse 折叠面板', 'doc-accordion.svg', CollapsePage()),
     DemoSpec(
+      'collapsible',
+      'Collapsible 折叠',
+      'doc-collapsible.svg',
+      CollapsiblePage(),
+    ),
+    DemoSpec(
       'descriptions',
       'Descriptions 描述列表',
       'doc-descriptions.svg',
@@ -185,6 +198,12 @@ const List<DemoGroup> demoGroups = [
       HighlightPage(),
     ),
     DemoSpec('modal', 'Modal 模态对话框', 'doc-modal.svg', ModalPage()),
+    DemoSpec(
+      'overflowList',
+      'OverflowList 折叠列表',
+      'doc-overflowList.svg',
+      OverflowListPage(),
+    ),
     DemoSpec('tag', 'Tag 标签', 'doc-tag.svg', TagPage()),
     DemoSpec('timeline', 'Timeline 时间轴', 'doc-timeline.svg', TimelinePage()),
     DemoSpec('tooltip', 'Tooltip 工具提示', 'doc-tooltip.svg', TooltipPage()),

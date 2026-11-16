@@ -85,7 +85,7 @@ image `ImageProvider`（上游 `src`）。shape `SemiCropperShape`（rect/round/
 - **className/style**：外层布局承担（SizedBox/ConstrainedBox）。
 - **wheel preventDefault**：`{ passive: false }`/`e.preventDefault()` 防页面缩放不适用（Flutter 指针信号无页面滚动）；触控板滚动等价走 PointerScrollEvent。
 - **裁切输出像素替换**：`putImageData`（整像素替换）→ `BlendMode.src` 贴图（语义一致）；旋转贴图重采样 FilterQuality.none（上游 canvas 平滑由浏览器决定）。
-- **ResizeObserver**：仅观察 Width → LayoutBuilder 宽向触发（高度单独变化不重算，行为照抄）。
+- **ResizeObserver**：仅观察 Width → LayoutBuilder 宽向触发（高度单独变化不重算缩放数学，行为照抄；但容器尺寸记录会更新，定比拖动范围按新高度计算——上游完全不感知高度变化，此处更符合直觉）。
 - **viewIMGDragStart**：HTML 拖影抑制不适用（Flutter 图片不可拖拽），留档。
 - **未移植 API**：`aspectRatio` 受控语义保留（变化仅影响后续拖动，照抄 componentDidUpdate）。
 

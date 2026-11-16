@@ -73,7 +73,15 @@ BorderRadius clipRadiusOf(WidgetTester tester) => tester
         matching: find.byType(ClipRRect),
       ),
     )
-    .borderRadius! as BorderRadius;
+    .borderRadius as BorderRadius;
+
+/// slot 文字样式来自 DefaultTextStyle（Text 自身 style 可能为 null）。
+double fontSizeOf(WidgetTester tester, String text) {
+  final finder = find.text(text);
+  final widget = tester.widget<Text>(finder);
+  final style = widget.style ?? DefaultTextStyle.of(tester.element(finder)).style;
+  return style.fontSize!;
+}
 
 void main() {
   group('geometry', () {
@@ -231,10 +239,16 @@ void main() {
       var taps = 0;
       await pumpHost(tester, SemiAvatar(text: 'x', onTap: () => taps++));
       expect(find.byType(CustomPaint), findsNothing);
-      final focus = tester.widget<Focus>(find.byType(Focus));
-      focus.focusNode!.requestFocus();
+      Focus.of(tester.element(find.text('x'))).requestFocus();
+      await tester.pump();
       await tester.pump();
       expect(find.byType(CustomPaint), findsOneWidget);
+      final focus = tester.widget<Focus>(
+        find.descendant(
+          of: find.byType(SemiAvatar),
+          matching: find.byType(Focus),
+        ),
+      );
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       expect(taps, 1);
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
@@ -317,8 +331,7 @@ void main() {
           topSlot: SemiAvatarTopSlot(text: Text('新')),
         ),
       );
-      final style = tester.widget<Text>(find.text('新')).style!;
-      expect(style.fontSize, 8);
+      expect(fontSizeOf(tester, '新'), 8);
       final painters = tester
           .widgetList<CustomPaint>(find.byType(CustomPaint))
           .map((p) => p.painter.runtimeType.toString())
@@ -354,7 +367,7 @@ void main() {
       );
       // ★零样式 quirk：无 bg/shield，文字回落基础 `font-size-regular`。
       expect(
-        tester.widget<Text>(find.text('新')).style!.fontSize,
+        fontSizeOf(tester, '新'),
         const SemiThemeData.light().typography.fontSizeRegular,
       );
       final painters = tester
@@ -409,7 +422,7 @@ void main() {
         const SemiThemeData.light().colors.colorBg0,
       );
       expect(decoration.borderRadius, BorderRadius.circular(4));
-      expect(tester.widget<Text>(find.text('9')).style!.fontSize, 12);
+      expect(fontSizeOf(tester, '9'), 12);
       // ★quirk：`shape_square-extra_small` 类名拼写不匹配 → 规则从不命中，
       // font-size 回落 14、border-width 回落 CSS 初始 medium = 3。
       await pumpHost(
@@ -431,7 +444,7 @@ void main() {
       );
       expect(quirk.border!.top.width, 3);
       expect(
-        tester.widget<Text>(find.text('9')).style!.fontSize,
+        fontSizeOf(tester, '9'),
         const SemiThemeData.light().typography.fontSizeRegular,
       );
     });

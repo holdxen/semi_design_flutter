@@ -113,8 +113,8 @@ class _SemiCollapsibleState extends State<SemiCollapsible>
   void didChangeDependencies() {
     super.didChangeDependencies();
     _theme = SemiCollapsibleTheme.resolve(context);
-    _controller.duration = widget.duration ??
-        _theme.transitionDurationCollapsibleHeight;
+    _controller.duration =
+        widget.duration ?? _theme.transitionDurationCollapsibleHeight;
     _syncOpen();
   }
 
@@ -171,8 +171,8 @@ class _SemiCollapsibleState extends State<SemiCollapsible>
   void didUpdateWidget(SemiCollapsible oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.duration != widget.duration) {
-      _controller.duration = widget.duration ??
-          _theme.transitionDurationCollapsibleHeight;
+      _controller.duration =
+          widget.duration ?? _theme.transitionDurationCollapsibleHeight;
     }
     if (oldWidget.isOpen != widget.isOpen) {
       _syncOpen();
@@ -278,7 +278,11 @@ class _CollapsibleClip extends SingleChildRenderObjectWidget {
 }
 
 class _CollapsibleClipBox extends RenderProxyBox {
-  _CollapsibleClipBox(this._t, this._collapseHeight, this._collapseHeightAdaptive);
+  _CollapsibleClipBox(
+    this._t,
+    this._collapseHeight,
+    this._collapseHeightAdaptive,
+  );
 
   double _t;
   double _collapseHeight;
@@ -336,6 +340,11 @@ class _CollapsibleClipBox extends RenderProxyBox {
   void paint(PaintingContext context, Offset offset) {
     final child = this.child;
     if (child == null) return;
-    context.pushClipRect(needsCompositing, offset, Offset.zero & size, super.paint);
+    context.pushClipRect(
+      needsCompositing,
+      offset,
+      Offset.zero & size,
+      super.paint,
+    );
   }
 }

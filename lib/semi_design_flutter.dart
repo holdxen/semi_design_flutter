@@ -132,6 +132,9 @@ export 'src/theme/semi_pagination_theme_data.dart';
 export 'src/components/semi_tree.dart';
 export 'src/theme/semi_tree_theme.dart';
 export 'src/theme/semi_tree_theme_data.dart';
+export 'src/components/semi_tree_select.dart';
+export 'src/theme/semi_tree_select_theme.dart';
+export 'src/theme/semi_tree_select_theme_data.dart';
 export 'src/components/semi_steps.dart';
 export 'src/theme/semi_steps_theme.dart';
 export 'src/theme/semi_steps_theme_data.dart';
@@ -162,6 +165,7 @@ export 'src/theme/semi_avatar_theme_data.dart';
 export 'src/components/semi_cropper.dart';
 export 'src/theme/semi_cropper_theme.dart';
 export 'src/theme/semi_cropper_theme_data.dart';
+export 'src/components/semi_overflow_list.dart';
 
 /// A Calculator.
 class Calculator {
