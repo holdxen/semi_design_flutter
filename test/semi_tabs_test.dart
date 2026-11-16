@@ -4,6 +4,7 @@
 // word-boundary assertNotIn + docs（上游未消费）marks.
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -1711,6 +1712,36 @@ void main() {
       await tester.pump(const Duration(milliseconds: 50));
       await tester.pump(const Duration(milliseconds: 300));
       expect(scrollable.position.pixels, greaterThan(0));
+    });
+
+    testWidgets('collapsible bar hides the desktop scrollbar', (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+      try {
+        await pumpHost(
+          tester,
+          SemiTabs(
+            tabList: [
+              for (var i = 0; i < 8; i++)
+                SemiTabData(itemKey: '$i', tab: 'Tab $i', content: Text('p$i')),
+            ],
+            collapsible: true,
+            tabPaneMotion: false,
+          ),
+          width: 300,
+        );
+        await tester.pump();
+        // 桌面端 ScrollBehavior 会给滚动区自动包 RawScrollbar；折叠条只用
+        // 箭头滚动、不显示滚动条（`copyWith(scrollbars: false)`）。
+        expect(
+          find.descendant(
+            of: find.byType(SemiTabs),
+            matching: find.byType(RawScrollbar),
+          ),
+          findsNothing,
+        );
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
     });
 
     testWidgets('keyboard arrows move focus and Enter activates', (

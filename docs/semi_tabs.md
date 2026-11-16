@@ -31,7 +31,7 @@ tabList `List<SemiTabData>`。activeKey `String?`（非 null 即受控：点击/
 
 ### 溢出
 
-`collapsible` → 横条放入横向滚动容器，两端箭头（chevron，RTL 翻转；间距 4、内边距 8、边框宽 0、禁用色）按滚动位置启用，点击滚动 80px。`more: n` → 只渲染前 `length - n` 项，尾部「更多」触发器（text-2 色 + chevron-down，图标外边距 8/8/0/0，形态同页签 padding）hover 弹出 SemiDropdown，列表最大高 300（可滚动），行高 32、padding 8/12、hover fill-0、选中 primary + 加粗 + tick；点击行切换。`collapsible` 与 `more` 同时给时 collapsible 优先（TabBar.tsx render）。
+`collapsible` → 横条放入横向滚动容器（滚动条隐藏），两端箭头（chevron，RTL 翻转；间距 4、内边距 8、边框宽 0、禁用色）按滚动位置启用，点击滚动 80px。`more: n` → 只渲染前 `length - n` 项，尾部「更多」触发器（text-2 色 + chevron-down，图标外边距 8/8/0/0，形态同页签 padding）hover 弹出 SemiDropdown，列表最大高 300（可滚动），行高 32、padding 8/12、hover fill-0、选中 primary + 加粗 + tick；点击行切换。`collapsible` 与 `more` 同时给时 collapsible 优先（TabBar.tsx render）。
 
 ### 内容
 
@@ -219,7 +219,7 @@ pane 文本色 text-0；内容区 padding 上下 5 / 左右 0（左向改为左�
 
 ## 差异清单
 
-- **collapsible**：Flutter 端为「横向滚动 + 两端箭头（点击滚 80px）」，上游是 OverflowList 溢出测量 + 箭头 hover 下拉列出隐藏项；`'auto'` 未移植（等价 true）。
+- **collapsible**：Flutter 端为「横向滚动 + 两端箭头（点击滚 80px）」，上游是 OverflowList 溢出测量 + 箭头 hover 下拉列出隐藏项；`'auto'` 未移植（等价 true）。滚动条隐藏（`copyWith(scrollbars: false)`，上游无滚动条；桌面端 ScrollBehavior 默认会自动加 RawScrollbar）。
 - **more**：支持 `int` + `renderMoreTrigger`；上游 `more.dropdownProps` 未移植（SemiDropdown 无透传）。
 - **未移植 API**：`className`/`style`/`contentStyle`/`tabBarStyle`/`tabBarClassName`/`renderTabBar`/`onVisibleTabsChange`/`visibleTabsStyle`/`renderArrow`/`arrowPosition`/`dropdownProps`/`preventScroll`——Flutter 由外层布局与主题承担。
 - **动效**：CSS enter animation → Flutter 单次进入动画（无 leave）；`AnimatedContainer` 无 delay 参数，4 个 transition delay 字段留档未消费（默认 0ms）；`fill-mode: forwards` 由动画停在 1 表达。

@@ -428,10 +428,17 @@ class _SemiTabsState extends State<SemiTabs> {
         children: [
           _buildArrow(t, start: true, onTap: () => _scrollBy(-80)),
           Flexible(
-            child: SingleChildScrollView(
-              controller: _scroll,
-              scrollDirection: Axis.horizontal,
-              child: Row(mainAxisSize: MainAxisSize.min, children: items),
+            // 上游折叠条只用箭头滚动、无滚动条——关掉桌面端 ScrollBehavior
+            // 自动包上的 RawScrollbar（`copyWith(scrollbars: false)`）。
+            child: ScrollConfiguration(
+              behavior: ScrollConfiguration.of(
+                context,
+              ).copyWith(scrollbars: false),
+              child: SingleChildScrollView(
+                controller: _scroll,
+                scrollDirection: Axis.horizontal,
+                child: Row(mainAxisSize: MainAxisSize.min, children: items),
+              ),
             ),
           ),
           _buildArrow(t, start: false, onTap: () => _scrollBy(80)),
