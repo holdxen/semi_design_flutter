@@ -38,6 +38,7 @@ import 'semi_steps_theme_data.dart';
 import 'semi_upload_theme_data.dart';
 import 'semi_skeleton_theme_data.dart';
 import 'semi_tabs_theme_data.dart';
+import 'semi_carousel_theme_data.dart';
 
 @immutable
 class SemiComponentThemes {
@@ -80,6 +81,7 @@ class SemiComponentThemes {
     this.upload = const SemiUploadThemeData(),
     this.skeleton = const SemiSkeletonThemeData(),
     this.tabs = const SemiTabsThemeData(),
+    this.carousel = const SemiCarouselThemeData(),
   });
   final SemiTagThemeData tag;
   final SemiTypographyThemeData typography;
@@ -122,6 +124,7 @@ class SemiComponentThemes {
   final SemiUploadThemeData upload;
   final SemiSkeletonThemeData skeleton;
   final SemiTabsThemeData tabs;
+  final SemiCarouselThemeData carousel;
   SemiComponentThemes copyWith({
     SemiTagThemeData? tag,
     SemiTypographyThemeData? typography,
@@ -161,6 +164,7 @@ class SemiComponentThemes {
     SemiUploadThemeData? upload,
     SemiSkeletonThemeData? skeleton,
     SemiTabsThemeData? tabs,
+    SemiCarouselThemeData? carousel,
   }) => SemiComponentThemes(
     tag: tag ?? this.tag,
     typography: typography ?? this.typography,
@@ -200,6 +204,7 @@ class SemiComponentThemes {
     upload: upload ?? this.upload,
     skeleton: skeleton ?? this.skeleton,
     tabs: tabs ?? this.tabs,
+    carousel: carousel ?? this.carousel,
   );
   @override
   bool operator ==(Object other) =>
@@ -242,7 +247,8 @@ class SemiComponentThemes {
           steps == other.steps &&
           upload == other.upload &&
           skeleton == other.skeleton &&
-          tabs == other.tabs;
+          tabs == other.tabs &&
+          carousel == other.carousel;
   @override
   int get hashCode => Object.hashAll([
     tag,
@@ -283,5 +289,6 @@ class SemiComponentThemes {
     upload,
     skeleton,
     tabs,
+    carousel,
   ]);
 }

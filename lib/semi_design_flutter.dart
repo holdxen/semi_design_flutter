@@ -138,6 +138,9 @@ export 'src/theme/semi_skeleton_theme_data.dart';
 export 'src/components/semi_tabs.dart';
 export 'src/theme/semi_tabs_theme.dart';
 export 'src/theme/semi_tabs_theme_data.dart';
+export 'src/components/semi_carousel.dart';
+export 'src/theme/semi_carousel_theme.dart';
+export 'src/theme/semi_carousel_theme_data.dart';
 
 /// A Calculator.
 class Calculator {
