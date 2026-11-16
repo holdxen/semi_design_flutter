@@ -1910,6 +1910,41 @@ void main() {
       expect(find.byKey(SemiNavigation.subPopupKey), findsOneWidget);
       expect(find.text('ChildA'), findsOneWidget);
     });
+
+    testWidgets('popup rows span the full popup width (the horizontal list '
+        'gap stays outside the portal)', (tester) async {
+      final gesture = await startMouse(tester);
+      await pumpHost(
+        tester,
+        Center(
+          child: nav(items: nestedItems(), mode: SemiNavigationMode.horizontal),
+        ),
+      );
+      await gesture.moveTo(tester.getCenter(find.text('Sub1')));
+      for (var i = 0; i < 5; i++) {
+        await tester.pump(const Duration(milliseconds: 30));
+      }
+      final popup = find.byKey(SemiNavigation.subPopupKey);
+      expect(popup, findsOneWidget);
+      final popupWidth = tester.getSize(popup).width;
+      for (final label in ['ChildA', 'ChildB']) {
+        // ★悬浮底色 = 行装饰盒宽度：必须铺满弹层（此前首行带 horizontal
+        // 列表非末位右 margin 8——底色右侧留白、弹层也被撑宽）。
+        final row = find.ancestor(
+          of: find.text(label),
+          matching: find.byType(AnimatedContainer),
+        );
+        final painted = tester.getSize(
+          find
+              .descendant(of: row.first, matching: find.byType(DecoratedBox))
+              .first,
+        );
+        expect(painted.width, popupWidth, reason: label);
+      }
+      // 对照：导航列表本身的非末位右 margin 仍保留（防误删列表间距）。
+      final railRow = tester.widget<AnimatedContainer>(rowOf('Sub1'));
+      expect((railRow.margin! as EdgeInsetsDirectional).end, 8.0);
+    });
   });
 
   group('disabled and keyboard', () {

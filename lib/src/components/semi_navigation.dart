@@ -1336,8 +1336,10 @@ class _NavItemRowState extends State<_NavItemRow> {
             : widget.horizontal
             ? t.spacingNavigationHorizontalNavListItemMarginBottom
             : t.spacingNavigationItemMarginBottom,
-        // nav:663-665 horizontal 非末位右 margin。
-        end: widget.horizontal && !widget.last
+        // nav:663-665 horizontal 非末位右 margin。★弹层行不参与：上游
+        // `.semi-navigation-horizontal .semi-navigation-list` 的作用域不含
+        // portal 弹层——否则首行悬浮底色右侧空 8px、弹层卡片也跟着变宽。
+        end: widget.horizontal && !widget.inPopup && !widget.last
             ? t.spacingNavigationHorizontalNavListItemNotLastMarginRight
             : 0,
       ),
@@ -1734,12 +1736,13 @@ class _NavSubTitleState extends State<_NavSubTitle> {
     final row = AnimatedContainer(
       duration: t.transitionDurationNavigationItemL1Bg,
       curve: t.transitionFunctionNavigationItemL1Bg,
-      // nav:81-85 行盒 + nav:158 sub-title margin-bottom。
+      // nav:81-85 行盒 + nav:158 sub-title margin-bottom。★弹层标题同
+      // `_NavItemRow`：horizontal 列表右 margin 不进 portal 弹层。
       margin: EdgeInsetsDirectional.only(
         bottom: widget.horizontal
             ? t.spacingNavigationHorizontalNavListItemMarginBottom
             : t.spacingNavigationSubTitleMarginBottom,
-        end: widget.horizontal
+        end: widget.horizontal && !widget.inPopup
             ? t.spacingNavigationHorizontalNavListItemNotLastMarginRight
             : 0,
       ),
