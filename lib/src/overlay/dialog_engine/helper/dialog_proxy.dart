@@ -103,6 +103,10 @@ class DialogProxy {
   /// supply real builders later.
   static Widget _neutralBuilder(String msg) => Text(msg);
 
+  /// 已绑定 ambient overlay 与否（web 首帧绑定需重试，见
+  /// SmartNavigatorObserver._tryBind）。
+  bool get isBound => _overlay != null;
+
   /// The bound ambient overlay; asserts a clear message when unbound.
   OverlayState get overlay {
     final overlay = _overlay;

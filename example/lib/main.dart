@@ -15,6 +15,7 @@ import 'package:example/pages/empty.dart';
 import 'package:example/pages/highlight.dart';
 import 'package:example/pages/input.dart';
 import 'package:example/pages/input_number.dart';
+import 'package:example/pages/modal.dart';
 import 'package:example/pages/navigation.dart';
 import 'package:example/pages/pagination.dart';
 import 'package:example/pages/pincode.dart';
@@ -179,6 +180,7 @@ const List<DemoGroup> demoGroups = [
       'doc-highlight.svg',
       HighlightPage(),
     ),
+    DemoSpec('modal', 'Modal 模态对话框', 'doc-modal.svg', ModalPage()),
     DemoSpec('tag', 'Tag 标签', 'doc-tag.svg', TagPage()),
     DemoSpec('timeline', 'Timeline 时间轴', 'doc-timeline.svg', TimelinePage()),
     DemoSpec('tooltip', 'Tooltip 工具提示', 'doc-tooltip.svg', TooltipPage()),

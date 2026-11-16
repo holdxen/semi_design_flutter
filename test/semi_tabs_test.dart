@@ -87,6 +87,20 @@ BoxDecoration tabDecoration(WidgetTester tester, String label) =>
     tester.widget<AnimatedContainer>(tabContainer(label)).decoration
         as BoxDecoration;
 
+/// card 形态页签的盒边 painter（`SemiTabsCardPainter`）。
+SemiTabsCardPainter tabCardPainter(WidgetTester tester, String label) =>
+    tester
+            .widget<CustomPaint>(
+              find
+                  .ancestor(
+                    of: tabContainer(label),
+                    matching: find.byType(CustomPaint),
+                  )
+                  .first,
+            )
+            .foregroundPainter!
+        as SemiTabsCardPainter;
+
 Color? textColorOf(WidgetTester tester, String label) {
   final paragraph = tester.renderObject<RenderParagraph>(find.text(label));
   return (paragraph.text as TextSpan).style?.color;
@@ -1449,17 +1463,16 @@ void main() {
         tester,
         const SemiTabs(tabList: tabs3, type: SemiTabsType.card),
       );
-      final selected = tabDecoration(tester, 'Tab 1');
-      expect(selected.border!.top.color, light.colors.colorBorder);
-      expect(selected.border!.bottom.color, light.colors.colorBg1);
+      final selected = tabCardPainter(tester, 'Tab 1');
+      expect(selected.top.color, light.colors.colorBorder);
+      expect(selected.bottom.color, light.colors.colorBg1);
+      // 描边贴圆角弧走（BoxDecoration 非均匀颜色 + 圆角不允许，圆角画进
+      // painter 同形的盒底色里）。
       expect(
-        find
-            .ancestor(
-              of: tabContainer('Tab 1'),
-              matching: find.byType(ClipRRect),
-            )
-            .evaluate(),
-        isNotEmpty,
+        (tabDecoration(tester, 'Tab 1')).borderRadius,
+        BorderRadius.vertical(
+          top: Radius.circular(light.radius.borderRadiusSmall.value),
+        ),
       );
     });
 
@@ -1473,7 +1486,7 @@ void main() {
       );
       // 未选中无底边框（上游 `border-bottom: none`）——与选中 8+0 = 7+1 等高，
       // 选中的 bg-1 底边才与条底轨道线同像素行。
-      expect(tabDecoration(tester, 'Tab 2').border!.bottom, BorderSide.none);
+      expect(tabCardPainter(tester, 'Tab 2').bottom, BorderSide.none);
       expect(
         tester.getSize(tabContainer('Tab 1')).height,
         tester.getSize(tabContainer('Tab 2')).height,
@@ -1507,11 +1520,14 @@ void main() {
           tabPosition: SemiTabsPosition.left,
         ),
       );
-      final selected = tabDecoration(tester, 'Tab 1').border! as Border;
-      // 内侧（LTR 右）bg-1 遮线、外侧（左）indicator 边。
-      expect(selected.right.color, light.colors.colorBg1);
+      final selected = tabCardPainter(tester, 'Tab 1');
+      // 遮线条是盒外 `::after`（LTR `right: -1px`）；外侧（左）indicator 边，
+      // 内侧无边框（上游 `border-right: none`）。
+      expect(selected.maskSide, SemiTabsCardMaskSide.right);
+      expect(selected.maskColor, light.colors.colorBg1);
       expect(selected.left.color, light.colors.colorBorder);
-      // 等宽铺满：遮线边与条侧轨道线同列。
+      expect(selected.right, BorderSide.none);
+      // 等宽铺满：遮线条与条侧轨道线同列。
       expect(
         tester.getSize(tabContainer('Tab 1')).width,
         tester.getSize(tabContainer('Tab 2')).width,
@@ -1523,15 +1539,61 @@ void main() {
               w is DecoratedBox &&
               w.decoration is BoxDecoration &&
               ((w.decoration as BoxDecoration).border as Border?)
-                  ?.right
-                  .color ==
-              light.colors.colorBorder,
+                      ?.right
+                      .color ==
+                  light.colors.colorBorder,
         ),
       );
+      // 盒外 1px 遮线条正好落在条边带上：盒右缘 + 1px = 条右缘。
       expect(
-        tester.getTopRight(tabContainer('Tab 1')).dx,
+        tester.getTopRight(tabContainer('Tab 1')).dx +
+            SemiTabsCardPainter.maskWidth,
         tester.getTopRight(bar).dx,
       );
+    });
+
+    testWidgets('card press fills fill-1 even on the selected tab', (
+      tester,
+    ) async {
+      final light = const SemiThemeData.light();
+      await pumpHost(
+        tester,
+        const SemiTabs(tabList: tabs3, type: SemiTabsType.card),
+      );
+      // 选中项 hover 保持 transparent；按下时 `:active`（fill-1）源序靠后
+      // 压过 `.tab-active` 的 transparent（真实 semi.css computed style 对账）。
+      expect(tabDecoration(tester, 'Tab 1').color, const Color(0x00000000));
+      expect(tabDecoration(tester, 'Tab 2').color, const Color(0x00000000));
+      final gesture = await tester.startGesture(
+        tester.getCenter(tabContainer('Tab 1')),
+      );
+      await tester.pump();
+      expect(tabDecoration(tester, 'Tab 1').color, light.colors.colorFill1);
+      await gesture.up();
+      await tester.pump();
+    });
+
+    testWidgets('card left RTL flips the cover strip (upstream quirk)', (
+      tester,
+    ) async {
+      final light = const SemiThemeData.light();
+      await pumpHost(
+        tester,
+        const SemiTabs(
+          tabList: tabs3,
+          type: SemiTabsType.card,
+          tabPosition: SemiTabsPosition.left,
+        ),
+        direction: TextDirection.rtl,
+      );
+      final selected = tabCardPainter(tester, 'Tab 1');
+      // ★上游 quirk：`.semi-rtl` 的 `.tab` 规则 (0-4-0) 压过 `.tab-active` →
+      // 选中项边框整体透明；`border-radius` 不翻转（仍在左侧两角）。
+      expect(selected.maskSide, SemiTabsCardMaskSide.left);
+      expect(selected.maskColor, light.colors.colorBg1);
+      expect(selected.left, BorderSide.none);
+      expect(selected.top.color, const Color(0x00000000));
+      expect(selected.right.color, const Color(0x00000000));
     });
 
     testWidgets('button selected tab paints primary-light bg + primary text', (

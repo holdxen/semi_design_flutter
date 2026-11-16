@@ -24,8 +24,8 @@ tabList `List<SemiTabData>`。activeKey `String?`（非 null 即受控：点击/
 
 - 公共：字重 regular / 选中 bold，字号 14；图标在文字前（间距 8、上移 3）；图标色 text-2 → hover text-0 → press text-0 → 选中 primary；hover/press 背景与文字色按形态；`transform: scale(1)` 恒等。
 - line：条底 1px 轨道线（text/border），页签内 2px 底边（透明/hover fill-0/press fill-1/选中 primary），左右 padding 4、上下 16/14（small 8/6、medium 12/10），首项左 padding 0，项间距 24；左向：轨道线在右、选中/hover/press 用左边框 + vertical 背景（选中 primary-light-default）。
-- card：条底 1px 轨道线；页签 1px 边框透明（★未选中无底边框 `border-bottom: none`）+ 顶部圆角 3；选中边框 border 色、底边用 bg-1 遮住轨道线（与未选中等高 8+0 = 7+1，遮线与轨道线同像素行）、底部 padding 7；hover fill-0、press fill-1；项间距 8；左向：轨道线在右、圆角在左、选中右侧（内侧）1px bg-1 遮线（RTL 翻左）、等宽铺满、项间距（vertical）8。
-- button：无边框、圆角 3、padding 8/12、项间距 8（左向底部 8）；文字 text-2；hover fill-0、press fill-1、选中底 primary-light-default + 文字 primary。
+- card：条底 1px 轨道线；页签 1px 边框透明（★未选中无底边框 `border-bottom: none`）+ 顶部圆角 3（描边贴圆角弧、直角邻边 miter 对角——`SemiTabsCardPainter` 逐边填充，BoxDecoration 非均匀颜色 + 圆角会断言失败）；选中边框 border 色、底边用 bg-1 遮住轨道线（与未选中等高 8+0 = 7+1，遮线与轨道线同像素行）、底部 padding 7；hover fill-0（★选中 hover 仍 transparent）、press fill-1（★选中按下也 fill-1——`:active` 源序压过 `.tab-active`）；项间距 8（`:not(:last-of-type)`，末项不留）；左向：轨道线在右、圆角在左（★RTL 不翻转）、`border-right: none`；选中盒外内侧 1px bg-1 遮线（`::after { right: -1px }`，RTL 翻左）、等宽铺满（条边带让位 1px 内缩）、项间距（vertical）8（非末项）；★RTL quirk：`.semi-rtl` 的 `.tab` 规则把选中项边框整体刷成透明。
+- button：无边框、圆角 3、padding 8/12、项间距 8（左向底部 8，均 `:not(:last-of-type)` 末项不留）；文字 text-2；hover fill-0、press fill-1、选中底 primary-light-default + 文字 primary。
 - slash：padding 12/0、项间距 16，非末项后接 1px 斜线分割（8×14、上下 3、左距 16，text-2 色）。
 - 附加内容：外层 padding 0/5；line 形态高度 50（small 36）并垂直居中。
 

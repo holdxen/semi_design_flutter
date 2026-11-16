@@ -42,16 +42,23 @@ class SmartNavigatorObserver extends NavigatorObserver {
     final nav = navigator;
     if (nav == null) return;
     DialogProxy.contextNavigator = nav.context;
-    // Ambient binding (vendored adaptation): the engine inserts into the
-    // navigator's own overlay — the same layer SemiTooltip/SemiDropdown use.
-    // The initial route's didPush fires while the navigator subtree is still
-    // building (its Overlay is not attached yet), so bind post-frame — the
-    // same addSafeUse dance upstream used to capture the navigator context.
+    _tryBind(nav);
+  }
+
+  /// Ambient binding (vendored adaptation): the engine inserts into the
+  /// navigator's own overlay — the same layer SemiTooltip/SemiDropdown use.
+  /// 初始路由的 didPush 在 Navigator 子树构建途中触发，web 上其 Overlay
+  /// 尚未挂载（`nav.overlay == null`）——一次性跳过会让引擎永不绑定
+  /// （弹层静默入库不渲染），故逐帧重试直至挂载。
+  void _tryBind(NavigatorState nav) {
     ViewUtils.addSafeUse(() {
       final overlay = nav.overlay;
       if (overlay != null) {
         DialogProxy.instance.bind(overlay, navigatorContext: nav.context);
+        return;
       }
+      if (!nav.mounted || DialogProxy.instance.isBound) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _tryBind(nav));
     });
   }
 

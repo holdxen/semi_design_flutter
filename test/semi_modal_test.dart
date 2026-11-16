@@ -346,6 +346,24 @@ void main() {
       expect(find.text('body'), findsNothing);
     });
 
+    testWidgets('motion: true (default) animates content in', (tester) async {
+      await pumpHost(tester);
+      await setModal(
+        tester,
+        const SemiModal(
+          visible: true,
+          title: '标题',
+          content: Text('body'),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 250));
+      await tester.pump(const Duration(milliseconds: 250));
+      expect(find.text('body'), findsOneWidget);
+      await pumpClosed(tester);
+      expect(find.text('body'), findsNothing);
+    });
+
     testWidgets('mask click / Esc / close button notify onCancel; declarative '
         'does not self-close', (tester) async {
       var cancels = 0;

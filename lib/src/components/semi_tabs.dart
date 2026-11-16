@@ -26,6 +26,22 @@
 // - tabs.scss:235 `overflow-y: auto`（折叠下拉最大高 300）
 // - tabs.scss:612 slash `content: ""` 伪元素
 // - tabs.scss:452 卡片左侧选中 `width: 1px`（::after 遮住轨道线）
+//
+// card 形态补记（真实 semi.css 2.105 computed style 对账）：
+// - 卡片页签 `border: … solid` + `border-radius: 3 3 0 0`：描边贴圆角弧走
+//   （`SemiTabsCardPainter` 逐边填充）；BoxDecoration 非均匀颜色 + 圆角
+//   直接断言失败，ClipRRect 裁直角边框会把圆角描边切平。
+// - 状态色：`:active`（fill-1）与 `.semi-tabs-tab-active`（transparent）同
+//   权重、源序靠后 → 选中项按下也上 fill-1；选中项 hover 仍 transparent
+//   （`&:hover` 列表 (0-4-0) 压过 `.tab:hover`）。
+// - 竖向选中遮线条是 `::after` 盒外覆盖（`right: -1px`，RTL `left: -1px`），
+//   页签自身 `border-right: none`（RTL `border-left: none`）。
+// - ★RTL quirk：`.semi-rtl` 的 `.tab` 规则 (0-4-0) 压过 `.tab-active` →
+//   竖向选中页签边框整体变透明；`border-radius` 不随 RTL 翻转。
+// - `outline: 2px` + `outline-offset: -2px`（line 为 -1px）：环带 = 盒边内
+//   侧 [-w-o, -o]（outline 盖在 border 之上）。
+import 'dart:math' as math;
+
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -431,9 +447,8 @@ class _SemiTabsState extends State<SemiTabs> {
             // 上游折叠条只用箭头滚动、无滚动条——关掉桌面端 ScrollBehavior
             // 自动包上的 RawScrollbar（`copyWith(scrollbars: false)`）。
             child: ScrollConfiguration(
-              behavior: ScrollConfiguration.of(
-                context,
-              ).copyWith(scrollbars: false),
+              behavior: ScrollConfiguration.of(context)
+                  .copyWith(scrollbars: false),
               child: SingleChildScrollView(
                 controller: _scroll,
                 scrollDirection: Axis.horizontal,
@@ -459,7 +474,7 @@ class _SemiTabsState extends State<SemiTabs> {
   ) {
     final items = _buildBarItems(t, global);
     // card 左向等宽铺满（上游 `.semi-tabs-bar-left` flex column + stretch），
-    // 选中项内侧 bg-1 边才能盖住条侧轨道线；bar 在 Row 里是 intrinsic 宽，
+    // 选中项遮线条才能盖住条侧轨道线；bar 在 Row 里是 intrinsic 宽，
     // `IntrinsicWidth` 先定宽为最宽项（上游 flex 行为）。
     final card = widget.type == SemiTabsType.card;
     final column = Column(
@@ -473,7 +488,16 @@ class _SemiTabsState extends State<SemiTabs> {
           Align(alignment: AlignmentDirectional.centerEnd, child: extra),
       ],
     );
-    return card ? IntrinsicWidth(child: column) : column;
+    if (!card) return column;
+    // 上游 `.semi-tabs-bar-left { border-right: 1px }` 是 CSS 边框盒：页签
+    // 铺满内容盒（轨道线在盒内 1px 边带），`::after { right: -1px }` 遮线
+    // 正好落在边带上——Flutter DecoratedBox 不内缩子项，手动让出 1px。
+    return IntrinsicWidth(
+      child: Padding(
+        padding: EdgeInsetsDirectional.only(end: t.widthTabsBarCardBorder),
+        child: column,
+      ),
+    );
   }
 
   void _scrollBy(double delta) {
@@ -564,13 +588,18 @@ class _SemiTabsState extends State<SemiTabs> {
         margin = EdgeInsetsDirectional.only(end: gap);
       }
     } else if (widget.type == SemiTabsType.card) {
-      margin = EdgeInsetsDirectional.only(
-        bottom: t.spacingTabsBarCardTabLeftMarginBottom,
-      );
+      // 上游 `&:not(:last-of-type) { margin-bottom }`——末项不留下间距。
+      if (!last) {
+        margin = EdgeInsetsDirectional.only(
+          bottom: t.spacingTabsBarCardTabLeftMarginBottom,
+        );
+      }
     } else if (widget.type == SemiTabsType.button) {
-      margin = EdgeInsetsDirectional.only(
-        bottom: t.spacingTabsBarButtonTabLeftMarginBottom,
-      );
+      if (!last) {
+        margin = EdgeInsetsDirectional.only(
+          bottom: t.spacingTabsBarButtonTabLeftMarginBottom,
+        );
+      }
     }
     return margin == null ? child : Padding(padding: margin, child: child);
   }
@@ -867,8 +896,10 @@ class _TabItemState extends State<_TabItem> {
         }
         return const Color(0x00000000);
       case SemiTabsType.card:
-        if (widget.selected) return const Color(0x00000000);
+        // 上游 `:active`（源序靠后）压过 `.tab-active` 的 transparent——
+        // 选中项按下也上 fill-1；选中项 hover 仍 transparent。
         if (_pressed) return t.colorTabsTabCardBgActive;
+        if (widget.selected) return const Color(0x00000000);
         if (_hovered) return t.colorTabsTabCardBgHover;
         return const Color(0x00000000);
       case SemiTabsType.button:
@@ -909,47 +940,74 @@ class _TabItemState extends State<_TabItem> {
                     : side,
               );
       case SemiTabsType.card:
-        final indicator = BorderSide(
-          color: widget.selected
-              ? t.colorTabsTabCardIndicatorSelectedIconDefault
-              : transparent,
-          width: t.widthTabsBarCardBorder,
-        );
-        if (top) {
-          // 上游未选中 `border-bottom: none`、选中 `border-bottom: bg-1`
-          // ——两态等高（8+0 = 7+1），选中的 bg-1 底边与条底轨道线同像素行
-          // 才能盖线；未选中留线。
-          return Border(
-            top: indicator,
-            left: indicator,
-            right: indicator,
-            bottom: widget.selected
-                ? BorderSide(
-                    color: t.colorTabsTabCardSelectedBgDefault,
-                    width: t.widthTabsBarCardBorder,
-                  )
-                : BorderSide.none,
-          );
-        }
-        final rtl = Directionality.of(context) == TextDirection.rtl;
-        // 内侧 1px 边即遮线（上游 `::after { right:-1px }` / RTL `left:-1px`
-        // 的盒内等价——条轨道线画在子项之下）：选中 bg-1 盖线，未选透明。
-        final edge = BorderSide(
-          color: widget.selected
-              ? t.colorTabsTabCardSelectedBgDefault
-              : transparent,
-          width: t.widthTabsBarCardBorder,
-        );
-        return Border(
-          top: indicator,
-          bottom: indicator,
-          left: rtl ? edge : indicator,
-          right: rtl ? indicator : edge,
-        );
+        // card 四边走 `SemiTabsCardPainter`（非均匀颜色 + 圆角），盒装饰
+        // 只留底色。
+        return null;
       case SemiTabsType.button:
       case SemiTabsType.slash:
         return null;
     }
+  }
+
+  /// card 盒边（上游 `border: … solid` / `border-…: none`，真实 semi.css
+  /// computed style 对账）。
+  ///
+  /// top：未选中 `border-bottom: none`、选中 `border-bottom: bg-1`——两态
+  /// 等高（8+0 = 7+1），选中的 bg-1 底边与条底轨道线同像素行才能盖线。
+  /// left：`border-right: none`（RTL `border-left: none`），选中遮线条是
+  /// 盒外 `::after`；★RTL 选中项边框被 `.tab` 规则刷成透明（上游 quirk）。
+  ({BorderSide top, BorderSide right, BorderSide bottom, BorderSide left})
+  _cardSides(SemiResolvedTabsThemeData t) {
+    final width = t.widthTabsBarCardBorder;
+    if (widget.position == SemiTabsPosition.top) {
+      final edge = BorderSide(
+        color: widget.selected
+            ? t.colorTabsTabCardIndicatorSelectedIconDefault
+            : const Color(0x00000000),
+        width: width,
+      );
+      return (
+        top: edge,
+        left: edge,
+        right: edge,
+        bottom: widget.selected
+            ? BorderSide(
+                color: t.colorTabsTabCardSelectedBgDefault,
+                width: width,
+              )
+            : BorderSide.none,
+      );
+    }
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    final edge = BorderSide(
+      color: widget.selected && !rtl
+          ? t.colorTabsTabCardIndicatorSelectedIconDefault
+          : const Color(0x00000000),
+      width: width,
+    );
+    return (
+      top: edge,
+      bottom: edge,
+      left: rtl ? BorderSide.none : edge,
+      right: rtl ? edge : BorderSide.none,
+    );
+  }
+
+  /// 竖向选中的 `::after` 遮线条（`right: -1px` / RTL `left: -1px`）。
+  ({SemiTabsCardMaskSide side, Color color})? _cardMask(
+    SemiResolvedTabsThemeData t,
+  ) {
+    if (widget.type != SemiTabsType.card ||
+        widget.position != SemiTabsPosition.left ||
+        !widget.selected) {
+      return null;
+    }
+    return (
+      side: Directionality.of(context) == TextDirection.rtl
+          ? SemiTabsCardMaskSide.left
+          : SemiTabsCardMaskSide.right,
+      color: t.colorTabsTabCardSelectedBgDefault,
+    );
   }
 
   BorderRadius? get _radius {
@@ -999,17 +1057,27 @@ class _TabItemState extends State<_TabItem> {
             bottom,
           );
         case SemiTabsType.card:
-          return widget.selected
-              ? EdgeInsetsDirectional.fromSTEB(
-                  t.spacingTabsBarCardTabActivePaddingLeft,
+          final sides = _cardSides(t);
+          final (top, right, bottom, left) = widget.selected
+              ? (
                   t.spacingTabsBarCardTabActivePaddingTop,
                   t.spacingTabsBarCardTabActivePaddingRight,
                   t.spacingTabsBarCardTabActivePaddingBottom,
+                  t.spacingTabsBarCardTabActivePaddingLeft,
                 )
-              : EdgeInsetsDirectional.symmetric(
-                  vertical: t.spacingTabsBarCardTabPaddingY,
-                  horizontal: t.spacingTabsBarCardTabPaddingX,
+              : (
+                  t.spacingTabsBarCardTabPaddingY,
+                  t.spacingTabsBarCardTabPaddingX,
+                  t.spacingTabsBarCardTabPaddingY,
+                  t.spacingTabsBarCardTabPaddingX,
                 );
+          // 边框占位（CSS border-box）：padding + border 宽。
+          return EdgeInsets.only(
+            top: top + sides.top.width,
+            right: right + sides.right.width,
+            bottom: bottom + sides.bottom.width,
+            left: left + sides.left.width,
+          );
         case SemiTabsType.button:
           return EdgeInsetsDirectional.symmetric(
             vertical: t.spacingTabsBarButtonTabPaddingY,
@@ -1033,15 +1101,26 @@ class _TabItemState extends State<_TabItem> {
         };
         return EdgeInsets.all(padding);
       case SemiTabsType.card:
-        return widget.selected
-            ? EdgeInsetsDirectional.symmetric(
-                vertical: t.spacingTabsBarCardTabLeftActivePaddingY,
-                horizontal: t.spacingTabsBarCardTabLeftActivePaddingX,
+        final sides = _cardSides(t);
+        final (top, right, bottom, left) = widget.selected
+            ? (
+                t.spacingTabsBarCardTabLeftActivePaddingY,
+                t.spacingTabsBarCardTabLeftActivePaddingX,
+                t.spacingTabsBarCardTabLeftActivePaddingY,
+                t.spacingTabsBarCardTabLeftActivePaddingX,
               )
-            : EdgeInsetsDirectional.symmetric(
-                vertical: t.spacingTabsBarCardTabPaddingY,
-                horizontal: t.spacingTabsBarCardTabPaddingX,
+            : (
+                t.spacingTabsBarCardTabPaddingY,
+                t.spacingTabsBarCardTabPaddingX,
+                t.spacingTabsBarCardTabPaddingY,
+                t.spacingTabsBarCardTabPaddingX,
               );
+        return EdgeInsets.only(
+          top: top + sides.top.width,
+          right: right + sides.right.width,
+          bottom: bottom + sides.bottom.width,
+          left: left + sides.left.width,
+        );
       case SemiTabsType.button:
         return EdgeInsetsDirectional.symmetric(
           vertical: t.spacingTabsBarButtonTabPaddingY,
@@ -1108,9 +1187,9 @@ class _TabItemState extends State<_TabItem> {
       decoration: BoxDecoration(
         color: _background,
         border: _border,
-        // ★卡片态边框四色不同（选中底边用 bg-1 盖线），BoxDecoration 不允许
-        // 非均匀边框 + borderRadius —— 圆角交给外层 ClipRRect 裁剪。
-        borderRadius: widget.type == SemiTabsType.card ? null : _radius,
+        // card 四边（非均匀颜色 + 圆角）走 `SemiTabsCardPainter`，盒装饰
+        // 只留底色 + 同形圆角。
+        borderRadius: _radius,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1179,7 +1258,22 @@ class _TabItemState extends State<_TabItem> {
     );
 
     if (widget.type == SemiTabsType.card) {
-      core = ClipRRect(borderRadius: _radius!, child: core);
+      // 盒边描边贴圆角弧走（ClipRRect 裁直角边框会把角切平）；竖向选中的
+      // `::after` 遮线条画在盒外内侧。
+      final sides = _cardSides(t);
+      final mask = _cardMask(t);
+      core = CustomPaint(
+        foregroundPainter: SemiTabsCardPainter(
+          top: sides.top,
+          right: sides.right,
+          bottom: sides.bottom,
+          left: sides.left,
+          borderRadius: _radius!,
+          maskSide: mask?.side,
+          maskColor: mask?.color,
+        ),
+        child: core,
+      );
     }
 
     core = Transform.scale(
@@ -1193,18 +1287,14 @@ class _TabItemState extends State<_TabItem> {
     if (_focused && _keyboardUsed) {
       // `&:focus-visible { outline: $width-tabs-outline solid
       // $color-tabs_tab-outline-focus; outline-offset: $width-tabs-outline-offset
-      // }`（line 用 `$width-tabs_bar_line-outline-offset`，负值 = 内缩）。
+      // }`（line 用 `$width-tabs_bar_line-outline-offset`，负值 = 内移）。
+      // 环带 = 盒边内侧 [-w-o, -o]（outline 盖在 border 之上）→ 中心线内缩
+      // |o| - w/2；圆角跟随 border-radius（card 为顶部/左侧两角）。
       // 环走 `:focus-visible` 门控（`_keyboardUsed`，button 先例）：点击聚焦
       // 不画、键盘聚焦才画。
-      final inset =
-          (widget.type == SemiTabsType.line
-                  ? t.widthTabsBarLineOutlineOffset
-                  : t.widthTabsOutlineOffset)
-              .abs();
-      final radius =
-          widget.type == SemiTabsType.line || widget.type == SemiTabsType.slash
-          ? 0.0
-          : t.radiusTabsTabButton;
+      final offset = widget.type == SemiTabsType.line
+          ? t.widthTabsBarLineOutlineOffset
+          : t.widthTabsOutlineOffset;
       core = Stack(
         children: [
           core,
@@ -1214,8 +1304,8 @@ class _TabItemState extends State<_TabItem> {
                 painter: _FocusRingPainter(
                   color: t.colorTabsTabOutlineFocus,
                   width: t.widthTabsOutline,
-                  inset: inset,
-                  radius: radius,
+                  inset: -offset - t.widthTabsOutline / 2,
+                  radius: _radius ?? BorderRadius.zero,
                 ),
               ),
             ),
@@ -1238,11 +1328,11 @@ class _TabItemState extends State<_TabItem> {
           onPointerDown: _disabled
               ? null
               : (_) => setState(() {
-                    // 按下清键盘模态（rating/checkbox tap-down 先例）——
-                    // 鼠标点击聚焦不画焦点环（`:focus-visible`）。
-                    _pressed = true;
-                    _keyboardUsed = false;
-                  }),
+                  // 按下清键盘模态（rating/checkbox tap-down 先例）——
+                  // 鼠标点击聚焦不画焦点环（`:focus-visible`）。
+                  _pressed = true;
+                  _keyboardUsed = false;
+                }),
           onPointerUp: (_) {
             if (_pressed) setState(() => _pressed = false);
           },
@@ -1277,6 +1367,208 @@ class _TabItemState extends State<_TabItem> {
   }
 }
 
+/// 竖向选中遮线条所在的盒外侧（`::after { right: -1px }` / RTL
+/// `left: -1px`）。
+enum SemiTabsCardMaskSide { right, left }
+
+/// card 形态页签的四边描边 + 竖向选中遮线条（tabs.scss card 页签的
+/// `border: … solid` / `border-…: none` / `border-radius` / `::after`）。
+///
+/// Flutter `BoxDecoration` 不允许非均匀颜色 + 圆角（`BoxBorder.paint` 只在
+/// 全同色时走圆角路径），这里按 CSS 盒模型逐边填充：圆角邻边 45° 分角、
+/// 直角邻边 miter 对角，描边贴着圆角弧走。
+class SemiTabsCardPainter extends CustomPainter {
+  const SemiTabsCardPainter({
+    required this.top,
+    required this.right,
+    required this.bottom,
+    required this.left,
+    required this.borderRadius,
+    this.maskSide,
+    this.maskColor,
+  });
+
+  /// 四边（`BorderSide.none` 即上游 `border-…: none`；宽度计入盒内边距由
+  /// 调用方算，这里只负责画）。
+  final BorderSide top;
+  final BorderSide right;
+  final BorderSide bottom;
+  final BorderSide left;
+
+  /// `border-radius`（顶部两角 / 左侧两角；★RTL 不翻转——上游同）。
+  final BorderRadius borderRadius;
+
+  /// 竖向选中的 `::after` 遮线条：`right: -1px`（RTL `left: -1px`），画在
+  /// 盒外内侧、盖住条侧轨道线。
+  final SemiTabsCardMaskSide? maskSide;
+  final Color? maskColor;
+
+  /// 遮线条宽 1px（tabs.scss:452 `width: 1px` 硬编码）。
+  static const double maskWidth = 1;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    _paintEdge(canvas, size, _CardEdge.top);
+    _paintEdge(canvas, size, _CardEdge.right);
+    _paintEdge(canvas, size, _CardEdge.bottom);
+    _paintEdge(canvas, size, _CardEdge.left);
+    if (maskSide == null || maskColor == null || maskColor!.a == 0) {
+      return;
+    }
+    // `::after { top: 0; bottom: 0 }`（盒外内侧）。
+    final rect = switch (maskSide!) {
+      SemiTabsCardMaskSide.right =>
+        Offset(size.width, 0) & Size(maskWidth, size.height),
+      SemiTabsCardMaskSide.left =>
+        Offset(-maskWidth, 0) & Size(maskWidth, size.height),
+    };
+    canvas.drawRect(rect, Paint()..color = maskColor!);
+  }
+
+  void _paintEdge(Canvas canvas, Size size, _CardEdge edge) {
+    // 画到局部坐标「上边」：局部 x 沿该边走，局部左/右即邻边。
+    final (side, length, radiusA, radiusB, adjA, adjB) = switch (edge) {
+      _CardEdge.top => (
+        top,
+        size.width,
+        borderRadius.topLeft.x,
+        borderRadius.topRight.x,
+        left.width,
+        right.width,
+      ),
+      _CardEdge.right => (
+        right,
+        size.height,
+        borderRadius.topRight.x,
+        borderRadius.bottomRight.x,
+        top.width,
+        bottom.width,
+      ),
+      _CardEdge.bottom => (
+        bottom,
+        size.width,
+        borderRadius.bottomRight.x,
+        borderRadius.bottomLeft.x,
+        right.width,
+        left.width,
+      ),
+      _CardEdge.left => (
+        left,
+        size.height,
+        borderRadius.bottomLeft.x,
+        borderRadius.topLeft.x,
+        bottom.width,
+        top.width,
+      ),
+    };
+    final width = side.width;
+    if (side.style == BorderStyle.none || width <= 0 || side.color.a == 0) {
+      return;
+    }
+    canvas.save();
+    switch (edge) {
+      case _CardEdge.top:
+        break;
+      case _CardEdge.right:
+        canvas.translate(size.width, 0);
+        canvas.rotate(math.pi / 2);
+      case _CardEdge.bottom:
+        canvas.translate(size.width, size.height);
+        canvas.rotate(math.pi);
+      case _CardEdge.left:
+        canvas.translate(0, size.height);
+        canvas.rotate(-math.pi / 2);
+    }
+    canvas.drawPath(
+      _bandPath(length, width, radiusA, radiusB, adjA, adjB),
+      Paint()..color = side.color,
+    );
+    canvas.restore();
+  }
+
+  /// 局部坐标「上边」的描边带：外缘走圆角弧（45° 分角给邻边）、内缘
+  /// 反向，端头直角邻边 miter 对角 / 圆角径向分界。
+  Path _bandPath(
+    double length,
+    double width,
+    double radiusA,
+    double radiusB,
+    double adjA,
+    double adjB,
+  ) {
+    const k = 0.7071067811865476; // cos45°
+    final path = Path();
+    if (radiusA > 0) {
+      // 外缘 45° 分角点 → 顶边起点（12 点方向）。
+      path.moveTo(radiusA - k * radiusA, radiusA - k * radiusA);
+      path.arcTo(
+        Rect.fromCircle(center: Offset(radiusA, radiusA), radius: radiusA),
+        math.pi * 5 / 4,
+        math.pi / 4,
+        false,
+      );
+    } else {
+      path.moveTo(0, 0);
+    }
+    if (radiusB > 0) {
+      path.lineTo(length - radiusB, 0);
+      path.arcTo(
+        Rect.fromCircle(
+          center: Offset(length - radiusB, radiusB),
+          radius: radiusB,
+        ),
+        math.pi * 3 / 2,
+        math.pi / 4,
+        false,
+      );
+    } else {
+      path.lineTo(length, 0);
+    }
+    // 内缘反向：B 端分角点 / miter 对角，回到 A 端。
+    if (radiusB > 0) {
+      final inner = math.max(0.0, radiusB - width);
+      path.lineTo(length - radiusB + k * inner, radiusB - k * inner);
+      path.arcTo(
+        Rect.fromCircle(
+          center: Offset(length - radiusB, radiusB),
+          radius: inner,
+        ),
+        math.pi * 7 / 4,
+        -math.pi / 4,
+        false,
+      );
+    } else {
+      path.lineTo(length - adjB, width);
+    }
+    if (radiusA > 0) {
+      final inner = math.max(0.0, radiusA - width);
+      path.lineTo(radiusA, width);
+      path.arcTo(
+        Rect.fromCircle(center: Offset(radiusA, radiusA), radius: inner),
+        math.pi * 3 / 2,
+        -math.pi / 4,
+        false,
+      );
+    } else {
+      path.lineTo(adjA, width);
+    }
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldRepaint(SemiTabsCardPainter oldDelegate) =>
+      top != oldDelegate.top ||
+      right != oldDelegate.right ||
+      bottom != oldDelegate.bottom ||
+      left != oldDelegate.left ||
+      borderRadius != oldDelegate.borderRadius ||
+      maskSide != oldDelegate.maskSide ||
+      maskColor != oldDelegate.maskColor;
+}
+
+enum _CardEdge { top, right, bottom, left }
+
 class _FocusRingPainter extends CustomPainter {
   const _FocusRingPainter({
     required this.color,
@@ -1287,22 +1579,29 @@ class _FocusRingPainter extends CustomPainter {
 
   final Color color;
   final double width;
+
+  /// 环带中心线到盒边的距离（`outline-offset` + `outline-width/2` 折算；
+  /// 负值 = 环在盒外）。
   final double inset;
-  final double radius;
+  final BorderRadius radius;
 
   @override
   void paint(Canvas canvas, Size size) {
     final rect =
-        (Offset(inset, inset) &
-                Size(
-                  (size.width - inset * 2).clamp(0.0, double.infinity),
-                  (size.height - inset * 2).clamp(0.0, double.infinity),
-                ))
-            .deflate(0);
+        Offset(inset, inset) &
+        Size(
+          (size.width - inset * 2).clamp(0.0, double.infinity),
+          (size.height - inset * 2).clamp(0.0, double.infinity),
+        );
+    Radius shrink(Radius r) =>
+        Radius.circular((r.x - inset).clamp(0.0, double.infinity));
     canvas.drawRRect(
-      RRect.fromRectAndRadius(
+      RRect.fromRectAndCorners(
         rect,
-        Radius.circular((radius - inset).clamp(0.0, double.infinity)),
+        topLeft: shrink(radius.topLeft),
+        topRight: shrink(radius.topRight),
+        bottomLeft: shrink(radius.bottomLeft),
+        bottomRight: shrink(radius.bottomRight),
       ),
       Paint()
         ..color = color
