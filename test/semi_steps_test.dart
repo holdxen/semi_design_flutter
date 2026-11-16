@@ -1009,10 +1009,23 @@ void main() {
     ) async {
       final t = resolve();
       await pumpHost(tester, const SemiSteps(steps: steps, current: 1));
+      // 自然盒方案（fluent_ui TextBox 先例，semi_input.md）：不设
+      // `TextStyle.height`——height 按比例放大 ascent/descent、基线下移，
+      // 数字偏下。
+      final style = tester
+          .widget<AnimatedDefaultTextStyle>(
+            find
+                .ancestor(
+                  of: find.text('2'),
+                  matching: find.byType(AnimatedDefaultTextStyle),
+                )
+                .first,
+          )
+          .style;
+      expect(style.height, isNull);
       final paragraph = tester.renderObject<RenderParagraph>(find.text('2'));
-      // 字形墨盒中心 vs 圆心——CSS `line-height` 半行距上下均分，Flutter
-      // 需 `TextLeadingDistribution.even` 对齐（默认 proportional 会把数字
-      // 压低溢出圆圈）。
+      // 字形墨盒中心 vs 圆心（自然盒居中 = CSS 半行距均分行盒居中，单行
+      // 基线重合、偏差 0）。
       final glyph = paragraph
           .getBoxesForSelection(
             const TextSelection(baseOffset: 0, extentOffset: 1),

@@ -521,26 +521,19 @@ class _FillStepState extends State<_FillStep> {
             style: TextStyle(
               // fillSteps.scss:175 `@include font-size-header-4` = 20 +
               // `font-weight: $font-weight-bold`；`line-height: 32px`
-              //（fontStepsItemLeftLineHeight，行盒 32 在 24 盒内居中）。
+              //（fontStepsItemLeftLineHeight——注释引用：单行数字以自然盒
+              // 居中等价实现，见下）。
               fontSize: _StepsMetrics.fillLeftFontSize,
               fontWeight: _StepsMetrics.fillLeftFontWeight,
-              height:
-                  t.fontStepsItemLeftLineHeight /
-                  _StepsMetrics.fillLeftFontSize,
-              // CSS `line-height` 半行距上下均分；Flutter 默认 proportional
-              // 会把数字压低溢出圆圈——even 对齐 CSS。
-              leadingDistribution: TextLeadingDistribution.even,
               color: numberColor,
             ),
             // 上游 `stepNumber: `${stepNumber + 1}``（0-based → 显示 1-based）。
-            // 行盒 32 高于 24 圆盒：CSS flex 居中让行盒上下溢出 4px 居中，
-            // Flutter 的 Align 会把文本钳回 24 顶对齐——OverflowBox 强制
-            // 行盒 32 后居中溢出（对齐 CSS）。
-            child: OverflowBox(
-              minHeight: t.fontStepsItemLeftLineHeight,
-              maxHeight: t.fontStepsItemLeftLineHeight,
-              child: Text('${step.stepNumber + 1}'),
-            ),
+            // 行盒 = 字体自然度量盒（ascent+descent），在 24 圆盒内垂直居中
+            //（fluent_ui TextBox 同款做法，semi_input.md 先例）：CSS 对称
+            // half-leading 下「line-height 32 行盒在 24 盒内居中」与「自然盒
+            // 居中」基线重合（单行偏差 0）；不设 `TextStyle.height`——Flutter
+            // height 按比例放大 ascent/descent、基线下移，数字偏下。
+            child: Text('${step.stepNumber + 1}'),
           );
         case SemiStepStatus.finish:
           inner = SemiIcon(SemiIcons.tickCircle, size: SemiIconSize.extraLarge);

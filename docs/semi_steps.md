@@ -20,7 +20,7 @@ type `fill`（| basic | nav）。steps `List<SemiStepData>`（上游 `<Steps.Ste
 
 ### fill
 
-卡片等宽分栏（水平 `Row` + `Expanded`；垂直 `Column`）：item 高 72、右 margin 16、边框 1（透明）+ 圆角 medium(6)、paddingY 12 / paddingX 16、bg 过渡三元组 + `transform: scale(...)`（scale(1,1) 恒等）。左槽 24×24 圆角 32：wait 序号（底 text-2、字白）、process 序号（底 primary、字白——★`-left-process` 用 `primary-bg-default`，浅底白字 quirk 照抄）、finish/error/warning 状态图标 24（tick/alert-circle/alert-triangle），可点击 finish/error/warning hover/active 底色与字色（success/danger/warning 系）。序号行盒 32（`font-steps_item_left-lineHeight`）溢出 24 圆盒居中——`leadingDistribution: even` + `OverflowBox` 对齐 CSS「半行距上下均分、行盒溢出居中」（默认 proportional + Align 钳高会把数字压低溢出圆圈）。标题 header-5(18) bold，状态色（process primary / finish success / error danger / warning warning / wait text-0）；描述 regular(14) text-2；可点击 hover 时描述 focus-border。自定义 icon 走左槽图标（不渲染序号，wait/process 底色不生效——`:not(.item-icon)`）。
+卡片等宽分栏（水平 `Row` + `Expanded`；垂直 `Column`）：item 高 72、右 margin 16、边框 1（透明）+ 圆角 medium(6)、paddingY 12 / paddingX 16、bg 过渡三元组 + `transform: scale(...)`（scale(1,1) 恒等）。左槽 24×24 圆角 32：wait 序号（底 text-2、字白）、process 序号（底 primary、字白——★`-left-process` 用 `primary-bg-default`，浅底白字 quirk 照抄）、finish/error/warning 状态图标 24（tick/alert-circle/alert-triangle），可点击 finish/error/warning hover/active 底色与字色（success/danger/warning 系）。序号行盒 = 字体自然度量盒（ascent+descent）、24 圆盒内垂直居中（fluent_ui TextBox 同款做法，semi_input.md 先例；`$font-steps_item_left-lineHeight: 32px` 单行等价——CSS「行盒 32 均分半行距、24 盒内居中」与「自然盒居中」基线重合，不设 `TextStyle.height` 防数字偏下）。标题 header-5(18) bold，状态色（process primary / finish success / error danger / warning warning / wait text-0）；描述 regular(14) text-2；可点击 hover 时描述 focus-border。自定义 icon 走左槽图标（不渲染序号，wait/process 底色不生效——`:not(.item-icon)`）。
 
 ### basic
 
@@ -133,7 +133,7 @@ inline-flex 行：每步标题（header-6(16)；small regular(14)；`max-width: 
 | `$font-steps_basic_item_title-lineHeight: 24px` | `fontStepsBasicItemTitleLineHeight` | `24` |
 | `$font-steps_item_title-fontWeight: $font-weight-bold` | `fontStepsItemTitleFontWeight` | `theme.typography.fontWeightBold（**上游未消费**）` |
 | `$font-steps_item_left-fontWeight: $font-weight-bold` | `fontStepsItemLeftFontWeight` | `theme.typography.fontWeightBold（**上游未消费**）` |
-| `$font-steps_item_left-lineHeight: 32px` | `fontStepsItemLeftLineHeight` | `32` |
+| `$font-steps_item_left-lineHeight: 32px` | `fontStepsItemLeftLineHeight` | `32`（单行自然盒居中等价——注释引用） |
 | `$font-steps_nav_item_title-fontWeight: $font-weight-regular` | `fontStepsNavItemTitleFontWeight` | `theme.typography.fontWeightRegular` |
 | `$font-steps_nav_item_title_active-fontWeight: 600` | `fontStepsNavItemTitleActiveFontWeight` | `FontWeight.w600` |
 | `$transition_duration-steps_item_title-text: var(--semi-transition_duration-none)` | `transitionDurationStepsItemTitleText` | `Duration.zero` |
@@ -189,6 +189,7 @@ inline-flex 行：每步标题（header-6(16)；small regular(14)；`max-width: 
 12. **aria 近似**：`aria-current` → Semantics(selected)；根 `aria-label` → Semantics label。
 13. **nav 布局近似**：上游 content flex 1 + icon min-width 60；本移植标题内容宽 + 60 宽 chevron 槽（视觉一致）。
 14. **fill 自定义 icon 尺寸**：上游自定义图标按传入尺寸渲染（不套 `stepSizeMapIconSize`）；本移植同。
+15. **序号行盒 = 自然盒居中**：`$font-steps_item_left-lineHeight: 32px` 不落地为 `TextStyle.height`（Flutter height 按比例放大 ascent/descent、基线下移，数字偏下——semi_input.md 被否方案一同款问题）；单行数字以字体自然度量盒在 24 圆盒内垂直居中（fluent_ui TextBox 做法），与 CSS「行盒 32 均分半行距、24 盒内居中」基线重合（单行偏差 0）。
 
 ## 用法
 
