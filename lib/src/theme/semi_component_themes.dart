@@ -34,6 +34,8 @@ import 'semi_breadcrumb_theme_data.dart';
 import 'semi_navigation_theme_data.dart';
 import 'semi_pagination_theme_data.dart';
 import 'semi_tree_theme_data.dart';
+import 'semi_steps_theme_data.dart';
+import 'semi_upload_theme_data.dart';
 
 @immutable
 class SemiComponentThemes {
@@ -72,6 +74,8 @@ class SemiComponentThemes {
     this.navigation = const SemiNavigationThemeData(),
     this.pagination = const SemiPaginationThemeData(),
     this.tree = const SemiTreeThemeData(),
+    this.steps = const SemiStepsThemeData(),
+    this.upload = const SemiUploadThemeData(),
   });
   final SemiTagThemeData tag;
   final SemiTypographyThemeData typography;
@@ -110,6 +114,8 @@ class SemiComponentThemes {
   final SemiNavigationThemeData navigation;
   final SemiPaginationThemeData pagination;
   final SemiTreeThemeData tree;
+  final SemiStepsThemeData steps;
+  final SemiUploadThemeData upload;
   SemiComponentThemes copyWith({
     SemiTagThemeData? tag,
     SemiTypographyThemeData? typography,
@@ -145,6 +151,8 @@ class SemiComponentThemes {
     SemiNavigationThemeData? navigation,
     SemiPaginationThemeData? pagination,
     SemiTreeThemeData? tree,
+    SemiStepsThemeData? steps,
+    SemiUploadThemeData? upload,
   }) => SemiComponentThemes(
     tag: tag ?? this.tag,
     typography: typography ?? this.typography,
@@ -180,6 +188,8 @@ class SemiComponentThemes {
     navigation: navigation ?? this.navigation,
     pagination: pagination ?? this.pagination,
     tree: tree ?? this.tree,
+    steps: steps ?? this.steps,
+    upload: upload ?? this.upload,
   );
   @override
   bool operator ==(Object other) =>
@@ -218,7 +228,9 @@ class SemiComponentThemes {
           breadcrumb == other.breadcrumb &&
           navigation == other.navigation &&
           pagination == other.pagination &&
-          tree == other.tree;
+          tree == other.tree &&
+          steps == other.steps &&
+          upload == other.upload;
   @override
   int get hashCode => Object.hashAll([
     tag,
@@ -255,5 +267,7 @@ class SemiComponentThemes {
     navigation,
     pagination,
     tree,
+    steps,
+    upload,
   ]);
 }
