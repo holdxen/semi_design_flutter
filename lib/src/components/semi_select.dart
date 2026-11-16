@@ -1183,7 +1183,34 @@ class _SemiSelectState extends State<SemiSelect> {
     final textColor = widget.disabled
         ? theme.colorSelectInputDisabledText
         : theme.colorSelectMainTextDefault;
-    final row = Row(
+    // The selection slot is `flex: 1` inside a bounded trigger (CSS row) and
+    // a natural-width child when the trigger itself sits in an unbounded main
+    // axis (CSS inline-block auto width — e.g. Pagination's size switcher).
+    // `Expanded`/`Flexible` assert with an unbounded main axis, so the slot
+    // swaps by the incoming width (SemiInput's bounded/unbounded precedent).
+    final selectionContent = Padding(
+      padding: EdgeInsetsDirectional.only(
+        // The 12px `-selection` inset belongs to the single-selection
+        // area only (select.scss:161); multiple mode manages its own
+        // insets (4px tags / 8px empty wrapper) and stacking both made
+        // the tags sit ~16px off the border.
+        start:
+            !widget.multiple &&
+                widget.prefix == null &&
+                widget.insetLabel == null
+            ? theme.spacingSelectSelectionMarginLeft
+            : 0,
+        end: 0,
+      ),
+      child: Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: widget.multiple
+            ? _buildMultipleSelection(global, theme, textColor, fontSize)
+            : _buildSingleSelection(global, theme, textColor, fontSize),
+      ),
+    );
+    Widget buildRow(bool bounded) => Row(
+      mainAxisSize: bounded ? MainAxisSize.max : MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         if (widget.prefix != null)
@@ -1208,29 +1235,7 @@ class _SemiSelectState extends State<SemiSelect> {
               child: _asWidget(widget.insetLabel!),
             ),
           ),
-        Expanded(
-          child: Padding(
-            padding: EdgeInsetsDirectional.only(
-              // The 12px `-selection` inset belongs to the single-selection
-              // area only (select.scss:161); multiple mode manages its own
-              // insets (4px tags / 8px empty wrapper) and stacking both made
-              // the tags sit ~16px off the border.
-              start:
-                  !widget.multiple &&
-                      widget.prefix == null &&
-                      widget.insetLabel == null
-                  ? theme.spacingSelectSelectionMarginLeft
-                  : 0,
-              end: 0,
-            ),
-            child: Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: widget.multiple
-                  ? _buildMultipleSelection(global, theme, textColor, fontSize)
-                  : _buildSingleSelection(global, theme, textColor, fontSize),
-            ),
-          ),
-        ),
+        bounded ? Expanded(child: selectionContent) : selectionContent,
         if (widget.suffix != null)
           _slotText(
             global,
@@ -1298,13 +1303,19 @@ class _SemiSelectState extends State<SemiSelect> {
       ],
     );
     // The multiple mode grows with its tags (`min-height` upstream); the
-    // single mode keeps the fixed tier height.
-    final body = widget.multiple
-        ? ConstrainedBox(
-            constraints: BoxConstraints(minHeight: _triggerHeight(theme)),
-            child: row,
-          )
-        : SizedBox(height: _triggerHeight(theme), child: row);
+    // single mode keeps the fixed tier height. LayoutBuilder 消费 incoming
+    // 宽度判 bounded（本子树无 intrinsics——auto 宽由布局期 Text 决定）。
+    final body = LayoutBuilder(
+      builder: (context, constraints) {
+        final row = buildRow(constraints.hasBoundedWidth);
+        return widget.multiple
+            ? ConstrainedBox(
+                constraints: BoxConstraints(minHeight: _triggerHeight(theme)),
+                child: row,
+              )
+            : SizedBox(height: _triggerHeight(theme), child: row);
+      },
+    );
     return Semantics(
       button: true,
       enabled: !widget.disabled,

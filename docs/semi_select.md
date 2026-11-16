@@ -206,6 +206,7 @@ trigger 高 24/32/40（多选 min-height、随 tags 增高）、圆角 3；bg/bo
 - **onChanged 联合承载**：上游 `onChange`（值）+ `onChangeWithObject`（对象）双通道；本移植 `onChanged` 只发值（单选 `Object?`、多选 `List<Object>`），对象经 onSelect/onDeselect 携带，`onChangeWithObject` 不移植。diff 门控在多选同样生效（上游 `_diffSelections` 多选恒真、每次 toggle 都发）。
 - **options/groups 数据形态**：上游 JSX children（`<Option>`/`<OptionGroup>`）或 `optionList`；本移植为 `List<SemiSelectOption>` + `List<SemiSelectGroup>`，**options 平铺在前、groups 在后**（上游按 children 顺序交织）。JSX children、`optionList` prop 不移植。
 - **单选选中回调顺序**：onSelect → onChanged → 关面板（任务契约序）；上游受控分支在关闭动画回调里才发 onChange。
+- **触发器宽度**：bounded 主轴里选中区 `Expanded` 铺满（CSS `flex: 1`）；无界主轴（如 `Row` 直接子项，Pagination 容量切换器）改为内容宽（CSS inline-block auto）。触发器包 `LayoutBuilder` 分流——`SemiSelect` 本身不提供 intrinsics（外层 `IntrinsicWidth` 得到 0，需自行给宽）。
 - **triggerRender/virtualize/ellipsisTrigger/inputProps/onChangeWithObject 不移植**：triggerRender（自定义触发框内容）、虚拟滚动（virtualize）、宽度溢出折叠（ellipsisTrigger/OverflowList，只保留计数折叠 maxTagCount）、inputProps（内嵌 Input 透传）、onChangeWithObject。
 - **slot Tab 链简化**：上游 Tab 在 slot/trigger/容器间循环（`getFocusableElements` 链）；本移植 Tab 只关面板并放行常规焦点遍历。
 - **aria-\* 不移植**：Semantics 暴露 button/expanded/selected/enabled；上游 aria-labelledby/aria-activedescendant 等不移植。
