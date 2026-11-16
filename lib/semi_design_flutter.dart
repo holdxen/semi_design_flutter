@@ -144,6 +144,9 @@ export 'src/theme/semi_carousel_theme.dart';
 export 'src/theme/semi_carousel_theme_data.dart';
 export 'src/theme/semi_modal_theme.dart';
 export 'src/theme/semi_modal_theme_data.dart';
+export 'src/components/semi_banner.dart';
+export 'src/theme/semi_banner_theme.dart';
+export 'src/theme/semi_banner_theme_data.dart';
 
 /// A Calculator.
 class Calculator {

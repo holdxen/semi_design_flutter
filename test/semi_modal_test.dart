@@ -696,4 +696,175 @@ void main() {
       await pumpClosed(tester);
     });
   });
+
+  group('region mask (getPopupContainer scope)', () {
+    // 区域在 1200×900 表面的确定位置（Stack > Positioned 显式摆放）。
+    const regionRect = Rect.fromLTWH(100, 150, 400, 300);
+
+    Widget regionTree({required Widget child, Widget? outside}) => Stack(
+      children: [
+        Positioned(
+          left: regionRect.left,
+          top: regionRect.top,
+          child: SizedBox(
+            width: regionRect.width,
+            height: regionRect.height,
+            child: SemiModalRegion(child: child),
+          ),
+        ),
+        if (outside != null) Positioned(left: 900, top: 400, child: outside),
+      ],
+    );
+
+    testWidgets('mask covers only the region; outside stays tappable; '
+        'visible flip dismisses the layer', (tester) async {
+      var outsideTaps = 0;
+      Widget buildTree({required bool visible}) => regionTree(
+        outside: GestureDetector(
+          key: const ValueKey('outside'),
+          onTap: () => outsideTaps++,
+          child: const Text('outside'),
+        ),
+        child: SemiModal(
+          visible: visible,
+          motion: false,
+          title: '标题',
+          content: const Text('body'),
+        ),
+      );
+      await pumpHost(tester);
+      await setModal(tester, buildTree(visible: true));
+      await pumpOpen(tester);
+      final mask = find.byKey(const ValueKey('semi-modal-region-mask'));
+      expect(mask, findsOneWidget);
+      // ★遮罩只铺区域（modal.scss:210-216 `.semi-modal-popup` absolute 语义）。
+      expect(tester.getRect(mask), regionRect);
+      // 区域外无蒙层——点击命中底层。
+      await tester.tap(find.byKey(const ValueKey('outside')));
+      await tester.pump();
+      expect(outsideTaps, 1);
+      await setModal(tester, buildTree(visible: false));
+      await tester.pump(const Duration(milliseconds: 250));
+      expect(mask, findsNothing);
+    });
+
+    testWidgets('mask click notifies onCancel; declarative does not '
+        'self-close', (tester) async {
+      var cancels = 0;
+      await pumpHost(tester);
+      await setModal(
+        tester,
+        regionTree(
+          child: SemiModal(
+            visible: true,
+            motion: false,
+            width: 200,
+            title: '标题',
+            content: const Text('body'),
+            onCancel: () => cancels++,
+          ),
+        ),
+      );
+      await pumpOpen(tester);
+      // 区域内内容盒之外的蒙层点击（内容盒横向 200..400，点 x=110 必中蒙层）。
+      await tester.tapAt(const Offset(110, 440));
+      await tester.pump();
+      expect(cancels, 1);
+      expect(find.text('body'), findsOneWidget);
+    });
+
+    testWidgets('maskFixed: true keeps the full-window mask', (tester) async {
+      var cancels = 0;
+      await pumpHost(tester);
+      await setModal(
+        tester,
+        regionTree(
+          child: SemiModal(
+            visible: true,
+            motion: false,
+            maskFixed: true,
+            title: '标题',
+            content: const Text('body'),
+            onCancel: () => cancels++,
+          ),
+        ),
+      );
+      await pumpOpen(tester);
+      // 引擎路——区域层无蒙层（modal.scss:218-222 `.semi-modal-fixed`）。
+      expect(
+        find.byKey(const ValueKey('semi-modal-region-mask')),
+        findsNothing,
+      );
+      // 全窗蒙层：远在区域外的点击也触发 onCancel。
+      await tester.tapAt(const Offset(20, 20));
+      await tester.pump();
+      expect(cancels, 1);
+      await pumpClosed(tester);
+    });
+
+    testWidgets('confirm family scopes to the region via its context', (
+      tester,
+    ) async {
+      late BuildContext regionCtx;
+      await pumpHost(tester);
+      await setModal(
+        tester,
+        regionTree(
+          child: Builder(
+            builder: (context) {
+              regionCtx = context;
+              return const SizedBox.expand();
+            },
+          ),
+        ),
+      );
+      final handle = SemiModal.confirm(
+        context: regionCtx,
+        title: '确认',
+        content: const Text('内容'),
+      );
+      await pumpOpen(tester);
+      final mask = find.byKey(const ValueKey('semi-modal-region-mask'));
+      expect(mask, findsOneWidget);
+      expect(tester.getRect(mask), regionRect);
+      expect(find.text('内容'), findsOneWidget);
+      handle.destroy();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 250));
+      expect(mask, findsNothing);
+    });
+
+    testWidgets('handle update re-renders the region layer; afterClose '
+        'fires on close', (tester) async {
+      var afterClosed = 0;
+      late BuildContext regionCtx;
+      await pumpHost(tester);
+      await setModal(
+        tester,
+        regionTree(
+          child: Builder(
+            builder: (context) {
+              regionCtx = context;
+              return const SizedBox.expand();
+            },
+          ),
+        ),
+      );
+      final handle = SemiModal.confirm(
+        context: regionCtx,
+        title: '旧标题',
+        content: const Text('内容'),
+        afterClose: () => afterClosed++,
+      );
+      await pumpOpen(tester);
+      handle.update(title: '新标题');
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('新标题'), findsOneWidget);
+      handle.destroy();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 250));
+      expect(afterClosed, 1);
+    });
+  });
 }

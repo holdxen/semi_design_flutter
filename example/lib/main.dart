@@ -1,5 +1,6 @@
 import 'package:example/pages/anchor.dart';
 import 'package:example/pages/autocomplete.dart';
+import 'package:example/pages/banner.dart';
 import 'package:example/pages/breadcrumb.dart';
 import 'package:example/pages/button.dart';
 import 'package:example/pages/card.dart';
@@ -163,6 +164,7 @@ const List<DemoGroup> demoGroups = [
     DemoSpec('tree', 'Tree 树形控件', 'doc-tree.svg', TreePage()),
   ]),
   DemoGroup('展示类', [
+    DemoSpec('banner', 'Banner 通知横幅', 'doc-banner.svg', BannerPage()),
     DemoSpec('card', 'Card 卡片', 'doc-card.svg', CardPage()),
     DemoSpec('carousel', 'Carousel 轮播图', 'doc-carousel.svg', CarouselPage()),
     DemoSpec('collapse', 'Collapse 折叠面板', 'doc-accordion.svg', CollapsePage()),

@@ -90,6 +90,55 @@ class SemiModalHandle {
   );
 }
 
+/// 区域遮罩容器（上游 `getPopupContainer` 容器 + `position: relative` 的
+/// Flutter 形态——DOM 回调在 Flutter 的等价物是就近 scope；modal.scss:210-216
+/// `.semi-modal-popup`：mask/wrap 由 `position: fixed` 切 `absolute`，只铺
+/// 容器 + `overflow: hidden`）。
+///
+/// [SemiModal] 位于本容器内（命令式族传入本区域内的 `context`）时只遮罩本
+/// 区域；`maskFixed: true` 仍走全窗（modal.scss:218-222 `.semi-modal-fixed`）。
+/// 区域内不锁页面滚动（上游 body overflow 锁只在挂 body 时生效，Modal.tsx:
+/// 141-151）；区域内 tooltip 等其他弹层不受影响（专用 scope 不劫持 ambient
+/// Overlay 路由）。容器需有界（同上游 `position: relative` 容器需有尺寸）。
+class SemiModalRegion extends StatefulWidget {
+  const SemiModalRegion({super.key, required this.child});
+
+  final Widget child;
+
+  /// 最近的区域容器 state（无则 null——弹层路由判据）。
+  static _SemiModalRegionState? _maybeOf(BuildContext context) =>
+      context.findAncestorStateOfType<_SemiModalRegionState>();
+
+  @override
+  State<SemiModalRegion> createState() => _SemiModalRegionState();
+}
+
+class _SemiModalRegionState extends State<SemiModalRegion> {
+  final List<Widget> _layers = <Widget>[];
+
+  void _insert(Widget layer) {
+    setState(() => _layers.add(layer));
+  }
+
+  void _remove(Widget layer) {
+    if (!mounted) return;
+    setState(() => _layers.remove(layer));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // `overflow: hidden`（modal.scss:214 popup 模式 wrap/mask）——弹层不越界。
+    return ClipRect(
+      child: Stack(
+        children: <Widget>[
+          widget.child,
+          for (final layer in _layers) Positioned.fill(child: layer),
+        ],
+      ),
+    );
+  }
+}
+
 /// 对话框（Semi Modal）。
 ///
 /// 两态 API：
@@ -117,6 +166,7 @@ class SemiModal extends StatefulWidget {
     this.centered = false,
     this.mask = true,
     this.maskClosable = true,
+    this.maskFixed = false,
     this.closable = true,
     this.closeIcon,
     this.closeOnEsc = true,
@@ -168,6 +218,10 @@ class SemiModal extends StatefulWidget {
 
   /// 蒙层点击触发 [onCancel]（声明式不自关；命令式关闭）。
   final bool maskClosable;
+
+  /// 区域内仍走全窗遮罩（上游 `maskFixed`，modal.scss:218-222
+  /// `.semi-modal-fixed`）——[SemiModalRegion] 内默认只遮区域。
+  final bool maskFixed;
 
   /// 右上角关闭按钮（点击触发 [onCancel]）。
   final bool closable;
@@ -229,6 +283,7 @@ class SemiModal extends StatefulWidget {
     SemiModalSize? size,
     bool? centered,
     bool? maskClosable,
+    bool maskFixed = false,
     bool? closeOnEsc,
     bool fullScreen = false,
     VoidCallback? afterClose,
@@ -251,6 +306,7 @@ class SemiModal extends StatefulWidget {
     size: size,
     centered: centered,
     maskClosable: maskClosable,
+    maskFixed: maskFixed,
     closeOnEsc: closeOnEsc,
     fullScreen: fullScreen,
     afterClose: afterClose,
@@ -275,6 +331,7 @@ class SemiModal extends StatefulWidget {
     SemiModalSize? size,
     bool? centered,
     bool? maskClosable,
+    bool maskFixed = false,
     bool? closeOnEsc,
     bool fullScreen = false,
     VoidCallback? afterClose,
@@ -297,6 +354,7 @@ class SemiModal extends StatefulWidget {
     size: size,
     centered: centered,
     maskClosable: maskClosable,
+    maskFixed: maskFixed,
     closeOnEsc: closeOnEsc,
     fullScreen: fullScreen,
     afterClose: afterClose,
@@ -321,6 +379,7 @@ class SemiModal extends StatefulWidget {
     SemiModalSize? size,
     bool? centered,
     bool? maskClosable,
+    bool maskFixed = false,
     bool? closeOnEsc,
     bool fullScreen = false,
     VoidCallback? afterClose,
@@ -343,6 +402,7 @@ class SemiModal extends StatefulWidget {
     size: size,
     centered: centered,
     maskClosable: maskClosable,
+    maskFixed: maskFixed,
     closeOnEsc: closeOnEsc,
     fullScreen: fullScreen,
     afterClose: afterClose,
@@ -367,6 +427,7 @@ class SemiModal extends StatefulWidget {
     SemiModalSize? size,
     bool? centered,
     bool? maskClosable,
+    bool maskFixed = false,
     bool? closeOnEsc,
     bool fullScreen = false,
     VoidCallback? afterClose,
@@ -389,6 +450,7 @@ class SemiModal extends StatefulWidget {
     size: size,
     centered: centered,
     maskClosable: maskClosable,
+    maskFixed: maskFixed,
     closeOnEsc: closeOnEsc,
     fullScreen: fullScreen,
     afterClose: afterClose,
@@ -413,6 +475,7 @@ class SemiModal extends StatefulWidget {
     SemiModalSize? size,
     bool? centered,
     bool? maskClosable,
+    bool maskFixed = false,
     bool? closeOnEsc,
     bool fullScreen = false,
     VoidCallback? afterClose,
@@ -435,6 +498,7 @@ class SemiModal extends StatefulWidget {
     size: size,
     centered: centered,
     maskClosable: maskClosable,
+    maskFixed: maskFixed,
     closeOnEsc: closeOnEsc,
     fullScreen: fullScreen,
     afterClose: afterClose,
@@ -461,6 +525,7 @@ class SemiModal extends StatefulWidget {
     SemiModalSize? size,
     bool? centered,
     bool? maskClosable,
+    bool maskFixed = false,
     bool? closeOnEsc,
     bool fullScreen = false,
     VoidCallback? afterClose,
@@ -469,10 +534,26 @@ class SemiModal extends StatefulWidget {
   }) {
     final tag = 'semi-modal-confirm-${_seq++}';
     final controller = SmartDialogController();
-    final state = _ConfirmState(
-      type: type,
+    // host ← → state 循环引用：闭包延迟解引用（事件/帧回调才会触发）。
+    late final _ConfirmState state;
+    final host = SemiModal._installEntry(
       tag: tag,
       controller: controller,
+      // 上游 `getPopupContainer` 非 body → 区域层（maskFixed 强制全窗）。
+      region: maskFixed
+          ? null
+          : (context == null ? null : SemiModalRegion._maybeOf(context)),
+      theme: _resolveTheme(context),
+      centered: centered ?? false,
+      mask: true,
+      motion: motion,
+      afterClose: afterClose,
+      onMask: () => state.handleMask(),
+      builder: () => state.build(),
+    );
+    state = _ConfirmState(
+      type: type,
+      host: host,
       config: _ModalConfig(
         title: title,
         content: content,
@@ -494,19 +575,6 @@ class SemiModal extends StatefulWidget {
         footerFill: footerFill,
       ),
     );
-    unawaited(
-      _showEntry(
-        tag: tag,
-        controller: controller,
-        theme: _resolveTheme(context),
-        centered: centered ?? false,
-        mask: true,
-        motion: motion,
-        afterClose: afterClose,
-        onMask: state.handleMask,
-        builder: state.build,
-      ),
-    );
     return SemiModalHandle._(state.destroy, state.update);
   }
 
@@ -517,13 +585,16 @@ class SemiModal extends StatefulWidget {
     return const SemiModalThemeData().resolve(const SemiThemeData.light());
   }
 
-  /// 弹层入库（引擎 show 统一入口）：动画用 `animationBuilder` 精确消费
+  /// 弹层入库（统一入口）：`region` 非空走区域层（只遮 [SemiModalRegion]——
+  /// 上游 `getPopupContainer` 非 body 路径），否则引擎全窗。返回承载句柄
+  /// （refresh/dismiss）。引擎路动画用 `animationBuilder` 精确消费
   /// `animation_transform_scale-modal_content-open: 0.7` +
   /// `animation_opacity-modal_content-open : 0`（★冒号前空格 quirk）+
   /// 120ms `cubic-bezier(0.215, 0.61, 0.355, 1)`（show 正放 / hide 反放）。
-  static Future<void> _showEntry({
+  static _ModalHost _installEntry({
     required String tag,
     required SmartDialogController controller,
+    required _SemiModalRegionState? region,
     required SemiResolvedModalThemeData theme,
     required bool centered,
     required bool mask,
@@ -531,59 +602,238 @@ class SemiModal extends StatefulWidget {
     required VoidCallback? afterClose,
     required VoidCallback onMask,
     required Widget Function() builder,
-  }) async {
+  }) {
     final t = theme;
-    await SmartDialog.show<void>(
-      tag: tag,
-      controller: controller,
-      // 遮罩点击只走 onMask（上游 maskClosable → onCancel），关闭权在调用方/
-      // 句柄——`clickMaskDismiss` 恒 false。mask: false → 透明蒙层。
-      clickMaskDismiss: false,
+    if (region == null) {
+      unawaited(() async {
+        await SmartDialog.show<void>(
+          tag: tag,
+          controller: controller,
+          // 遮罩点击只走 onMask（上游 maskClosable → onCancel），关闭权在
+          // 调用方/句柄——`clickMaskDismiss` 恒 false。mask: false → 透明蒙层。
+          clickMaskDismiss: false,
+          onMask: onMask,
+          maskColor: mask ? t.colorModalMaskBg : const Color(0x00000000),
+          // `margin: auto` / `align-items: flex-start` 居中语义由 alignment
+          // 表达；非 centered 距顶 marginY 80（spacingModalMarginY 在内容盒
+          // 上消费）。
+          alignment: centered ? Alignment.center : Alignment.topCenter,
+          useAnimation: motion,
+          animationTime: t.animationDurationModalShow,
+          // show/hide 同一 upstream 曲线（`cubic-bezier(0.215, 0.61, 0.355,
+          // 1)`），drive/chain 无监听器（CurvedAnimation 挂监听会在引擎
+          // controller 销毁后触发 disposed 通知）。
+          animationBuilder: motion
+              ? (controller, child, param) {
+                  final curve = t.animationFunctionModalShow;
+                  return ScaleTransition(
+                    scale: controller.drive(
+                      Tween<double>(
+                        begin: t.animationTransformScaleModalContentOpen.scaleX,
+                        end: 1,
+                      ).chain(CurveTween(curve: curve)),
+                    ),
+                    child: FadeTransition(
+                      opacity: controller.drive(
+                        Tween<double>(
+                          begin: t.animationOpacityModalContentOpen,
+                          end: 1,
+                        ).chain(CurveTween(curve: curve)),
+                      ),
+                      child: child,
+                    ),
+                  );
+                }
+              : null,
+          builder: (_) => builder(),
+        );
+        afterClose?.call();
+      }());
+      return _EngineHost(tag, controller);
+    }
+    final key = GlobalKey<_RegionModalLayerState>();
+    late final _RegionModalLayer layer;
+    layer = _RegionModalLayer(
+      key: key,
+      theme: t,
+      centered: centered,
+      mask: mask,
+      motion: motion,
       onMask: onMask,
-      maskColor: mask ? t.colorModalMaskBg : const Color(0x00000000),
-      // `margin: auto` / `align-items: flex-start` 居中语义由 alignment 表达；
-      // 非 centered 距顶 marginY 80（spacingModalMarginY 在内容盒上消费）。
-      alignment: centered ? Alignment.center : Alignment.topCenter,
-      useAnimation: motion,
-      animationTime: t.animationDurationModalShow,
-      // show/hide 同一 upstream 曲线（`cubic-bezier(0.215, 0.61, 0.355, 1)`），
-      // drive/chain 无监听器（CurvedAnimation 挂监听会在引擎 controller
-      // 销毁后触发 disposed 通知）。
-      animationBuilder: motion
-          ? (controller, child, param) {
-              final curve = t.animationFunctionModalShow;
-              return ScaleTransition(
-                scale: controller.drive(
-                  Tween<double>(
-                    begin: t.animationTransformScaleModalContentOpen.scaleX,
-                    end: 1,
-                  ).chain(CurveTween(curve: curve)),
-                ),
-                child: FadeTransition(
-                  opacity: controller.drive(
-                    Tween<double>(
-                      begin: t.animationOpacityModalContentOpen,
-                      end: 1,
-                    ).chain(CurveTween(curve: curve)),
-                  ),
-                  child: child,
-                ),
-              );
-            }
-          : null,
-      builder: (_) => builder(),
+      builder: builder,
     );
-    afterClose?.call();
+    region._insert(layer);
+    return _RegionHost(region, layer, key, afterClose);
   }
 
   @override
   State<SemiModal> createState() => _SemiModalState();
 }
 
+/// 弹层承载句柄（全窗引擎 vs 区域层——上游 `getPopupContainer` 双路径）。
+abstract class _ModalHost {
+  /// 就地刷新内容（update/按钮 loading 态）。
+  void refresh();
+
+  /// 关闭（[force] 跳过关闭动画——dispose 语义）。
+  Future<void> dismiss({bool force = false});
+}
+
+class _EngineHost implements _ModalHost {
+  _EngineHost(this._tag, this._controller);
+
+  final String _tag;
+  final SmartDialogController _controller;
+
+  @override
+  void refresh() => _controller.refresh();
+
+  @override
+  Future<void> dismiss({bool force = false}) =>
+      SmartDialog.dismiss<void>(tag: _tag, force: force);
+}
+
+class _RegionHost implements _ModalHost {
+  _RegionHost(this._region, this._layer, this._key, this._afterClose);
+
+  final _SemiModalRegionState _region;
+  final _RegionModalLayer _layer;
+  final GlobalKey<_RegionModalLayerState> _key;
+  final VoidCallback? _afterClose;
+  bool _closed = false;
+
+  @override
+  void refresh() => _key.currentState?._markNeedsContent();
+
+  @override
+  Future<void> dismiss({bool force = false}) async {
+    if (_closed) return;
+    _closed = true;
+    if (!force) {
+      // 关闭动画后卸层（层在中途被卸载时落空即出）。
+      try {
+        await _key.currentState?._animateOut();
+      } catch (_) {}
+    }
+    _region._remove(_layer);
+    _afterClose?.call();
+  }
+}
+
+/// 区域层（modal.scss:210-216 `.semi-modal-popup`：mask/内容只铺容器 + 独立
+/// 120ms scale 0.7→1 + fade——同引擎路 animationBuilder）。
+class _RegionModalLayer extends StatefulWidget {
+  const _RegionModalLayer({
+    super.key,
+    required this.theme,
+    required this.centered,
+    required this.mask,
+    required this.motion,
+    required this.onMask,
+    required this.builder,
+  });
+
+  final SemiResolvedModalThemeData theme;
+  final bool centered;
+  final bool mask;
+  final bool motion;
+  final VoidCallback onMask;
+  final Widget Function() builder;
+
+  @override
+  State<_RegionModalLayer> createState() => _RegionModalLayerState();
+}
+
+class _RegionModalLayerState extends State<_RegionModalLayer>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: widget.theme.animationDurationModalShow,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.motion) {
+      _controller.forward();
+    } else {
+      _controller.value = 1;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _markNeedsContent() {
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _animateOut() async {
+    if (!widget.motion || !mounted) return;
+    try {
+      await _controller.reverse().orCancel;
+    } catch (_) {
+      // TickerCanceled——反放中途被卸载。
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = widget.theme;
+    final curve = t.animationFunctionModalShow;
+    Widget content = widget.builder();
+    if (widget.motion) {
+      content = ScaleTransition(
+        scale: _controller.drive(
+          Tween<double>(
+            begin: t.animationTransformScaleModalContentOpen.scaleX,
+            end: 1,
+          ).chain(CurveTween(curve: curve)),
+        ),
+        child: FadeTransition(
+          opacity: _controller.drive(
+            Tween<double>(
+              begin: t.animationOpacityModalContentOpen,
+              end: 1,
+            ).chain(CurveTween(curve: curve)),
+          ),
+          child: content,
+        ),
+      );
+    }
+    return Stack(
+      children: [
+        // 蒙层（mask: false → 透明仍占位接点击，同引擎 `clickMaskDismiss: false`
+        // 的 onMask 语义）。
+        Positioned.fill(
+          child: GestureDetector(
+            key: const ValueKey('semi-modal-region-mask'),
+            behavior: HitTestBehavior.opaque,
+            onTap: widget.onMask,
+            child: ColoredBox(
+              color: widget.mask ? t.colorModalMaskBg : const Color(0x00000000),
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: Align(
+            alignment: widget.centered ? Alignment.center : Alignment.topCenter,
+            child: content,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _SemiModalState extends State<SemiModal> {
   static int _seq = 0;
   late final String _tag = 'semi-modal-${_seq++}';
   final SmartDialogController _controller = SmartDialogController();
+  _ModalHost? _host;
   bool _open = false;
   bool _okPending = false;
   bool _cancelPending = false;
@@ -599,7 +849,7 @@ class _SemiModalState extends State<SemiModal> {
   void didUpdateWidget(SemiModal oldWidget) {
     super.didUpdateWidget(oldWidget);
     _sync();
-    if (_open) _controller.refresh();
+    if (_open) _host?.refresh();
   }
 
   void _sync() {
@@ -612,24 +862,25 @@ class _SemiModalState extends State<SemiModal> {
     if (!mounted) return;
     if (widget.visible && !_open) {
       _open = true;
-      unawaited(
-        SemiModal._showEntry(
-          tag: _tag,
-          controller: _controller,
-          theme: SemiModalTheme.resolve(context),
-          centered: widget.centered,
-          mask: widget.mask,
-          motion: widget.motion,
-          afterClose: widget.afterClose,
-          onMask: () {
-            if (widget.maskClosable) _notify(widget.onCancel, ok: false);
-          },
-          builder: _buildContent,
-        ),
+      _host = SemiModal._installEntry(
+        tag: _tag,
+        controller: _controller,
+        // 上游 `getPopupContainer` 非 body → 区域层（maskFixed 强制全窗）。
+        region: widget.maskFixed ? null : SemiModalRegion._maybeOf(context),
+        theme: SemiModalTheme.resolve(context),
+        centered: widget.centered,
+        mask: widget.mask,
+        motion: widget.motion,
+        afterClose: widget.afterClose,
+        onMask: () {
+          if (widget.maskClosable) _notify(widget.onCancel, ok: false);
+        },
+        builder: _buildContent,
       );
     } else if (!widget.visible && _open) {
       _open = false;
-      unawaited(SmartDialog.dismiss<void>(tag: _tag));
+      unawaited(_host?.dismiss());
+      _host = null;
     }
   }
 
@@ -642,13 +893,13 @@ class _SemiModalState extends State<SemiModal> {
     final result = callback?.call();
     if (result is Future<void>) {
       setState(() => ok ? _okPending = true : _cancelPending = true);
-      _controller.refresh();
+      _host?.refresh();
       try {
         await result;
       } catch (_) {}
       if (!mounted) return;
       setState(() => ok ? _okPending = false : _cancelPending = false);
-      _controller.refresh();
+      _host?.refresh();
     }
   }
 
@@ -656,7 +907,8 @@ class _SemiModalState extends State<SemiModal> {
   void dispose() {
     if (_open) {
       _open = false;
-      unawaited(SmartDialog.dismiss<void>(tag: _tag, force: true));
+      unawaited(_host?.dismiss(force: true));
+      _host = null;
     }
     super.dispose();
   }
@@ -682,16 +934,10 @@ class _SemiModalState extends State<SemiModal> {
 
 /// 命令式 confirm 族的内部状态（ConfirmModal.tsx 的可见性/loading 语义）。
 class _ConfirmState {
-  _ConfirmState({
-    required this.type,
-    required this.tag,
-    required this.controller,
-    required this.config,
-  });
+  _ConfirmState({required this.type, required this.host, required this.config});
 
   final SemiModalConfirmType type;
-  final String tag;
-  final SmartDialogController controller;
+  final _ModalHost host;
   _ModalConfig config;
   bool confirmPending = false;
   bool cancelPending = false;
@@ -701,46 +947,46 @@ class _ConfirmState {
   }
 
   void destroy() {
-    unawaited(SmartDialog.dismiss<void>(tag: tag));
+    unawaited(host.dismiss());
   }
 
   void update(_ModalConfig Function(_ModalConfig) merge) {
     config = merge(config);
-    controller.refresh();
+    host.refresh();
   }
 
   Future<void> handleOk() async {
     final result = config.onOk?.call();
     if (result is Future<void>) {
       confirmPending = true;
-      controller.refresh();
+      host.refresh();
       try {
         await result;
       } catch (_) {
         confirmPending = false;
-        controller.refresh();
+        host.refresh();
         return;
       }
       confirmPending = false;
     }
-    await SmartDialog.dismiss<void>(tag: tag);
+    await host.dismiss();
   }
 
   Future<void> handleCancel() async {
     final result = config.onCancel?.call();
     if (result is Future<void>) {
       cancelPending = true;
-      controller.refresh();
+      host.refresh();
       try {
         await result;
       } catch (_) {
         cancelPending = false;
-        controller.refresh();
+        host.refresh();
         return;
       }
       cancelPending = false;
     }
-    await SmartDialog.dismiss<void>(tag: tag);
+    await host.dismiss();
   }
 
   Widget build() => _ModalContent(
