@@ -1603,13 +1603,21 @@ void main() {
       // 线——选中项底部应透出面板底色、轨道线在项下断开。
       const panel = Color(0xFFF7F8FA);
       const key = ValueKey('shot');
+      // 标签锁 20px 行高（height: 1）→ 页签整数高 37，取样行不落 AA 半像素。
+      final list = [
+        for (final label in ['Tab 1', 'Tab 2', 'Tab 3'])
+          SemiTabData(
+            itemKey: label,
+            tab: Text(label, style: const TextStyle(fontSize: 20, height: 1)),
+          ),
+      ];
       await pumpHost(
         tester,
         RepaintBoundary(
           key: key,
           child: Container(
             color: panel,
-            child: const SemiTabs(tabList: tabs3, type: SemiTabsType.card),
+            child: SemiTabs(tabList: list, type: SemiTabsType.card),
           ),
         ),
       );
@@ -1619,26 +1627,33 @@ void main() {
       );
       final boundary =
           tester.renderObject(find.byKey(key)) as RenderRepaintBoundary;
-      final image = await boundary.toImage();
-      final bytes = (await image.toByteData())!;
       final origin = tester.getTopLeft(find.byKey(key));
-      Color at(Offset global) {
-        final o = global - origin;
-        final i = (o.dy.round() * image.width + o.dx.round()) * 4;
-        return Color.fromARGB(
-          bytes.getUint8(i + 3),
-          bytes.getUint8(i),
-          bytes.getUint8(i + 1),
-          bytes.getUint8(i + 2),
-        );
-      }
-
       final selected = tester.getRect(tabContainer('Tab 1'));
       final idle = tester.getRect(tabContainer('Tab 2'));
-      // 选中项底边 = 遮线带 → 擦除后透出面板底色（不是白线、不是轨道线）。
-      expect(at(Offset(selected.center.dx, selected.bottom - 0.5)), panel);
-      // 未选中项底下轨道线仍在。
-      expect(at(Offset(idle.center.dx, idle.bottom - 0.5)), isNot(panel));
+      // toImage 需要真实异步（runAsync）。
+      final pixels = await tester.runAsync(() async {
+        final image = await boundary.toImage();
+        final bytes = (await image.toByteData())!;
+        Color at(Offset global) {
+          final o = global - origin;
+          final i = (o.dy.floor() * image.width + o.dx.floor()) * 4;
+          return Color.fromARGB(
+            bytes.getUint8(i + 3),
+            bytes.getUint8(i),
+            bytes.getUint8(i + 1),
+            bytes.getUint8(i + 2),
+          );
+        }
+
+        // 选中项底边 = 遮线带 → 擦除后透出面板底色（不是白线、不是轨道线）；
+        // 同一行上未选中项底下轨道线仍在。
+        return (
+          at(Offset(selected.center.dx, selected.bottom - 0.5)),
+          at(Offset(idle.center.dx, selected.bottom - 0.5)),
+        );
+      });
+      expect(pixels!.$1, panel);
+      expect(pixels.$2, isNot(panel));
     });
 
     testWidgets('button selected tab paints primary-light bg + primary text', (

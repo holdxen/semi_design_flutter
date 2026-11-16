@@ -38,7 +38,7 @@
 //   页签自身 `border-right: none`（RTL `border-left: none`）。
 // - 遮线（top `border-bottom: bg-1` / left `::after`）：上游用 bg-1 盖住
 //   轨道线，只在条坐 bg-1 时成立（灰面板上露白线）；移植端以遮线色为源色
-//   dstOut 擦除轨道线（条包 RepaintBoundary 隔离擦除），背景无关、bg-1 上
+//   dstOut 擦除轨道线（条画进独立 saveLayer 隔离擦除），背景无关、bg-1 上
 //   像素级等价。
 // - ★RTL quirk：`.semi-rtl` 的 `.tab` 规则 (0-4-0) 压过 `.tab-active` →
 //   竖向选中页签边框整体变透明；`border-radius` 不随 RTL 翻转。
@@ -46,6 +46,7 @@
 //   侧 [-w-o, -o]（outline 盖在 border 之上）。
 import 'dart:math' as math;
 
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -403,10 +404,11 @@ class _SemiTabsState extends State<SemiTabs> {
     final result = decoration == null
         ? bar
         : DecoratedBox(decoration: decoration, child: bar);
-    // card 的遮线带以 dstOut 擦除轨道线——条单独一层隔离擦除范围（否则会
-    // 连组件背后的面板一起擦穿）。
+    // card 的遮线带以 dstOut 擦除轨道线——条画进独立 saveLayer 隔离擦除
+    // 范围（RepaintBoundary 的 OffsetLayer 不开离屏缓冲，混合模式会把组件
+    // 背后的面板一起擦穿）。
     return widget.type == SemiTabsType.card
-        ? RepaintBoundary(child: result)
+        ? _SaveLayerScope(child: result)
         : result;
   }
 
@@ -1380,6 +1382,25 @@ class _TabItemState extends State<_TabItem> {
     if (tab == null) return const SizedBox.shrink();
     if (tab is Widget) return tab;
     return Text(tab.toString());
+  }
+}
+
+/// 子树画进独立 saveLayer：混合模式（card 遮线带的 `dstOut` 擦除）只作用
+/// 于层内（轨道线），不穿透到组件背后的面板。`RepaintBoundary` 的
+/// `OffsetLayer` 不开离屏缓冲，隔离不了混合模式。
+class _SaveLayerScope extends SingleChildRenderObjectWidget {
+  const _SaveLayerScope({super.child});
+
+  @override
+  RenderObject createRenderObject(BuildContext context) => _SaveLayerScopeBox();
+}
+
+class _SaveLayerScopeBox extends RenderProxyBox {
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    context.canvas.saveLayer(offset & size, Paint());
+    super.paint(context, offset);
+    context.canvas.restore();
   }
 }
 

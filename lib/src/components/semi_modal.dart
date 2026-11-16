@@ -996,12 +996,14 @@ class _ModalContent extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: t.colorModalBg,
-        border: Border.all(
-          color: config.fullScreen
-              ? const Color(0x00000000)
-              : t.colorModalContentBorder,
-          width: t.widthModalContentBorder,
-        ),
+        // `-content-fullScreen { border: none }`（占位的 1px 透明边也会
+        // 把内容挤偏 1px——全屏直接不描边）。
+        border: config.fullScreen
+            ? null
+            : Border.all(
+                color: t.colorModalContentBorder,
+                width: t.widthModalContentBorder,
+              ),
         borderRadius: BorderRadius.circular(
           config.fullScreen
               ? t.radiusModalContentFullscreen
@@ -1030,6 +1032,11 @@ class _ModalContent extends StatelessWidget {
                 ],
               ),
             )
+          else if (config.fullScreen || config.height != null)
+            // `-body { flex: 1 1 auto }`：定高容器（`-content-fullScreen
+            // { height: 100% }` / `-content-height-set`）里 body 吃满余量，
+            // footer 被推到容器底部（`marginY` 24 距底）。
+            Expanded(child: body)
           else
             body,
           ?footer,

@@ -16,7 +16,7 @@ title/content `Object?`（String | Widget）。okType `SemiButtonType`（上游 
 
 ### 结构（modal.scss `.semi-modal-content` 族）
 
-内容盒：bg bg2、1px border border 色、圆角 large（fullScreen → 0 无描边）、padding 0/24、shadow-elevated、overflow hidden。header 行（`margin: 24px 0`；confirm 仅覆写 margin-bottom 为 8、顶 24 保持）：icon-wrapper（宽 24 `width-icon-extra-large` + margin-right 12）+ 标题（Typography.Title heading 5）+ 关闭钮（tertiary borderless small icon）。有 icon 时 body `margin-left: 36`（`content_withicon-marginLeft`）；无 header 时 body-wrapper 行（icon + body + closer，margin 24/0）。footer 行（margin 24/0、`text-align: right`，RTL 翻左）：取消（tertiary）+ 确定（okType），按钮间距 12（RTL 翻右）；`footerFill` 通栏（按钮 block）。非 centered 距顶 80（`margin: 80px auto`）；centered 居中。
+内容盒：bg bg2、1px border border 色、圆角 large（fullScreen → 0 无描边）、padding 0/24、shadow-elevated、overflow hidden。header 行（`margin: 24px 0`；confirm 仅覆写 margin-bottom 为 8、顶 24 保持）：icon-wrapper（宽 24 `width-icon-extra-large` + margin-right 12）+ 标题（Typography.Title heading 5）+ 关闭钮（tertiary borderless small icon）。有 icon 时 body `margin-left: 36`（`content_withicon-marginLeft`）；无 header 时 body-wrapper 行（icon + body + closer，margin 24/0）。body `flex: 1 1 auto`（定高容器里吃满余量、footer 推到底部）；footer 行（margin 24/0、`text-align: right`，RTL 翻左）：取消（tertiary）+ 确定（okType），按钮间距 12（RTL 翻右）；`footerFill` 通栏（按钮 block）。非 centered 距顶 80（`margin: 80px auto`）；centered 居中。
 
 ### 动画（animation.scss keyframes）
 

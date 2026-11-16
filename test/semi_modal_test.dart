@@ -472,6 +472,14 @@ void main() {
       expect(box.width, 1200);
       expect(box.height, 900);
       expect(box.top, 0);
+      // `-body { flex: 1 1 auto }`：定高容器里 body 吃满余量，footer 贴底
+      // （距底 = footer marginY 24）。
+      final ok = tester.getRect(
+        find
+            .ancestor(of: find.text('确定'), matching: find.byType(SemiButton))
+            .first,
+      );
+      expect(box.bottom - ok.bottom, resolve().spacingModalFooterMarginY);
       await pumpClosed(tester);
     });
 
