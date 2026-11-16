@@ -184,8 +184,17 @@ class _NavigationPageState extends State<NavigationPage> {
   ];
 
   static const List<Object> _headerFooterItems = <Object>[
-    SemiNavigationItem(itemKey: '页眉项一', text: '页眉项一'),
-    SemiNavigationItem(itemKey: '页眉项二', text: '页眉项二'),
+    // ★带 icon：收起态（60px）文字渐隐后靠图标识别，否则整栏只剩空白行。
+    SemiNavigationItem(
+      itemKey: '页眉项一',
+      text: '页眉项一',
+      icon: SemiIcon(SemiIcons.home),
+    ),
+    SemiNavigationItem(
+      itemKey: '页眉项二',
+      text: '页眉项二',
+      icon: SemiIcon(SemiIcons.folder),
+    ),
   ];
 
   static const List<Object> _numericItems = <Object>[
@@ -497,8 +506,8 @@ class _NavigationPageState extends State<NavigationPage> {
             _demo(
               'SemiNavigationHeader(logo 36×36 scale-down + text) + '
               'SemiNavigationFooter(collapseButton + collapseText 固定串——'
-              '上游函数形态收敛 String)；收起后 header text 隐、logo 居中、'
-              '按钮 icon-only 带 tooltip',
+              '上游函数形态收敛 String)；条目带 icon（收起态文字渐隐后靠图标识别）；'
+              '收起后 header text 隐、logo 居中、按钮 icon-only 带 tooltip',
               SizedBox(
                 height: 320,
                 child: SemiNavigation(

@@ -627,31 +627,19 @@ class _SemiNavigationState extends State<SemiNavigation> {
     final header = widget.header!;
     final collapsed = _isCollapsed && !_isHorizontal;
     final logo = header.logo;
-    final children = <Widget>[
-      if (logo != null)
-        Padding(
-          // nav:363-364 logo margin（RTL 翻边，rtl.scss:48-52）。
-          padding: EdgeInsetsDirectional.only(
-            start: t.spacingNavigationHeaderLogoMarginLeft,
-            end: collapsed ? 0 : t.spacingNavigationHeaderLogoMarginRight,
-          ),
-          child: SizedBox(
-            // nav:371-372 logo 36×36（collapsed 宽走 nav:414 `width:
-            // $height-navigation_header_logo_collapsed` 当宽用 quirk）。
-            width: collapsed
-                ? t.heightNavigationHeaderLogoCollapsed
-                : t.widthNavigationHeaderLogo,
-            height: collapsed
-                ? t.heightNavigationHeaderLogoCollapsed
-                : t.heightNavigationHeaderLogo,
-            // nav:373 `object-fit: scale-down`。
-            child: FittedBox(fit: BoxFit.scaleDown, child: logo),
-          ),
-        ),
-      // Header.tsx:63-65：collapsed 隐 text。
-      if (header.text != null && !collapsed)
-        Flexible(
-          child: DefaultTextStyle.merge(
+    // logo 固定槽宽（含两侧 margin；collapsed 右距 0）。文字槽按
+    // 「可用宽 − logo 槽」截断（见下方 LayoutBuilder 注）。
+    final logoExtent = logo == null
+        ? 0.0
+        : t.spacingNavigationHeaderLogoMarginLeft +
+              (collapsed
+                  ? t.heightNavigationHeaderLogoCollapsed
+                  : t.widthNavigationHeaderLogo) +
+              (collapsed ? 0 : t.spacingNavigationHeaderLogoMarginRight);
+    // Header.tsx:63-65：collapsed 隐 text。
+    final Widget? textWidget = header.text == null || collapsed
+        ? null
+        : DefaultTextStyle.merge(
             // nav:378 `@include font-size-header-5`（mixin 来源 global
             // `$font-size-header-5` = 18，见 _NavigationMetrics.fontSizeHeader5）
             // + nav:379 字重 + nav:381 色。
@@ -668,10 +656,56 @@ class _SemiNavigationState extends State<SemiNavigation> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
+          );
+    // ★行盒按 CSS `overflow: visible` 作画（条目行同配方）：折叠动画从 60px
+    // 展开时 logo 槽/文字首帧即按展开态布局，而窄栏的紧约束 Row 会
+    // RenderFlex overflow（用户可见 debug 报错文本）。改为固定槽按自然尺寸、
+    // 文字槽按「可用宽 − logo 槽」截断（ellipsis 与 CSS 同口径；溢出部分由
+    // 根 ClipRect 裁剪）。
+    final row = LayoutBuilder(
+      builder: (context, bc) {
+        final avail = bc.maxWidth;
+        final textMax = !avail.isFinite
+            ? double.infinity
+            : (avail > logoExtent ? avail - logoExtent : 0.0);
+        return OverflowBox(
+          fit: OverflowBoxFit.deferToChild,
+          maxWidth: double.infinity,
+          alignment: AlignmentDirectional.centerStart,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (logo != null)
+                Padding(
+                  // nav:363-364 logo margin（RTL 翻边，rtl.scss:48-52）。
+                  padding: EdgeInsetsDirectional.only(
+                    start: t.spacingNavigationHeaderLogoMarginLeft,
+                    end: collapsed
+                        ? 0
+                        : t.spacingNavigationHeaderLogoMarginRight,
+                  ),
+                  child: SizedBox(
+                    // nav:371-372 logo 36×36（collapsed 宽走 nav:414 `width:
+                    // $height-navigation_header_logo_collapsed` 当宽用 quirk）。
+                    width: collapsed
+                        ? t.heightNavigationHeaderLogoCollapsed
+                        : t.widthNavigationHeaderLogo,
+                    height: collapsed
+                        ? t.heightNavigationHeaderLogoCollapsed
+                        : t.heightNavigationHeaderLogo,
+                    // nav:373 `object-fit: scale-down`。
+                    child: FittedBox(fit: BoxFit.scaleDown, child: logo),
+                  ),
+                ),
+              if (textWidget != null)
+                textMax == double.infinity
+                    ? textWidget
+                    : SizedBox(width: textMax, child: textWidget),
+            ],
           ),
-        ),
-    ];
-    final row = Row(mainAxisSize: MainAxisSize.min, children: children);
+        );
+      },
+    );
     return Padding(
       padding: _headerPadding(t),
       child: _isHorizontal

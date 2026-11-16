@@ -531,6 +531,14 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 400));
     expect(tester.getSize(navIn('navigation-header-footer')).width, 60);
+    // ★收起态条目仍靠 icon 识别——fixture 有意带 icon（无 icon 的 60px 栏
+    // 文字渐隐后只剩空白行）。
+    expect(
+      tester
+          .widgetList<SemiIcon>(iconsIn('navigation-header-footer'))
+          .map((icon) => icon.data),
+      containsAll(<SemiIconData>[SemiIcons.home, SemiIcons.folder]),
+    );
     // ★收起态 icon-only（CollapseButton.tsx:39-43）——固定串不随折叠态切换，
     // 只活在按钮 tooltip 里；悬停按钮出「收起导航」。
     expect(find.text('收起导航'), findsNothing);
@@ -544,6 +552,15 @@ void main() {
       await tester.pump(const Duration(milliseconds: 30));
     }
     expect(find.text('收起导航'), findsOneWidget);
+    // ★展开动画逐帧（60→240）：header 文字首帧即按展开态出现，窄栏里
+    // 固定槽/文字不得 RenderFlex overflow（此前溢出 13px，debug 屏上闪报错）。
+    await tester.tap(collapseButtonIn('navigation-header-footer'));
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+    await tester.pumpAndSettle();
+    expect(tester.getSize(navIn('navigation-header-footer')).width, 240);
+    expect(nameOf('navigation-header-footer', 'Semi Design'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
