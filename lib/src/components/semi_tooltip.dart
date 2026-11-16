@@ -632,10 +632,12 @@ class _SemiTooltipState extends State<SemiTooltip>
                       child: ScaleTransition(
                         scale: _scale ?? const AlwaysStoppedAnimation(1),
                         alignment: _originAlignment,
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.translucent,
-                          onTap: widget.clickToHide
-                              ? () => _requestHide()
+                        child: _PointerTapArea(
+                          // ★GestureDetector 会输给弹层内条目自己的手势竞技场
+                          // （内层胜出——点条目关不掉）；上游 clickToHide 是 DOM
+                          // click 监听恒观察子点击（同 _PointerTapArea 立论）。
+                          onUpInside: widget.clickToHide
+                              ? (_) => _requestHide()
                               : null,
                           child: SemiOverlayPointerExempt(
                             // Nested popups register their regions here; the

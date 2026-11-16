@@ -32,7 +32,7 @@ vertical（240px，nav:5-11）：Sub 内联折叠展开（subNavMotion true → 
 
 ### 弹层菜单
 
-collapsed/horizontal 的 Sub 走 SemiDropdown content 自绘列表（★自决点：SemiDropdownItemData menu 形态承载不了 nav item 六态色与 min-width 150——取 content 自绘；嵌套 Sub 由 SemiDropdown 的 pointer-exempt scope 接住，SemiOverlayPointerExemptScope 先例）。弹层项 min-width `widthNavigationDropdownItemNavItemMinWidth`（150）；位置 horizontal 顶层 bottomLeft、其余 rightTop；延迟 `SUBNAV_OPEN_DELAY: 0`/`SUBNAV_CLOSE_DELAY: 100`（constants.ts）；弹层可见性变更走 onOpenChange（不发 onClick——subNavFoundation.ts:71-90）。
+collapsed/horizontal 的 Sub 走 SemiDropdown content 自绘列表（★自决点：SemiDropdownItemData menu 形态承载不了 nav item 六态色与 min-width 150——取 content 自绘；嵌套 Sub 由 SemiDropdown 的 pointer-exempt scope 接住，SemiOverlayPointerExemptScope 先例）。弹层项 min-width `widthNavigationDropdownItemNavItemMinWidth`（150）；位置 horizontal 顶层 bottomLeft、其余 right（★web 实测 rightTop 弹层不渲染——right/bottomLeft 正常，以 right 绕行留档）；延迟 `SUBNAV_OPEN_DELAY: 0`/`SUBNAV_CLOSE_DELAY: 100`（constants.ts）；弹层可见性变更走 onOpenChange（不发 onClick——subNavFoundation.ts:71-90）。
 
 ### 视觉与 RTL
 
@@ -232,7 +232,7 @@ Enter 激活条目/Sub 标题（itemFoundation.ts:101-110、subNavFoundation.ts:
 27. **className/style 等裁剪**：`className`/`style`/`getDataAttr`/`prefixCls`/`linkOptions` 不移植（Flutter 无 CSS 类）。
 28. **aria 近似**：`role="menu"/"menuitem"`/`aria-expanded`/`aria-disabled` 以 Semantics(button/selected/expanded) 近似。
 29. **Form/多语言上游即无**：上游 Navigation 无 Form 语义接入；locale 仅 zh 两串硬编码（zh_CN.ts:100-103）。
-30. **弹层可见性语义**（★照搬+自管 hover）：collapsed/horizontal 的 Sub 弹层为 hover 语义（wrapDropdown `trigger: 'hover'`，SubNav.tsx:311-313）；★web 实测 tooltip 自带 hover 会虚报 exit（open→close 抖动、弹层一闪即逝）——本移植改 `trigger: custom` 自管悬停（标题/弹层内容共享 `_subHoverEnter/Exit` 悬停区，`subNavCloseDelay` 100ms 内未再进入才关）；标题点按未开则开（替代 touch-tap 兜底）、已开不关（上游点击对可见性惰性）；关闭走移出/外点/弹层内点条目。
+30. **弹层可见性语义**（★照搬+自管 hover）：collapsed/horizontal 的 Sub 弹层为 hover 语义（wrapDropdown `trigger: 'hover'`，SubNav.tsx:311-313）；★web 实测 tooltip 自带 hover 会虚报 exit（open→close 抖动、弹层一闪即逝）——本移植改 `trigger: custom` 自管悬停（标题/弹层内容共享 `_subHoverEnter/Exit` 悬停区；★web hover 重挂虚报 exit 无法可靠辨别「真移出」——exit 不关，`subNavCloseDelay` 100ms 定时关闭亦弃）；标题点按未开则开（替代 touch-tap 兜底）、已开不关（上游点击对可见性惰性）；关闭只走：悬停另一个 Sub（单开切换）/ 外点（tooltip 屏障）/ 弹层内点条目。
 
 ## 用法
 
