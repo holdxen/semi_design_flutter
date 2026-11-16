@@ -327,8 +327,9 @@ class _TreePageState extends State<TreePage> {
           const SizedBox(height: 32),
           _section('受控与 RTL', [
             _demo(
-              'expandedKeys 受控（点击箭头只发 onExpand，展开跟随 props）/ value '
-              '受控（点击只发 onChange，选中跟随 props）',
+              'expandedKeys 受控（点击箭头/条目只发 onExpand，handler 回写 props '
+              '才展开；「切换展开」按钮亦可直接改 props）/ value 受控（点击只发 '
+              'onChange，选中跟随 props）',
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -365,16 +366,21 @@ class _TreePageState extends State<TreePage> {
                       treeData: _controlledData,
                       expandedKeys: _controlledExpanded,
                       value: _controlledValue,
+                      // 整行点击即可展开/收起（受控——展开与否由下面 handler 回写）。
+                      expandAction: SemiTreeExpandAction.click,
                       onChange: (value) => _push('onChange $value'),
-                      onExpand: (keys, expanded, node) =>
-                          _push('onExpand ${node.key}/$expanded'),
+                      onExpand: (keys, expanded, node) {
+                        _push('onExpand ${node.key}/$expanded');
+                        setState(() => _controlledExpanded = keys);
+                      },
                     ),
                   ),
                 ],
               ),
             ),
             _demo(
-              'Directionality.rtl — 缩进/边距镜像、收起三角 rotate 90、引导线镜像',
+              'Directionality.rtl — 缩进/边距镜像、收起三角 rotate 90、引导线镜像；'
+              'expandAction: click（点条目/箭头皆可展开收起）',
               const SizedBox(
                 height: 220,
                 child: Directionality(
@@ -384,6 +390,7 @@ class _TreePageState extends State<TreePage> {
                     treeData: _directoryData,
                     directory: true,
                     showLine: true,
+                    expandAction: SemiTreeExpandAction.click,
                     defaultExpandedKeys: ['docs', 'docs-spec'],
                   ),
                 ),

@@ -455,6 +455,8 @@ class _SemiTreeState extends State<SemiTree> {
       _motionKeys = <String>{};
       _motionType = '';
       _cachedFlatten = null;
+      // 受控 props 变化必须重算拍平列表（否则视觉停留在旧的展开状态）。
+      _refreshFlatten();
     }
     if (widget.value != null && widget.value != oldWidget.value) {
       _syncSelectionFromValue();
@@ -1081,19 +1083,22 @@ class _SemiTreeState extends State<SemiTree> {
       expandedKeys.add(entity.key);
     }
     final virtual = widget.virtualize != null;
-    if (widget.motion && !virtual) {
-      _motionKeys = _motionKeysFor(entity.key, expandedKeys).toSet();
-      _motionType = wasExpanded ? 'hide' : 'show';
-      if (wasExpanded) {
-        // 收起时缓存旧拍平列表——动画期继续渲染被移除的行（NodeList 口径）。
-        _cachedFlatten = List<_FlatNode>.of(_flattenNodes);
-      }
-    } else {
-      _motionKeys = <String>{};
-      _motionType = '';
-      _cachedFlatten = null;
-    }
+    // foundation.ts:712-732：受控 expandedKeys 只回调不改态——运动状态也不动
+    // （上游把 motionKeys/flatten 更新都放在 `!isExpandControlled` 分支里；
+    // 否则受控点击会播「收起又弹回」的幽灵动画）。
     if (!_expandControlled) {
+      if (widget.motion && !virtual) {
+        _motionKeys = _motionKeysFor(entity.key, expandedKeys).toSet();
+        _motionType = wasExpanded ? 'hide' : 'show';
+        if (wasExpanded) {
+          // 收起时缓存旧拍平列表——动画期继续渲染被移除的行（NodeList 口径）。
+          _cachedFlatten = List<_FlatNode>.of(_flattenNodes);
+        }
+      } else {
+        _motionKeys = <String>{};
+        _motionType = '';
+        _cachedFlatten = null;
+      }
       setState(() {
         if (_searching) {
           _filteredExpanded = expandedKeys;

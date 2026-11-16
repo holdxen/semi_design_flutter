@@ -14,7 +14,7 @@ treeData `List<SemiTreeNodeData>`（引用变化触发实体重建——建议 c
 
 ### 拍平与展开
 
-`treeData` → `keyEntities`（level/pos/parent；pos 形如 `0-1-2`）+ 拍平列表（只含展开节点的子级）。展开（foundation.ts:696-752）：受控 `expandedKeys` 非 null 时内部不改态；未受控 toggle；`loadData` 且未加载的节点展开时显示 Spin（12×12 primary）；★无 `loadData` 且无子节点的节点不响应展开；★disabled 节点**仍可展开**（上游 onExpand 无 disabled 检查 quirk）。运动（nodeList.tsx/nodeCollapsible.tsx）：展开/收起时把该节点的已展开后代行包进一个 200ms 高度+fade 块（`duration={200}`）；收起时缓存旧拍平列表让被移除的行播完离场；虚拟化模式不播（上游同）。
+`treeData` → `keyEntities`（level/pos/parent；pos 形如 `0-1-2`）+ 拍平列表（只含展开节点的子级）。展开（foundation.ts:696-752）：受控 `expandedKeys` 非 null 时内部不改态、**props 变更时重算拍平列表且不播运动**（上游把 motionKeys/flatten 更新都放在 `!isExpandControlled` 分支）；未受控 toggle；`loadData` 且未加载的节点展开时显示 Spin（12×12 primary）；★无 `loadData` 且无子节点的节点不响应展开；★disabled 节点**仍可展开**（上游 onExpand 无 disabled 检查 quirk）。运动（nodeList.tsx/nodeCollapsible.tsx）：展开/收起时把该节点的已展开后代行包进一个 200ms 高度+fade 块（`duration={200}`）；收起时缓存旧拍平列表让被移除的行播完离场；虚拟化模式不播（上游同）。
 
 ### 选择与勾选
 

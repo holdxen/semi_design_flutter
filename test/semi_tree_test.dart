@@ -540,8 +540,9 @@ void main() {
       expect(find.text('B'), findsOneWidget);
       await tester.tap(expandArrow('a'));
       await tester.pump();
-      // 内部不跟 props 变；B 仍在。
+      // 内部不跟 props 变；B 仍在；★受控模式不播运动（否则会「收起又弹回」）。
       expect(find.text('B'), findsOneWidget);
+      expect(find.byType(SizeTransition), findsNothing);
       expect(expands, ['a/false']);
       expect(tester.takeException(), isNull);
     });

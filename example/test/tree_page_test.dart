@@ -63,6 +63,18 @@ Future<void> settle(WidgetTester tester) async {
   }
 }
 
+/// 展开/收起是 toggle——只点一次再逐帧等动画稳定（不可像 tapUntil 那样重试，
+/// 否则第二次点击会把状态切回去）。
+Future<void> tapAndSettle(WidgetTester tester, Finder finder) async {
+  await tester.ensureVisible(finder);
+  await tester.pump(const Duration(milliseconds: 50));
+  await tester.tap(finder, warnIfMissed: false);
+  for (var i = 0; i < 12; i++) {
+    await tester.pump(const Duration(milliseconds: 40));
+  }
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets('page renders every demo section and variant', (tester) async {
     await start(tester);
@@ -296,6 +308,46 @@ void main() {
       tester,
       find.text('选中受控子二'),
       () => statusContaining('onChange c1-2').evaluate().isNotEmpty,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('controlled demo closes/opens by clicking an item (handler '
+      'writes props back)', (tester) async {
+    await start(tester);
+    await tester.ensureVisible(keyed('tree-controlled'));
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(nameOf('tree-controlled', '受控子一'), findsOneWidget);
+    // 点条目：发 onExpand，受控 handler 回写 props 后收起。
+    await tapAndSettle(tester, nameOf('tree-controlled', '受控父级'));
+    expect(statusContaining('onExpand c1/false'), findsOneWidget);
+    expect(nameOf('tree-controlled', '受控子一'), findsNothing);
+    // 再点展开。
+    await tapAndSettle(tester, nameOf('tree-controlled', '受控父级'));
+    expect(statusContaining('onExpand c1/true'), findsOneWidget);
+    expect(nameOf('tree-controlled', '受控子一'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('RTL demo toggles expansion by clicking items', (tester) async {
+    await start(tester);
+    await tester.ensureVisible(keyed('tree-rtl'));
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(
+      find.descendant(of: keyed('tree-rtl'), matching: find.text('README.md')),
+      findsOneWidget,
+    );
+    // 点「文档」条目收起（toggle——单点后逐帧等稳定）。
+    await tapAndSettle(tester, nameOf('tree-rtl', '文档'));
+    expect(
+      find.descendant(of: keyed('tree-rtl'), matching: find.text('README.md')),
+      findsNothing,
+    );
+    // 点「源码」条目展开。
+    await tapAndSettle(tester, nameOf('tree-rtl', '源码'));
+    expect(
+      find.descendant(of: keyed('tree-rtl'), matching: find.text('tree.dart')),
+      findsOneWidget,
     );
     expect(tester.takeException(), isNull);
   });
