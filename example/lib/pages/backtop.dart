@@ -69,11 +69,13 @@ class _BackTopPageState extends State<BackTopPage> {
   );
 
   /// 滚动区 + BackTop（Stack 宿主：SemiBackTop 是 PositionedDirectional，
-  /// 需挂在 Stack 直接子节点位）。
+  /// 需挂在 Stack 直接子节点位）。[key] 供 example/test 度量锚点。
   Widget _stack({
+    required Key key,
     required ScrollController controller,
     required SemiBackTop backTop,
   }) => Stack(
+    key: key,
     children: [
       SingleChildScrollView(controller: controller, child: _content()),
       backTop,
@@ -87,13 +89,14 @@ class _BackTopPageState extends State<BackTopPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SemiText(_status),
+          SemiText(_status, key: const ValueKey('backtop-status')),
           const SizedBox(height: 16),
           _section('基本用法', [
             _demo(
               '预设按钮（IconButton theme="light" + IconChevronUp）；'
               'visibilityHeight 400 / duration 450ms 缺省。',
               _stack(
+                key: const ValueKey('backtop-basic'),
                 controller: _basicController,
                 backTop: SemiBackTop(
                   scrollController: _basicController,
@@ -112,6 +115,7 @@ class _BackTopPageState extends State<BackTopPage> {
                   spacingBacktopBottom: 32,
                 ),
                 child: _stack(
+                  key: const ValueKey('backtop-custom'),
                   controller: _customController,
                   backTop: SemiBackTop(
                     scrollController: _customController,
@@ -138,6 +142,7 @@ class _BackTopPageState extends State<BackTopPage> {
             _demo(
               'visibilityHeight 100（早现）+ duration 1000ms（慢滚回）。',
               _stack(
+                key: const ValueKey('backtop-threshold'),
                 controller: _thresholdController,
                 backTop: SemiBackTop(
                   scrollController: _thresholdController,
@@ -155,6 +160,7 @@ class _BackTopPageState extends State<BackTopPage> {
               Directionality(
                 textDirection: TextDirection.rtl,
                 child: _stack(
+                  key: const ValueKey('backtop-rtl'),
                   controller: _rtlController,
                   backTop: SemiBackTop(
                     scrollController: _rtlController,

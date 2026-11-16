@@ -59,10 +59,12 @@ flutter:
   # the Material Icons class.
   uses-material-design: true
 
-  # 官方示例侧栏图标（src/images/docIcons/doc-*.svg）与 Semi logo。
+  # 官方示例侧栏图标（src/images/docIcons/doc-*.svg）与 Semi logo；
+  # images/ 为组件演示图（theme demo images）。
   assets:
     - assets/
     - assets/doc_icons/
+    - assets/images/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

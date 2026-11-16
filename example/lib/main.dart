@@ -1,6 +1,8 @@
 import 'package:example/pages/anchor.dart';
 import 'package:example/pages/backtop.dart';
 import 'package:example/pages/autocomplete.dart';
+import 'package:example/pages/avatar.dart';
+import 'package:example/pages/badge.dart';
 import 'package:example/pages/banner.dart';
 import 'package:example/pages/breadcrumb.dart';
 import 'package:example/pages/button.dart';
@@ -173,6 +175,8 @@ const List<DemoGroup> demoGroups = [
     DemoSpec('tree', 'Tree 树形控件', 'doc-tree.svg', TreePage()),
   ]),
   DemoGroup('展示类', [
+    DemoSpec('avatar', 'Avatar 头像', 'doc-avatar.svg', AvatarPage()),
+    DemoSpec('badge', 'Badge 徽标', 'doc-badge.svg', BadgePage()),
     DemoSpec('banner', 'Banner 通知横幅', 'doc-banner.svg', BannerPage()),
     DemoSpec('card', 'Card 卡片', 'doc-card.svg', CardPage()),
     DemoSpec('carousel', 'Carousel 轮播图', 'doc-carousel.svg', CarouselPage()),

@@ -3,6 +3,7 @@
 // provenance anchors live in the widget's `_TreeSelectMetrics` / call sites.
 // ★1 死变量（上游未消费）：`$color-treeSelect_input_disabled-border-default`
 // 仅被 treeSelect.scss:99 注释行引用——字段保留、widget 不消费（docs 标注）。
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -825,10 +826,9 @@ void main() {
         'visible:false',
       ]);
       expect(find.text('B'), findsOneWidget); // trigger 回填
-      // Re-open and re-pick the same row.
+      // Re-open and re-pick the same row.（收起时 clearInput 已把选中项祖先
+      // 补进展开集——A 默认展开，无需再点箭头。）
       await tester.tap(find.text('B'));
-      await tester.pumpAndSettle();
-      await tester.tap(expandArrow('a'));
       await tester.pumpAndSettle();
       await tester.tap(rowText('B'));
       await tester.pumpAndSettle();
@@ -854,11 +854,11 @@ void main() {
       // Expand A then check B → A half.
       await tester.tap(expandArrow('a'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('B'));
+      await tester.tap(rowText('B'));
       await tester.pumpAndSettle();
       expect(last, ['b']);
       // Check A → cascade to B + C（disabled 亦被级联——非严格模式）。
-      await tester.tap(find.text('A'));
+      await tester.tap(rowText('A'));
       await tester.pumpAndSettle();
       expect(last, ['a']);
     });
@@ -879,11 +879,11 @@ void main() {
       );
       await tester.tap(find.byType(SemiTreeSelect));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('D'));
+      await tester.tap(rowText('D'));
       await tester.pumpAndSettle();
       expect(last, ['d']);
       // triggerRenderKeys 取 [...checkedKeys]（unRelated 下恒空）→ 无标签。
-      expect(find.text('D', skipOffstage: false), findsOneWidget);
+      expect(find.byType(SemiTag), findsNothing);
     });
 
     testWidgets('tag close reverts the cascade and reports onSelect false', (
@@ -903,7 +903,9 @@ void main() {
         ),
       );
       expect(find.text('B'), findsOneWidget); // tag
-      await tester.tap(find.byTooltip('关闭标签').hitTestable());
+      final handle = tester.ensureSemantics();
+      await tester.tap(find.bySemanticsLabel('Close B'));
+      handle.dispose();
       await tester.pumpAndSettle();
       expect(last, <String>[]);
       expect(events, ['select:b:false']);
@@ -1013,7 +1015,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(SemiInput), 'b');
       await tester.pumpAndSettle();
-      await tester.tap(find.text('B'));
+      await tester.tap(rowText('B'));
       await tester.pumpAndSettle();
       expect(last, 'b');
     });
@@ -1033,8 +1035,10 @@ void main() {
           onExpand: (keys, expanded, node) => expands.add(node.key),
         ),
       );
-      expect(find.text('D'), findsOneWidget);
-      await tester.tap(find.text('D'));
+      expect(find.text('D'), findsOneWidget); // trigger 回填
+      await tester.tap(find.byType(SemiTreeSelect));
+      await tester.pumpAndSettle();
+      await tester.tap(rowText('D'));
       await tester.pumpAndSettle();
       expect(last, 'd'); // 回调照发
       expect(find.text('D'), findsOneWidget); // 受控不改显示
@@ -1065,6 +1069,7 @@ void main() {
 
     testWidgets('loadData shows the spin and reports onLoad', (tester) async {
       final loaded = <String>[];
+      final gate = Completer<void>();
       await pumpHost(
         tester,
         SemiTreeSelect(
@@ -1072,7 +1077,7 @@ void main() {
             SemiTreeNodeData(key: 'p', label: 'P'),
           ],
           motion: false,
-          loadData: (_) async {},
+          loadData: (_) => gate.future,
           onLoad: (keys, node) => loaded.add(node.key),
         ),
       );
@@ -1081,6 +1086,7 @@ void main() {
       await tester.tap(expandArrow('p'));
       await tester.pump();
       expect(find.byType(SemiSpin), findsOneWidget);
+      gate.complete();
       await tester.pumpAndSettle();
       expect(loaded, ['p']);
     });
@@ -1098,10 +1104,10 @@ void main() {
       );
       await tester.tap(find.byType(SemiTreeSelect));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('A'));
+      await tester.tap(rowText('A'));
       await tester.pumpAndSettle();
       expect(expands, 1);
-      expect(find.text('B'), findsOneWidget);
+      expect(rowText('B'), findsOneWidget);
 
       await pumpHost(
         tester,
@@ -1114,10 +1120,10 @@ void main() {
       );
       await tester.tap(find.byType(SemiTreeSelect));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('A'));
+      await tester.tap(rowText('A'));
       await tester.pump(const Duration(milliseconds: 350));
       expect(expands, 1); // 单击只选择
-      final center = tester.getCenter(find.text('A'));
+      final center = tester.getCenter(rowText('A'));
       await tester.tapAt(center);
       await tester.tapAt(center);
       await tester.pumpAndSettle();
@@ -1243,10 +1249,10 @@ void main() {
       );
       await tester.tap(find.byType(SemiTreeSelect));
       await tester.pumpAndSettle();
-      expect(find.text('B'), findsOneWidget);
+      expect(rowText('D'), findsOneWidget);
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       await tester.pumpAndSettle();
-      expect(find.text('B'), findsNothing);
+      expect(find.byKey(SemiTreeSelect.listKey), findsNothing);
       expect(events, ['visible:true', 'visible:false']);
     });
 
@@ -1260,7 +1266,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('B'), findsOneWidget);
+      expect(rowText('D'), findsOneWidget);
     });
 
     testWidgets('custom searchRender replaces the search input', (

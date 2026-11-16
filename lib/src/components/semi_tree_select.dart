@@ -142,6 +142,9 @@ class SemiTreeSelect extends StatefulWidget {
   /// Key of the clear button slot.
   static const Key clearButtonKey = Key('SemiTreeSelect.clearButton');
 
+  /// Key of the option list (弹层树列).
+  static const Key listKey = Key('SemiTreeSelect.list');
+
   /// Key of the filter input.
   static const Key searchInputKey = Key('SemiTreeSelect.searchInput');
 
@@ -1239,6 +1242,8 @@ class _SemiTreeSelectState extends State<SemiTreeSelect> {
   /// foundation.ts:503-522 `handleClick`。
   void _handleTriggerTap() {
     if (widget.disabled) return;
+    // 键盘可达（上游 tabIndex=0 + DOM focus 跟随点击）。
+    _triggerFocusNode.requestFocus();
     if (!_isFocus) {
       _handleTriggerFocus();
     }
@@ -1282,6 +1287,7 @@ class _SemiTreeSelectState extends State<SemiTreeSelect> {
     if (event.logicalKey == LogicalKeyboardKey.escape) {
       // index.tsx:1181 `onKeyDown={this.foundation.handleKeyDown}` +
       // foundation.ts:314 `e.key === ESC_KEY`。
+      if (!_open) return KeyEventResult.ignored;
       _handleEsc();
       return KeyEventResult.handled;
     }
@@ -1567,6 +1573,10 @@ class _SemiTreeSelectState extends State<SemiTreeSelect> {
       trigger: SemiTooltipTrigger.custom,
       visible: _open,
       onVisibleChange: _handleTooltipVisibleChange,
+      // foundation.ts:313-318 `handleKeyDown`（ESC 收起；不 blur quirk）——
+      // 面板内输入聚焦时由 tooltip 通道消费，触发器聚焦时由 _handleKey 消费。
+      closeOnEsc: true,
+      onEscKeyDown: _handleEsc,
       showArrow: false,
       popupBare: true,
       position: widget.position,
