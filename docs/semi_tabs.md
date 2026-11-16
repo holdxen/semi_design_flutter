@@ -24,7 +24,7 @@ tabList `List<SemiTabData>`。activeKey `String?`（非 null 即受控：点击/
 
 - 公共：字重 regular / 选中 bold，字号 14；图标在文字前（间距 8、上移 3）；图标色 text-2 → hover text-0 → press text-0 → 选中 primary；hover/press 背景与文字色按形态；`transform: scale(1)` 恒等。
 - line：条底 1px 轨道线（text/border），页签内 2px 底边（透明/hover fill-0/press fill-1/选中 primary），左右 padding 4、上下 16/14（small 8/6、medium 12/10），首项左 padding 0，项间距 24；左向：轨道线在右、选中/hover/press 用左边框 + vertical 背景（选中 primary-light-default）。
-- card：条底 1px 轨道线；页签 1px 边框透明 + 顶部圆角 3；选中边框 primary/border 色、底边用 bg-1 遮住轨道线、底部 padding 7；hover fill-0、press fill-1；项间距 8；左向：轨道线在右、圆角在左、选中右侧 1px bg-1 遮线、项间距（vertical）8。
+- card：条底 1px 轨道线；页签 1px 边框透明（★未选中无底边框 `border-bottom: none`）+ 顶部圆角 3；选中边框 border 色、底边用 bg-1 遮住轨道线（与未选中等高 8+0 = 7+1，遮线与轨道线同像素行）、底部 padding 7；hover fill-0、press fill-1；项间距 8；左向：轨道线在右、圆角在左、选中右侧（内侧）1px bg-1 遮线（RTL 翻左）、等宽铺满、项间距（vertical）8。
 - button：无边框、圆角 3、padding 8/12、项间距 8（左向底部 8）；文字 text-2；hover fill-0、press fill-1、选中底 primary-light-default + 文字 primary。
 - slash：padding 12/0、项间距 16，非末项后接 1px 斜线分割（8×14、上下 3、左距 16，text-2 色）。
 - 附加内容：外层 padding 0/5；line 形态高度 50（small 36）并垂直居中。
@@ -228,6 +228,7 @@ pane 文本色 text-0；内容区 padding 上下 5 / 左右 0（左向改为左�
 - **左向内容**：CSS `height: 100%` 在 Flutter 为自适应高度（父级 Row 拉伸决定）。
 - **slash 分割线**：CSS 渐变斜线 → 1px `CustomPaint` 线（像素级近似）。
 - **焦点环**：outline + offset → 前景内描边（2px，紧贴边框）；`:focus-visible` 门控（`_keyboardUsed` 先例），鼠标点击聚焦不画环。
+- **卡片遮线**：左向 `::after { right: -1px }`（RTL `left: -1px`）外贴条 → 盒内 1px bg-1 边叠画（条轨道线是 `DecoratedBox` 边框、画在子项之下）；左向 flex column stretch 等宽 → `IntrinsicWidth` + `CrossAxisAlignment.stretch` 近似。
 
 ## 用法
 

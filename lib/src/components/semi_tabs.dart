@@ -451,15 +451,22 @@ class _SemiTabsState extends State<SemiTabs> {
     Widget? extra,
   ) {
     final items = _buildBarItems(t, global);
-    return Column(
+    // card 左向等宽铺满（上游 `.semi-tabs-bar-left` flex column + stretch），
+    // 选中项内侧 bg-1 边才能盖住条侧轨道线；bar 在 Row 里是 intrinsic 宽，
+    // `IntrinsicWidth` 先定宽为最宽项（上游 flex 行为）。
+    final card = widget.type == SemiTabsType.card;
+    final column = Column(
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: card
+          ? CrossAxisAlignment.stretch
+          : CrossAxisAlignment.start,
       children: [
         ...items,
         if (extra != null)
           Align(alignment: AlignmentDirectional.centerEnd, child: extra),
       ],
     );
+    return card ? IntrinsicWidth(child: column) : column;
   }
 
   void _scrollBy(double delta) {
@@ -902,6 +909,9 @@ class _TabItemState extends State<_TabItem> {
           width: t.widthTabsBarCardBorder,
         );
         if (top) {
+          // 上游未选中 `border-bottom: none`、选中 `border-bottom: bg-1`
+          // ——两态等高（8+0 = 7+1），选中的 bg-1 底边与条底轨道线同像素行
+          // 才能盖线；未选中留线。
           return Border(
             top: indicator,
             left: indicator,
@@ -911,13 +921,12 @@ class _TabItemState extends State<_TabItem> {
                     color: t.colorTabsTabCardSelectedBgDefault,
                     width: t.widthTabsBarCardBorder,
                   )
-                : BorderSide(
-                    color: transparent,
-                    width: t.widthTabsBarCardBorder,
-                  ),
+                : BorderSide.none,
           );
         }
         final rtl = Directionality.of(context) == TextDirection.rtl;
+        // 内侧 1px 边即遮线（上游 `::after { right:-1px }` / RTL `left:-1px`
+        // 的盒内等价——条轨道线画在子项之下）：选中 bg-1 盖线，未选透明。
         final edge = BorderSide(
           color: widget.selected
               ? t.colorTabsTabCardSelectedBgDefault
@@ -927,8 +936,8 @@ class _TabItemState extends State<_TabItem> {
         return Border(
           top: indicator,
           bottom: indicator,
-          left: rtl ? indicator : BorderSide.none,
-          right: rtl ? edge : BorderSide.none,
+          left: rtl ? edge : indicator,
+          right: rtl ? indicator : edge,
         );
       case SemiTabsType.button:
       case SemiTabsType.slash:

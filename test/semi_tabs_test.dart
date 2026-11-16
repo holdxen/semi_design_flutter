@@ -1462,6 +1462,77 @@ void main() {
       );
     });
 
+    testWidgets('card bar line is masked under the selected tab only', (
+      tester,
+    ) async {
+      final light = const SemiThemeData.light();
+      await pumpHost(
+        tester,
+        const SemiTabs(tabList: tabs3, type: SemiTabsType.card),
+      );
+      // 未选中无底边框（上游 `border-bottom: none`）——与选中 8+0 = 7+1 等高，
+      // 选中的 bg-1 底边才与条底轨道线同像素行。
+      expect(tabDecoration(tester, 'Tab 2').border!.bottom, BorderSide.none);
+      expect(
+        tester.getSize(tabContainer('Tab 1')).height,
+        tester.getSize(tabContainer('Tab 2')).height,
+      );
+      final bar = find.ancestor(
+        of: tabContainer('Tab 1'),
+        matching: find.byWidgetPredicate(
+          (w) =>
+              w is DecoratedBox &&
+              w.decoration is BoxDecoration &&
+              (w.decoration as BoxDecoration).border?.bottom.color ==
+                  light.colors.colorBorder,
+        ),
+      );
+      // 选中项底边与条底重合 → 盖住轨道线；未选中项留线。
+      expect(
+        tester.getBottomLeft(tabContainer('Tab 1')).dy,
+        tester.getBottomLeft(bar).dy,
+      );
+    });
+
+    testWidgets('card left bar masks the line on the inner edge', (
+      tester,
+    ) async {
+      final light = const SemiThemeData.light();
+      await pumpHost(
+        tester,
+        const SemiTabs(
+          tabList: tabs3,
+          type: SemiTabsType.card,
+          tabPosition: SemiTabsPosition.left,
+        ),
+      );
+      final selected = tabDecoration(tester, 'Tab 1').border! as Border;
+      // 内侧（LTR 右）bg-1 遮线、外侧（左）indicator 边。
+      expect(selected.right.color, light.colors.colorBg1);
+      expect(selected.left.color, light.colors.colorBorder);
+      // 等宽铺满：遮线边与条侧轨道线同列。
+      expect(
+        tester.getSize(tabContainer('Tab 1')).width,
+        tester.getSize(tabContainer('Tab 2')).width,
+      );
+      final bar = find.ancestor(
+        of: tabContainer('Tab 1'),
+        matching: find.byWidgetPredicate(
+          (w) =>
+              w is DecoratedBox &&
+              w.decoration is BoxDecoration &&
+              ((w.decoration as BoxDecoration).border as Border?)
+                  ?.right
+                  .color ==
+              light.colors.colorBorder,
+        ),
+      );
+      expect(
+        tester.getTopRight(tabContainer('Tab 1')).dx,
+        tester.getTopRight(bar).dx,
+      );
+    });
+
     testWidgets('button selected tab paints primary-light bg + primary text', (
       tester,
     ) async {

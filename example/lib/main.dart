@@ -1,4 +1,5 @@
 import 'package:example/pages/carousel.dart';
+import 'package:example/pages/tabs.dart';
 import 'package:flutter/widgets.dart';
 import 'package:semi_design_flutter/semi_design_flutter.dart';
 
@@ -13,7 +14,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const SemiApp(
       themeMode: SemiThemeMode.light,
-      home: SafeArea(child: CarouselPage()),
+      home: SafeArea(child: TabsPage()),
     );
   }
 }
