@@ -265,8 +265,8 @@ class _NavigationPageState extends State<NavigationPage> {
             _demo(
               'defaultIsCollapsed: true — 60px 图标栏（文字渐隐 opacity: 0 仍'
               '在树上）；平铺 item hover 出右侧 Tooltip；Sub 悬停/点按弹出层菜单'
-              '（弹层内点条目即收起；★标题点按未开则开、已开不关——关闭走悬停其他'
-              'Sub/外点）；footer '
+              '（弹层内点条目即收起；★hover 0ms 开/移出 100ms 关、鼠标点按只发 '
+              'onClick）；footer '
               '收起按钮缺省 locale '
               '「展开侧边栏」→ 点击展开 240px（onCollapseChange 回传新值）',
               SizedBox(
@@ -559,9 +559,9 @@ class _NavigationPageState extends State<NavigationPage> {
             'String、className/style/getDataAttr/prefixCls 不移植、'
             'aria 以 Semantics(button/selected/expanded) 近似、locale 仅 zh 两串'
             '硬编码。'
-            '★弹层可见性语义（照上游 wrapDropdown trigger:hover）：hover/点按'
-            '开启（自管悬停 trigger:custom——web 虚报 exit 不可靠，移出不关），'
-            '标题点按对可见性惰性、仅发 onClick；关闭走悬停其他 Sub/外点/点条目。',
+            '★弹层可见性语义（照上游 wrapDropdown trigger:hover 非受控）：'
+            'hover 0ms 开/移出 100ms 关（进弹层续命），鼠标点按对可见性惰性'
+            '仅发 onClick（touch tap 兜底 toggle），弹层内点条目即收起。',
             key: ValueKey('navigation-unsupported-note'),
           ),
         ],

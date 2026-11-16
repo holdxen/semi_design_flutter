@@ -1,4 +1,5 @@
 import 'package:example/pages/anchor.dart';
+import 'package:example/pages/backtop.dart';
 import 'package:example/pages/autocomplete.dart';
 import 'package:example/pages/banner.dart';
 import 'package:example/pages/breadcrumb.dart';
@@ -141,6 +142,7 @@ const List<DemoGroup> demoGroups = [
   ]),
   DemoGroup('导航类', [
     DemoSpec('anchor', 'Anchor 锚点', 'doc-anchor.svg', AnchorPage()),
+    DemoSpec('backTop', 'BackTop 回到顶部', 'doc-backtop.svg', BackTopPage()),
     DemoSpec(
       'breadcrumb',
       'Breadcrumb 面包屑',

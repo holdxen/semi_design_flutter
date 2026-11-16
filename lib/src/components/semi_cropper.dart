@@ -1,0 +1,1326 @@
+// SemiCropper — 上游 packages/semi-ui/cropper/index.tsx 与
+// packages/semi-foundation/cropper/{cropper.scss,variables.scss,foundation.ts,
+// constants.ts,utils.ts} 的移植。
+//
+// 主题对账 **5 = 5 FIELDS + 0 MOTION + 0 INTERNAL**（variables.scss 5 声明：
+// color 3、width 2；无 animation.scss；`$module` 胶水与 cropper.scss 局部
+// `$half_corner_width: calc($width-cropper_box_corner / 2)` 不计，banner
+// `22 = 22 + 0 + 0`、carousel `40 = 34 + 6 + 0` 先例）。0 死变量。
+//
+// HARDCODES（另列，生成器锚点逐字留档）：
+// - constants.ts：moduleName = `${BASE_CLASS_PREFIX}-cropper`；
+//   strings.shape: ['rect', 'round', 'roundRect']；
+//   strings.corner: ['tl', 'tm', 'tr', 'ml', 'mr', 'bl', 'bm', 'br']；
+//   strings.roundCorner: ['tm', 'ml', 'mr', 'bm']（round 仅四边中点柄）
+// - index.tsx defaultProps：shape: 'rect' / defaultAspectRatio: 1 /
+//   showResizeBox: true / fill: 'rgba(0, 0, 0, 0)' / maxZoom: 3 /
+//   minZoom: 0.1 / zoomStep: 0.1
+// - index.tsx img：crossOrigin='anonymous'、alt=""、
+//   transformOrigin: 'center'（顶点平移 + 绕自身中心旋转）
+// - cropper.scss：img 规则 tailwindCSS 防污 max-width: none；
+//   `-img`/`-view-img` user-select: none；`-mask` 规则 cursor: move;; 双分号；
+//   `tl`/`br` 光标 cursor: nwse-resize（br 行缺分号，照抄）、`tr`/`bl`
+//   nesw-resize、`tm`/`bm` ns-resize、`ml`/`mr` ew-resize；
+//   `$half_corner_width: calc($width-cropper_box_corner / 2)` 角柄半宽外偏
+//   （`margin-left: -$half_corner_width` 等；`-bm` 行尾空格，照抄）；
+//   `-view-img` 残留注释 `// position: absolute;`；
+//   `-view-box-round` border-radius: 50%（round/roundRect 椭圆裁切，
+//   round 外框 outline 同形）
+// - index.tsx wheel 注册 `{ passive: false }`（e.preventDefault() 防双手
+//   缩放放大页面）；foundation.ts handleWheel 步进
+//   `(currZoom + zoomStep).toFixed(2)`、指针定点缩放；受控同步
+//   getDerivedStateFromProps 注释 `centerPoint 的 y 坐标与实际的坐标系方向
+//   相反`（y 翻转公式）
+// - index.tsx viewIMGDragStart 拖影抑制；foundation.ts
+//   handleCropperBoxMouseDown 的 `target.dataset.dir` 角柄命中不移动；
+//   ResizeObserver ObserverProperty.Width 仅宽向；utils.ts getAspectHW /
+//   getMiddle；changeDir 越界翻柄
+// - foundation.ts getCropperCanvas 裁切输出：越界补
+//   fillRect(0, 0, relativeWidth, relativeHeight)、
+//   getImageData(realLeft, realTop, realWidth, realHeight)、
+//   relativeCropLeft < 0 ? - relativeCropLeft : 0 修正贴图偏移
+import 'dart:math' as math;
+import 'dart:ui' as ui;
+
+import 'package:flutter/widgets.dart';
+
+import '../theme/semi_cropper_theme.dart';
+
+/// 裁切框形状（上游 `strings.shape`，缺省 `rect`）。
+enum SemiCropperShape {
+  /// 矩形框（8 角柄）。
+  rect,
+
+  /// 圆形框（4 边中点柄，外框与视口同形）。
+  round,
+
+  /// 圆角矩形（8 角柄，视口 `border-radius: 50%`）。
+  roundRect,
+}
+
+/// 裁切控制器（上游 ref 方法 `getCropperCanvas`）。
+class SemiCropperController {
+  _SemiCropperState? _state;
+
+  void _attach(_SemiCropperState state) => _state = state;
+  void _detach(_SemiCropperState state) {
+    if (_state == state) _state = null;
+  }
+
+  bool get isAttached => _state != null;
+
+  /// 裁切结果（上游 `getCropperCanvas()`：原图分辨率、旋转外接矩形内裁出）。
+  ///
+  /// 未 attach 或图片未加载完成时抛 [StateError]。
+  Future<ui.Image> getCropperImage() {
+    final state = _state;
+    if (state == null) {
+      throw StateError('SemiCropperController is not attached to a SemiCropper');
+    }
+    return state._getCropperImage();
+  }
+}
+
+/// 图片裁切（Semi Cropper）。
+///
+/// 拖动遮罩平移图片、滚轮/触控板定点缩放、拖动裁切框、拖动角柄缩放裁切框
+/// （[aspectRatio] 非空时定比）；[zoom] / [rotate] 受控（非 null 即受控，
+/// 同上游 `getDerivedStateFromProps` 语义）；[previewBuilder] 实时预览；
+/// [SemiCropperController.getCropperImage] 输出裁切结果。
+///
+/// 尺寸：上游容器 `style` 定宽高，Flutter 需父级给出有界宽高（如 [SizedBox]）。
+class SemiCropper extends StatefulWidget {
+  const SemiCropper({
+    super.key,
+    required this.image,
+    this.shape = SemiCropperShape.rect,
+    this.aspectRatio,
+    this.defaultAspectRatio = 1,
+    this.zoom,
+    this.onZoomChange,
+    this.rotate,
+    this.showResizeBox = true,
+    this.fill = const Color(0x00000000),
+    this.maxZoom = 3,
+    this.minZoom = 0.1,
+    this.zoomStep = 0.1,
+    this.previewBuilder,
+    this.controller,
+  });
+
+  /// 被裁切图片（上游 `src`）。
+  final ImageProvider image;
+
+  /// 裁切框形状（上游 `shape`）。
+  final SemiCropperShape shape;
+
+  /// 受控裁切框宽高比；非空时角柄拖动定比缩放。
+  final double? aspectRatio;
+
+  /// 初始裁切框宽高比（仅首次生效，拖动后随拖动变化）。
+  final double defaultAspectRatio;
+
+  /// 受控缩放（非 null 即受控）；拖轮改变后经 [onZoomChange] 回调。
+  final double? zoom;
+
+  /// 缩放回调（上游 `onZoomChange`）。
+  final ValueChanged<double>? onZoomChange;
+
+  /// 受控旋转角度（度，顺时针）。
+  final double? rotate;
+
+  /// 显示角柄调整块（上游 `showResizeBox`）。
+  final bool showResizeBox;
+
+  /// 裁切结果中非图片部分的填充色（上游 `fill`）。
+  final Color fill;
+
+  /// 最大缩放倍数。
+  final double maxZoom;
+
+  /// 最小缩放倍数。
+  final double minZoom;
+
+  /// 缩放步长（滚轮每格）。
+  final double zoomStep;
+
+  /// 实时预览（上游 `preview: () => HTMLElement`）。
+  ///
+  /// `cropView` 为裁切区域视图，在给定约束内按上游 `updatePreview` 适配
+  /// 数学自缩放；放到任意位置即可。
+  final Widget Function(BuildContext context, Widget cropView)? previewBuilder;
+
+  /// 裁切输出控制器。
+  final SemiCropperController? controller;
+
+  static const maskKey = ValueKey<String>('semi-cropper-mask');
+  static const boxKey = ValueKey<String>('semi-cropper-box');
+  static const viewBoxKey = ValueKey<String>('semi-cropper-view-box');
+  static Key cornerKey(String dir) =>
+      ValueKey<String>('semi-cropper-corner-$dir');
+
+  @override
+  State<SemiCropper> createState() => _SemiCropperState();
+}
+
+/// 上游 `ImageDataState` / `CropperBox`（width/height/centerPoint）。
+class _CropRect {
+  const _CropRect(this.width, this.height, this.center);
+  final double width;
+  final double height;
+  final Offset center;
+  double get left => center.dx - width / 2;
+  double get top => center.dy - height / 2;
+}
+
+/// 上游 utils.ts `getMiddle`：钳值入 `[min, max]`。
+double _getMiddle(double value, (double, double) range) =>
+    value.clamp(range.$1, range.$2).toDouble();
+
+/// 上游 utils.ts `getAspectHW`：等比内收 (width, height)。
+(double, double) _getAspectHW(
+  double width,
+  double height,
+  double aspect,
+) {
+  if (width / height > aspect) {
+    width = height * aspect;
+  } else {
+    height = width / aspect;
+  }
+  return (width, height);
+}
+
+enum _DragMode { none, imgMove, boxMove, cornerResize }
+
+class _SemiCropperState extends State<SemiCropper> {
+  // foundation.ts 实例字段。
+  ui.Image? _image;
+  ImageStream? _stream;
+  ImageStreamListener? _listener;
+  double _originalWidth = 0;
+  double _originalHeight = 0;
+  double _scale = 1;
+  Size _containerData = Size.zero;
+  String _boxMoveDir = '';
+  ({double x, double y}) _boxMoveParam = (x: 0, y: 0);
+  Offset? _cropperBoxMoveStart;
+  Offset? _imgMoveStart;
+  ({double xMin, double xMax, double yMin, double yMax})? _moveRange;
+  (double, double)? _rangeX;
+  (double, double)? _rangeY;
+  bool _initial = false;
+
+  // 上游 state。
+  _CropRect _imgData = const _CropRect(0, 0, Offset.zero);
+  _CropRect _cropperBox = const _CropRect(0, 0, Offset.zero);
+  double _zoom = 1;
+  double _rotate = 0;
+  bool _loaded = false;
+
+  _DragMode _dragMode = _DragMode.none;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller?._attach(this);
+    _resolveImage();
+  }
+
+  @override
+  void didUpdateWidget(SemiCropper oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller?._detach(this);
+      widget.controller?._attach(this);
+    }
+    if (oldWidget.image != widget.image) {
+      _resolveImage();
+    }
+    // aspectRatio 变化：上游 componentDidUpdate 仅 unBindResizeEvent
+    // （清残留拖动监听），几何不变，后续拖动按新比例走。
+  }
+
+  @override
+  void dispose() {
+    _listener = null;
+    _stream?.dispose();
+    widget.controller?._detach(this);
+    super.dispose();
+  }
+
+  void _resolveImage() {
+    _stream?.removeListener(_listener!);
+    _stream?.dispose();
+    final stream = widget.image.resolve(ImageConfiguration.empty);
+    _listener = ImageStreamListener(_onImage, onError: (error, stack) {});
+    stream.addListener(_listener!);
+    _stream = stream;
+  }
+
+  void _onImage(ImageInfo info, bool synchronousCall) {
+    setState(() {
+      _image = info.image;
+      _handleImageLoad(
+        info.image.width.toDouble(),
+        info.image.height.toDouble(),
+      );
+    });
+  }
+
+  /// 上游 foundation.ts handleImageLoad：适配容器的初始显示尺寸 + 初始裁切框。
+  void _handleImageLoad(double naturalWidth, double naturalHeight) {
+    final containerWidth = _containerData.width;
+    final containerHeight = _containerData.height;
+    if (containerWidth == 0 || containerHeight == 0) return;
+    _originalWidth = naturalWidth;
+    _originalHeight = naturalHeight;
+    double scale;
+    late double width, height;
+    if (naturalWidth / containerWidth > naturalHeight / containerHeight) {
+      scale = containerWidth / naturalWidth;
+      width = containerWidth;
+      height = naturalHeight * scale;
+    } else {
+      scale = containerHeight / naturalHeight;
+      width = naturalWidth * scale;
+      height = containerHeight;
+    }
+    _scale = scale;
+    width *= _zoom;
+    height *= _zoom;
+    final imgCenter = Offset(containerWidth / 2, containerHeight / 2);
+    // 计算裁切框大小
+    final calcAspect = widget.aspectRatio ?? widget.defaultAspectRatio;
+    late double boxWidth, boxHeight;
+    if (containerWidth / containerHeight > calcAspect) {
+      boxWidth = containerHeight * calcAspect;
+      boxHeight = containerHeight;
+    } else {
+      boxWidth = containerWidth;
+      boxHeight = containerWidth / calcAspect;
+    }
+    _imgData = _CropRect(width, height, imgCenter);
+    _cropperBox = _CropRect(boxWidth, boxHeight, imgCenter);
+    _loaded = true;
+  }
+
+  /// 上游 ResizeObserver（ObserverProperty.Width）handleResize：仅宽向变化
+  /// 触发，按宽比缩放图片与裁切框。LayoutBuilder 首帧记录尺寸（上游 init）。
+  void _handleLayout(Size size) {
+    if (_containerData == Size.zero) {
+      _containerData = size;
+      _initial = true;
+      if (_image != null && !_loaded) {
+        _handleImageLoad(
+          _image!.width.toDouble(),
+          _image!.height.toDouble(),
+        );
+      }
+      return;
+    }
+    if (size.width == _containerData.width) {
+      _containerData = size;
+      return;
+    }
+    if (!_initial) {
+      _initial = true;
+      _containerData = size;
+      return;
+    }
+    if (!_loaded) {
+      _containerData = size;
+      return;
+    }
+    final ratio = size.width / _containerData.width;
+    final newImgData = _CropRect(
+      _imgData.width * ratio,
+      _imgData.height * ratio,
+      _imgData.center * ratio,
+    );
+    _scale *= ratio;
+    final newCropperBox = _getCropperBoxWhenResize(ratio, size);
+    _containerData = size;
+    _imgData = newImgData;
+    _cropperBox = newCropperBox;
+  }
+
+  /// 上游 getCropperBoxWhenResize：比例缩放后钳回新容器（定比时保 aspect）。
+  _CropRect _getCropperBoxWhenResize(double ratio, Size newContainerData) {
+    final box = _cropperBox;
+    final aspectRatio = widget.aspectRatio;
+    final temp = _CropRect(
+      box.width * ratio,
+      box.height * ratio,
+      box.center * ratio,
+    );
+    var xMin = temp.left;
+    var xMax = temp.left + temp.width;
+    var yMin = temp.top;
+    var yMax = temp.top + temp.height;
+    if (aspectRatio != null) {
+      if (xMax > newContainerData.width) {
+        xMax = newContainerData.width;
+        xMin = temp.width > newContainerData.width
+            ? 0
+            : newContainerData.width - temp.width;
+        final width = xMax - xMin;
+        final height = width / aspectRatio;
+        yMax = yMin + height;
+        return _CropRect(width, height, Offset((xMax + xMin) / 2, (yMax + yMin) / 2));
+      }
+      if (yMax > newContainerData.height) {
+        yMax = newContainerData.height;
+        yMin = temp.height > newContainerData.height
+            ? 0
+            : newContainerData.height - temp.height;
+        final height = yMax - yMin;
+        final width = height * aspectRatio;
+        xMax = xMin + width;
+        return _CropRect(width, height, Offset((xMax + xMin) / 2, (yMax + yMin) / 2));
+      }
+    } else {
+      if (xMax > newContainerData.width) {
+        xMax = newContainerData.width;
+        xMin = temp.width > newContainerData.width
+            ? 0
+            : newContainerData.width - temp.width;
+      }
+      if (yMax > newContainerData.height) {
+        yMax = newContainerData.height;
+        yMin = temp.height > newContainerData.height
+            ? 0
+            : newContainerData.height - temp.height;
+      }
+    }
+    return _CropRect(
+      xMax - xMin,
+      yMax - yMin,
+      Offset((xMax + xMin) / 2, (yMax + yMin) / 2),
+    );
+  }
+
+  /// 上游 getDerivedStateFromProps（受控 rotate/zoom 同步；未加载不动）。
+  ///
+  /// 因为以裁切框的左上方顶点作为原点，所以centerPoint 的 y 坐标与实际的坐标系方向相反，
+  /// 因此 y 方向需要先做变换，再使用旋转变换公式计算中心点坐标。
+  /// （build 顶部执行：React 每次 render 前派生状态的等价位置。）
+  void _syncControlledProps() {
+    if (!_loaded) return;
+    var width = _imgData.width;
+    var height = _imgData.height;
+    var center = _imgData.center;
+    var changed = false;
+    final newRotate = widget.rotate;
+    if (newRotate != null && newRotate != _rotate) {
+      final oldRotate = _rotate;
+      _rotate = newRotate;
+      changed = true;
+      // 同上（y 翻转）
+      final rotateCenter = Offset(
+        _cropperBox.center.dx,
+        -_cropperBox.center.dy,
+      );
+      final imgCenter = Offset(center.dx, -center.dy);
+      final angle = (newRotate - oldRotate) * math.pi / 180;
+      center = Offset(
+        (imgCenter.dx - rotateCenter.dx) * math.cos(angle) +
+            (imgCenter.dy - rotateCenter.dy) * math.sin(angle) +
+            rotateCenter.dx,
+        -(-(imgCenter.dx - rotateCenter.dx) * math.sin(angle) +
+            (imgCenter.dy - rotateCenter.dy) * math.cos(angle) +
+            rotateCenter.dy),
+      );
+    }
+    final newZoom = widget.zoom;
+    if (newZoom != null && newZoom != _zoom) {
+      final oldZoom = _zoom;
+      _zoom = newZoom;
+      changed = true;
+      // 同上（y 翻转）
+      final scaleCenter = Offset(
+        _cropperBox.center.dx,
+        -_cropperBox.center.dy,
+      );
+      final currentImgCenter = Offset(center.dx, -center.dy);
+      width = width / oldZoom * newZoom;
+      height = height / oldZoom * newZoom;
+      center = Offset(
+        (currentImgCenter.dx - scaleCenter.dx) / oldZoom * newZoom +
+            scaleCenter.dx,
+        -((currentImgCenter.dy - scaleCenter.dy) / oldZoom * newZoom +
+            scaleCenter.dy),
+      );
+    }
+    if (changed) {
+      _imgData = _CropRect(width, height, center);
+    }
+  }
+
+  /// 上游 handleWheel：定点缩放（步进取两位小数、min/max 钳制）。
+  void _handleWheel(PointerScrollEvent event) {
+    final scrollDown = event.scrollDelta.dy > 0;
+    final scrollUp = event.scrollDelta.dy < 0;
+    double? next;
+    if (scrollUp) {
+      // zoom in
+      final value = double.parse((_zoom + widget.zoomStep).toStringAsFixed(2));
+      if (value <= widget.maxZoom) next = value;
+    } else if (scrollDown) {
+      // zoom out
+      final value = double.parse((_zoom - widget.zoomStep).toStringAsFixed(2));
+      if (value >= widget.minZoom) next = value;
+    }
+    if (next == null) return;
+    final offset = event.localPosition;
+    final scaleCenter = Offset(offset.dx, -offset.dy);
+    // 计算新的中心点位置（y 翻转）
+    final currentPoint = Offset(_imgData.center.dx, -_imgData.center.dy);
+    final newCenterPoint = Offset(
+      (currentPoint.dx - scaleCenter.dx) / _zoom * next + scaleCenter.dx,
+      -((currentPoint.dy - scaleCenter.dy) / _zoom * next + scaleCenter.dy),
+    );
+    setState(() {
+      _imgData = _CropRect(
+        _imgData.width / _zoom * next,
+        _imgData.height / _zoom * next,
+        newCenterPoint,
+      );
+      _zoom = next;
+    });
+    widget.onZoomChange?.call(next);
+  }
+
+  /// 上游 getMoveParamByDir。
+  ({double x, double y}) _getMoveParamByDir(String dir) {
+    switch (dir) {
+      case 'tl':
+        return (x: -1, y: -1);
+      case 'tm':
+        return (x: 0, y: -1);
+      case 'tr':
+        return (x: 1, y: -1);
+      case 'ml':
+        return (x: -1, y: 0);
+      case 'mr':
+        return (x: 1, y: 0);
+      case 'bl':
+        return (x: -1, y: 1);
+      case 'bm':
+        return (x: 0, y: 1);
+      case 'br':
+        return (x: 1, y: 1);
+    }
+    return (x: 0, y: 0);
+  }
+
+  /// 上游 getRangeForAspectChange：定比拖动的各向活动范围。
+  void _getRangeForAspectChange() {
+    final box = _cropperBox;
+    final aspectRatio = widget.aspectRatio!;
+    final containerWidth = _containerData.width;
+    final containerHeight = _containerData.height;
+    // 可能的最大宽高
+    double height, width;
+    // 裁剪框当前的位置
+    final xMin = box.left;
+    final xMax = box.left + box.width;
+    final yMin = box.top;
+    final yMax = box.top + box.height;
+    switch (_boxMoveDir) {
+      case 'tl':
+        height = yMax;
+        width = xMax;
+        (width, height) = _getAspectHW(width, height, aspectRatio);
+        _rangeX = (xMax - width, xMax);
+        _rangeY = (yMax - height, yMax);
+        break;
+      case 'tm':
+        height = yMax;
+        final leftHalfWidth = box.center.dx;
+        final rightHalfWidth = containerWidth - box.center.dx;
+        width =
+            2 * (leftHalfWidth < rightHalfWidth ? leftHalfWidth : rightHalfWidth);
+        (width, height) = _getAspectHW(width, height, aspectRatio);
+        _rangeX = (box.center.dx - width / 2, box.center.dx + width / 2);
+        _rangeY = (yMax - height, yMax);
+        break;
+      case 'tr':
+        height = yMax;
+        width = containerWidth - xMin;
+        (width, height) = _getAspectHW(width, height, aspectRatio);
+        _rangeX = (xMin, xMin + width);
+        _rangeY = (yMax - height, yMax);
+        break;
+      case 'ml':
+        width = xMax;
+        final topHalfHeight = box.center.dy;
+        final bottomHalfHeight = containerHeight - box.center.dy;
+        height = 2 *
+            (topHalfHeight < bottomHalfHeight ? topHalfHeight : bottomHalfHeight);
+        (width, height) = _getAspectHW(width, height, aspectRatio);
+        _rangeX = (xMax - width, xMax);
+        _rangeY = (box.center.dy - height / 2, box.center.dy + height / 2);
+        break;
+      case 'mr':
+        width = containerWidth - xMin;
+        final topHalfHeight2 = box.center.dy;
+        final bottomHalfHeight2 = containerHeight - box.center.dy;
+        height = 2 *
+            (topHalfHeight2 < bottomHalfHeight2
+                ? topHalfHeight2
+                : bottomHalfHeight2);
+        (width, height) = _getAspectHW(width, height, aspectRatio);
+        _rangeX = (xMin, xMin + width);
+        _rangeY = (box.center.dy - height / 2, box.center.dy + height / 2);
+        break;
+      case 'bl':
+        height = containerHeight - yMin;
+        width = xMax;
+        (width, height) = _getAspectHW(width, height, aspectRatio);
+        _rangeX = (xMax - width, xMax);
+        _rangeY = (yMin, yMin + height);
+        break;
+      case 'bm':
+        height = containerHeight - yMin;
+        final leftHalfWidth2 = box.center.dx;
+        final rightHalfWidth2 = containerWidth - box.center.dx;
+        width = 2 *
+            (leftHalfWidth2 < rightHalfWidth2
+                ? leftHalfWidth2
+                : rightHalfWidth2);
+        (width, height) = _getAspectHW(width, height, aspectRatio);
+        _rangeX = (box.center.dx - width / 2, box.center.dx + width / 2);
+        _rangeY = (yMin, yMin + height);
+        break;
+      case 'br':
+        height = containerHeight - yMin;
+        width = containerWidth - xMin;
+        (width, height) = _getAspectHW(width, height, aspectRatio);
+        _rangeX = (xMin, xMin + width);
+        _rangeY = (yMin, yMin + height);
+        break;
+    }
+  }
+
+  /// 上游 changeDir：拖过零点翻柄。
+  void _changeDir() {
+    var dir = _boxMoveDir;
+    if (dir.contains('t')) {
+      dir = dir.replaceFirst('t', 'b');
+    } else if (dir.contains('b')) {
+      dir = dir.replaceFirst('b', 't');
+    }
+    if (dir.contains('l')) {
+      dir = dir.replaceFirst('l', 'r');
+    } else if (dir.contains('r')) {
+      dir = dir.replaceFirst('r', 'l');
+    }
+    _boxMoveDir = dir;
+  }
+
+  void _handleCornerDown(String dir) {
+    _boxMoveDir = dir;
+    _boxMoveParam = _getMoveParamByDir(dir);
+    if (widget.aspectRatio != null) {
+      _getRangeForAspectChange();
+    } else {
+      _rangeX = (0, _containerData.width);
+      _rangeY = (0, _containerData.height);
+    }
+  }
+
+  /// 上游 handleCornerAspectMouseMove：定比角柄拖动。
+  void _handleCornerAspectMove(Offset local) {
+    final box = _cropperBox;
+    final aspectRatio = widget.aspectRatio!;
+    late double offsetX, offsetY;
+    if (_boxMoveDir == 'ml' || _boxMoveDir == 'mr') {
+      offsetX = _getMiddle(local.dx, _rangeX!);
+    } else {
+      offsetY = _getMiddle(local.dy, _rangeY!);
+    }
+    double width = box.width, height = box.height;
+    var center = box.center;
+    switch (_boxMoveDir) {
+      case 'tl':
+        height = _rangeY!.$2 - offsetY;
+        width = height * aspectRatio;
+        center = Offset(
+          _rangeX!.$2 - width / 2,
+          _rangeY!.$2 - height / 2,
+        );
+        break;
+      case 'tm':
+        height = _rangeY!.$2 - offsetY;
+        width = height * aspectRatio;
+        center = Offset(
+          box.center.dx,
+          _rangeY!.$2 - height / 2,
+        );
+        break;
+      case 'tr':
+        height = _rangeY!.$2 - offsetY;
+        width = height * aspectRatio;
+        center = Offset(
+          _rangeX!.$1 + width / 2,
+          _rangeY!.$2 - height / 2,
+        );
+        break;
+      case 'ml':
+        width = _rangeX!.$2 - offsetX;
+        height = width / aspectRatio;
+        center = Offset(
+          _rangeX!.$2 - width / 2,
+          box.center.dy,
+        );
+        break;
+      case 'mr':
+        width = offsetX - _rangeX!.$1;
+        height = width / aspectRatio;
+        center = Offset(
+          _rangeX!.$1 + width / 2,
+          box.center.dy,
+        );
+        break;
+      case 'bl':
+        height = offsetY - _rangeY!.$1;
+        width = height * aspectRatio;
+        center = Offset(
+          _rangeX!.$2 - width / 2,
+          _rangeY!.$1 + height / 2,
+        );
+        break;
+      case 'bm':
+        height = offsetY - _rangeY!.$1;
+        width = height * aspectRatio;
+        center = Offset(
+          box.center.dx,
+          _rangeY!.$1 + height / 2,
+        );
+        break;
+      case 'br':
+        height = offsetY - _rangeY!.$1;
+        width = height * aspectRatio;
+        center = Offset(
+          _rangeX!.$1 + width / 2,
+          _rangeY!.$1 + height / 2,
+        );
+        break;
+    }
+    if (height == 0 && width == 0) {
+      _changeDir();
+      _getRangeForAspectChange();
+    }
+    setState(() => _cropperBox = _CropRect(width, height, center));
+  }
+
+  /// 上游 handleCornerMouseMove：自由角柄拖动（过零点翻柄）。
+  void _handleCornerMove(Offset local) {
+    if (widget.aspectRatio != null) {
+      _handleCornerAspectMove(local);
+      return;
+    }
+    final offsetX = _getMiddle(local.dx, _rangeX!);
+    final offsetY = _getMiddle(local.dy, _rangeY!);
+    final box = _cropperBox;
+    var width = box.width;
+    var height = box.height;
+    var center = box.center;
+    var paramX = _boxMoveParam.x;
+    var paramY = _boxMoveParam.y;
+    if (paramX != 0) {
+      final x = box.center.dx + paramX * box.width / 2;
+      width = box.width + paramX * (offsetX - x);
+      if (width < 0) {
+        width = -width;
+        paramX = -paramX;
+        _boxMoveParam = (x: paramX, y: paramY);
+      }
+      center = Offset(offsetX - paramX * width / 2, center.dy);
+    }
+    if (paramY != 0) {
+      final y = box.center.dy + paramY * box.height / 2;
+      height = box.height + paramY * (offsetY - y);
+      if (height < 0) {
+        height = -height;
+        paramY = -paramY;
+        _boxMoveParam = (x: paramX, y: paramY);
+      }
+      center = Offset(center.dx, offsetY - paramY * height / 2);
+    }
+    setState(() => _cropperBox = _CropRect(width, height, center));
+  }
+
+  void _handleCornerUp() {
+    _boxMoveParam = (x: 0, y: 0);
+  }
+
+  /// 上游 handleCropperBoxMouseDown：移动裁切框（角柄命中不响应）。
+  void _handleBoxDown(Offset local) {
+    _cropperBoxMoveStart = local;
+    final box = _cropperBox;
+    // 计算 cropperBox 中心点移动范围
+    _moveRange = (
+      xMin: box.width / 2,
+      xMax: _containerData.width - box.width / 2,
+      yMin: box.height / 2,
+      yMax: _containerData.height - box.height / 2,
+    );
+  }
+
+  /// 上游 handleCropperBoxMouseMove。
+  void _handleBoxMove(Offset local) {
+    final start = _cropperBoxMoveStart;
+    if (start == null) return;
+    final box = _cropperBox;
+    final offsetX = local.dx - start.dx;
+    final offsetY = local.dy - start.dy;
+    final range = _moveRange!;
+    final newCenterPointX =
+        _getMiddle(box.center.dx + offsetX, (range.xMin, range.xMax));
+    final newCenterPointY =
+        _getMiddle(box.center.dy + offsetY, (range.yMin, range.yMax));
+    _cropperBoxMoveStart = local;
+    setState(() {
+      _cropperBox = _CropRect(
+        box.width,
+        box.height,
+        Offset(newCenterPointX, newCenterPointY),
+      );
+    });
+  }
+
+  void _handleBoxUp() {
+    _cropperBoxMoveStart = null;
+  }
+
+  /// 上游 handleMaskMouseDown：平移图片。
+  void _handleMaskDown(Offset local) {
+    _imgMoveStart = local;
+  }
+
+  /// 上游 handleImgMove（图片可拖出视野，无钳制）。
+  void _handleImgMoveUpdate(Offset local) {
+    final start = _imgMoveStart;
+    if (start == null) return;
+    final imgData = _imgData;
+    final offsetX = local.dx - start.dx;
+    final offsetY = local.dy - start.dy;
+    _imgMoveStart = local;
+    setState(() {
+      _imgData = _CropRect(
+        imgData.width,
+        imgData.height,
+        imgData.center + Offset(offsetX, offsetY),
+      );
+    });
+  }
+
+  void _handleImgMoveUp() {
+    _imgMoveStart = null;
+  }
+
+  /// 上游 getCropperCanvas：原图分辨率的旋转外接矩形内裁出裁切框区域。
+  ///
+  /// 越界补 fill：fillRect(0, 0, relativeWidth, relativeHeight)、
+  /// getImageData(realLeft, realTop, realWidth, realHeight)、
+  /// relativeCropLeft < 0 ? - relativeCropLeft : 0 修正贴图偏移。
+  Future<ui.Image> _getCropperImage() async {
+    final image = _image;
+    if (image == null || !_loaded) {
+      throw StateError('SemiCropper image is not loaded yet');
+    }
+    final fill = widget.fill;
+    final cropperBox = _cropperBox;
+    final imgData = _imgData;
+
+    // 计算包含旋转后的图片的矩形容器的宽高
+    final angle = _rotate * math.pi / 180;
+    final sine = angle.sin().abs();
+    final cosine = angle.cos().abs();
+    final imgWidth = _originalWidth;
+    final imgHeight = _originalHeight;
+    final containerWidth = imgWidth * cosine + imgHeight * sine;
+    final containerHeight = imgHeight * cosine + imgWidth * sine;
+
+    // 判断裁切区域和外接矩形是否存在交集，如果不存在，则直接返回空白图片
+    // 计算需要裁剪的区域实际大小和位置
+    final cropperContainerWidth = containerWidth * _zoom * _scale;
+    final cropperContainerHeight = containerHeight * _zoom * _scale;
+    final cropperContainerTop = imgData.center.dy - cropperContainerHeight / 2;
+    final cropperContainerLeft = imgData.center.dx - cropperContainerWidth / 2;
+    final cropperBoxLeft = cropperBox.left;
+    final cropperBoxTop = cropperBox.top;
+    final realZoom = _zoom * _scale;
+
+    final relativeCropLeft = (cropperBoxLeft - cropperContainerLeft) / realZoom;
+    final relativeCropTop = (cropperBoxTop - cropperContainerTop) / realZoom;
+    final relativeWidth = cropperBox.width / realZoom;
+    final relativeHeight = cropperBox.height / realZoom;
+    final relativeCropRight = relativeCropLeft + relativeWidth;
+    final relativeCropBottom = relativeCropTop + relativeHeight;
+
+    if (relativeCropRight < 0 ||
+        relativeCropBottom < 0 ||
+        relativeCropLeft > containerWidth ||
+        relativeCropTop > containerHeight) {
+      // 没有交集，直接返回空白图片
+      return _record(
+        relativeWidth,
+        relativeHeight,
+        (canvas, width, height) {
+          canvas.drawRect(
+            Rect.fromLTWH(0, 0, width, height),
+            Paint()..color = fill,
+          );
+        },
+      );
+    }
+
+    final full = await _record(
+      containerWidth,
+      containerHeight,
+      (canvas, width, height) {
+        canvas.drawRect(
+          Rect.fromLTWH(0, 0, width, height),
+          Paint()..color = fill,
+        );
+        final halfWidth = width / 2;
+        final halfHeight = height / 2;
+        canvas.translate(halfWidth, halfHeight);
+        canvas.rotate(_rotate * math.pi / 180);
+        canvas.translate(-halfWidth, -halfHeight);
+        final imgX = (width - imgWidth) / 2;
+        final imgY = (height - imgHeight) / 2;
+        canvas.drawImageRect(
+          image,
+          Rect.fromLTWH(0, 0, imgWidth, imgHeight),
+          Rect.fromLTWH(imgX, imgY, imgWidth, imgHeight),
+          Paint()..filterQuality = FilterQuality.none,
+        );
+      },
+    );
+
+    // 为了避免裁剪时候，超出被裁切的画布的部分颜色不正常，需要将裁切区域限制在画布范围内。
+    // 相对位置会在后续进行修正
+    var realLeft = relativeCropLeft;
+    var realTop = relativeCropTop;
+    var realWidth = relativeWidth;
+    var realHeight = relativeHeight;
+
+    if (relativeCropLeft < 0) {
+      realLeft = 0;
+    }
+    if (relativeCropTop < 0) {
+      realTop = 0;
+    }
+    if (relativeCropRight > containerWidth) {
+      realWidth = containerWidth - realLeft;
+    } else if (relativeCropLeft < 0) {
+      realWidth = relativeCropRight;
+    }
+
+    if (relativeCropBottom > containerHeight) {
+      realHeight = containerHeight - realTop;
+    } else if (relativeCropTop < 0) {
+      realHeight = relativeCropBottom;
+    }
+
+    final result = await _record(
+      relativeWidth,
+      relativeHeight,
+      (canvas, width, height) {
+        canvas.drawRect(
+          Rect.fromLTWH(0, 0, width, height),
+          Paint()..color = fill,
+        );
+        // putImageData 的整像素替换语义（BlendMode.src 贴图）。
+        canvas.drawImageRect(
+          full,
+          Rect.fromLTWH(realLeft, realTop, realWidth, realHeight),
+          Rect.fromLTWH(
+            relativeCropLeft < 0 ? -relativeCropLeft : 0,
+            relativeCropTop < 0 ? -relativeCropTop : 0,
+            realWidth,
+            realHeight,
+          ),
+          Paint()
+            ..blendMode = BlendMode.src
+            ..filterQuality = FilterQuality.none,
+        );
+      },
+    );
+    full.dispose();
+    return result;
+  }
+
+  Future<ui.Image> _record(
+    double width,
+    double height,
+    void Function(Canvas canvas, double width, double height) draw,
+  ) {
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    draw(canvas, width, height);
+    return recorder
+        .endRecording()
+        .toImage(width.round().clamp(1, 1 << 20), height.round().clamp(1, 1 << 20));
+  }
+
+  /// 上游 updatePreview：预览容器内按裁切框适配缩放。
+  Widget _buildCropView() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final containerWidth = constraints.hasBoundedWidth
+            ? constraints.maxWidth
+            : 0.0;
+        final containerHeight = constraints.hasBoundedHeight
+            ? constraints.maxHeight
+            : 0.0;
+        final cropperBox = _cropperBox;
+        if (!_loaded || cropperBox.width <= 0 || cropperBox.height <= 0) {
+          return const SizedBox.shrink();
+        }
+        var zoom = 1.0;
+        var previewWidth = containerWidth;
+        var previewHeight = containerHeight;
+        if (previewWidth < previewHeight) {
+          zoom = containerWidth / cropperBox.width;
+          final tempHeight = zoom * cropperBox.height;
+          if (tempHeight > containerHeight) {
+            zoom = containerHeight / cropperBox.height;
+            previewWidth = zoom * cropperBox.width;
+          } else {
+            previewHeight = tempHeight;
+          }
+        } else {
+          zoom = containerHeight / cropperBox.height;
+          final tempWidth = zoom * cropperBox.width;
+          if (tempWidth > containerWidth) {
+            zoom = containerWidth / cropperBox.width;
+            previewHeight = zoom * cropperBox.height;
+          } else {
+            previewWidth = tempWidth;
+          }
+        }
+        final imgX = _imgData.left - cropperBox.left;
+        final imgY = _imgData.top - cropperBox.top;
+        return SizedBox(
+          width: previewWidth,
+          height: previewHeight,
+          child: ClipRect(
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Positioned(
+                  left: imgX * zoom,
+                  top: imgY * zoom,
+                  width: _imgData.width * zoom,
+                  height: _imgData.height * zoom,
+                  child: Transform.rotate(
+                    // transformOrigin: 'center'
+                    angle: _rotate * math.pi / 180,
+                    child: RawImage(
+                      image: _image,
+                      fit: BoxFit.fill,
+                      filterQuality: FilterQuality.low,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // 受控 zoom/rotate 同步（getDerivedStateFromProps 等价位置）。
+    _syncControlledProps();
+    final t = SemiCropperTheme.resolve(context);
+    final imgX = _imgData.left;
+    final imgY = _imgData.top;
+    final boxX = _cropperBox.left;
+    final boxY = _cropperBox.top;
+    final cropperImgX = imgX - boxX;
+    final cropperImgY = imgY - boxY;
+
+    final imageLayer = Positioned(
+      left: imgX,
+      top: imgY,
+      width: _imgData.width,
+      height: _imgData.height,
+      child: Transform.rotate(
+        // transformOrigin: 'center'
+        angle: _rotate * math.pi / 180,
+        child: RawImage(
+          image: _image,
+          fit: BoxFit.fill,
+          filterQuality: FilterQuality.low,
+        ),
+      ),
+    );
+
+    // 遮罩层（cursor: move;; 双分号 quirk）：拖动平移图片。
+    final mask = Positioned.fill(
+      child: Listener(
+        key: SemiCropper.maskKey,
+        behavior: HitTestBehavior.opaque,
+        onPointerDown: (e) {
+          if (_dragMode != _DragMode.none) return;
+          _dragMode = _DragMode.imgMove;
+          _handleMaskDown(e.localPosition);
+        },
+        child: ColoredBox(color: t.colorCropperMaskBg),
+      ),
+    );
+
+    final corners = _buildCorners(t);
+    final isRound = widget.shape == SemiCropperShape.round;
+
+    // 裁切框（outline 外描边语义：画在盒外）。
+    final box = Positioned(
+      left: boxX,
+      top: boxY,
+      width: _cropperBox.width,
+      height: _cropperBox.height,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned.fill(
+            child: IgnorePointer(
+              child: CustomPaint(
+                painter: _CropperBoxOutlinePainter(
+                  color: t.colorCropperBoxOutline,
+                  strokeWidth: t.widthCropperBoxOutline,
+                  oval: isRound,
+                ),
+              ),
+            ),
+          ),
+          Listener(
+            key: SemiCropper.boxKey,
+            behavior: HitTestBehavior.opaque,
+            onPointerDown: (e) {
+              // 角柄命中（target.dataset.dir）不移动裁切框。
+              if (_dragMode != _DragMode.none) return;
+              _dragMode = _DragMode.boxMove;
+              _handleBoxDown(e.localPosition);
+            },
+            child: ClipPath(
+              // `-view-box-round` border-radius: 50%（round/roundRect）。
+              clipper: widget.shape == SemiCropperShape.rect
+                  ? null
+                  : const _OvalClipper(),
+              child: ClipRect(
+                child: SizedBox(
+                  width: _cropperBox.width,
+                  height: _cropperBox.height,
+                  child: Stack(
+                    key: SemiCropper.viewBoxKey,
+                    clipBehavior: Clip.hardEdge,
+                    children: [
+                      Positioned(
+                        left: cropperImgX,
+                        top: cropperImgY,
+                        width: _imgData.width,
+                        height: _imgData.height,
+                        child: Transform.rotate(
+                          angle: _rotate * math.pi / 180,
+                          child: RawImage(
+                            image: _image,
+                            fit: BoxFit.fill,
+                            filterQuality: FilterQuality.low,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          if (_loaded && widget.showResizeBox) ...corners,
+        ],
+      ),
+    );
+
+    return Semantics(
+      container: true,
+      label: '图片裁切',
+      child: MouseRegion(
+        cursor: SystemMouseCursors.move,
+        child: Listener(
+          behavior: HitTestBehavior.opaque,
+          onPointerDown: (_) => _dragMode = _DragMode.none,
+          onPointerMove: (e) {
+            if (!e.down) return;
+            switch (_dragMode) {
+              case _DragMode.imgMove:
+                _handleImgMoveUpdate(e.localPosition);
+              case _DragMode.boxMove:
+                _handleBoxMove(e.localPosition);
+              case _DragMode.cornerResize:
+                _handleCornerMove(e.localPosition);
+              case _DragMode.none:
+                break;
+            }
+          },
+          onPointerUp: (_) => _endDrag(),
+          onPointerCancel: (_) => _endDrag(),
+          onPointerSignal: (e) {
+            if (e is PointerScrollEvent) _handleWheel(e);
+          },
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final size = constraints.biggest;
+              _handleLayout(size);
+              return Stack(
+                clipBehavior: Clip.none,
+                fit: StackFit.expand,
+                children: [
+                  // 图片层（img-wrapper overflow: hidden）。
+                  ClipRect(child: Stack(children: [imageLayer])),
+                  mask,
+                  box,
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _endDrag() {
+    switch (_dragMode) {
+      case _DragMode.imgMove:
+        _handleImgMoveUp();
+      case _DragMode.boxMove:
+        _handleBoxUp();
+      case _DragMode.cornerResize:
+        _handleCornerUp();
+      case _DragMode.none:
+        break;
+    }
+    _dragMode = _DragMode.none;
+  }
+
+  List<Widget> _buildCorners(SemiResolvedCropperThemeData t) {
+    // `$half_corner_width: calc($width-cropper_box_corner / 2)` 半宽外偏。
+    final size = t.widthCropperBoxCorner;
+    final half = size / 2;
+    final boxWidth = _cropperBox.width;
+    final boxHeight = _cropperBox.height;
+    // round 仅四边中点柄（roundCorner）。
+    const placements = <String, (double? left, double? top, double? right,
+        double? bottom)>{
+      'tl': (-half, -half, null, null),
+      'tm': (null, -half, null, null),
+      'tr': (null, -half, -half, null),
+      'ml': (-half, null, null, null),
+      'mr': (null, null, -half, null),
+      'bl': (-half, null, null, -half),
+      'bm': (null, null, null, -half),
+      'br': (null, null, -half, -half),
+    };
+    const cursors = <String, MouseCursor>{
+      'tl': SystemMouseCursors.resizeUpLeft,
+      'tm': SystemMouseCursors.resizeUp,
+      'tr': SystemMouseCursors.resizeUpRight,
+      'ml': SystemMouseCursors.resizeLeft,
+      'mr': SystemMouseCursors.resizeRight,
+      'bl': SystemMouseCursors.resizeDownLeft,
+      'bm': SystemMouseCursors.resizeDown,
+      'br': SystemMouseCursors.resizeDownRight,
+    };
+    final dirs = widget.shape == SemiCropperShape.round
+        ? const ['tm', 'ml', 'mr', 'bm']
+        : const ['tl', 'tm', 'tr', 'ml', 'mr', 'bl', 'bm', 'br'];
+    return [
+      for (final dir in dirs)
+        Positioned(
+          left: switch (dir) {
+            'tl' || 'ml' || 'bl' => -half,
+            'tm' || 'bm' => boxWidth / 2 - half,
+            _ => null,
+          },
+          top: switch (dir) {
+            'tl' || 'tm' || 'tr' => -half,
+            'ml' || 'mr' => boxHeight / 2 - half,
+            _ => null,
+          },
+          right: switch (dir) {
+            'tr' || 'mr' || 'br' => -half,
+            _ => null,
+          },
+          bottom: switch (dir) {
+            'bl' || 'bm' || 'br' => -half,
+            _ => null,
+          },
+          width: size,
+          height: size,
+          child: MouseRegion(
+            cursor: cursors[dir]!,
+            child: Listener(
+              key: SemiCropper.cornerKey(dir),
+              behavior: HitTestBehavior.opaque,
+              onPointerDown: (e) {
+                _dragMode = _DragMode.cornerResize;
+                _handleCornerDown(dir);
+              },
+              child: ColoredBox(color: t.colorCropperBoxCornerBg),
+            ),
+          ),
+        ),
+    ];
+  }
+}
+
+/// `-view-box-round`：`border-radius: 50%` 椭圆裁切。
+class _OvalClipper extends CustomClipper<Path> {
+  const _OvalClipper();
+
+  @override
+  Path getClip(Size size) => Path()..addOval(Offset.zero & size);
+
+  @override
+  bool shouldReclip(_OvalClipper oldClipper) => false;
+}
+
+/// 裁切框 outline 外描边（CSS `outline: w solid` 画在盒外）。
+class _CropperBoxOutlinePainter extends CustomPainter {
+  const _CropperBoxOutlinePainter({
+    required this.color,
+    required this.strokeWidth,
+    required this.oval,
+  });
+
+  final Color color;
+  final double strokeWidth;
+  final bool oval;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..color = color;
+    final rect = Offset.zero & size;
+    final outline = strokeWidth > 0 ? rect.deflate(strokeWidth / 2) : rect;
+    if (oval) {
+      canvas.drawOval(outline, paint);
+    } else {
+      canvas.drawRect(outline, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_CropperBoxOutlinePainter oldDelegate) =>
+      color != oldDelegate.color ||
+      strokeWidth != oldDelegate.strokeWidth ||
+      oval != oldDelegate.oval;
+}

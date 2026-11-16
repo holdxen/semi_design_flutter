@@ -57,6 +57,9 @@ export 'src/overlay/tooltip_positioning.dart';
 export 'src/components/semi_collapse.dart';
 export 'src/theme/semi_collapse_theme.dart';
 export 'src/theme/semi_collapse_theme_data.dart';
+export 'src/components/semi_collapsible.dart';
+export 'src/theme/semi_collapsible_theme.dart';
+export 'src/theme/semi_collapsible_theme_data.dart';
 export 'src/components/semi_dropdown.dart';
 export 'src/components/semi_button.dart';
 export 'src/theme/semi_button_theme.dart';
@@ -114,6 +117,9 @@ export 'src/theme/semi_transfer_theme_data.dart';
 export 'src/components/semi_anchor.dart';
 export 'src/theme/semi_anchor_theme.dart';
 export 'src/theme/semi_anchor_theme_data.dart';
+export 'src/components/semi_backtop.dart';
+export 'src/theme/semi_backtop_theme.dart';
+export 'src/theme/semi_backtop_theme_data.dart';
 export 'src/components/semi_breadcrumb.dart';
 export 'src/theme/semi_breadcrumb_theme.dart';
 export 'src/theme/semi_breadcrumb_theme_data.dart';
@@ -147,6 +153,9 @@ export 'src/theme/semi_modal_theme_data.dart';
 export 'src/components/semi_banner.dart';
 export 'src/theme/semi_banner_theme.dart';
 export 'src/theme/semi_banner_theme_data.dart';
+export 'src/components/semi_badge.dart';
+export 'src/theme/semi_badge_theme.dart';
+export 'src/theme/semi_badge_theme_data.dart';
 
 /// A Calculator.
 class Calculator {

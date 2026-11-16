@@ -1,10 +1,12 @@
 # SemiModal
 
-对话框（上游 Semi Modal 全件移植）：声明式（`visible` 驱动显隐，onOk/onCancel 只通知）+ 命令式（`confirm`/`info`/`success`/`warning`/`error` 一族，内部管理显隐 + `destroy`/`update` 句柄）。标题/内容/图标/自定义 header/footer、四档 `size`（small 448 / medium 684 / large 920 / full-width = 视口-64）、`centered`、`fullScreen`、`mask`/`maskClosable`、`closable`/`closeIcon`、`closeOnEsc`、`hasCancel`/`okText`/`okType`/`cancelText`、`confirmLoading`/`cancelLoading`、`motion`（120ms scale 0.7→1 + fade）、`footerFill`、`modalRender`。弹层底座为 vendored 引擎（`lib/src/overlay/dialog_engine`，PROVENANCE.md）：tag/队列/遮罩/动画入库 `SmartDialog.show`，蒙层点击与 Esc 走 `onCancel`。主题对账 **81 = 63 FIELDS + 18 MOTION + 0 INTERNAL**（variables.scss 63 + animation.scss 18；`$module` 胶水不计，steps `104 = 94 + 10 + 0`、tabs `144 = 121 + 23 + 0` 先例）。★**0 死变量**（modal.scss/rtl.scss 逐条消费）。
+对话框（上游 Semi Modal 全件移植）：声明式（`visible` 驱动显隐，onOk/onCancel 只通知）+ 命令式（`confirm`/`info`/`success`/`warning`/`error` 一族，内部管理显隐 + `destroy`/`update` 句柄）。标题/内容/图标/自定义 header/footer、四档 `size`（small 448 / medium 684 / large 920 / full-width = 视口-64）、`centered`、`fullScreen`、`mask`/`maskClosable`/`maskFixed`（+ `SemiModalRegion` 区域遮罩——`getPopupContainer` 的 Flutter 形态，见差异）、`closable`/`closeIcon`、`closeOnEsc`、`hasCancel`/`okText`/`okType`/`cancelText`、`confirmLoading`/`cancelLoading`、`motion`（120ms scale 0.7→1 + fade）、`footerFill`、`modalRender`。弹层底座为 vendored 引擎（`lib/src/overlay/dialog_engine`，PROVENANCE.md）：tag/队列/遮罩/动画入库 `SmartDialog.show`，蒙层点击与 Esc 走 `onCancel`。主题对账 **81 = 63 FIELDS + 18 MOTION + 0 INTERNAL**（variables.scss 63 + animation.scss 18；`$module` 胶水不计，steps `104 = 94 + 10 + 0`、tabs `144 = 121 + 23 + 0` 先例）。★**0 死变量**（modal.scss/rtl.scss 逐条消费）。
 
 ## API
 
-`SemiModal({visible, title, content, icon, header, footer, width, height, size: small, centered: false, mask: true, maskClosable: true, closable: true, closeIcon, closeOnEsc: true, hasCancel: true, okText, okType: primary, cancelText, confirmLoading, cancelLoading, onOk, onCancel, afterClose, motion: true, fullScreen: false, footerFill: false, modalRender})`。
+`SemiModal({visible, title, content, icon, header, footer, width, height, size: small, centered: false, mask: true, maskClosable: true, maskFixed: false, closable: true, closeIcon, closeOnEsc: true, hasCancel: true, okText, okType: primary, cancelText, confirmLoading, cancelLoading, onOk, onCancel, afterClose, motion: true, fullScreen: false, footerFill: false, modalRender})`。
+
+`SemiModalRegion({child})`——区域遮罩容器（上游 `getPopupContainer` 容器的 Flutter 形态）：区域内的 Modal 只遮本区域，`maskFixed: true` 强制全窗。
 
 title/content `Object?`（String | Widget）。okType `SemiButtonType`（上游 Button `type` 字符串 → 强类型）。onOk/onCancel `FutureOr<void> Function()?`（返回 `Future` 时按钮 loading 至完成——声明式不自关、命令式完成后关闭；error 变体 `okType` 缺省 `danger`）。size `SemiModalSize`（`strings.SIZE`）。confirm 族：`SemiModal.confirm/info/success/warning/error({...})` → `SemiModalHandle { destroy(), update(...) }`（同名参数 + 可选 `BuildContext? context` 主题锚点，缺省亮色 token）。locale zh 硬编码：「确定」/「取消」/「关闭」（zh_CN.ts Modal）。
 
@@ -127,7 +129,8 @@ title/content `Object?`（String | Widget）。okType `SemiButtonType`（上游 
 
 ## 差异清单
 
-- **弹层底座**：上游 Portal + `document.body` overflow 锁 → vendored 引擎 ambient Overlay 入库（PROVENANCE.md）；`getPopupContainer`/`getContainerContext`/`maskFixed`/`zIndex`/`keepDOM`/`lazyRender`/`direction`（RTL 走 `Directionality`）/`style`/`maskStyle`/`bodyStyle`/`className` 未移植（层级/定位由引擎与布局层表达）。
+- **弹层底座**：上游 Portal + `document.body` overflow 锁 → vendored 引擎 ambient Overlay 入库（PROVENANCE.md）；`getContainerContext`/`zIndex`/`keepDOM`/`lazyRender`/`direction`（RTL 走 `Directionality`）/`style`/`maskStyle`/`bodyStyle`/`className` 未移植（层级/定位由引擎与布局层表达）。
+- **区域遮罩（getPopupContainer/maskFixed）**：上游 `getPopupContainer: () => el` DOM 回调 + 容器 `position: relative` → Flutter 形态为 `SemiModalRegion` scope 包裹器（就近挂载判据，不取回调——DOM 容器选择的 Flutter 对应物是 scope + 就近渲染）；区域内的 Modal（命令式族传区域内 `context`）只遮区域——modal.scss:210-216 `.semi-modal-popup` mask/wrap `position: absolute` + `overflow: hidden` 语义（ClipRect + 层 Stack 表达），区域层消费同款 120ms scale/fade 动画 token。`maskFixed` 照名移植（区域内仍走全窗引擎路——modal.scss:218-222 `.semi-modal-fixed`）。body 滚动锁只在挂 body 时生效（Modal.tsx:141-151）→ 区域模式不锁滚动；区域为专用 scope，不劫持区域内 tooltip 等弹层的 ambient Overlay 路由（同上游逐组件 `getPopupContainer` 粒度）。
 - **居中语义**：`align-items: flex-start` + auto margin 的「内容超高时退化为顶部+滚动」技巧 → 弹层为绝对定位居中（超高内容由弹层自滚），居中简化为 `Alignment.center`。
 - **标题字号**：`font-modal_header-*`（14/bold）被 `Typography.Title heading 5`（18）覆盖的 CSS specificity quirk → 渲染 SemiTitle heading 5，两 token 注释引用。
 - **蒙层动画**：蒙层独立 90ms 简写时长随引擎主动画（120ms）渐显，`modal_mask-*` 时长/曲线/延迟/opacity 槽注释引用（内容 scale/opacity/曲线/时长精确消费）。

@@ -10,6 +10,7 @@ import 'semi_timeline_theme_data.dart';
 import 'semi_descriptions_theme_data.dart';
 import 'semi_tooltip_theme_data.dart';
 import 'semi_collapse_theme_data.dart';
+import 'semi_collapsible_theme_data.dart';
 import 'semi_dropdown_theme_data.dart';
 import 'semi_button_theme_data.dart';
 import 'semi_card_theme_data.dart';
@@ -30,6 +31,7 @@ import 'semi_color_picker_theme_data.dart';
 import 'semi_time_picker_theme_data.dart';
 import 'semi_transfer_theme_data.dart';
 import 'semi_anchor_theme_data.dart';
+import 'semi_backtop_theme_data.dart';
 import 'semi_breadcrumb_theme_data.dart';
 import 'semi_navigation_theme_data.dart';
 import 'semi_pagination_theme_data.dart';
@@ -41,6 +43,7 @@ import 'semi_tabs_theme_data.dart';
 import 'semi_carousel_theme_data.dart';
 import 'semi_modal_theme_data.dart';
 import 'semi_banner_theme_data.dart';
+import 'semi_badge_theme_data.dart';
 
 @immutable
 class SemiComponentThemes {
@@ -56,6 +59,7 @@ class SemiComponentThemes {
     this.descriptions = const SemiDescriptionsThemeData(),
     this.tooltip = const SemiTooltipThemeData(),
     this.collapse = const SemiCollapseThemeData(),
+    this.collapsible = const SemiCollapsibleThemeData(),
     this.dropdown = const SemiDropdownThemeData(),
     this.button = const SemiButtonThemeData(),
     this.card = const SemiCardThemeData(),
@@ -75,6 +79,7 @@ class SemiComponentThemes {
     this.timePicker = const SemiTimePickerThemeData(),
     this.transfer = const SemiTransferThemeData(),
     this.anchor = const SemiAnchorThemeData(),
+    this.backTop = const SemiBackTopThemeData(),
     this.breadcrumb = const SemiBreadcrumbThemeData(),
     this.navigation = const SemiNavigationThemeData(),
     this.pagination = const SemiPaginationThemeData(),
@@ -86,6 +91,7 @@ class SemiComponentThemes {
     this.carousel = const SemiCarouselThemeData(),
     this.modal = const SemiModalThemeData(),
     this.banner = const SemiBannerThemeData(),
+    this.badge = const SemiBadgeThemeData(),
   });
   final SemiTagThemeData tag;
   final SemiTypographyThemeData typography;
@@ -98,6 +104,7 @@ class SemiComponentThemes {
   final SemiDescriptionsThemeData descriptions;
   final SemiTooltipThemeData tooltip;
   final SemiCollapseThemeData collapse;
+  final SemiCollapsibleThemeData collapsible;
   final SemiDropdownThemeData dropdown;
   final SemiButtonThemeData button;
   final SemiCardThemeData card;
@@ -120,6 +127,7 @@ class SemiComponentThemes {
   final SemiTimePickerThemeData timePicker;
   final SemiTransferThemeData transfer;
   final SemiAnchorThemeData anchor;
+  final SemiBackTopThemeData backTop;
   final SemiBreadcrumbThemeData breadcrumb;
   final SemiNavigationThemeData navigation;
   final SemiPaginationThemeData pagination;
@@ -131,6 +139,7 @@ class SemiComponentThemes {
   final SemiCarouselThemeData carousel;
   final SemiModalThemeData modal;
   final SemiBannerThemeData banner;
+  final SemiBadgeThemeData badge;
   SemiComponentThemes copyWith({
     SemiTagThemeData? tag,
     SemiTypographyThemeData? typography,
@@ -143,6 +152,7 @@ class SemiComponentThemes {
     SemiDescriptionsThemeData? descriptions,
     SemiTooltipThemeData? tooltip,
     SemiCollapseThemeData? collapse,
+    SemiCollapsibleThemeData? collapsible,
     SemiDropdownThemeData? dropdown,
     SemiButtonThemeData? button,
     SemiCardThemeData? card,
@@ -162,6 +172,7 @@ class SemiComponentThemes {
     SemiTimePickerThemeData? timePicker,
     SemiTransferThemeData? transfer,
     SemiAnchorThemeData? anchor,
+    SemiBackTopThemeData? backTop,
     SemiBreadcrumbThemeData? breadcrumb,
     SemiNavigationThemeData? navigation,
     SemiPaginationThemeData? pagination,
@@ -173,6 +184,7 @@ class SemiComponentThemes {
     SemiCarouselThemeData? carousel,
     SemiModalThemeData? modal,
     SemiBannerThemeData? banner,
+    SemiBadgeThemeData? badge,
   }) => SemiComponentThemes(
     tag: tag ?? this.tag,
     typography: typography ?? this.typography,
@@ -185,6 +197,7 @@ class SemiComponentThemes {
     descriptions: descriptions ?? this.descriptions,
     tooltip: tooltip ?? this.tooltip,
     collapse: collapse ?? this.collapse,
+    collapsible: collapsible ?? this.collapsible,
     dropdown: dropdown ?? this.dropdown,
     button: button ?? this.button,
     card: card ?? this.card,
@@ -204,6 +217,7 @@ class SemiComponentThemes {
     timePicker: timePicker ?? this.timePicker,
     transfer: transfer ?? this.transfer,
     anchor: anchor ?? this.anchor,
+    backTop: backTop ?? this.backTop,
     breadcrumb: breadcrumb ?? this.breadcrumb,
     navigation: navigation ?? this.navigation,
     pagination: pagination ?? this.pagination,
@@ -215,6 +229,7 @@ class SemiComponentThemes {
     carousel: carousel ?? this.carousel,
     modal: modal ?? this.modal,
     banner: banner ?? this.banner,
+    badge: badge ?? this.badge,
   );
   @override
   bool operator ==(Object other) =>
@@ -231,6 +246,7 @@ class SemiComponentThemes {
           descriptions == other.descriptions &&
           tooltip == other.tooltip &&
           collapse == other.collapse &&
+          collapsible == other.collapsible &&
           dropdown == other.dropdown &&
           button == other.button &&
           card == other.card &&
@@ -250,6 +266,7 @@ class SemiComponentThemes {
           timePicker == other.timePicker &&
           transfer == other.transfer &&
           anchor == other.anchor &&
+          backTop == other.backTop &&
           breadcrumb == other.breadcrumb &&
           navigation == other.navigation &&
           pagination == other.pagination &&
@@ -260,7 +277,8 @@ class SemiComponentThemes {
           tabs == other.tabs &&
           carousel == other.carousel &&
           modal == other.modal &&
-          banner == other.banner;
+          banner == other.banner &&
+          badge == other.badge;
   @override
   int get hashCode => Object.hashAll([
     tag,
@@ -274,6 +292,7 @@ class SemiComponentThemes {
     descriptions,
     tooltip,
     collapse,
+    collapsible,
     dropdown,
     button,
     card,
@@ -293,6 +312,7 @@ class SemiComponentThemes {
     timePicker,
     transfer,
     anchor,
+    backTop,
     breadcrumb,
     navigation,
     pagination,
@@ -304,5 +324,6 @@ class SemiComponentThemes {
     carousel,
     modal,
     banner,
+    badge,
   ]);
 }
