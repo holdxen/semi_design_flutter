@@ -20,7 +20,7 @@ type `fill`（| basic | nav）。steps `List<SemiStepData>`（上游 `<Steps.Ste
 
 ### fill
 
-卡片等宽分栏（水平 `Row` + `Expanded`；垂直 `Column`）：item 高 72、右 margin 16、边框 1（透明）+ 圆角 medium(6)、paddingY 12 / paddingX 16、bg 过渡三元组 + `transform: scale(...)`（scale(1,1) 恒等）。左槽 24×24 圆角 32：wait 序号（底 text-2、字白）、process 序号（底 primary、字白——★`-left-process` 用 `primary-bg-default`，浅底白字 quirk 照抄）、finish/error/warning 状态图标 24（tick/alert-circle/alert-triangle），可点击 finish/error/warning hover/active 底色与字色（success/danger/warning 系）。标题 header-5(18) bold，状态色（process primary / finish success / error danger / warning warning / wait text-0）；描述 regular(14) text-2；可点击 hover 时描述 focus-border。自定义 icon 走左槽图标（不渲染序号，wait/process 底色不生效——`:not(.item-icon)`）。
+卡片等宽分栏（水平 `Row` + `Expanded`；垂直 `Column`）：item 高 72、右 margin 16、边框 1（透明）+ 圆角 medium(6)、paddingY 12 / paddingX 16、bg 过渡三元组 + `transform: scale(...)`（scale(1,1) 恒等）。左槽 24×24 圆角 32：wait 序号（底 text-2、字白）、process 序号（底 primary、字白——★`-left-process` 用 `primary-bg-default`，浅底白字 quirk 照抄）、finish/error/warning 状态图标 24（tick/alert-circle/alert-triangle），可点击 finish/error/warning hover/active 底色与字色（success/danger/warning 系）。序号行盒 32（`font-steps_item_left-lineHeight`）溢出 24 圆盒居中——`leadingDistribution: even` + `OverflowBox` 对齐 CSS「半行距上下均分、行盒溢出居中」（默认 proportional + Align 钳高会把数字压低溢出圆圈）。标题 header-5(18) bold，状态色（process primary / finish success / error danger / warning warning / wait text-0）；描述 regular(14) text-2；可点击 hover 时描述 focus-border。自定义 icon 走左槽图标（不渲染序号，wait/process 底色不生效——`:not(.item-icon)`）。
 
 ### basic
 

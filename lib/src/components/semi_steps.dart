@@ -527,10 +527,20 @@ class _FillStepState extends State<_FillStep> {
               height:
                   t.fontStepsItemLeftLineHeight /
                   _StepsMetrics.fillLeftFontSize,
+              // CSS `line-height` 半行距上下均分；Flutter 默认 proportional
+              // 会把数字压低溢出圆圈——even 对齐 CSS。
+              leadingDistribution: TextLeadingDistribution.even,
               color: numberColor,
             ),
             // 上游 `stepNumber: `${stepNumber + 1}``（0-based → 显示 1-based）。
-            child: Text('${step.stepNumber + 1}'),
+            // 行盒 32 高于 24 圆盒：CSS flex 居中让行盒上下溢出 4px 居中，
+            // Flutter 的 Align 会把文本钳回 24 顶对齐——OverflowBox 强制
+            // 行盒 32 后居中溢出（对齐 CSS）。
+            child: OverflowBox(
+              minHeight: t.fontStepsItemLeftLineHeight,
+              maxHeight: t.fontStepsItemLeftLineHeight,
+              child: Text('${step.stepNumber + 1}'),
+            ),
           );
         case SemiStepStatus.finish:
           inner = SemiIcon(SemiIcons.tickCircle, size: SemiIconSize.extraLarge);

@@ -9,6 +9,7 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:semi_design_flutter/semi_design_flutter.dart';
@@ -1001,6 +1002,38 @@ void main() {
       expect(titleColor(tester, 'Second'), t.colorStepsPrimaryIconDefault);
       expect(titleColor(tester, 'Third'), t.colorStepsMainTextDefault);
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('fill number sits centered in the badge circle', (
+      tester,
+    ) async {
+      final t = resolve();
+      await pumpHost(tester, const SemiSteps(steps: steps, current: 1));
+      final paragraph = tester.renderObject<RenderParagraph>(find.text('2'));
+      // 字形墨盒中心 vs 圆心——CSS `line-height` 半行距上下均分，Flutter
+      // 需 `TextLeadingDistribution.even` 对齐（默认 proportional 会把数字
+      // 压低溢出圆圈）。
+      final glyph = paragraph
+          .getBoxesForSelection(
+            const TextSelection(baseOffset: 0, extentOffset: 1),
+          )
+          .single
+          .toRect();
+      final glyphCenter = paragraph.localToGlobal(glyph.center);
+      Rect? badge;
+      for (final element
+          in find
+              .ancestor(of: find.text('2'), matching: find.byType(Container))
+              .evaluate()) {
+        final rect = tester.getRect(
+          find.byElementPredicate((e) => e == element),
+        );
+        if (rect.size == Size(t.widthStepsItemLeft, t.heightStepsItemLeft)) {
+          badge = rect;
+        }
+      }
+      expect(badge, isNotNull, reason: '24×24 badge container not found');
+      expect((glyphCenter.dy - badge!.center.dy).abs(), lessThan(1));
     });
 
     testWidgets('step.status overrides and custom icon replaces the badge', (
