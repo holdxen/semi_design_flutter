@@ -33,7 +33,7 @@ type `SemiNotificationType`（normal/info/success/warning/error；`default` 是 
 - 结构：root（`@include shadow-elevated` + 圆角 + 四边 margin 20）> icon 槽（宽 24、右距 12、顶对齐 `size="large"`）+ inner（content-wrapper `flex: 1` 右距 8 > title（16/22 bold、底距 4）+ content（14/20）+ closer（`height: $width-icon-extra-large` 24））。
 - 列表：按 placement 六向锚定（top/bottom 居中 = `left: 50%` + `translateX(-50%)`，显式 left 偏移覆写锚点）；最新在前（add 前插）；同列卡片等宽（shrink-to-fit 列宽取最宽 max-content、下限 `min-width: 320px`）；`pointer-events: none` 列表点穿 + 卡片 `pointer-events: auto`（空白区不吸中等价）。
 - margin 折叠：`margin: 20` 四边在 CSS 相邻卡片纵向折叠（间距 = 20 非 40）——Flutter 以纵向半值对拆 + 列首尾补半值等价。
-- light 主题：`background-image: linear-gradient(0deg, …_light-bg, …_light-bg)` 等价单色覆盖层叠 `background-color: $color-notification_ambient-bg` 底（内层色块 + 外层底色，覆盖层半透时露底）+ 1px 语义色描边；'default' 与 info 共用 info 通道。normal 主题：`$color-notification-bg-default` 无描边。
+- light 主题：`background-image: linear-gradient(0deg, …_light-bg, …_light-bg)` 等价单色覆盖层与 `background-color: $color-notification_ambient-bg` 底色 alpha 合成（覆盖层不透明时即 _light-bg、半透时露底）+ 1px 语义色描边；合成进同一圆角 BoxDecoration 一体成型（内层直角色块会溢出外层圆角——修四角破图）；'default' 与 info 共用 info 通道。normal 主题：`$color-notification-bg-default` 无描边。
 - 入/退场：按 placement 反向滑出（`translateY(±100%)`/`translateX(±100%)`）+ 透明度 0↔1（`$animation_opacity-notification-show/-hide`），300ms show/hide 同曲线 `cubic-bezier(0.62, 0.63, 0, 1.13)`（`animation_delay-*: 0ms` 叠入时长）；`motion: false` 无动画（入即位、退即释放）；退场完成释放（上游 `scheduleRemovedNoticeRelease` 350ms 兜底等价——Flutter 动画状态回调可靠）。
 - 语义：`role="alert"` → `Semantics(liveRegion: true)`；`aria-labelledby` 标题引用（titleID 前缀 `semi-notification-notice-title` 实例内稳定）≈ 标题文本为语义锚；关闭钮语义标签 '关闭'。
 

@@ -451,11 +451,21 @@ class _SemiNotificationNoticeState extends State<SemiNotificationNotice> {
               minWidth: t.widthNotificationNoticeMinWidth,
             ),
             child: Container(
+              padding: EdgeInsetsDirectional.only(
+                top: t.spacingNotificationNoticePaddingTop,
+                // rtl.scss `padding-right: …-paddingLeft` /
+                // `padding-left: …-paddingRight`——方向性边距自动镜像。
+                bottom: t.spacingNotificationNoticePaddingBottom,
+                start: t.spacingNotificationNoticePaddingLeft,
+                end: t.spacingNotificationNoticePaddingRight,
+              ),
               decoration: BoxDecoration(
+                // light：`background-image: linear-gradient(0deg, …-light-bg, …-light-bg)`
+                // 等价单色覆盖层与 `background-color: $color-notification_ambient-bg`
+                // 底色的 alpha 合成（覆盖层不透明时即 _light-bg）——单
+                // BoxDecoration 圆角一体成型，内层直角色块不再溢出外层圆角。
                 color: isLight
-                    // `background-color: $color-notification_ambient-bg`——
-                    // light 底色（覆盖层半透时露出）。
-                    ? t.colorNotificationAmbientBg
+                    ? Color.alphaBlend(lightBg, t.colorNotificationAmbientBg)
                     : t.colorNotificationBgDefault,
                 borderRadius: BorderRadius.circular(t.radiusNotificationNotice),
                 border: isLight
@@ -466,20 +476,7 @@ class _SemiNotificationNoticeState extends State<SemiNotificationNotice> {
                     : null,
                 boxShadow: shadows,
               ),
-              child: Container(
-                padding: EdgeInsetsDirectional.only(
-                  top: t.spacingNotificationNoticePaddingTop,
-                  // rtl.scss `padding-right: …-paddingLeft` /
-                  // `padding-left: …-paddingRight`——方向性边距自动镜像。
-                  bottom: t.spacingNotificationNoticePaddingBottom,
-                  start: t.spacingNotificationNoticePaddingLeft,
-                  end: t.spacingNotificationNoticePaddingRight,
-                ),
-                // `background-image: linear-gradient(0deg, …-light-bg, …-light-bg)`
-                // ——渐变等价单色覆盖层（padding box 全覆盖）。
-                color: isLight ? lightBg : null,
-                child: body,
-              ),
+              child: body,
             ),
           ),
         ),

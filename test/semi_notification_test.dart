@@ -411,8 +411,15 @@ void main() {
           )
           .where((c) => c.decoration is BoxDecoration);
       final box = containers.first.decoration! as BoxDecoration;
-      // `background-color: $color-notification_ambient-bg` + 1px warning 描边。
-      expect(box.color, t.colorNotificationAmbientBg);
+      // `background-image` 覆盖层与 `background-color:
+      // $color-notification_ambient-bg` 底色 alpha 合成 + 1px warning 描边。
+      expect(
+        box.color,
+        Color.alphaBlend(
+          t.colorNotificationWarningLightBg,
+          t.colorNotificationAmbientBg,
+        ),
+      );
       expect(box.border?.top.color, t.colorNotificationWarningLightBorder);
       expect(box.border?.top.width, t.widthNotificationNoticeBorder);
     });
