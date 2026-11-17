@@ -189,24 +189,13 @@ class _SemiBorderBeamState extends State<SemiBorderBeam>
 
     final animated = AnimatedBuilder(
       animation: _controller,
-      builder: (context, child) => Stack(
-        clipBehavior: Clip.none,
-        children: [
-          child!,
-          Positioned.fill(
-            child: IgnorePointer(
-              child: ExcludeSemantics(
-                child: CustomPaint(
-                  painter: _buildPainter(
-                    colors: colors,
-                    radius: radius,
-                    phase: _controller.value,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
+      builder: (context, child) => CustomPaint(
+        foregroundPainter: _buildPainter(
+          colors: colors,
+          radius: radius,
+          phase: _controller.value,
+        ),
+        child: child,
       ),
       child: widget.child,
     );

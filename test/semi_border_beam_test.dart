@@ -16,7 +16,7 @@ Widget host(Widget child, {bool reduced = false, bool ticker = true}) =>
 
 List<SemiBorderBeamPainter> painters(WidgetTester tester) => tester
     .widgetList<CustomPaint>(find.byType(CustomPaint))
-    .map((widget) => widget.painter)
+    .map((widget) => widget.foregroundPainter)
     .whereType<SemiBorderBeamPainter>()
     .toList();
 
@@ -108,6 +108,9 @@ void main() {
     await tester.pumpWidget(
       host(SemiBorderBeam(child: SizedBox(key: key, width: 120, height: 60))),
     );
+    final before = tester.getSize(find.byKey(key));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(tester.getSize(find.byKey(key)), before);
     expect(tester.getSize(find.byKey(key)), const Size(120, 60));
     expect(tester.hitTestOnBinding(const Offset(400, 300)), isNotNull);
   });
