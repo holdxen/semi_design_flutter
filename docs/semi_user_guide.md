@@ -123,7 +123,7 @@ cover（定高 `heightUserGuidePopupContentCoverDefault` 200 + `radiusUserGuideP
 13. **modal 不消费 theme**：renderModal 按钮固定样式（skip/prev tertiary、next solid）、无 primary 分支（:569-585）。
 14. **modal 指示点不可点**：renderIndicator 无 onClick（:488-500）。
 15. **蒙层捕获条吞点击/洞口穿透**：四条 `pointer-events: auto` + 根 `pointer-events: none`（userGuide.scss:15/18 + index.tsx:461-488）。
-16. **洞口补间、余者即时**：仅 `-spotlight-rect` 带 `transition: all 200ms`（userGuide.scss:22）——捕获条/锚 div/卡片按未补间矩形落位。
+16. **洞口补间、余者即时**：仅 `-spotlight-rect` 带 `transition: all 200ms`（userGuide.scss:22）——捕获条/锚 div/卡片按未补间矩形落位。★补间以 `Rect.lerp` 承担（`_RectTween`）——泛型 `Tween<Rect>` 以 `Rect ± Rect` 算术求值、矩形一变每帧抛 "Cannot lerp between Rect..."；SDK `RectTween` 是 `Tween<Rect?>` 不可赋 `TweenAnimationBuilder<Rect>`。
 17. **按钮内联覆色恒定**：`backgroundColor` 内联压过 :hover/:active（fill-2/#FFF 各态不变）——SemiButtonTheme 三态覆写/白盒底衬承担。
 18. **prevButtonProps/nextButtonProps 的 onClick 顶替**：`{...prevButtonProps}` 在 onClick 之后展开（index.tsx:307/:317）→ `onPressed` 顶替内置步进。
 19. **命名错位/注释错字 quirk 照抄**：`$spacing-userGuide_popup_content_indicator-gap` 由 modal 指示点消费（userGuide.scss:104）；variables.scss:30 `// 弹窗式片指示器间距`（缺字）、:36 `// 气泡卡片指示器圆角`（错位）、:45 `// 弹窗式卡详情字体大小`（缺字）原文进 PROVENANCE_NOTES。

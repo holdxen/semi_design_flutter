@@ -1,9 +1,11 @@
 // 临时诊断（不提交）：复现「Cropper 角柄光标/命中」在真实 shell 布局下的回归。
 // 用法：flutter test test/scratch_cursor_diag_test.dart
+import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:example/main.dart';
 import 'package:example/pages/cropper.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
@@ -35,22 +37,45 @@ Future<ui.Image> _paintImage() async {
   return recorder.endRecording().toImage(240, 160);
 }
 
-/// 命中路径上最深（最先决定光标）的 MouseRegion 光标。
-List<MouseCursor> cursorsAt(WidgetTester tester, Offset pos) {
+/// 命中路径类型 dump（诊断用途）。
+List<String> pathAt(WidgetTester tester, Offset pos) {
   final result = HitTestResult();
   tester.binding.hitTestInView(
     result,
     pos,
     ui.PlatformDispatcher.instance.implicitView!.viewId,
   );
-  return [
-    for (final entry in result.path)
-      if (entry.target is RenderMouseRegion)
-        (entry.target as RenderMouseRegion).annotation.cursor,
-  ];
+  return [for (final e in result.path) e.target.runtimeType.toString()];
+}
+
+/// 测试内真实 asset 解码需 runAsync（默认假异步不跑 IO/codec）。
+Future<void> precacheDemoImage(WidgetTester tester) async {
+  await tester.runAsync(() async {
+    final completer = SynchronousFuture<void>(null);
+    final stream = const AssetImage(
+      'assets/images/cropper_demo.png',
+    ).resolve(ImageConfiguration.empty);
+    final done = Completer<void>();
+    stream.addListener(
+      ImageStreamListener((info, _) {
+        if (!done.isCompleted) done.complete();
+      }, onError: (e, _) {
+        debugPrint('asset load error: $e');
+        if (!done.isCompleted) done.complete();
+      }),
+    );
+    await done.future;
+    await completer;
+  });
+  await tester.pump();
 }
 
 Future<void> diag(WidgetTester tester, String label) async {
+  debugPrint(
+    '[$label] cropper-basic=${find.byKey(const ValueKey('cropper-basic')).evaluate().length} '
+    'tl-any=${find.byKey(SemiCropper.cornerKey('tl')).evaluate().length} '
+    'cropper-type=${find.byType(SemiCropper).evaluate().length}',
+  );
   final tl = find.descendant(
     of: find.byKey(const ValueKey('cropper-basic')),
     matching: find.byKey(SemiCropper.cornerKey('tl')),
@@ -69,8 +94,8 @@ Future<void> diag(WidgetTester tester, String label) async {
   );
   final before = tester.getTopLeft(boxFinder);
   debugPrint('[$label] tlCenter=$tlCenter');
-  debugPrint('[$label] cursor@tl=${cursorsAt(tester, tlCenter)}');
-  debugPrint('[$label] cursor@mask=${cursorsAt(tester, maskCenter)}');
+  debugPrint('[$label] path@tl=${pathAt(tester, tlCenter)}');
+  debugPrint('[$label] path@mask=${pathAt(tester, maskCenter)}');
 
   final gesture = await tester.createGesture(kind: ui.PointerDeviceKind.mouse);
   await gesture.addPointer(location: tlCenter);
@@ -100,14 +125,28 @@ void main() {
     await diag(tester, 'bare-light');
   });
 
+  testWidgets('diag: bare SemiApp + 默认 AssetImage', (tester) async {
+    addTearDown(() async => tester.pumpWidget(const SizedBox.shrink()));
+    await tester.binding.setSurfaceSize(const Size(1200, 3200));
+    await tester.pumpWidget(const SemiApp(home: CropperPage()));
+    await precacheDemoImage(tester);
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    await diag(tester, 'bare-asset');
+  });
+
   testWidgets('diag: 完整 shell（MyApp）导航到 Cropper 页', (tester) async {
     addTearDown(() async => tester.pumpWidget(const SizedBox.shrink()));
     await tester.binding.setSurfaceSize(const Size(1200, 3200));
     await tester.pumpWidget(const MyApp());
     await tester.pump(const Duration(milliseconds: 60));
+    await precacheDemoImage(tester);
     await tester.tap(find.text('Cropper 图片裁切'));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
     await diag(tester, 'shell-light');
   });
 
@@ -116,11 +155,14 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(1200, 3200));
     await tester.pumpWidget(const MyApp());
     await tester.pump(const Duration(milliseconds: 60));
+    await precacheDemoImage(tester);
     await tester.tap(find.byType(SemiSwitch));
     await tester.pump();
     await tester.tap(find.text('Cropper 图片裁切'));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
     await diag(tester, 'shell-dark');
   });
 }

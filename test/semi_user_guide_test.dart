@@ -265,6 +265,51 @@ void main() {
       );
     });
 
+    testWidgets('★换目标步进：洞口补间走 lerp 不抛（RectTween 回归）', (tester) async {
+      final errors = <String>[];
+      final oldOnError = FlutterError.onError;
+      FlutterError.onError = (details) =>
+          errors.add(details.exceptionAsString());
+      addTearDown(() => FlutterError.onError = oldOnError);
+      await pumpHost(tester);
+      await setBody(
+        tester,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Row(
+              children: [
+                SemiUserGuideTarget(
+                  id: 'a',
+                  child: SizedBox(key: _targetKey, width: 100, height: 50),
+                ),
+                SizedBox(width: 24),
+                SemiUserGuideTarget(
+                  id: 'b',
+                  child: SizedBox(width: 114, height: 50),
+                ),
+              ],
+            ),
+            _GuideInBody(
+              steps: [
+                SemiUserGuideStep(target: 'a'),
+                SemiUserGuideStep(target: 'b'),
+              ],
+            ),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+      errors.clear();
+
+      // 换目标 → 聚光灯矩形跳变 → 洞口 200ms 补间必须经过 lerp 中段帧。
+      await tester.tap(find.text('下一步'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pumpAndSettle();
+      expect(errors, isEmpty);
+    });
+
     testWidgets('滚动跟随目标移动（window scroll 捕获对应）', (tester) async {
       await pumpHost(tester);
       await setBody(

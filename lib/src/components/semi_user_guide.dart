@@ -423,8 +423,10 @@ class _SemiUserGuideState extends State<SemiUserGuide>
             child: TweenAnimationBuilder<Rect>(
               // `&-spotlight-rect { transition: all ... }`（userGuide.scss:22）
               // ——洞口矩形补间；四条捕获条按未补间矩形即时落位（上游仅
-              // `-spotlight-rect` 带 transition 类）。
-              tween: Tween<Rect>(begin: rect, end: rect),
+              // `-spotlight-rect` 带 transition 类）。★必须 RectTween——泛型
+              // `Tween<Rect>` 无 `Rect - Rect` 运算，矩形一变（换目标/滚动）
+              // 每帧抛 "Cannot lerp between Rect..." 闪现报错。
+              tween: _RectTween(begin: rect, end: rect),
               duration: t.transitionDurationUserGuideSpotLight,
               curve: t.transitionFunctionUserGuideSpotLight,
               builder: (context, hole, _) => CustomPaint(
@@ -1165,6 +1167,16 @@ class _SemiUserGuideState extends State<SemiUserGuide>
     // popup 模式：蒙层 + 卡片在自管 overlay（insert 延后到 postFrame）。
     return const SizedBox.shrink();
   }
+}
+
+/// 洞口矩形补间——走 `Rect.lerp`（★泛型 `Tween<Rect>` 以 `Rect ± Rect` 算术
+/// 求值、矩形一变每帧抛 "Cannot lerp between Rect..."；SDK `RectTween` 是
+/// `Tween<Rect?>`，不可赋给 `TweenAnimationBuilder<Rect>`）。
+class _RectTween extends Tween<Rect> {
+  _RectTween({required super.begin, required super.end});
+
+  @override
+  Rect lerp(double t) => Rect.lerp(begin, end, t)!;
 }
 
 /// SVG 遮罩挖洞等价涂色：viewport 填色 + 圆角矩形洞差值
