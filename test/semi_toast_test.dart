@@ -781,6 +781,38 @@ void main() {
       await done(tester);
     });
 
+    testWidgets('closed items free their slot: reflow up and new items fill '
+        'without gaps', (tester) async {
+      await pumpHost(tester);
+      SemiToast.info(id: 'a', content: '一', duration: 0);
+      SemiToast.info(id: 'b', content: '二', duration: 0);
+      SemiToast.info(id: 'c', content: '三', duration: 0);
+      // 进场过冲动画落定后再取几何（中途采样会被 translate 偏移污染）。
+      await pumpFor(tester, const Duration(milliseconds: 600));
+      final y1 = tester.getTopLeft(find.text('一')).dy;
+      final y2 = tester.getTopLeft(find.text('二')).dy;
+      final y3 = tester.getTopLeft(find.text('三')).dy;
+      SemiToast.close('a');
+      await pumpFor(tester, const Duration(milliseconds: 450));
+      expect(find.text('一'), findsNothing);
+      // 剩余条目补位：二 回到一 的原位、三 紧随其后（无空位残留）。
+      expect(tester.getTopLeft(find.text('二')).dy, y1);
+      expect(tester.getTopLeft(find.text('三')).dy, y2);
+      // 补位条目必须可见（视图状态按 key 跟随，无透明占位串位）。
+      final opacity = tester.widget<Opacity>(
+        find
+            .ancestor(of: find.text('二'), matching: find.byType(Opacity))
+            .first,
+      );
+      expect(opacity.opacity, 1.0);
+      // 新条目接在末条正下方（补位后坐标为准，间距一致，不落到空位之下）。
+      SemiToast.info(id: 'd', content: '四', duration: 0);
+      await pumpFor(tester, const Duration(milliseconds: 600));
+      final y3After = tester.getTopLeft(find.text('三')).dy;
+      expect(tester.getTopLeft(find.text('四')).dy - y3After, y3 - y2);
+      await done(tester);
+    });
+
     testWidgets('showClose false drops the closer; custom icon replaces '
         'default', (tester) async {
       await pumpHost(tester);

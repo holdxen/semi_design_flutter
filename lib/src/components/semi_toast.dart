@@ -523,7 +523,10 @@ class _ToastHost extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 for (final item in _ToastList.instance.items)
-                  _ToastItemView(item: item),
+                  // ObjectKey 让视图状态（AnimationController / onLeaving）
+                  // 按条目跟随：列表增删时不按位置串位，先关闭的条目裁剪后
+                  // 存活条目上移补位，无透明占位残留。
+                  _ToastItemView(key: ObjectKey(item), item: item),
               ],
             ),
           ),
@@ -535,7 +538,7 @@ class _ToastHost extends StatelessWidget {
 
 /// 单条视图：进/离场动画（keyframes show/hide）+ 悬停计时 + 视觉组装。
 class _ToastItemView extends StatefulWidget {
-  const _ToastItemView({required this.item});
+  const _ToastItemView({super.key, required this.item});
 
   final _ToastItem item;
 
@@ -549,6 +552,7 @@ class _ToastItemViewState extends State<_ToastItemView>
   CurvedAnimation? _curved;
   late SemiResolvedToastThemeData _t;
   bool _started = false;
+  bool _leaving = false;
 
   @override
   void initState() {
@@ -560,7 +564,30 @@ class _ToastItemViewState extends State<_ToastItemView>
         _ToastList.instance.prune(widget.item);
       }
     });
-    widget.item.onLeaving = () => unawaited(_leave());
+    widget.item.onLeaving = _startLeave;
+    // close() 先于首帧（onLeaving 未挂载）：视图建成后补启动离场。
+    if (widget.item.leaving) _startLeave();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ToastItemView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.item.leaving) _startLeave();
+  }
+
+  /// 启动离场（幂等）：`notifyWrapperToRemove` 后播离场动画再裁剪；进场未
+  /// 启动（controller 仍 dismissed）时无动画可播，post-frame 直接裁剪，
+  /// 不留透明占位。
+  void _startLeave() {
+    if (_leaving) return;
+    _leaving = true;
+    if (_controller.isDismissed) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _ToastList.instance.prune(widget.item);
+      });
+      return;
+    }
+    unawaited(_leave());
   }
 
   @override

@@ -139,6 +139,7 @@ rtl.scss `text-align: right` + text 边距互换（两侧同值 12，no-op）→
 - **onClose**：上游 `() => void` 相同；`close(e)` 的 `e.stopPropagation()` 不适用（Flutter 无冒泡）。
 - **pendingToasts**：上游挂载前 pending 队列 → show 即入库（宿主惰性创建）。
 - **离场中同 id 复出**：上游 Set 去重渲染语义含混 → 按新实例处理（新进场动画）。
+- **离场动画位置**：上游把 removedItems 渲染在列表末尾（离场条目瞬移到列表底部淡出、存活条目立刻补位）→ 本实现离场条目原位淡出、动画结束裁剪后存活条目补位（补位语义一致，无空位残留）。
 - **break-word**：CSS `word-wrap`/`overflow-wrap` → Flutter 软换行 + ConstrainedBox 尺寸约束（超长单词断行细节依平台文本布局）。
 - **`className`/`style` 未移植**（外层布局承担）。
 - **主题解析**：带 `context` 调用时快照（含本地 `SemiToastTheme` patch）；缺省宿主构建时随环境主题（SemiModal `_resolveTheme` 先例）。
