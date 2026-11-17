@@ -22,7 +22,7 @@ config 为全局缺省（上游 `Toast.config` + semiGlobal 覆盖语义）：nu
 
 - **列表级开关**（上游 `ToastList.ref.stack`）：每次调用按该次参数覆写（未传 = false，★last-call-wins quirk），对全部条目生效；`destroyAll` 后复位。
 - **非悬停（叠牌）**：各条目重叠于卡组原点（`&-zero-height-wrapper` `height: 0` + `overflow: visible;` 语义，宿主高度取透视包络），按 `translate3d(0,0,${reservedIndex * -10}px)` 每条后退 10px，经 `perspective: 280px` + `perspective-origin: center 280px`（★`perspective-origin: center $spacing-toast-perspective-originY; ;` 双分号 quirk）投影成后退叠牌——旧条目向下收缩退远、新条目在最前。
-- **悬停展开**：`stackExpanded: this.state.mouseInSide`（`handleMouseInSideChange`）展开为常规列表（条目按量高插值排开、间距同普通堆叠 24+内容高）；`.semi-toast-innerWrapper-hover` 的 `perspective: unset` 扁平化卡组。离开悬停收起。展开/收起按 `transition: all $animation_duration-toast-stack $animation_function-toast-stack;`（300ms 过冲）过渡。
+- **悬停展开**：`stackExpanded: this.state.mouseInSide`（`handleMouseInSideChange`）展开为常规列表（条目按量高插值排开、间距同普通堆叠 24+内容高）；`.semi-toast-innerWrapper-hover` 的 `perspective: unset` 扁平化卡组。悬停区贴内容宽/高（innerWrapper `width: fit-content`，独立命中层 `opaque: false` + translucent，不挡卡片点击与条目悬停计时）——鼠标水平移开即收起。离开悬停收起。展开/收起按 `transition: all $animation_duration-toast-stack $animation_function-toast-stack;`（300ms 过冲）过渡。
 - 条目高度 post-frame 量高（ResizeObserver 语义迁移）。
 
 ### 计时与更新

@@ -565,6 +565,45 @@ void main() {
       expect(xs[1], greaterThan(xRatio));
       expect(xs[1], lessThan(xRotate));
     });
+
+    testWidgets('disabled footer icons tint the glyph but paint no background', (
+      tester,
+    ) async {
+      // 1/1 时 prev/next 禁用；initialZoom=minZoom 时缩小禁用 —— 三个按钮
+      // 都进 `preview-footer-disabled` 态。上游只置图标 color，无背景色块。
+      await pumpHost(
+        tester,
+        SemiImage(
+          image: const _TestImage(1),
+          previewProps: const SemiImagePreviewProps(initialZoom: 0.1),
+        ),
+      );
+      await tester.pump();
+      await tester.tap(find.byType(SemiImage));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      Container containerOf(SemiIconData data) => tester.widget<Container>(
+        find.byWidgetPredicate(
+          (w) =>
+              w is Container &&
+              w.child is SemiIcon &&
+              (w.child! as SemiIcon).data == data,
+        ),
+      );
+      for (final data in [SemiIcons.chevronLeft, SemiIcons.chevronRight, SemiIcons.minus]) {
+        final container = containerOf(data);
+        expect(container.color, isNull, reason: '$data 禁用态不应有背景');
+        expect(container.decoration, isNull, reason: '$data 禁用态不应有装饰');
+        final icon = container.child! as SemiIcon;
+        expect(
+          icon.color,
+          const SemiThemeData.light().components.image.resolve(
+            const SemiThemeData.light(),
+          ).colorImagePreviewDisabled,
+          reason: '$data 禁用态图标着 disabled 色',
+        );
+      }
+    });
   });
 
   group('theme and group context', () {

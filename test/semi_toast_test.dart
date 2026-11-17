@@ -840,12 +840,28 @@ void main() {
       final expanded1 = tester.getTopLeft(find.text('一')).dy;
       final expanded3 = tester.getTopLeft(find.text('三')).dy;
       expect(expanded3 - expanded1, closeTo(136, 0.1));
-      // 离开悬停收起回卡组。
-      await gesture.moveTo(const Offset(1100, 700));
+      // 离开悬停收起回卡组——悬停区贴内容宽（innerWrapper fit-content），
+      // 水平移开（y 仍在卡组纵向范围内）即视为离开。
+      await gesture.moveTo(const Offset(50, 100));
       await pumpFor(tester, const Duration(milliseconds: 500));
       final collapsed1 = tester.getTopLeft(find.text('一')).dy;
       final collapsed3 = tester.getTopLeft(find.text('三')).dy;
       expect(collapsed3 - collapsed1, lessThan(40));
+      // 再次悬停展开后向下移开同样收起。
+      await gesture.moveTo(tester.getCenter(find.text('三')));
+      await pumpFor(tester, const Duration(milliseconds: 500));
+      expect(
+        tester.getTopLeft(find.text('三')).dy -
+            tester.getTopLeft(find.text('一')).dy,
+        closeTo(136, 0.1),
+      );
+      await gesture.moveTo(const Offset(1100, 700));
+      await pumpFor(tester, const Duration(milliseconds: 500));
+      expect(
+        tester.getTopLeft(find.text('三')).dy -
+            tester.getTopLeft(find.text('一')).dy,
+        lessThan(40),
+      );
       await done(tester);
     });
 

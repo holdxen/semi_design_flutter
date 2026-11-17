@@ -614,6 +614,7 @@ class _ToastDeckState extends State<_ToastDeck>
 
   late final AnimationController _expand;
   final Map<String, double> _heights = {};
+  final Map<String, double> _widths = {};
 
   @override
   void initState() {
@@ -640,13 +641,15 @@ class _ToastDeckState extends State<_ToastDeck>
   void _measure() {
     final ids = {for (final item in widget.items) item.id};
     _heights.removeWhere((id, _) => !ids.contains(id));
+    _widths.removeWhere((id, _) => !ids.contains(id));
     var changed = false;
     for (final item in widget.items) {
       final box = GlobalObjectKey(item).currentContext?.findRenderObject();
       if (box is RenderBox && box.hasSize) {
-        final h = box.size.height;
-        if (_heights[item.id] != h) {
-          _heights[item.id] = h;
+        final size = box.size;
+        if (_heights[item.id] != size.height || _widths[item.id] != size.width) {
+          _heights[item.id] = size.height;
+          _widths[item.id] = size.width;
           changed = true;
         }
       }
@@ -679,60 +682,80 @@ class _ToastDeckState extends State<_ToastDeck>
     WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
     final items = widget.items;
     final curve = widget.theme.animationFunctionToastStack;
-    return MouseRegion(
-      // `stackExpanded: this.state.mouseInSide`（悬停展开/收起）。
-      onEnter: (_) => _expand.forward(),
-      onExit: (_) => _expand.reverse(),
-      child: AnimatedBuilder(
-        animation: _expand,
-        builder: (context, _) {
-          final progress = _expand.value;
-          final spread = curve.transform(progress);
-          // 上游 `perspective: unset` 不可插值——CSS 过渡 50% 处离散翻转，
-          // 卡组透视在展开过半时消失（收起反之）。
-          final decked = progress < 0.5;
-          var cursor = 0.0;
-          var deckExtent = 0.0;
-          final tops = <double>[];
-          for (var i = 0; i < items.length; i++) {
-            final h = _heights[items[i].id] ?? 0;
-            // 非悬停各条目重叠于卡组原点（`height: 0`）；展开位置按量高
-            // 累计插值。
-            tops.add(cursor * spread);
-            cursor += h;
-            final projected = _projectedBottom(h, items.length - 1 - i);
-            if (projected > deckExtent) deckExtent = projected;
-          }
-          return SizedBox(
-            height: deckExtent + (cursor - deckExtent) * spread,
-            width: double.infinity,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                for (var i = 0; i < items.length; i++)
-                  Positioned(
-                    top: tops[i],
-                    left: 0,
-                    right: 0,
-                    child: Align(
+    return AnimatedBuilder(
+      animation: _expand,
+      builder: (context, _) {
+        final progress = _expand.value;
+        final spread = curve.transform(progress);
+        // 上游 `perspective: unset` 不可插值——CSS 过渡 50% 处离散翻转，
+        // 卡组透视在展开过半时消失（收起反之）。
+        final decked = progress < 0.5;
+        var cursor = 0.0;
+        var deckExtent = 0.0;
+        var maxW = 0.0;
+        final tops = <double>[];
+        for (var i = 0; i < items.length; i++) {
+          final h = _heights[items[i].id] ?? 0;
+          // 非悬停各条目重叠于卡组原点（`height: 0`）；展开位置按量高
+          // 累计插值。
+          tops.add(cursor * spread);
+          cursor += h;
+          final projected = _projectedBottom(h, items.length - 1 - i);
+          if (projected > deckExtent) deckExtent = projected;
+          final w = _widths[items[i].id] ?? 0;
+          if (w > maxW) maxW = w;
+        }
+        return SizedBox(
+          height: deckExtent + (cursor - deckExtent) * spread,
+          width: double.infinity,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              for (var i = 0; i < items.length; i++)
+                Positioned(
+                  top: tops[i],
+                  left: 0,
+                  right: 0,
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: Transform(
+                      transform: decked
+                          ? _deckMatrix(-_zStep * (items.length - 1 - i))
+                          : Matrix4.identity(),
                       alignment: Alignment.topCenter,
-                      child: Transform(
-                        transform: decked
-                            ? _deckMatrix(-_zStep * (items.length - 1 - i))
-                            : Matrix4.identity(),
-                        alignment: Alignment.topCenter,
-                        child: _ToastItemView(
-                          key: GlobalObjectKey(items[i]),
-                          item: items[i],
-                        ),
+                      child: _ToastItemView(
+                        key: GlobalObjectKey(items[i]),
+                        item: items[i],
                       ),
                     ),
                   ),
-              ],
-            ),
-          );
-        },
-      ),
+                ),
+              // 悬停命中层贴内容（上游 innerWrapper `width: fit-content` /
+              // `height: fit-content`）而非整行宽——鼠标水平移开即收起。
+              // translucent + `opaque: false`：不吸收点击、不挡卡片自身的
+              // 悬停区域。
+              Positioned.fill(
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: SizedBox(
+                    width: maxW,
+                    height: deckExtent + (cursor - deckExtent) * spread,
+                    child: MouseRegion(
+                      opaque: false,
+                      hitTestBehavior: HitTestBehavior.translucent,
+                      // `stackExpanded: this.state.mouseInSide`（悬停展开/
+                      // 收起）。
+                      onEnter: (_) => _expand.forward(),
+                      onExit: (_) => _expand.reverse(),
+                      child: const SizedBox.expand(),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

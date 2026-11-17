@@ -1840,8 +1840,9 @@ class _SemiImagePreviewInnerState extends State<SemiImagePreviewInner> {
         child: GestureDetector(
           onTap: disabled ? null : onTap,
           child: Container(
-            // `preview-footer-disabled`。
-            color: disabled ? t.colorImagePreviewDisabled : null,
+            // `preview-footer-disabled`（previewFooter.tsx:186）只置
+            // `color: $color-image_preview_disabled`（图标着色）+ 禁点击，
+            // 无背景 —— 背景色是误加，官方禁用态无色块。
             padding: gap ? EdgeInsetsDirectional.only(start: gapLeft) : null,
             child: SemiIcon(
               data,
