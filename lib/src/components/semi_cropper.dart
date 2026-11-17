@@ -284,6 +284,43 @@ class _SemiCropperState extends State<SemiCropper> {
 
   _DragMode _dragMode = _DragMode.none;
 
+  /// 自绘对角光标的指针位置（容器坐标；容器不随角柄拖动移动）。
+  final ValueNotifier<Offset?> _drawnCornerAt = ValueNotifier<Offset?>(null);
+
+  /// 角柄命中区（容器坐标，布局时收集）：悬停时判定落在哪个角柄。
+  final Map<String, Rect> _cornerHitRects = <String, Rect>{};
+
+  bool _isDiagonalCorner(String dir) =>
+      dir == 'tl' || dir == 'tr' || dir == 'bl' || dir == 'br';
+
+  /// 当前应绘制的对角光标：拖动中取被拖角柄；悬停时取命中的角柄。
+  String? _drawnCornerDir() {
+    if (!_usesDrawnCornerCursor) return null;
+    final at = _drawnCornerAt.value;
+    if (at == null) return null;
+    if (_dragMode == _DragMode.cornerResize) {
+      return _isDiagonalCorner(_boxMoveDir) ? _boxMoveDir : null;
+    }
+    if (_dragMode != _DragMode.none) return null;
+    for (final entry in _cornerHitRects.entries) {
+      if (_isDiagonalCorner(entry.key) && entry.value.contains(at)) {
+        return entry.key;
+      }
+    }
+    return null;
+  }
+
+  /// 拖动结束/指针离开后，按当前指针位置修剪自绘光标。
+  void _pruneDrawnCorner() {
+    final at = _drawnCornerAt.value;
+    if (at == null) return;
+    if (!(Offset.zero & _containerData).contains(at)) {
+      _drawnCornerAt.value = null;
+      return;
+    }
+    if (_drawnCornerDir() == null) _drawnCornerAt.value = null;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -307,6 +344,7 @@ class _SemiCropperState extends State<SemiCropper> {
 
   @override
   void dispose() {
+    _drawnCornerAt.dispose();
     if (_listener != null) _stream?.removeListener(_listener!);
     widget.controller?._detach(this);
     super.dispose();
@@ -1096,10 +1134,18 @@ class _SemiCropperState extends State<SemiCropper> {
       container: true,
       label: '图片裁切',
       child: MouseRegion(
-        // 对角角柄拖动时整个容器都隐藏系统光标，由 _CornerHandle 自绘。
-        cursor: _usesDrawnCornerCursor && _dragMode == _DragMode.cornerResize
+        // 对角角柄拖动时整个容器都隐藏系统光标，由根 Stack 自绘。
+        cursor:
+            _usesDrawnCornerCursor &&
+                _dragMode == _DragMode.cornerResize &&
+                _isDiagonalCorner(_boxMoveDir)
             ? SystemMouseCursors.none
             : _moveCursor(),
+        // 自绘光标位置用容器坐标（容器不随角柄拖动移动，跟手不漂移）。
+        onHover: (e) => _drawnCornerAt.value = e.localPosition,
+        onExit: (_) {
+          if (_dragMode == _DragMode.none) _drawnCornerAt.value = null;
+        },
         child: Listener(
           behavior: HitTestBehavior.opaque,
           onPointerDown: (e) {
@@ -1116,6 +1162,9 @@ class _SemiCropperState extends State<SemiCropper> {
           },
           onPointerMove: (e) {
             if (!e.down) return;
+            if (_dragMode == _DragMode.cornerResize) {
+              _drawnCornerAt.value = e.localPosition;
+            }
             switch (_dragMode) {
               case _DragMode.imgMove:
                 _handleImgMoveUpdate(e.localPosition);
@@ -1188,6 +1237,8 @@ class _SemiCropperState extends State<SemiCropper> {
               // `$half_corner_width`：角柄外悬半格——盒层扩一圈让角柄可命中
               //（RenderBox.hitTest 不收自身边界外的子级）。
               final pad = t.widthCropperBoxCorner / 2;
+              // 角柄未渲染时清空命中区（toggle showResizeBox 后无残留）。
+              _cornerHitRects.clear();
 
               // 裁切框（outline 外描边语义：画在盒外）。
               final box = Positioned(
@@ -1250,6 +1301,26 @@ class _SemiCropperState extends State<SemiCropper> {
                   ),
                   mask,
                   box,
+                  // macOS 对角角柄自绘光标（容器坐标，不随角柄拖动漂移）。
+                  if (_usesDrawnCornerCursor)
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: ValueListenableBuilder<Offset?>(
+                          valueListenable: _drawnCornerAt,
+                          builder: (context, at, _) {
+                            final dir = _drawnCornerDir();
+                            if (dir == null) return const SizedBox.shrink();
+                            return CustomPaint(
+                              key: SemiCropper.resizeCursorKey(dir),
+                              painter: _DiagonalResizeCursorPainter(
+                                hotspot: at!,
+                                nwse: dir == 'tl' || dir == 'br',
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
                 ],
               );
             },
@@ -1303,6 +1374,7 @@ class _SemiCropperState extends State<SemiCropper> {
         break;
     }
     _dragMode = _DragMode.none;
+    _pruneDrawnCorner();
     // 根光标在角柄拖动期间是 none，结束后恢复 move/grab。
     if (wasCorner && _usesDrawnCornerCursor) setState(() {});
   }
@@ -1331,131 +1403,72 @@ class _SemiCropperState extends State<SemiCropper> {
     };
     double clampToContainer(double value, double extent) =>
         _getMiddle(value, (0, math.max(0, extent - size)));
-    return [
-      for (final dir in dirs)
+    _cornerHitRects.clear();
+    final corners = <Widget>[];
+    for (final dir in dirs) {
+      final left =
+          clampToContainer(handleLeft(dir), _containerData.width) -
+          box.left +
+          pad;
+      final top =
+          clampToContainer(handleTop(dir), _containerData.height) -
+          box.top +
+          pad;
+      // 命中区换算回容器坐标（盒层原点 = box.topLeft - pad）。
+      _cornerHitRects[dir] = Rect.fromLTWH(
+        left + box.left - pad,
+        top + box.top - pad,
+        size,
+        size,
+      );
+      corners.add(
         Positioned(
-          // 各偏移 + pad：盒层扩一圈后的坐标（半格外悬可命中）。
-          left:
-              clampToContainer(handleLeft(dir), _containerData.width) -
-              box.left +
-              pad,
-          top:
-              clampToContainer(handleTop(dir), _containerData.height) -
-              box.top +
-              pad,
+          left: left,
+          top: top,
           width: size,
           height: size,
           child: _CornerHandle(
             dir: dir,
             cursor: _cornerCursor(dir),
-            // 对角线四角在 macOS 上自绘（系统无对角 resize 光标）。
-            drawn:
-                _usesDrawnCornerCursor &&
-                dir != 'tm' &&
-                dir != 'bm' &&
-                dir != 'ml' &&
-                dir != 'mr',
             onPointerDown: () {
               _dragMode = _DragMode.cornerResize;
               _handleCornerDown(dir);
-              // 根光标切 none（拖动中指针可能离开角柄）。
+              // 根光标切 none（拖动中指针可能离开角柄），自绘层沿用最近
+              // 一次 hover 的容器坐标。
               if (_usesDrawnCornerCursor) setState(() {});
             },
             child: ColoredBox(color: t.colorCropperBoxCornerBg),
           ),
         ),
-    ];
+      );
+    }
+    return corners;
   }
 }
 
-/// 角柄（macOS 对角四角：系统光标表无对角 resize，隐藏系统光标 + 自绘）。
-class _CornerHandle extends StatefulWidget {
+/// 角柄（光标由 `_cornerCursor` 决定；macOS 对角四角为 none + 根 Stack 自绘）。
+class _CornerHandle extends StatelessWidget {
   const _CornerHandle({
     required this.dir,
     required this.cursor,
-    required this.drawn,
     required this.onPointerDown,
     required this.child,
   });
 
   final String dir;
   final MouseCursor cursor;
-
-  /// 是否自绘对角光标（macOS 的 tl/tr/bl/br）。
-  final bool drawn;
   final VoidCallback onPointerDown;
   final Widget child;
 
   @override
-  State<_CornerHandle> createState() => _CornerHandleState();
-}
-
-class _CornerHandleState extends State<_CornerHandle> {
-  final ValueNotifier<Offset?> _at = ValueNotifier<Offset?>(null);
-  bool _hovered = false;
-  bool _pressed = false;
-
-  @override
-  void dispose() {
-    _at.dispose();
-    super.dispose();
-  }
-
-  void _release() {
-    _pressed = false;
-    if (!_hovered && _at.value != null) _at.value = null;
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final drawn = widget.drawn;
     return MouseRegion(
-      cursor: drawn ? SystemMouseCursors.none : widget.cursor,
-      onEnter: drawn ? (_) => _hovered = true : null,
-      onHover: drawn ? (e) => _at.value = e.localPosition : null,
-      onExit: drawn
-          ? (_) {
-              _hovered = false;
-              if (!_pressed) _at.value = null;
-            }
-          : null,
+      cursor: cursor,
       child: Listener(
-        key: SemiCropper.cornerKey(widget.dir),
+        key: SemiCropper.cornerKey(dir),
         behavior: HitTestBehavior.opaque,
-        onPointerDown: (e) {
-          _pressed = true;
-          _at.value = e.localPosition;
-          widget.onPointerDown();
-        },
-        onPointerMove: (e) {
-          if (e.down && drawn) _at.value = e.localPosition;
-        },
-        onPointerUp: (_) => _release(),
-        onPointerCancel: (_) => _release(),
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Positioned.fill(child: widget.child),
-            if (drawn)
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: ValueListenableBuilder<Offset?>(
-                    valueListenable: _at,
-                    builder: (context, at, _) =>
-                        at != null && (_hovered || _pressed)
-                        ? CustomPaint(
-                            key: SemiCropper.resizeCursorKey(widget.dir),
-                            painter: _DiagonalResizeCursorPainter(
-                              hotspot: at,
-                              nwse: widget.dir == 'tl' || widget.dir == 'br',
-                            ),
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-                ),
-              ),
-          ],
-        ),
+        onPointerDown: (e) => onPointerDown(),
+        child: child,
       ),
     );
   }

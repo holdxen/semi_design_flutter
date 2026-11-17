@@ -737,6 +737,13 @@ void main() {
         await tester.pump();
         expect(kinds.last, 'none');
         expect(find.byKey(SemiCropper.resizeCursorKey('tl')), findsOneWidget);
+        // 拖动中自绘光标必须跟住指针（容器坐标 = 宿主坐标）。
+        final glyph = tester.widget<CustomPaint>(
+          find.byKey(SemiCropper.resizeCursorKey('tl')),
+        );
+        final hotspot = (glyph.painter! as dynamic).hotspot as Offset;
+        expect(hotspot.dx, moreOrLessEquals(start.dx + 40, epsilon: 0.5));
+        expect(hotspot.dy, moreOrLessEquals(start.dy + 30, epsilon: 0.5));
         await drag.up();
         // 松手后仍停在角柄上（角柄跟着指针走）→ 保持绘制；移开后撤掉。
         await drag.moveTo(start + const Offset(200, 150));
