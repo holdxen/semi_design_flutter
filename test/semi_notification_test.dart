@@ -638,5 +638,76 @@ void main() {
       final offRect = tester.getRect(cardOf('offset'));
       expect(offRect.top, moreOrLessEquals(410, epsilon: 1));
     });
+
+    testWidgets('关闭顶部通知后剩余通知留在原位；新通知顶入空出的位置', (tester) async {
+      await pumpHost(tester);
+      SemiNotification.info(id: 'a', title: 'A', duration: Duration.zero);
+      SemiNotification.info(id: 'b', title: 'B', duration: Duration.zero);
+      await pumpOpen(tester);
+      await settleEnter(tester);
+      // 上游 prepend 语义：后显示的 B 在上、先显示的 A 在下。
+      final bTop = tester.getRect(cardOf('B')).top;
+      final aTop = tester.getRect(cardOf('A')).top;
+      expect(bTop, lessThan(aTop));
+
+      // 关闭顶部的 B——A 不应被 B 的槽位状态连带（位移/透明）。
+      SemiNotification.close('b');
+      await pumpLeave(tester);
+      final aRect = tester.getRect(cardOf('A'));
+      expect(aRect.top, moreOrLessEquals(10, epsilon: 1));
+      expect(aRect.right, moreOrLessEquals(1180, epsilon: 1));
+
+      // 新通知 C 顶入 B 空出的位置，A 在其下。
+      SemiNotification.info(id: 'c', title: 'C', duration: Duration.zero);
+      await pumpOpen(tester);
+      await settleEnter(tester);
+      final cRect = tester.getRect(cardOf('C'));
+      final aRect2 = tester.getRect(cardOf('A'));
+      expect(cRect.top, moreOrLessEquals(10, epsilon: 1));
+      expect(aRect2.top, greaterThan(cRect.bottom));
+    });
+
+    testWidgets('自动关闭计时器按通知隔离（不随槽位错位互换）', (tester) async {
+      await pumpHost(tester);
+      var aClosed = 0;
+      var bClosed = 0;
+      SemiNotification.info(
+        id: 'a',
+        title: 'A',
+        duration: const Duration(seconds: 1),
+        onClose: () => aClosed++,
+      );
+      SemiNotification.info(
+        id: 'b',
+        title: 'B',
+        duration: Duration.zero,
+        onClose: () => bClosed++,
+      );
+      await pumpOpen(tester);
+      await tester.pump(const Duration(milliseconds: 1200));
+      await pumpLeave(tester);
+      // A（1s）自动关闭；B（zero）固定不关——计时器属于各自通知。
+      expect(aClosed, 1);
+      expect(bClosed, 0);
+      expect(find.text('B'), findsOneWidget);
+    });
+
+    testWidgets('同 id 复用 leaving 通知：旧实例即弃、新实例重新入场', (tester) async {
+      await pumpHost(tester);
+      SemiNotification.info(id: 'r', title: 'R1', duration: Duration.zero);
+      await pumpOpen(tester);
+      await settleEnter(tester);
+      SemiNotification.close('r');
+      await tester.pump();
+      // leaving 中同 id 再入（上游 leaveAnimations 复用语义）。
+      SemiNotification.info(id: 'r', title: 'R2', duration: Duration.zero);
+      await pumpOpen(tester);
+      await settleEnter(tester);
+      await pumpLeave(tester);
+      expect(find.text('R1'), findsNothing);
+      final r2 = tester.getRect(cardOf('R2'));
+      expect(r2.top, moreOrLessEquals(10, epsilon: 1));
+      expect(r2.right, moreOrLessEquals(1180, epsilon: 1));
+    });
   });
 }

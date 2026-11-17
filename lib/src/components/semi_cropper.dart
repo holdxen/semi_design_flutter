@@ -39,9 +39,22 @@
 //   fillRect(0, 0, relativeWidth, relativeHeight)、
 //   getImageData(realLeft, realTop, realWidth, realHeight)、
 //   relativeCropLeft < 0 ? - relativeCropLeft : 0 修正贴图偏移
+//
+// PORT 适配（差异清单同步）：
+// - 角柄光标 kind：cropper.scss 全双向（nwse/nesw/ns/ew-resize）→
+//   resizeUpLeftDownRight / resizeUpRightDownLeft / resizeUpDown /
+//   resizeLeftRight；macOS 桌面引擎 cursor 表无对角线光标（NSCursor 公共
+//   API 缺失，flutter/flutter#138887 → #89351 跟踪；未映射 → 箭头），
+//   nwse 组退化 resizeUpDown、nesw 组退化 resizeLeftRight（Web 无此缺口
+//   不退化）。
+// - 角柄钳回容器：RenderBox.hitTest 不收自身边界外的点，贴边裁切框
+//   （初始态）的 $half_corner_width 外悬半格落在容器外成死区（拖不动、
+//   光标不切换；上游 DOM 命中不受父盒边界限制），柄位钳回
+//   [0, 容器 - 柄] 整只可命中（不贴边时与上游同形）。
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
@@ -192,6 +205,33 @@ double _getMiddle(double value, (double, double) range) =>
     height = width / aspect;
   }
   return (width, height);
+}
+
+/// 角柄光标（cropper.scss 全双向）：tl/br nwse-resize、tr/bl nesw-resize、
+/// tm/bm ns-resize、ml/mr ew-resize。
+MouseCursor _cornerCursor(String dir) {
+  const cursors = <String, MouseCursor>{
+    'tl': SystemMouseCursors.resizeUpLeftDownRight,
+    'tm': SystemMouseCursors.resizeUpDown,
+    'tr': SystemMouseCursors.resizeUpRightDownLeft,
+    'ml': SystemMouseCursors.resizeLeftRight,
+    'mr': SystemMouseCursors.resizeLeftRight,
+    'bl': SystemMouseCursors.resizeUpRightDownLeft,
+    'bm': SystemMouseCursors.resizeUpDown,
+    'br': SystemMouseCursors.resizeUpLeftDownRight,
+  };
+  // macOS 桌面引擎 cursor 表无对角线光标（NSCursor 公共 API 缺失，
+  // flutter/flutter#138887 → #89351 跟踪；未映射 → 箭头），退化为同组
+  // 双向箭头（nwse ↖↘ 组 → resizeUpDown、nesw ↗↙ 组 → resizeLeftRight）。
+  // Web 无此缺口（CSS 原生对角线），不退化。
+  if (kIsWeb || defaultTargetPlatform != TargetPlatform.macOS) {
+    return cursors[dir]!;
+  }
+  return switch (dir) {
+    'tl' || 'br' => SystemMouseCursors.resizeUpDown,
+    'tr' || 'bl' => SystemMouseCursors.resizeLeftRight,
+    _ => cursors[dir]!,
+  };
 }
 
 enum _DragMode { none, imgMove, boxMove, cornerResize }
@@ -1243,47 +1283,42 @@ class _SemiCropperState extends State<SemiCropper> {
     // `$half_corner_width: calc($width-cropper_box_corner / 2)` 半宽外偏。
     final size = t.widthCropperBoxCorner;
     final half = size / 2;
-    final boxWidth = _cropperBox.width;
-    final boxHeight = _cropperBox.height;
-    const cursors = <String, MouseCursor>{
-      'tl': SystemMouseCursors.resizeUpLeft,
-      'tm': SystemMouseCursors.resizeUp,
-      'tr': SystemMouseCursors.resizeUpRight,
-      'ml': SystemMouseCursors.resizeLeft,
-      'mr': SystemMouseCursors.resizeRight,
-      'bl': SystemMouseCursors.resizeDownLeft,
-      'bm': SystemMouseCursors.resizeDown,
-      'br': SystemMouseCursors.resizeDownRight,
-    };
+    final box = _cropperBox;
     final dirs = widget.shape == SemiCropperShape.round
         ? const ['tm', 'ml', 'mr', 'bm']
         : const ['tl', 'tm', 'tr', 'ml', 'mr', 'bl', 'bm', 'br'];
+    // 柄位在容器坐标系钳回 `[0, 容器 - 柄]`：贴边裁切框（初始态）的
+    // `-$half_corner_width` 外悬半格落在容器外成死区（根 Stack 命中不出
+    // 自身边界，拖不动且光标不切换；上游 DOM 命中不受父盒边界限制），
+    // 整只内移后全格可拖可悬停（差异清单「角柄钳回容器」）。
+    double handleLeft(String dir) => switch (dir) {
+      'tl' || 'ml' || 'bl' => box.left - half,
+      'tm' || 'bm' => box.center.dx - half,
+      _ => box.left + box.width - half,
+    };
+    double handleTop(String dir) => switch (dir) {
+      'tl' || 'tm' || 'tr' => box.top - half,
+      'ml' || 'mr' => box.center.dy - half,
+      _ => box.top + box.height - half,
+    };
+    double clampToContainer(double value, double extent) =>
+        _getMiddle(value, (0, math.max(0, extent - size)));
     return [
       for (final dir in dirs)
         Positioned(
           // 各偏移 + pad：盒层扩一圈后的坐标（半格外悬可命中）。
-          left: switch (dir) {
-            'tl' || 'ml' || 'bl' => -half + pad,
-            'tm' || 'bm' => boxWidth / 2 - half + pad,
-            _ => null,
-          },
-          top: switch (dir) {
-            'tl' || 'tm' || 'tr' => -half + pad,
-            'ml' || 'mr' => boxHeight / 2 - half + pad,
-            _ => null,
-          },
-          right: switch (dir) {
-            'tr' || 'mr' || 'br' => -half + pad,
-            _ => null,
-          },
-          bottom: switch (dir) {
-            'bl' || 'bm' || 'br' => -half + pad,
-            _ => null,
-          },
+          left:
+              clampToContainer(handleLeft(dir), _containerData.width) -
+              box.left +
+              pad,
+          top:
+              clampToContainer(handleTop(dir), _containerData.height) -
+              box.top +
+              pad,
           width: size,
           height: size,
           child: MouseRegion(
-            cursor: cursors[dir]!,
+            cursor: _cornerCursor(dir),
             child: Listener(
               key: SemiCropper.cornerKey(dir),
               behavior: HitTestBehavior.opaque,

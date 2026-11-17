@@ -567,6 +567,119 @@ void main() {
       }
     });
 
+    testWidgets('corner handles clamp into the container at the edges', (
+      tester,
+    ) async {
+      await pumpHost(
+        tester,
+        SemiCropper(image: _TestImageProvider(sampleImage)),
+      );
+      // 初始裁切框 300x300 顶满容器高：理想柄位半格外悬容器外成死区，
+      // 钳回后整只在容器内（差异清单「角柄钳回容器」）。
+      final container = tester.getRect(find.byKey(SemiCropper.maskKey));
+      for (final dir in ['tl', 'tm', 'tr', 'bl', 'bm', 'br']) {
+        final handle = tester.getRect(find.byKey(SemiCropper.cornerKey(dir)));
+        expect(handle.top, greaterThanOrEqualTo(container.top), reason: dir);
+        expect(handle.bottom, lessThanOrEqualTo(container.bottom), reason: dir);
+        expect(handle.left, greaterThanOrEqualTo(container.left), reason: dir);
+        expect(handle.right, lessThanOrEqualTo(container.right), reason: dir);
+      }
+
+      // 柄的左上像素可拖（修复前该像素落在柄外悬死区）。
+      final at =
+          tester.getRect(find.byKey(SemiCropper.cornerKey('tl'))).topLeft +
+          const Offset(1, 1);
+      final gesture = await startMouse(tester, at);
+      await gesture.down(at);
+      await gesture.moveBy(const Offset(-10, 30));
+      await tester.pump();
+      await gesture.up();
+      expect(boxSize(tester), const Size(314, 269));
+      expect(boxTopLeft(tester), const Offset(136, 31));
+
+      // 框拖贴右缘后右列柄同样整只在容器内。
+      await gesture.down(const Offset(300, 150));
+      await gesture.moveBy(const Offset(600, 0));
+      await tester.pump();
+      await gesture.up();
+      for (final dir in ['tr', 'mr', 'br']) {
+        final handle = tester.getRect(find.byKey(SemiCropper.cornerKey(dir)));
+        expect(handle.right, lessThanOrEqualTo(container.right), reason: dir);
+        expect(handle.left, greaterThanOrEqualTo(container.left), reason: dir);
+      }
+    });
+
+    testWidgets('corner cursors follow the upstream bidirectional CSS', (
+      tester,
+    ) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.linux;
+      try {
+        await pumpHost(
+          tester,
+          SemiCropper(image: _TestImageProvider(sampleImage)),
+        );
+        // cropper.scss：tl/br nwse-resize、tr/bl nesw-resize、tm/bm ns-resize、
+        // ml/mr ew-resize（全双向）。
+        const expected = <String, MouseCursor>{
+          'tl': SystemMouseCursors.resizeUpLeftDownRight,
+          'tm': SystemMouseCursors.resizeUpDown,
+          'tr': SystemMouseCursors.resizeUpRightDownLeft,
+          'ml': SystemMouseCursors.resizeLeftRight,
+          'mr': SystemMouseCursors.resizeLeftRight,
+          'bl': SystemMouseCursors.resizeUpRightDownLeft,
+          'bm': SystemMouseCursors.resizeUpDown,
+          'br': SystemMouseCursors.resizeUpLeftDownRight,
+        };
+        for (final dir in expected.keys) {
+          final cursors = tester
+              .widgetList<MouseRegion>(
+                find.ancestor(
+                  of: find.byKey(SemiCropper.cornerKey(dir)),
+                  matching: find.byType(MouseRegion),
+                ),
+              )
+              .map((w) => w.cursor)
+              .toList();
+          expect(cursors, contains(expected[dir]), reason: dir);
+        }
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    });
+
+    testWidgets('macOS degrades diagonal corner cursors to double arrows', (
+      tester,
+    ) async {
+      // macOS 引擎 cursor 表无对角线光标（flutter/flutter#138887 → #89351），
+      // nwse 组退化 resizeUpDown、nesw 组退化 resizeLeftRight。
+      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+      try {
+        await pumpHost(
+          tester,
+          SemiCropper(image: _TestImageProvider(sampleImage)),
+        );
+        MouseCursor cursorOf(String dir) => tester
+            .widgetList<MouseRegion>(
+              find.ancestor(
+                of: find.byKey(SemiCropper.cornerKey(dir)),
+                matching: find.byType(MouseRegion),
+              ),
+            )
+            .map((w) => w.cursor)
+            .firstWhere((c) => c != SystemMouseCursors.move);
+        expect(cursorOf('tl'), SystemMouseCursors.resizeUpDown);
+        expect(cursorOf('br'), SystemMouseCursors.resizeUpDown);
+        expect(cursorOf('tr'), SystemMouseCursors.resizeLeftRight);
+        expect(cursorOf('bl'), SystemMouseCursors.resizeLeftRight);
+        expect(cursorOf('tm'), SystemMouseCursors.resizeUpDown);
+        expect(cursorOf('bm'), SystemMouseCursors.resizeUpDown);
+        expect(cursorOf('ml'), SystemMouseCursors.resizeLeftRight);
+        expect(cursorOf('mr'), SystemMouseCursors.resizeLeftRight);
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    });
+
     testWidgets('a local theme patch drives mask colour and corner size', (
       tester,
     ) async {

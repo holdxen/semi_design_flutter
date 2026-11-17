@@ -519,7 +519,7 @@ class _NoticeSlotState extends State<_NoticeSlot>
     if (widget.entry.removing) {
       // 挂载即退出：无入动画，直接释放（closeLifecycle 挂载即 isClosing）。
       _controller.value = 0;
-      _release();
+      _release(widget.entry);
     } else if (!widget.entry.motion) {
       // `motion: false`（defaultConfig）：无入动画。
       _controller.value = 1;
@@ -541,10 +541,12 @@ class _NoticeSlotState extends State<_NoticeSlot>
   void didUpdateWidget(_NoticeSlot oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.entry.removing && !oldWidget.entry.removing) {
+      // 退场——按当前 entry 捕获释放对象（同 id 复用换代后不误放新实例）。
+      final leaving = widget.entry;
       if (!widget.entry.motion) {
         // `motion: false`：无 leave 动画，即刻释放（leaveAnimations 语义）。
         _controller.value = 0;
-        _release();
+        _release(leaving);
         return;
       }
       final t = SemiNotificationTheme.resolve(context);
@@ -559,7 +561,23 @@ class _NoticeSlotState extends State<_NoticeSlot>
                 t.animationDelayNotificationHide,
             curve: t.animationFunctionNotificationHide,
           )
-          .whenCompleteOrCancel(_release);
+          .whenCompleteOrCancel(() => _release(leaving));
+    } else if (!widget.entry.removing && oldWidget.entry.removing) {
+      // 同 id 复用 leaving 通知（上游 leaveAnimations：旧实例即弃、新实例
+      // `animation-show` 重新入场）——重置释放标记并重放入场动画。
+      _released = false;
+      if (!widget.entry.motion) {
+        _controller.value = 1;
+      } else {
+        final t = SemiNotificationTheme.resolve(context);
+        _controller.animateTo(
+          1,
+          duration:
+              t.animationDurationNotificationShow +
+              t.animationDelayNotificationShow,
+          curve: t.animationFunctionNotificationShow,
+        );
+      }
     }
   }
 
@@ -569,12 +587,13 @@ class _NoticeSlotState extends State<_NoticeSlot>
     super.dispose();
   }
 
-  void _release() {
-    if (_released) return;
+  void _release(_NoticeEntry entry) {
+    // 只释放当前代 entry：同 id 复用换代后，旧 leave 的完成回调不得误删新实例。
+    if (_released || !identical(widget.entry, entry)) return;
     _released = true;
     // setState 触点不在 build 生命周期内联触发（宿主在 build 中）。
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) widget.onReleased(widget.entry);
+      if (mounted && identical(widget.entry, entry)) widget.onReleased(entry);
     });
   }
 
@@ -1183,9 +1202,16 @@ class _NotificationHostState extends State<_NotificationHost> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SizedBox(width: t.widthNotificationNoticeMinWidth, height: 0),
+            SizedBox(
+              key: const ValueKey('notice-min-width'),
+              width: t.widthNotificationNoticeMinWidth,
+              height: 0,
+            ),
             for (final entry in entries)
+              // ValueKey 使槽位状态（入场/退场动画、计时、释放）跟随通知
+              // 本身而非列表位置——增删移位不再串状态（上游 key={notice.id}）。
               Padding(
+                key: ValueKey(entry.id),
                 // margin: $spacing-notification_notice-margin 四边——CSS
                 // 相邻卡片纵向 margin 折叠（间距 = margin 非 2×margin）：
                 // 纵向半值对拆 + 列首尾补半值，等价折叠结果。
