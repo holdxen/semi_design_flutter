@@ -139,6 +139,18 @@ class _SemiModalRegionState extends State<SemiModalRegion> {
   }
 }
 
+/// 上游 `header={null}` / `footer={null}` 的「显式空槽」哨兵（JS props 键存在
+/// 即覆盖缺省渲染——Dart `Widget?` 无法区分「未传」与「显式 null」，以此表达）。
+/// header 槽：无标题行、body 走直通分支（不进 body-wrapper、无 closer——上游
+/// renderBody `hasHeader` quirk）；footer 槽：无 footer 节点（无
+/// `semi-modal-footer` 边距包裹）。
+class SemiModalEmptySlot extends StatelessWidget {
+  const SemiModalEmptySlot({super.key});
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.shrink();
+}
+
 /// 对话框（Semi Modal）。
 ///
 /// 两态 API：
@@ -160,6 +172,7 @@ class SemiModal extends StatefulWidget {
     this.icon,
     this.header,
     this.footer,
+    this.contentPadding,
     this.width,
     this.height,
     this.size = SemiModalSize.small,
@@ -202,6 +215,11 @@ class SemiModal extends StatefulWidget {
 
   /// 自定义 footer（整体替换按钮行）。
   final Widget? footer;
+
+  /// 内容盒 padding（缺省 modal.scss `-content` 的
+  /// `$spacing-modal_content-paddingY/X` 0/24；UserGuide 的
+  /// `.#{$prefix}-modal-content { padding: 0 }` 覆写落点）。
+  final EdgeInsets? contentPadding;
 
   final double? width;
   final double? height;
@@ -1008,6 +1026,7 @@ class _ModalConfig {
     this.icon,
     this.header,
     this.footer,
+    this.contentPadding,
     this.okText,
     this.cancelText,
     this.okType,
@@ -1031,6 +1050,7 @@ class _ModalConfig {
     icon: w.icon,
     header: w.header,
     footer: w.footer,
+    contentPadding: w.contentPadding,
     okText: w.okText,
     cancelText: w.cancelText,
     okType: w.okType,
@@ -1053,6 +1073,7 @@ class _ModalConfig {
   final Widget? icon;
   final Widget? header;
   final Widget? footer;
+  final EdgeInsets? contentPadding;
   final String? okText;
   final String? cancelText;
   final SemiButtonType? okType;
@@ -1075,6 +1096,7 @@ class _ModalConfig {
     Widget? icon,
     Widget? header,
     Widget? footer,
+    EdgeInsets? contentPadding,
     String? okText,
     String? cancelText,
     SemiButtonType? okType,
@@ -1094,6 +1116,7 @@ class _ModalConfig {
     icon: icon ?? this.icon,
     header: header ?? this.header,
     footer: footer ?? this.footer,
+    contentPadding: contentPadding ?? this.contentPadding,
     okText: okText ?? this.okText,
     cancelText: cancelText ?? this.cancelText,
     okType: okType ?? this.okType,
@@ -1214,8 +1237,11 @@ class _ModalContent extends StatelessWidget {
       child: _slot(config.content),
     );
     final footer = _buildFooter(t, rtl);
-    // 自定义 header 整体替换标题行（上游 `'header' in props` 分支）。
+    // 自定义 header 整体替换标题行（上游 `'header' in props` 分支）；
+    // [SemiModalEmptySlot] = `header={null}` 显式空（无 header 行、body 直通、
+    // 无 closer——上游 renderBody `hasHeader` quirk）。
     final Widget? headerArea = switch (config.header) {
+      SemiModalEmptySlot() => null,
       final Widget customHeader => Padding(
         padding: EdgeInsetsDirectional.only(
           top: t.spacingModalHeaderMarginY,
@@ -1236,10 +1262,12 @@ class _ModalContent extends StatelessWidget {
       height: config.fullScreen
           ? MediaQuery.sizeOf(context).height
           : config.height,
-      padding: EdgeInsets.symmetric(
-        vertical: t.spacingModalContentPaddingY,
-        horizontal: t.spacingModalContentPaddingX,
-      ),
+      padding:
+          config.contentPadding ??
+          EdgeInsets.symmetric(
+            vertical: t.spacingModalContentPaddingY,
+            horizontal: t.spacingModalContentPaddingX,
+          ),
       decoration: BoxDecoration(
         color: t.colorModalBg,
         // `-content-fullScreen { border: none }`（占位的 1px 透明边也会
@@ -1341,6 +1369,9 @@ class _ModalContent extends StatelessWidget {
   }
 
   Widget? _buildFooter(SemiResolvedModalThemeData t, bool rtl) {
+    // [SemiModalEmptySlot] = `footer={null}` 显式空（无 footer 节点——上游
+    // `'footer' in props ? footer : renderFooter()` 覆盖缺省按钮行）。
+    if (config.footer is SemiModalEmptySlot) return null;
     if (config.footer case final Widget customFooter) {
       return Container(
         margin: EdgeInsetsDirectional.only(

@@ -58,6 +58,7 @@ import 'semi_float_button_theme_data.dart';
 import 'semi_image_theme_data.dart';
 import 'semi_toast_theme_data.dart';
 import 'semi_feedback_theme_data.dart';
+import 'semi_user_guide_theme_data.dart';
 
 @immutable
 class SemiComponentThemes {
@@ -120,6 +121,7 @@ class SemiComponentThemes {
     this.image = const SemiImageThemeData(),
     this.toast = const SemiToastThemeData(),
     this.feedback = const SemiFeedbackThemeData(),
+    this.userGuide = const SemiUserGuideThemeData(),
   });
   final SemiTagThemeData tag;
   final SemiTypographyThemeData typography;
@@ -182,6 +184,7 @@ class SemiComponentThemes {
   final SemiImageThemeData image;
   final SemiToastThemeData toast;
   final SemiFeedbackThemeData feedback;
+  final SemiUserGuideThemeData userGuide;
   SemiComponentThemes copyWith({
     SemiTagThemeData? tag,
     SemiTypographyThemeData? typography,
@@ -241,6 +244,7 @@ class SemiComponentThemes {
     SemiImageThemeData? image,
     SemiToastThemeData? toast,
     SemiFeedbackThemeData? feedback,
+    SemiUserGuideThemeData? userGuide,
   }) => SemiComponentThemes(
     tag: tag ?? this.tag,
     typography: typography ?? this.typography,
@@ -300,6 +304,7 @@ class SemiComponentThemes {
     image: image ?? this.image,
     toast: toast ?? this.toast,
     feedback: feedback ?? this.feedback,
+    userGuide: userGuide ?? this.userGuide,
   );
   @override
   bool operator ==(Object other) =>
@@ -362,7 +367,8 @@ class SemiComponentThemes {
           floatButton == other.floatButton &&
           image == other.image &&
           toast == other.toast &&
-          feedback == other.feedback;
+          feedback == other.feedback &&
+          userGuide == other.userGuide;
   @override
   int get hashCode => Object.hashAll([
     tag,
@@ -423,5 +429,6 @@ class SemiComponentThemes {
     image,
     toast,
     feedback,
+    userGuide,
   ]);
 }

@@ -199,6 +199,9 @@ export 'src/theme/semi_toast_theme_data.dart';
 export 'src/components/semi_feedback.dart';
 export 'src/theme/semi_feedback_theme.dart';
 export 'src/theme/semi_feedback_theme_data.dart';
+export 'src/components/semi_user_guide.dart';
+export 'src/theme/semi_user_guide_theme.dart';
+export 'src/theme/semi_user_guide_theme_data.dart';
 
 /// A Calculator.
 class Calculator {

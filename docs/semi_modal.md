@@ -8,6 +8,8 @@
 
 `SemiModalRegion({child})`——区域遮罩容器（上游 `getPopupContainer` 容器的 Flutter 形态）：区域内的 Modal 只遮本区域，`maskFixed: true` 强制全窗。
 
+`SemiModalEmptySlot` + `contentPadding`（UserGuide 移植的只加不改增量）：`header`/`footer` 传 `SemiModalEmptySlot()` 表达上游 `header={null}`/`footer={null}` 的「显式空槽」（header 槽 → 无 header 行、body 直通、无 closer；footer 槽 → 无 footer 节点）；`contentPadding` 覆写内容盒 padding（缺省 0/24，userGuide.scss `padding: 0` 覆写落点）。
+
 title/content `Object?`（String | Widget）。okType `SemiButtonType`（上游 Button `type` 字符串 → 强类型）。onOk/onCancel `FutureOr<void> Function()?`（返回 `Future` 时按钮 loading 至完成——声明式不自关、命令式完成后关闭；error 变体 `okType` 缺省 `danger`）。size `SemiModalSize`（`strings.SIZE`）。confirm 族：`SemiModal.confirm/info/success/warning/error({...})` → `SemiModalHandle { destroy(), update(...) }`（同名参数 + 可选 `BuildContext? context` 主题锚点，缺省亮色 token）。locale zh 硬编码：「确定」/「取消」/「关闭」（zh_CN.ts Modal）。
 
 ## 行为

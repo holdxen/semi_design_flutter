@@ -125,6 +125,14 @@ class ToastPage extends StatelessWidget {
               SemiButton(
                 '三条叠牌',
                 onPressed: () {
+                  SemiToast.info(content: '卡组第一条', stack: true);
+                  SemiToast.info(content: '卡组第二条', stack: true);
+                  SemiToast.info(content: '卡组第三条', stack: true);
+                },
+              ),
+              SemiButton(
+                '三条叠牌（不自动关）',
+                onPressed: () {
                   SemiToast.info(
                     content: '卡组第一条',
                     duration: 0,

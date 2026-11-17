@@ -55,6 +55,7 @@ import 'package:example/pages/tooltip.dart';
 import 'package:example/pages/tree.dart';
 import 'package:example/pages/tree_select.dart';
 import 'package:example/pages/typography.dart';
+import 'package:example/pages/user_guide.dart';
 import 'package:example/pages/upload.dart';
 import 'package:flutter/widgets.dart';
 import 'package:semi_design_flutter/semi_design_flutter.dart';
@@ -265,6 +266,12 @@ const List<DemoGroup> demoGroups = [
     DemoSpec('skeleton', 'Skeleton 骨架屏', 'doc-skeleton.svg', SkeletonPage()),
     DemoSpec('spin', 'Spin 加载器', 'doc-spin.svg', SpinPage()),
     DemoSpec('toast', 'Toast 轻提示', 'doc-toast.svg', ToastPage()),
+    DemoSpec(
+      'userGuide',
+      'UserGuide 用户引导',
+      'doc-userGuide.svg',
+      UserGuidePage(),
+    ),
   ]),
 ];
 
