@@ -2189,12 +2189,10 @@ class _SemiCascaderState extends State<SemiCascader> {
       fit: StackFit.passthrough,
       children: [
         SizedBox(
-          height: switch (widget.size) {
-            // cascader.scss:361-373 `-search-wrapper` 高度三档。
-            SemiInputSize.small => theme.heightCascaderSelectionWrapperSmall,
-            SemiInputSize.normal => theme.heightCascaderSelectionWrapper,
-            SemiInputSize.large => theme.heightCascaderSelectionWrapperLarge,
-          },
+          // SemiInput 已按既有方案使用自然字体度量盒 + Align 居中；
+          // 不再套用 22/30/38 的 CSS 内槽高度（会把标准 24/32/40
+          // EditableText 压缩并导致文本偏移）。
+          height: _triggerHeight(theme),
           child: DecoratedBox(
             decoration: BoxDecoration(
               // cascader.scss:333-336 `.popover .search-wrapper`（★上游误嵌套
@@ -2207,9 +2205,10 @@ class _SemiCascaderState extends State<SemiCascader> {
               ),
             ),
             child: Padding(
+              // 搜索容器的水平 token 保留；垂直 padding 不再参与输入盒几何，
+              // 由 SemiInput 自己在 24/32/40 槽内居中。
               padding: EdgeInsets.symmetric(
                 horizontal: theme.spacingCascaderSearchPaddingX,
-                vertical: theme.spacingCascaderSearchPaddingY,
               ),
               child: DecoratedBox(
                 decoration: BoxDecoration(
@@ -2303,23 +2302,28 @@ class _SemiCascaderState extends State<SemiCascader> {
       if (restCount > 0) _buildNTag(theme, restCount),
       ConstrainedBox(
         constraints: BoxConstraints(
+          // 保留 tagInput 的最小高度 token；实际输入槽由 SemiInput 的
+          // 24/32/40 高度决定，不能再用 22/30/38 作为 maxHeight。
           minHeight: _tagInputMinHeight(theme),
-          maxHeight: _tagInputMinHeight(theme),
         ),
         child: Padding(
+          // SemiInput 的自然字体盒由组件自身居中；不要用 22/30/38
+          // 的 maxHeight 截断其 24/32/40 标准槽。
           padding: EdgeInsetsDirectional.only(
-            // cascader.scss:210 `margin-left: $spacing-cascader_selection_input-marginLeft`。
             start: theme.spacingCascaderSelectionInputMarginLeft,
           ),
-          child: SemiInput(
-            key: SemiCascader.searchInputKey,
-            controller: _inputController,
-            focusNode: _inputFocusNode,
-            size: widget.size,
-            disabled: widget.disabled,
-            bare: true,
-            placeholder: widget.searchPlaceholder ?? widget.placeholder ?? '',
-            onChanged: widget.disabled ? null : _handleInputChange,
+          child: SizedBox(
+            height: _triggerHeight(theme),
+            child: SemiInput(
+              key: SemiCascader.searchInputKey,
+              controller: _inputController,
+              focusNode: _inputFocusNode,
+              size: widget.size,
+              disabled: widget.disabled,
+              bare: true,
+              placeholder: widget.searchPlaceholder ?? widget.placeholder ?? '',
+              onChanged: widget.disabled ? null : _handleInputChange,
+            ),
           ),
         ),
       ),

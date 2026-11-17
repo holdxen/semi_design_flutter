@@ -1206,6 +1206,44 @@ void main() {
       expect(find.byKey(SemiCascader.listKey), findsOneWidget); // 面板保持
     });
 
+    testWidgets('trigger search keeps SemiInput natural text centered in the '
+        'Cascader slot for single and multiple modes', (tester) async {
+      Future<void> pumpSearch({required bool multiple}) async {
+        await pumpHost(
+          tester,
+          SemiCascader(
+            treeData: data,
+            motion: false,
+            filterTreeNode: true,
+            multiple: multiple,
+            searchPosition: SemiCascaderSearchPosition.trigger,
+            size: SemiInputSize.normal,
+            placeholder: 'search',
+          ),
+        );
+      }
+
+      for (final multiple in [false, true]) {
+        await pumpSearch(multiple: multiple);
+        final inputFinder = find.byKey(SemiCascader.searchInputKey);
+        final inputBox = tester.getRect(inputFinder);
+        // The prior fix in semi_input.dart lays out the natural glyph box and
+        // centers it inside the 32px Cascader slot (no TextStyle.height/strut).
+        // Cascader must not clamp that slot to its smaller 22/30/38 CSS token.
+        expect(inputBox.height, closeTo(32, 0.01));
+        await tester.enterText(inputFinder, 'x');
+        await tester.pumpAndSettle();
+        final editableFinder = find.descendant(
+          of: inputFinder,
+          matching: find.byType(EditableText),
+        );
+        expect(editableFinder, findsOneWidget);
+        final editableBox = tester.getRect(editableFinder);
+        expect(editableBox.height, lessThanOrEqualTo(inputBox.height));
+        expect(editableBox.center.dy, closeTo(inputBox.center.dy, 0.01));
+      }
+    });
+
     testWidgets('showNext hover expands the next column without clicking', (
       tester,
     ) async {
