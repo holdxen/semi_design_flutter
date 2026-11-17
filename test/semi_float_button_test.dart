@@ -1355,4 +1355,41 @@ void main() {
       expect(second.left - first.right, 4);
     });
   });
+
+  // dark 模式回归：dark 默认 `--semi-shadow-elevated` 首层为 `inset 0 0 0 1px`
+  // （tokens_test 合同：`toBoxShadows()` 拒绝 inset）——渲染仅转换 drop 层
+  // （card 先例，docs/semi_float_button.md 差异清单），不得抛 UnsupportedError。
+  testWidgets('dark 模式渲染跳过 inset 阴影层', (tester) async {
+    const dark = SemiThemeData.dark();
+    final expected = [
+      for (final layer in dark.shadows.shadowElevated.layers)
+        if (!layer.inset) layer.toBoxShadow(),
+    ];
+    expect(expected, hasLength(1), reason: 'dark elevated = 1 inset + 1 drop');
+    await tester.pumpWidget(
+      host(
+        SemiTheme(
+          data: dark,
+          child: floatPage(
+            Stack(children: [
+              floatButton(),
+              floatGroup(
+                items: const [
+                  SemiFloatButtonGroupItem(
+                    value: 'help',
+                    icon: Text('H'),
+                    content: '帮助',
+                  ),
+                ],
+              ),
+            ]),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    expect(bodyBox(tester).boxShadow, expected);
+    expect(groupBox(tester).boxShadow, expected);
+  });
 }

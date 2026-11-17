@@ -166,4 +166,21 @@ void main() {
     expect(rect.left, stack.left + 24);
     expect(tester.takeException(), isNull);
   });
+
+  // dark 模式回归：`--semi-shadow-elevated` 首层为 `inset 0 0 0 1px`，
+  // 渲染仅转换 drop 层（docs/semi_float_button.md 差异清单 18）——
+  // 曾直调 `toBoxShadows()` 抛 UnsupportedError（unsupported operation）。
+  testWidgets('dark mode: page renders without inset shadow errors', (
+    tester,
+  ) async {
+    addTearDown(() async => tester.pumpWidget(const SizedBox.shrink()));
+    await tester.pumpWidget(
+      const SemiApp(themeMode: SemiThemeMode.dark, home: FloatButtonPage()),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(bodyOf('floatbutton-basic'), findsOneWidget);
+    // 页面有正常组 + 禁用组两个演示。
+    expect(find.byKey(SemiFloatButtonGroup.groupKey), findsNWidgets(2));
+  });
 }

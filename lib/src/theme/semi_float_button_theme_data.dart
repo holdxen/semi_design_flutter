@@ -182,7 +182,7 @@ class SemiFloatButtonThemeData {
 
   /// `$shadow-floatButton: var(--semi-shadow-elevated)` in packages/semi-foundation/floatButton/variables.scss.
   ///
-  /// `var(--semi-shadow-elevated)` → `SemiShadows`（card `shadowCard` 先例——`toBoxShadows()` 消费）。
+  /// `var(--semi-shadow-elevated)` → `SemiShadows`（card `shadowCard` 先例——渲染仅转换 drop 层，见差异清单）。
   final SemiShadows? shadowFloatButton;
   SemiFloatButtonThemeData copyWith({
     double? spacingFloatButtonBottom,
@@ -714,6 +714,6 @@ class SemiResolvedFloatButtonThemeData {
 
   /// `$shadow-floatButton: var(--semi-shadow-elevated)` in packages/semi-foundation/floatButton/variables.scss.
   ///
-  /// `var(--semi-shadow-elevated)` → `SemiShadows`（card `shadowCard` 先例——`toBoxShadows()` 消费）。
+  /// `var(--semi-shadow-elevated)` → `SemiShadows`（card `shadowCard` 先例——渲染仅转换 drop 层，见差异清单）。
   final SemiShadows shadowFloatButton;
 }

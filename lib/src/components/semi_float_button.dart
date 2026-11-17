@@ -277,7 +277,13 @@ class _SemiFloatButtonState extends State<SemiFloatButton> {
               ? t.radiusFloatButtonSquare
               : t.radiusFloatButtonRound,
         ),
-        boxShadow: t.shadowFloatButton.toBoxShadows(),
+        // `SemiShadows.toBoxShadows` 拒绝 inset 层、dark 默认
+        // `--semi-shadow-elevated` 首层即 `inset 0 0 0 1px`；仅 drop 层进
+        // BoxDecoration（card 先例，docs/semi_float_button.md 差异清单）。
+        boxShadow: [
+          for (final layer in t.shadowFloatButton.layers)
+            if (!layer.inset) layer.toBoxShadow(),
+        ],
       ),
       // body `color: $color-floatButton-text`（:17）——icon 走 currentColor
       // / DefaultTextStyle 色。
@@ -450,7 +456,11 @@ class SemiFloatButtonGroup extends StatelessWidget {
             borderRadius: BorderRadius.circular(
               t.radiusFloatButtonGroupBorderRadius,
             ),
-            boxShadow: t.shadowFloatButtonGroup.toBoxShadows(),
+            // inset 层跳过同 body（card 先例，docs/semi_float_button.md 差异清单）。
+            boxShadow: [
+              for (final layer in t.shadowFloatButtonGroup.layers)
+                if (!layer.inset) layer.toBoxShadow(),
+            ],
           ),
           padding: EdgeInsets.all(t.spacingFloatButtonGroupPadding),
           child: Row(
