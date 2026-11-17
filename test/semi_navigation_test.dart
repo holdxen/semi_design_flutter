@@ -2072,6 +2072,27 @@ void main() {
       expect(textDx(tester, 'T') > textDx(tester, 'Sub1'), isTrue);
     });
 
+    testWidgets('right toggle keeps only the title row trailing padding', (
+      tester,
+    ) async {
+      await pumpHost(
+        tester,
+        nav(
+          items: nestedItems(),
+          expandIcon: const SizedBox(width: 20, height: 20),
+        ),
+      );
+
+      final rowRect = tester.getRect(rowOf('Sub1'));
+      final iconRect = tester.getRect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is SizedBox && widget.width == 20 && widget.height == 20,
+        ),
+      );
+      expect(rowRect.right - iconRect.right, 12);
+    });
+
     testWidgets('limitIndent true indents nested text by 44px; false uses '
         'manual placeholder slots', (tester) async {
       Future<double> leafIndent(WidgetTester tester, bool limitIndent) async {

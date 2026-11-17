@@ -1759,13 +1759,17 @@ class _NavSubTitleState extends State<_NavSubTitle> {
     // 截断上限用（略保守即可，CSS overflow 可见不裁图标）。
     final slotExtent =
         t.widthNavigationIconLeftMinWidth + t.widthNavigationIconTextBetween;
-    final fixedSlots =
-        leading.length +
-        (showIconSlot ? 1 : 0) +
-        (widget.toggleIconPosition == SemiNavigationToggleIconPosition.right &&
-                animatedToggle != null
-            ? 1
-            : 0);
+    final hasRightToggle =
+        widget.toggleIconPosition == SemiNavigationToggleIconPosition.right &&
+        animatedToggle != null;
+    // nav:181-187: vertical right toggle has no trailing gap; the title row's
+    // own horizontal padding supplies the space to the row edge.
+    final toggleExtent = hasRightToggle && !widget.horizontal
+        ? t.widthNavigationIconLeftMinWidth
+        : slotExtent;
+    final fixedExtent =
+        (leading.length + (showIconSlot ? 1 : 0)) * slotExtent +
+        (hasRightToggle ? toggleExtent : 0);
 
     final row = AnimatedContainer(
       duration: t.transitionDurationNavigationItemL1Bg,
@@ -1807,9 +1811,7 @@ class _NavSubTitleState extends State<_NavSubTitle> {
           final avail = bc.maxWidth;
           final textMax = !avail.isFinite
               ? double.infinity
-              : (avail > slotExtent * fixedSlots
-                    ? avail - slotExtent * fixedSlots
-                    : 0.0);
+              : (avail > fixedExtent ? avail - fixedExtent : 0.0);
           final textContent = Padding(
             // nav:282 44px 缩进（同 item 规则——文本 first-child 才命中）。
             padding: EdgeInsetsDirectional.only(
@@ -1892,7 +1894,7 @@ class _NavSubTitleState extends State<_NavSubTitle> {
                       t,
                       widget.horizontal
                           ? t.spacingNavigationHorizontalIconLastMarginLeft
-                          : null,
+                          : 0,
                       color: toggleColor,
                     ),
                   ),
