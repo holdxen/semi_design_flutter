@@ -74,6 +74,29 @@ void main() {
     expect(find.text('Tabs 标签栏'), findsOneWidget);
   });
 
+  testWidgets('sidebar collapse/expand width is animated', (tester) async {
+    addTearDown(() async => tester.pumpWidget(const SizedBox.shrink()));
+    await tester.binding.setSurfaceSize(const Size(1200, 3000));
+    await tester.pumpWidget(const MyApp());
+    await tester.pump(const Duration(milliseconds: 50));
+    final nav = find.byKey(SemiNavigation.rootKey);
+    expect(tester.getSize(nav).width, 240);
+    // 收起：中途宽度必须处于 240 与 60 之间（瞬时切换会直接是目标值）。
+    await tester.tap(find.byKey(SemiNavigation.collapseButtonKey));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(tester.getSize(nav).width, inExclusiveRange(60, 240));
+    await tester.pumpAndSettle();
+    expect(tester.getSize(nav).width, 60);
+    // 展开同样中途取值。
+    await tester.tap(find.byKey(SemiNavigation.collapseButtonKey));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(tester.getSize(nav).width, inExclusiveRange(60, 240));
+    await tester.pumpAndSettle();
+    expect(tester.getSize(nav).width, 240);
+  });
+
   testWidgets('theme switch toggles light/dark', (tester) async {
     addTearDown(() async => tester.pumpWidget(const SizedBox.shrink()));
     await tester.binding.setSurfaceSize(const Size(1200, 3000));

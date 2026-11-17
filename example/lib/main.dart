@@ -324,6 +324,12 @@ class _DemoShellState extends State<DemoShell> {
   /// 折叠态受控——侧栏搜索行宽度跟随 widthNavigationContainer* 同步收放。
   bool _collapsed = false;
 
+  /// 与 SemiNavigation 默认 `motionNavigationWidth`
+  /// （`width 200ms cubic-bezier(.62, .05, .36, .95)`）对齐——外层侧栏宽度
+  /// 动画必须和导航自身的折叠 motion 同步（简写解析器在库内私有）。
+  static const Duration _navMotionDuration = Duration(milliseconds: 200);
+  static const Curve _navMotionCurve = Cubic(0.62, 0.05, 0.36, 0.95);
+
   /// 展开键受控——搜索过滤后自动展开命中分组，保证结果可见。
   List<Object> _openKeys = [for (final g in demoGroups) 'group-${g.label}'];
 
@@ -406,14 +412,26 @@ class _DemoShellState extends State<DemoShell> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SizedBox(
+        // ★SemiNavigation 自身按 motionNavigationWidth 动画宽度；外层若用
+        // SizedBox 直接把宽度切成目标值，会以紧约束覆盖导航内部的宽度动画
+        // （折叠/展开变瞬时）。这里改用同一 motion 驱动外层，搜索行一并收放。
+        AnimatedContainer(
           width: navWidth,
+          duration: _navMotionDuration,
+          curve: _navMotionCurve,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
-                child: _collapsed ? const SizedBox.shrink() : _searchInput(),
+              AnimatedSize(
+                duration: _navMotionDuration,
+                curve: _navMotionCurve,
+                alignment: Alignment.topCenter,
+                child: _collapsed
+                    ? const SizedBox(width: double.infinity)
+                    : Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+                        child: _searchInput(),
+                      ),
               ),
               // 基座 SemiNavigation：条目区内部滚动（_buildList 的
               // SingleChildScrollView），头/尾贴上下——需要有界高度，
