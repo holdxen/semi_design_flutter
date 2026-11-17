@@ -90,6 +90,7 @@ image `ImageProvider`（上游 `src`）。shape `SemiCropperShape`（rect/round/
 - **未移植 API**：`aspectRatio` 受控语义保留（变化仅影响后续拖动，照抄 componentDidUpdate）。
 - **角柄钳回容器**：上游角柄以 `$half_corner_width` 半格外悬裁切框角（DOM 命中不受父盒边界限制，外悬部分可点可悬停）；Flutter `RenderBox.hitTest` 不收自身边界外的点，裁切框贴住容器边（初始态即顶满容器高）时外悬半格落在容器外成死区——拖不动、光标不切换，故柄位钳回 `[0, 容器-柄]` 整只可命中（不贴边时与上游同形）。
 - **角柄光标 kind**：上游 CSS 全双向（`nwse`/`nesw`/`ns`/`ew-resize`）→ `resizeUpLeftDownRight`/`resizeUpRightDownLeft`/`resizeUpDown`/`resizeLeftRight`；macOS 桌面引擎 cursor 表无对角线光标（NSCursor 公共 API 缺失，flutter/flutter#138887 → #89351 跟踪，未映射 → 箭头），`nwse` 组退化 `resizeUpDown`、`nesw` 组退化 `resizeLeftRight`（Web 无此缺口不退化）。
+- **平移光标 kind**：上游 `-mask`/`-view-box` 的 `cursor: move` → `SystemMouseCursors.move`；macOS 引擎 cursor 表无 `move`（WebKit 走私有 CoreCursor `kCoreCursorWindowMove`，Flutter 的 NSCursor 表未映射 → 箭头），改为 `SystemMouseCursors.none` 隐藏系统光标 + 组件内自绘四向箭头跟随指针（`SemiCropper.moveCursorKey`），Web/Windows/Linux 走系统 move。
 
 ## 用法
 
