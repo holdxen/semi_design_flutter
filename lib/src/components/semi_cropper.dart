@@ -294,10 +294,14 @@ class _SemiCropperState extends State<SemiCropper> {
       dir == 'tl' || dir == 'tr' || dir == 'bl' || dir == 'br';
 
   /// 当前应绘制的对角光标：拖动中取被拖角柄；悬停时取命中的角柄。
+  ///
+  /// 指针出界即不绘制：组件外的光标归宿主所有，拖出时只剩系统默认箭头，
+  /// 避免"系统箭头 + 自绘 resize"两个光标同时出现。
   String? _drawnCornerDir() {
     if (!_usesDrawnCornerCursor) return null;
     final at = _drawnCornerAt.value;
     if (at == null) return null;
+    if (!(Offset.zero & _containerData).contains(at)) return null;
     if (_dragMode == _DragMode.cornerResize) {
       return _isDiagonalCorner(_boxMoveDir) ? _boxMoveDir : null;
     }
@@ -1134,12 +1138,10 @@ class _SemiCropperState extends State<SemiCropper> {
       container: true,
       label: '图片裁切',
       child: MouseRegion(
-        // 对角角柄拖动时整个容器都隐藏系统光标，由根 Stack 自绘。
-        cursor:
-            _usesDrawnCornerCursor &&
-                _dragMode == _DragMode.cornerResize &&
-                _isDiagonalCorner(_boxMoveDir)
-            ? SystemMouseCursors.none
+        // 角柄拖动期间整个容器保持该方向的 resize 光标（指针可能离开
+        // 10px 角柄或越出组件再拖回）；macOS 对角角柄走 none + 根 Stack 自绘。
+        cursor: _dragMode == _DragMode.cornerResize && _boxMoveDir.isNotEmpty
+            ? _cornerCursor(_boxMoveDir)
             : _moveCursor(),
         // 自绘光标位置用容器坐标（容器不随角柄拖动移动，跟手不漂移）。
         onHover: (e) => _drawnCornerAt.value = e.localPosition,
@@ -1375,8 +1377,8 @@ class _SemiCropperState extends State<SemiCropper> {
     }
     _dragMode = _DragMode.none;
     _pruneDrawnCorner();
-    // 根光标在角柄拖动期间是 none，结束后恢复 move/grab。
-    if (wasCorner && _usesDrawnCornerCursor) setState(() {});
+    // 根光标在角柄拖动期间是 resize/none，结束后恢复 move/grab。
+    if (wasCorner) setState(() {});
   }
 
   List<Widget> _buildCorners(SemiResolvedCropperThemeData t, double pad) {
@@ -1433,9 +1435,8 @@ class _SemiCropperState extends State<SemiCropper> {
             onPointerDown: () {
               _dragMode = _DragMode.cornerResize;
               _handleCornerDown(dir);
-              // 根光标切 none（拖动中指针可能离开角柄），自绘层沿用最近
-              // 一次 hover 的容器坐标。
-              if (_usesDrawnCornerCursor) setState(() {});
+              // 根光标切到该方向的 resize（拖动中指针可能离开角柄）。
+              setState(() {});
             },
             child: ColoredBox(color: t.colorCropperBoxCornerBg),
           ),

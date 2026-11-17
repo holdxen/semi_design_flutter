@@ -744,6 +744,16 @@ void main() {
         final hotspot = (glyph.painter! as dynamic).hotspot as Offset;
         expect(hotspot.dx, moreOrLessEquals(start.dx + 40, epsilon: 0.5));
         expect(hotspot.dy, moreOrLessEquals(start.dy + 30, epsilon: 0.5));
+        // 拖出组件：停止自绘，只留系统默认箭头（不能同时出现两个光标）。
+        await drag.moveTo(const Offset(300, 360));
+        await tester.pump();
+        expect(find.byKey(SemiCropper.resizeCursorKey('tl')), findsNothing);
+        expect(kinds.last, 'basic');
+        // 拖回组件内：恢复自绘 resize 光标（系统光标 none）。
+        await drag.moveTo(start + const Offset(20, 20));
+        await tester.pump();
+        expect(find.byKey(SemiCropper.resizeCursorKey('tl')), findsOneWidget);
+        expect(kinds.last, 'none');
         await drag.up();
         // 松手后仍停在角柄上（角柄跟着指针走）→ 保持绘制；移开后撤掉。
         await drag.moveTo(start + const Offset(200, 150));
@@ -773,6 +783,27 @@ void main() {
           await gesture.removePointer();
           await tester.pump();
         }
+
+        // 边中点拖动：整容器保持同向 resize；拖出组件回退系统箭头，
+        // 按住拖回组件内必须恢复 resize（不能残留手/箭头）。
+        final edge = tester.getCenter(find.byKey(SemiCropper.cornerKey('tm')));
+        final edgeDrag = await tester.createGesture(
+          kind: ui.PointerDeviceKind.mouse,
+        );
+        await edgeDrag.addPointer(location: edge);
+        await edgeDrag.down(edge);
+        await edgeDrag.moveTo(edge + const Offset(0, 40));
+        await tester.pump();
+        expect(kinds.last, 'resizeUpDown', reason: 'edge drag');
+        await edgeDrag.moveTo(const Offset(300, 360));
+        await tester.pump();
+        expect(kinds.last, 'basic', reason: 'outside');
+        await edgeDrag.moveTo(const Offset(300, 200));
+        await tester.pump();
+        expect(kinds.last, 'resizeUpDown', reason: 'returned');
+        await edgeDrag.up();
+        await edgeDrag.removePointer();
+        await tester.pump();
       } finally {
         debugDefaultTargetPlatformOverride = null;
       }
