@@ -809,7 +809,7 @@ void main() {
       }
     });
 
-    testWidgets('mask/view-box hover uses a system move cursor', (
+    testWidgets('mask/view-box hover: system move, drawn on macOS', (
       tester,
     ) async {
       Future<void> expectHoverKind(
@@ -828,8 +828,27 @@ void main() {
             kind: ui.PointerDeviceKind.mouse,
           );
           await gesture.addPointer(location: at);
+          await gesture.moveTo(at + const Offset(1, 0));
           await tester.pump();
-          expect(kinds.last, expected, reason: '$platform $at');
+          expect(kinds.last, expected, reason: '$platform $at cursor kind');
+          expect(
+            find.byKey(SemiCropper.moveCursorKey),
+            platform == TargetPlatform.macOS ? findsOneWidget : findsNothing,
+            reason: '$platform $at drawn move',
+          );
+          if (platform == TargetPlatform.macOS) {
+            final glyph = tester.widget<CustomPaint>(
+              find.byKey(SemiCropper.moveCursorKey),
+            );
+            final hotspot = (glyph.painter! as dynamic).hotspot as Offset;
+            expect(hotspot.dx, moreOrLessEquals(at.dx + 1, epsilon: 0.5));
+            expect(hotspot.dy, moreOrLessEquals(at.dy, epsilon: 0.5));
+          }
+          // 出界停绘（组件外光标归宿主箭头）。
+          await gesture.moveTo(const Offset(300, 360));
+          await tester.pump();
+          expect(find.byKey(SemiCropper.moveCursorKey), findsNothing);
+          expect(kinds.last, 'basic');
           await gesture.removePointer();
           await tester.pump();
         }
@@ -838,8 +857,37 @@ void main() {
       try {
         // cropper.scss：-mask / -view-box 均 `cursor: move`。
         await expectHoverKind(TargetPlatform.linux, 'move');
-        // macOS 引擎 cursor 表无 move（未映射 → 箭头），改用系统 grab。
-        await expectHoverKind(TargetPlatform.macOS, 'grab');
+        // macOS 引擎 cursor 表无 move：隐藏系统光标 + 自绘四向箭头。
+        await expectHoverKind(TargetPlatform.macOS, 'none');
+
+        // 平移拖动：自绘 move 跟随指针；出界停绘，拖回恢复。
+        final kinds = captureCursorKinds(tester);
+        final drag = await tester.createGesture(
+          kind: ui.PointerDeviceKind.mouse,
+        );
+        await drag.addPointer(location: const Offset(60, 150));
+        await drag.moveTo(const Offset(61, 151));
+        await tester.pump();
+        await drag.down(const Offset(61, 151));
+        await drag.moveTo(const Offset(120, 170));
+        await tester.pump();
+        final moved = tester.widget<CustomPaint>(
+          find.byKey(SemiCropper.moveCursorKey),
+        );
+        final movedHotspot = (moved.painter! as dynamic).hotspot as Offset;
+        expect(movedHotspot.dx, moreOrLessEquals(120, epsilon: 0.5));
+        expect(movedHotspot.dy, moreOrLessEquals(170, epsilon: 0.5));
+        await drag.moveTo(const Offset(300, 360));
+        await tester.pump();
+        expect(find.byKey(SemiCropper.moveCursorKey), findsNothing);
+        expect(kinds.last, 'basic');
+        await drag.moveTo(const Offset(300, 170));
+        await tester.pump();
+        expect(find.byKey(SemiCropper.moveCursorKey), findsOneWidget);
+        expect(kinds.last, 'none');
+        await drag.up();
+        await drag.removePointer();
+        await tester.pump();
       } finally {
         debugDefaultTargetPlatformOverride = null;
       }
