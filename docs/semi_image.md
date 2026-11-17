@@ -27,7 +27,7 @@ loading 期 overlay 显示 placeholder（包 `.semi-image-status`：`$color-imag
 `showPrev = total !== 1 && (infinite || currentIndex !== 0)`（next 对称）；切换 `(currentIndexInState + step + srcLength) % srcLength`（恒取模，回调 `onPrev/onNext` 带方向）；Esc（`e.keyCode === KeyCode.ESC`，closeOnEsc）关；遮罩点击关闭需 mouseup 目标非 icon/footer（`composedPath()`）且 5px 内（`Math.abs(clientX - x) > 5 || Math.abs(y - clientY) > 5` 不关）；打开后 `viewerVisibleDelay`（10s）无操作自动隐藏操作栏（mousemove 节流 50ms 复位，chrome 区不清不显）。
 
 ### Footer/Slider
-菜单序 `getIconChevronLeft | n/m | chevronRight | ⫶ | − | slider | + | 比例 | 旋转 | ⫶ | 下载`（`menuItems.splice(3, 0` 与 `menuItems.splice(8, 0` 插分隔线）；slider 调缩放（百分比档缺省 `min: 10`/`max: 500`/`step: 10`、tip `` `${v}%` ``、onChange 节流 50ms）；± 极值禁用（`preview-footer-disabled` = `$color-image_preview_disabled`）；比例钮显示目标模式（`ratio === "adaptation" ? "realSize" : "adaptation"`）；旋转钮 `handleRotateLeft` 恒左旋；下载钮 `disableDownload` 禁用；`showTooltip` 包 Tooltip（`zIndex={zIndex + 1}`）。
+菜单序 `getIconChevronLeft | n/m | chevronRight | ⫶ | − | slider | + | 比例 | ⫶ | 旋转 | 下载`（`menuItems.splice(3, 0` 与 `menuItems.splice(8, 0` 在首插后列表定位：分隔线落 chevronRight 后与 比例/旋转 之间，下载仅带 -gap）；slider 调缩放（百分比档缺省 `min: 10`/`max: 500`/`step: 10`、tip `` `${v}%` ``、onChange 节流 50ms）；± 极值禁用（`preview-footer-disabled` = `$color-image_preview_disabled`）；比例钮显示目标模式（`ratio === "adaptation" ? "realSize" : "adaptation"`）；旋转钮 `handleRotateLeft` 恒左旋；下载钮 `disableDownload` 禁用；`showTooltip` 包 Tooltip（`zIndex={zIndex + 1}`）。
 
 ### 图库与预加载
 组扫描（`imageID: index++`）：源 `preview.src ?? src`、标题 `preview.previewTitle`（header `titles[currentIndex]` 覆盖）；预加载：首载完成后 `crossMerge` 交叉序整段预载（±gap 外扩），此后按方向预载 `currentIndex ± preLoadGap`（infinite 取模否则止步）。

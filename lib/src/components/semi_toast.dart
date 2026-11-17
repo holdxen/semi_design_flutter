@@ -14,13 +14,15 @@
 // 逐条消费；constants.ts `LIST: `${PREFIX}-list`` 是死常量但非 Sass 变量，
 // HARDCODES 另列）。
 //
-// stack 卡组模式（v2.42 `stack: true`，zero-height-wrapper + 280px 透视
-// 叠牌 + 悬停展开）未移植（差异清单）——`spacingToastPerspectiveOriginY` /
-// `spacingToastPerspective` / `animationDurationToastStack` /
-// `animationFunctionToastStack` 四字段留档不消费；`spacingToastContentPaddingY`
-// / `spacingToastContentPaddingX`（`$spacing-toast_content-paddingY/-paddingX`）
-// 为 padding 四向的 Sass 中间引用（值同 Top/Bottom、Left/Right），
-// `widthToastWrapper`（100%）由全宽 Align 居中表达。
+// stack 卡组模式（v2.42 `stack: true`）已移植（`_ToastDeck`）：
+// `spacingToastPerspective` / `spacingToastPerspectiveOriginY` 为
+// `&-zero-height-wrapper` 透视叠牌（`translate3d(0,0,-10px*i)` 后退 +
+// `perspective-origin: center 280px` 投影），`animationDurationToastStack`
+// / `animationFunctionToastStack` 为悬停展开/收起过渡——四字段全部消费；
+// `spacingToastContentPaddingY` / `spacingToastContentPaddingX`
+// （`$spacing-toast_content-paddingY/-paddingX`）为 padding 四向的 Sass
+// 中间引用（值同 Top/Bottom、Left/Right），`widthToastWrapper`（100%）由
+// 全宽 Align 居中表达。
 //
 // HARDCODES（另列，生成器锚点逐字留档）：
 // - constants.ts `types: ['warning', 'success', 'info', 'error', 'default']`
@@ -50,7 +52,7 @@
 // - content-text：`textStyle.maxWidth = textMaxWidth;` / `text-align: left;`
 //   / `word-wrap: break-word;` / `overflow-wrap: break-word;`
 // - toast.tsx render：`translate3d(0,0,${reservedIndex * -10}px)`（stack
-//   卡组纵深，未移植仅留档）
+//   卡组纵深：每条 -10px，卡组透视消费）
 // - keyframes show：`transform: translateY($animation_transform_translateY-toast-show);`
 //   + `animation-fill-mode: forwards;`
 // - toast.tsx 悬停计时：`onMouseEnter={this.clearCloseTimer}` /
@@ -66,8 +68,13 @@
 //   + `notifyWrapperToRemove(this._id);`
 // - index.tsx `getPopupContainer() ?? document.body`
 // - constants.ts `LIST: `${PREFIX}-list``（死常量，上游未消费）
-// - zero-height-wrapper：`perspective-origin: center $spacing-toast-perspective-originY; ;`
-//   ★双分号 quirk（stack 卡组，未移植仅留档）
+// - zero-height-wrapper：`&-zero-height-wrapper`（`height: 0` +
+//   `overflow: visible;`）+ `perspective-origin: center $spacing-toast-perspective-originY; ;`
+//   ★双分号 quirk + `transition: all $animation_duration-toast-stack $animation_function-toast-stack;`
+//   展开/收起过渡（stack 卡组，透视叠牌消费）
+// - index.tsx 悬停展开：`stackExpanded: this.state.mouseInSide`（toastList
+//   Foundation `handleMouseInSideChange`；`.semi-toast-innerWrapper-hover`
+//   覆写 `perspective: unset` 扁平化卡组）
 // - rtl.scss：`text-align: right;` /
 //   `margin-left: $spacing-toast_content_text-marginRight;`（两侧同值 12
 //   互换 no-op；方向性边距自动翻转）
@@ -113,6 +120,7 @@ class SemiToast {
     Widget? icon,
     double? textMaxWidth,
     SemiToastThemeMode? theme,
+    bool? stack,
     TextDirection? direction,
     VoidCallback? onClose,
     BuildContext? context,
@@ -125,6 +133,7 @@ class SemiToast {
     icon: icon,
     textMaxWidth: textMaxWidth,
     theme: theme,
+    stack: stack,
     direction: direction,
     onClose: onClose,
     context: context,
@@ -139,6 +148,7 @@ class SemiToast {
     Widget? icon,
     double? textMaxWidth,
     SemiToastThemeMode? theme,
+    bool? stack,
     TextDirection? direction,
     VoidCallback? onClose,
     BuildContext? context,
@@ -151,6 +161,7 @@ class SemiToast {
     icon: icon,
     textMaxWidth: textMaxWidth,
     theme: theme,
+    stack: stack,
     direction: direction,
     onClose: onClose,
     context: context,
@@ -165,6 +176,7 @@ class SemiToast {
     Widget? icon,
     double? textMaxWidth,
     SemiToastThemeMode? theme,
+    bool? stack,
     TextDirection? direction,
     VoidCallback? onClose,
     BuildContext? context,
@@ -177,6 +189,7 @@ class SemiToast {
     icon: icon,
     textMaxWidth: textMaxWidth,
     theme: theme,
+    stack: stack,
     direction: direction,
     onClose: onClose,
     context: context,
@@ -191,6 +204,7 @@ class SemiToast {
     Widget? icon,
     double? textMaxWidth,
     SemiToastThemeMode? theme,
+    bool? stack,
     TextDirection? direction,
     VoidCallback? onClose,
     BuildContext? context,
@@ -203,6 +217,7 @@ class SemiToast {
     icon: icon,
     textMaxWidth: textMaxWidth,
     theme: theme,
+    stack: stack,
     direction: direction,
     onClose: onClose,
     context: context,
@@ -217,6 +232,7 @@ class SemiToast {
     Widget? icon,
     double? textMaxWidth,
     SemiToastThemeMode? theme,
+    bool? stack,
     TextDirection? direction,
     VoidCallback? onClose,
     BuildContext? context,
@@ -229,20 +245,26 @@ class SemiToast {
     icon: icon,
     textMaxWidth: textMaxWidth,
     theme: theme,
+    stack: stack,
     direction: direction,
     onClose: onClose,
     context: context,
   );
 
-  /// 全局默认配置（上游 `Toast.config`）：null 项保持现值。
+  /// 全局默认配置（上游 `Toast.config` + semiGlobal 覆盖语义）：null 项保持
+  /// 现值。
   ///
-  /// 上游 ConfigProps 的 `zIndex`（缺省 1010）、`bottom`/`right` 未移植：
-  /// 层级由 Overlay 插入序表达；`bottom`/`right` 上游即因过约束不生效。
+  /// `stack` 上游不经 `Toast.config` 而经 semiGlobal
+  /// `overrideDefaultProps.Toast` 全局生效——本移植并入 config（调用级
+  /// `stack` 参数优先）。上游 ConfigProps 的 `zIndex`（缺省 1010）、
+  /// `bottom`/`right` 未移植：层级由 Overlay 插入序表达；`bottom`/`right`
+  /// 上游即因过约束不生效。
   static void config({
     double? top,
     double? left,
     double? duration,
     SemiToastThemeMode? theme,
+    bool? stack,
     BuildContext? context,
   }) {
     _config = _config.copyWith(
@@ -250,6 +272,7 @@ class SemiToast {
       left: left,
       duration: duration,
       theme: theme,
+      stack: stack,
       context: context,
     );
   }
@@ -280,6 +303,7 @@ class SemiToast {
     required Widget? icon,
     required double? textMaxWidth,
     required SemiToastThemeMode? theme,
+    required bool? stack,
     required TextDirection? direction,
     required VoidCallback? onClose,
     required BuildContext? context,
@@ -297,6 +321,9 @@ class SemiToast {
       showClose: showClose ?? true,
       duration: duration ?? _config.duration ?? 3,
       themeMode: theme ?? _config.theme ?? SemiToastThemeMode.normal,
+      // 卡组开关合并（上游 `Boolean(mergedOpts.stack)`：opts > 全局覆盖 >
+      // 缺省 false；★每次 create 都覆写列表级开关——last-call-wins quirk）。
+      stack: stack ?? _config.stack ?? false,
       direction: direction,
       onClose: onClose,
       theme: _resolveTheme(context ?? _config.context),
@@ -349,6 +376,7 @@ class _ToastSpec {
     required this.showClose,
     required this.duration,
     required this.themeMode,
+    required this.stack,
     required this.direction,
     required this.onClose,
     required this.theme,
@@ -363,6 +391,9 @@ class _ToastSpec {
   /// 秒制（上游 `duration: 3 // default close time, unit: s`）；0 不自动关。
   final double? duration;
   final SemiToastThemeMode themeMode;
+
+  /// 卡组开关（上游 `stack`；★列表级 last-call-wins——每次 create 覆写）。
+  final bool stack;
   final TextDirection? direction;
   final VoidCallback? onClose;
 
@@ -372,12 +403,20 @@ class _ToastSpec {
 
 /// 全局缺省（上游 `ToastList.defaultOpts` + `Toast.config` 合并目标）。
 class _ToastConfig {
-  const _ToastConfig({this.top, this.left, this.duration, this.theme, this.context});
+  const _ToastConfig({
+    this.top,
+    this.left,
+    this.duration,
+    this.theme,
+    this.stack,
+    this.context,
+  });
 
   final double? top;
   final double? left;
   final double? duration;
   final SemiToastThemeMode? theme;
+  final bool? stack;
   final BuildContext? context;
 
   _ToastConfig copyWith({
@@ -385,12 +424,14 @@ class _ToastConfig {
     double? left,
     double? duration,
     SemiToastThemeMode? theme,
+    bool? stack,
     BuildContext? context,
   }) => _ToastConfig(
     top: top ?? this.top,
     left: left ?? this.left,
     duration: duration ?? this.duration,
     theme: theme ?? this.theme,
+    stack: stack ?? this.stack,
     context: context ?? this.context,
   );
 }
@@ -440,9 +481,14 @@ class _ToastList extends ChangeNotifier {
 
   final List<_ToastItem> items = [];
 
+  /// 卡组开关（上游 `ToastList.ref.stack`）：列表级、每次 create 覆写
+  /// （★last-call-wins quirk——`Boolean(mergedOpts.stack)`，缺省 false）。
+  bool stack = false;
+
   bool has(String id) => items.any((item) => item.id == id);
 
   void upsert(String id, _ToastSpec spec) {
+    stack = spec.stack;
     // toastListFoundation updateList 注释：`Reused instances need new timers, including same-id replacements before the next render.`
     // ——同 id 更新原地替换并重启计时。
     final index = items.indexWhere((item) => item.id == id);
@@ -486,6 +532,8 @@ class _ToastList extends ChangeNotifier {
       item.cancelTimer();
     }
     items.clear();
+    // 上游销毁 wrapper 后重建的 ToastList 实例 `stack: boolean = false`。
+    stack = false;
     notifyListeners();
   }
 }
@@ -518,19 +566,172 @@ class _ToastHost extends StatelessWidget {
             top: config.top ?? theme.spacingToastWrapperTop,
             left: shift,
             right: -shift,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                for (final item in _ToastList.instance.items)
-                  // ObjectKey 让视图状态（AnimationController / onLeaving）
-                  // 按条目跟随：列表增删时不按位置串位，先关闭的条目裁剪后
-                  // 存活条目上移补位，无透明占位残留。
-                  _ToastItemView(key: ObjectKey(item), item: item),
-              ],
-            ),
+            // stack 卡组开关为列表级（上游 `ToastList.ref.stack`）。
+            child: _ToastList.instance.stack
+                ? _ToastDeck(items: _ToastList.instance.items, theme: theme)
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      for (final item in _ToastList.instance.items)
+                        // GlobalObjectKey 让视图状态（AnimationController /
+                        // onLeaving）按条目跟随：列表增删时不按位置串位，先
+                        // 关闭的条目裁剪后存活条目上移补位，无透明占位残留；
+                        // 列表/卡组切换时状态同样跟随。
+                        _ToastItemView(key: GlobalObjectKey(item), item: item),
+                    ],
+                  ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// stack 卡组宿主（上游 `stack: true` + `&-zero-height-wrapper` + 悬停展开）。
+///
+/// 非悬停：各条目在卡组原点重叠（`height: 0` + `overflow: visible;` 语义，
+/// 宿主高度取透视包络），按 `translate3d(0,0,${reservedIndex * -10}px)`
+/// 透视后退叠牌（`perspective` / `perspective-origin` 消费）；悬停
+/// `stackExpanded: this.state.mouseInSide` 展开为常规列表（`handleMouseInSideChange`），
+/// 条目间距与包络按 `transition: all $animation_duration-toast-stack
+/// $animation_function-toast-stack;` 过渡，离开收起。条目高度 post-frame 量
+/// 高（ResizeObserver 语义迁移）。
+class _ToastDeck extends StatefulWidget {
+  const _ToastDeck({required this.items, required this.theme});
+
+  final List<_ToastItem> items;
+  final SemiResolvedToastThemeData theme;
+
+  @override
+  State<_ToastDeck> createState() => _ToastDeckState();
+}
+
+class _ToastDeckState extends State<_ToastDeck>
+    with SingleTickerProviderStateMixin {
+  /// `translate3d(0,0,${reservedIndex * -10}px)`：每条后退 10px。
+  static const double _zStep = 10;
+
+  late final AnimationController _expand;
+  final Map<String, double> _heights = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _expand = AnimationController(
+      vsync: this,
+      duration: widget.theme.animationDurationToastStack,
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _ToastDeck oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _expand.duration = widget.theme.animationDurationToastStack;
+  }
+
+  @override
+  void dispose() {
+    _expand.dispose();
+    super.dispose();
+  }
+
+  /// ResizeObserver 量高迁移：post-frame 回读布局尺寸，变化才重建。
+  void _measure() {
+    final ids = {for (final item in widget.items) item.id};
+    _heights.removeWhere((id, _) => !ids.contains(id));
+    var changed = false;
+    for (final item in widget.items) {
+      final box = GlobalObjectKey(item).currentContext?.findRenderObject();
+      if (box is RenderBox && box.hasSize) {
+        final h = box.size.height;
+        if (_heights[item.id] != h) {
+          _heights[item.id] = h;
+          changed = true;
+        }
+      }
+    }
+    if (changed && mounted) setState(() {});
+  }
+
+  /// 透视合成（CSS `perspective: d` + `perspective-origin: center oy` +
+  /// 子级 `translate3d(0,0,z)`）：`T(0,oy) ∘ P ∘ T(0,-oy) ∘ T3D(z)`；
+  /// center 轴由 Transform alignment `topCenter` 表达。
+  Matrix4 _deckMatrix(double z) {
+    final d = widget.theme.spacingToastPerspective;
+    final oy = widget.theme.spacingToastPerspectiveOriginY;
+    return Matrix4.identity()
+      ..multiply(Matrix4.translationValues(0, oy, 0))
+      ..multiply(Matrix4.identity()..setEntry(3, 2, -1 / d))
+      ..multiply(Matrix4.translationValues(0, -oy, 0))
+      ..multiply(Matrix4.translationValues(0, 0, z));
+  }
+
+  /// 透视包络：`oy + (h - oy) * d / (d + 10k)`（z = -10k 的投影下边界）。
+  double _projectedBottom(double h, int reservedIndex) {
+    final d = widget.theme.spacingToastPerspective;
+    final oy = widget.theme.spacingToastPerspectiveOriginY;
+    return oy + (h - oy) * d / (d + _zStep * reservedIndex);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
+    final items = widget.items;
+    final curve = widget.theme.animationFunctionToastStack;
+    return MouseRegion(
+      // `stackExpanded: this.state.mouseInSide`（悬停展开/收起）。
+      onEnter: (_) => _expand.forward(),
+      onExit: (_) => _expand.reverse(),
+      child: AnimatedBuilder(
+        animation: _expand,
+        builder: (context, _) {
+          final progress = _expand.value;
+          final spread = curve.transform(progress);
+          // 上游 `perspective: unset` 不可插值——CSS 过渡 50% 处离散翻转，
+          // 卡组透视在展开过半时消失（收起反之）。
+          final decked = progress < 0.5;
+          var cursor = 0.0;
+          var deckExtent = 0.0;
+          final tops = <double>[];
+          for (var i = 0; i < items.length; i++) {
+            final h = _heights[items[i].id] ?? 0;
+            // 非悬停各条目重叠于卡组原点（`height: 0`）；展开位置按量高
+            // 累计插值。
+            tops.add(cursor * spread);
+            cursor += h;
+            final projected = _projectedBottom(h, items.length - 1 - i);
+            if (projected > deckExtent) deckExtent = projected;
+          }
+          return SizedBox(
+            height: deckExtent + (cursor - deckExtent) * spread,
+            width: double.infinity,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                for (var i = 0; i < items.length; i++)
+                  Positioned(
+                    top: tops[i],
+                    left: 0,
+                    right: 0,
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: Transform(
+                        transform: decked
+                            ? _deckMatrix(-_zStep * (items.length - 1 - i))
+                            : Matrix4.identity(),
+                        alignment: Alignment.topCenter,
+                        child: _ToastItemView(
+                          key: GlobalObjectKey(items[i]),
+                          item: items[i],
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

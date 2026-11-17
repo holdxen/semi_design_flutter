@@ -126,6 +126,7 @@ import 'package:flutter/widgets.dart';
 
 import '../theme/semi_image_theme.dart';
 import '../theme/semi_image_theme_data.dart';
+import '../theme/semi_slider_theme.dart';
 import '../theme/semi_spin_theme.dart';
 import '../theme/semi_spin_theme_data.dart';
 import '../theme/semi_theme.dart';
@@ -1865,7 +1866,8 @@ class _SemiImagePreviewInnerState extends State<SemiImagePreviewInner> {
 
     // 菜单序（previewFooter.tsx:261-271 getMenu，首项 `getIconChevronLeft`）：
     // `chevronLeft | n/m | chevronRight | − | slider | + | 比例 | 旋转 | 下载`，
-    // `menuItems.splice(3, 0` 与 `menuItems.splice(8, 0` 插两条分隔线。
+    // `menuItems.splice(3, 0` 与 `menuItems.splice(8, 0` 在首插后的列表上定位：
+    // 分隔线落位 chevronRight 后与 比例/旋转 之间（下载自带 -gap，无分隔线）。
     final menu = <Widget>[
       icon(
         SemiIcons.chevronLeft,
@@ -1929,13 +1931,13 @@ class _SemiImagePreviewInnerState extends State<SemiImagePreviewInner> {
             ? props.originTip ?? '原始尺寸'
             : props.adaptiveTip ?? '适应页面',
       ),
+      _divider(t),
       icon(
         SemiIcons.rotate,
         // `handleRotateLeft` —— footer 恒左旋。
         () => _handleRotateImage('left'),
         tip: props.rotateTip ?? '旋转',
       ),
-      _divider(t),
       icon(
         SemiIcons.download,
         props.disableDownload ? null : _handleDownload,
@@ -2063,6 +2065,8 @@ class _SemiImagePreviewInnerState extends State<SemiImagePreviewInner> {
     final percent = (_zoom * 100).clamp(min, max);
     final ratio = max == min ? 0.0 : (percent - min) / (max - min);
     final tip = '$percent%'; // `${v}%`。
+    final trackColor = SemiSliderTheme.resolve(context)
+        .colorSliderTrackBgDefault;
     final slider = LayoutBuilder(
       builder: (context, constraints) {
         final usable = math.max(1.0, width - handleWidth);
@@ -2100,11 +2104,29 @@ class _SemiImagePreviewInnerState extends State<SemiImagePreviewInner> {
                   child: Stack(
                     alignment: Alignment.centerLeft,
                     children: [
+                      // rail 全宽（image.scss 只改高度/色；`$width-image_preview_footer_slider`
+                      // 132 内容宽）。
                       Container(
+                        width: width,
                         height: trackHeight,
                         decoration: BoxDecoration(
                           color: t.colorImagePreviewFooterSliderRail,
                           borderRadius: BorderRadius.circular(trackHeight / 2),
+                        ),
+                      ),
+                      // 已走过段（image.scss 未覆盖 track 色，回落 slider 基础
+                      // `colorSliderTrackBgDefault` = primary）。
+                      Positioned(
+                        left: 0,
+                        child: Container(
+                          width: ratio * usable + handleWidth / 2,
+                          height: trackHeight,
+                          decoration: BoxDecoration(
+                            color: trackColor,
+                            borderRadius: BorderRadius.circular(
+                              trackHeight / 2,
+                            ),
+                          ),
                         ),
                       ),
                       Positioned(

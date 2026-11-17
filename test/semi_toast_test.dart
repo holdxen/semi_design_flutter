@@ -530,10 +530,16 @@ void main() {
         'static pendingToasts',
         r'LIST: `${PREFIX}-list`',
         r'perspective-origin: center $spacing-toast-perspective-originY; ;',
+        '&-zero-height-wrapper',
+        'overflow: visible;',
+        r'transition: all $animation_duration-toast-stack $animation_function-toast-stack;',
+        'stackExpanded: this.state.mouseInSide',
+        'handleMouseInSideChange',
+        'innerWrapper-hover',
         'text-align: right;',
         r'margin-left: $spacing-toast_content_text-marginRight;',
       ];
-      expect(anchors, hasLength(54));
+      expect(anchors, hasLength(60));
       for (final anchor in anchors) {
         expect(widgetSource, contains(anchor), reason: anchor);
       }
@@ -810,6 +816,51 @@ void main() {
       await pumpFor(tester, const Duration(milliseconds: 600));
       final y3After = tester.getTopLeft(find.text('三')).dy;
       expect(tester.getTopLeft(find.text('四')).dy - y3After, y3 - y2);
+      await done(tester);
+    });
+
+    testWidgets('stack: true collapses into a perspective deck; hover expands '
+        'and unhover collapses', (tester) async {
+      await pumpHost(tester);
+      SemiToast.info(id: 'a', content: '一', duration: 0, stack: true);
+      SemiToast.info(id: 'b', content: '二', duration: 0, stack: true);
+      SemiToast.info(id: 'c', content: '三', duration: 0, stack: true);
+      await pumpFor(tester, const Duration(milliseconds: 600));
+      // 非悬停：卡组叠牌（`translate3d(0,0,-10px*i)` 透视后退，条目近乎
+      // 重叠——首尾条目可见间距远小于 68）。
+      final y1 = tester.getTopLeft(find.text('一')).dy;
+      final y3 = tester.getTopLeft(find.text('三')).dy;
+      expect(y3 - y1, lessThan(40));
+      // 悬停展开为常规列表（量高插值，等距 68）。
+      final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await gesture.addPointer(location: Offset.zero);
+      addTearDown(gesture.removePointer);
+      await gesture.moveTo(tester.getCenter(find.text('三')));
+      await pumpFor(tester, const Duration(milliseconds: 500));
+      final expanded1 = tester.getTopLeft(find.text('一')).dy;
+      final expanded3 = tester.getTopLeft(find.text('三')).dy;
+      expect(expanded3 - expanded1, closeTo(136, 0.1));
+      // 离开悬停收起回卡组。
+      await gesture.moveTo(const Offset(1100, 700));
+      await pumpFor(tester, const Duration(milliseconds: 500));
+      final collapsed1 = tester.getTopLeft(find.text('一')).dy;
+      final collapsed3 = tester.getTopLeft(find.text('三')).dy;
+      expect(collapsed3 - collapsed1, lessThan(40));
+      await done(tester);
+    });
+
+    testWidgets('stack flag is list-level and last-call-wins (upstream quirk)', (
+      tester,
+    ) async {
+      await pumpHost(tester);
+      SemiToast.info(id: 'a', content: '一', duration: 0, stack: true);
+      SemiToast.info(id: 'b', content: '二', duration: 0);
+      await pumpFor(tester, const Duration(milliseconds: 600));
+      // 第二条未带 stack（`Boolean(undefined)` = false）——列表级开关被
+      // 覆写，全部按普通列表排布。
+      final y1 = tester.getTopLeft(find.text('一')).dy;
+      final y2 = tester.getTopLeft(find.text('二')).dy;
+      expect(y2 - y1, closeTo(68, 0.1));
       await done(tester);
     });
 

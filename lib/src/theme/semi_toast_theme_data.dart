@@ -173,12 +173,12 @@ class SemiToastThemeData {
 
   /// `$spacing-toast-perspective-originY: 280px` in packages/semi-foundation/toast/variables.scss.
   ///
-  /// ★分类照抄：// Spacing 注释组内实为 3D 透视原点 Y（toast.scss `perspective-origin: center $spacing-toast-perspective-originY; ;` ★双分号 quirk 消费）。stack 卡组未移植（差异清单），字段留档不消费。
+  /// ★分类照抄：// Spacing 注释组内实为 3D 透视原点 Y（toast.scss `perspective-origin: center $spacing-toast-perspective-originY; ;` ★双分号 quirk 消费）。stack 卡组透视叠牌消费（`_ToastDeck`）。
   final double? spacingToastPerspectiveOriginY;
 
   /// `$spacing-toast-perspective: 280px` in packages/semi-foundation/toast/variables.scss.
   ///
-  /// ★分类照抄：// Spacing 注释组内实为透视距离（toast.scss `perspective: $spacing-toast-perspective` 消费）。stack 卡组未移植（差异清单），字段留档不消费。
+  /// ★分类照抄：// Spacing 注释组内实为透视距离（toast.scss `perspective: $spacing-toast-perspective` 消费）。stack 卡组透视叠牌消费（`_ToastDeck`）。
   final double? spacingToastPerspective;
 
   /// `$width-toast_wrapper: 100%` in packages/semi-foundation/toast/variables.scss.
@@ -247,12 +247,12 @@ class SemiToastThemeData {
 
   /// `$animation_duration-toast-stack: 300ms` in packages/semi-foundation/toast/animation.scss.
   ///
-  /// stack 卡组（zero-height-wrapper transition）未移植（差异清单），字段留档不消费。
+  /// stack 卡组悬停展开/收起过渡消费（zero-height-wrapper `transition`）。
   final Duration? animationDurationToastStack;
 
   /// `$animation_function-toast-stack: cubic-bezier(.22,.57,.02,1.2)` in packages/semi-foundation/toast/animation.scss.
   ///
-  /// ★行尾无分号 quirk 照抄（animation.scss 末行）。★小数点裸写 quirk 照抄。stack 卡组未移植（差异清单），字段留档不消费。
+  /// ★行尾无分号 quirk 照抄（animation.scss 末行）。★小数点裸写 quirk 照抄。stack 卡组悬停展开/收起过渡消费。
   final Curve? animationFunctionToastStack;
   SemiToastThemeData copyWith({
     Color? colorToastBgDefault,
@@ -817,12 +817,12 @@ class SemiResolvedToastThemeData {
 
   /// `$spacing-toast-perspective-originY: 280px` in packages/semi-foundation/toast/variables.scss.
   ///
-  /// ★分类照抄：// Spacing 注释组内实为 3D 透视原点 Y（toast.scss `perspective-origin: center $spacing-toast-perspective-originY; ;` ★双分号 quirk 消费）。stack 卡组未移植（差异清单），字段留档不消费。
+  /// ★分类照抄：// Spacing 注释组内实为 3D 透视原点 Y（toast.scss `perspective-origin: center $spacing-toast-perspective-originY; ;` ★双分号 quirk 消费）。stack 卡组透视叠牌消费（`_ToastDeck`）。
   final double spacingToastPerspectiveOriginY;
 
   /// `$spacing-toast-perspective: 280px` in packages/semi-foundation/toast/variables.scss.
   ///
-  /// ★分类照抄：// Spacing 注释组内实为透视距离（toast.scss `perspective: $spacing-toast-perspective` 消费）。stack 卡组未移植（差异清单），字段留档不消费。
+  /// ★分类照抄：// Spacing 注释组内实为透视距离（toast.scss `perspective: $spacing-toast-perspective` 消费）。stack 卡组透视叠牌消费（`_ToastDeck`）。
   final double spacingToastPerspective;
 
   /// `$width-toast_wrapper: 100%` in packages/semi-foundation/toast/variables.scss.
@@ -891,11 +891,11 @@ class SemiResolvedToastThemeData {
 
   /// `$animation_duration-toast-stack: 300ms` in packages/semi-foundation/toast/animation.scss.
   ///
-  /// stack 卡组（zero-height-wrapper transition）未移植（差异清单），字段留档不消费。
+  /// stack 卡组悬停展开/收起过渡消费（zero-height-wrapper `transition`）。
   final Duration animationDurationToastStack;
 
   /// `$animation_function-toast-stack: cubic-bezier(.22,.57,.02,1.2)` in packages/semi-foundation/toast/animation.scss.
   ///
-  /// ★行尾无分号 quirk 照抄（animation.scss 末行）。★小数点裸写 quirk 照抄。stack 卡组未移植（差异清单），字段留档不消费。
+  /// ★行尾无分号 quirk 照抄（animation.scss 末行）。★小数点裸写 quirk 照抄。stack 卡组悬停展开/收起过渡消费。
   final Curve animationFunctionToastStack;
 }

@@ -117,6 +117,35 @@ class ToastPage extends StatelessWidget {
             ],
           ),
           SizedBox(height: 40),
+          SemiTitle('卡组模式（stack）', heading: 3),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              SemiButton(
+                '三条叠牌',
+                onPressed: () {
+                  SemiToast.info(
+                    content: '卡组第一条',
+                    duration: 0,
+                    stack: true,
+                  );
+                  SemiToast.info(
+                    content: '卡组第二条',
+                    duration: 0,
+                    stack: true,
+                  );
+                  SemiToast.info(
+                    content: '卡组第三条',
+                    duration: 0,
+                    stack: true,
+                  );
+                },
+              ),
+              SemiButton('关闭全部', onPressed: SemiToast.destroyAll),
+            ],
+          ),
+          SizedBox(height: 40),
           SemiTitle('自定义与关闭行为', heading: 3),
           Wrap(
             spacing: 8,

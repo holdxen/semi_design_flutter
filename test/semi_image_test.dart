@@ -520,6 +520,51 @@ void main() {
       final semantics = tester.getSemantics(slider);
       expect(semantics.value, isNotEmpty);
     });
+
+    testWidgets('dividers land after chevronRight and between ratio/rotate', (
+      tester,
+    ) async {
+      await pumpHost(
+        tester,
+        SemiImage(
+          image: const _TestImage(1),
+          previewProps: const SemiImagePreviewProps(initialZoom: 1),
+        ),
+      );
+      await tester.pump();
+      await tester.tap(find.byType(SemiImage));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      // `menuItems.splice(3, 0` / `menuItems.splice(8, 0`：分隔线落
+      // chevronRight 后与 比例/旋转 之间（下载仅 -gap，无分隔线）。
+      final dividers = find.byWidgetPredicate(
+        (w) => w is Container && w.constraints?.maxWidth == 1,
+      );
+      expect(dividers, findsNWidgets(2));
+      final xChevronR = tester.getCenter(iconOf(SemiIcons.chevronRight)).dx;
+      final xMinus = tester.getCenter(iconOf(SemiIcons.minus)).dx;
+      final xRatio = tester
+          .getCenter(
+            find.byWidgetPredicate(
+              (w) =>
+                  w is SemiIcon &&
+                  (w.data == SemiIcons.realSizeStroked ||
+                      w.data == SemiIcons.windowAdaptionStroked),
+            ),
+          )
+          .dx;
+      final xRotate = tester.getCenter(iconOf(SemiIcons.rotate)).dx;
+      final xs =
+          tester
+              .widgetList<Container>(dividers)
+              .map((w) => tester.getCenter(find.byWidget(w)).dx)
+              .toList()
+            ..sort();
+      expect(xs[0], greaterThan(xChevronR));
+      expect(xs[0], lessThan(xMinus));
+      expect(xs[1], greaterThan(xRatio));
+      expect(xs[1], lessThan(xRotate));
+    });
   });
 
   group('theme and group context', () {

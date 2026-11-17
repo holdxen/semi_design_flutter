@@ -19,6 +19,7 @@ void main() {
       'Light 主题',
       '自动关闭时长',
       '堆叠与同 id 更新',
+      '卡组模式（stack）',
       '自定义与关闭行为',
     ]) {
       expect(find.text(title), findsOneWidget);
@@ -55,6 +56,22 @@ void main() {
     SemiToast.destroyAll();
     await tester.pump();
     expect(find.text('第一条提示'), findsNothing);
+
+    // 卡组模式：多条叠牌（可见间距远小于普通堆叠）。
+    await tester.ensureVisible(find.text('三条叠牌'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('三条叠牌'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('卡组第一条'), findsOneWidget);
+    expect(find.text('卡组第三条'), findsOneWidget);
+    final deckTop = tester.getTopLeft(find.text('卡组第一条')).dy;
+    final deckFront = tester.getTopLeft(find.text('卡组第三条')).dy;
+    expect(deckFront - deckTop, lessThan(40));
+
+    SemiToast.destroyAll();
+    await tester.pump();
+    expect(find.text('卡组第一条'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 }
