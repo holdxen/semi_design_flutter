@@ -163,7 +163,7 @@ knob 位移取反（未选 -2 / 选中 -18 等，rtl.scss:10-24，按末尾侧�
 - **文案盒定位语义化**：按契约用 PositionedDirectional（checked 在方向起始、unchecked 在方向末尾，RTL 视觉互换）；上游 checked-text 靠静态位置、unchecked-text `right: 0`（rtl.scss:31 的 `left: 0` 受绝对定位 over-constrained 规则影响，浏览器字面净效果存疑）。
 - **`$transition_delay-switch-bg` 无延迟通道**：AnimatedContainer 不支持 transition-delay（默认 `Duration.zero`，零净效果）。
 - **style / className / id / aria-\* 透传简化**：样式走私有 theme patch / 外层 Widget；语义以 `Semantics(toggled:, enabled:)` 表达。
-- **Form.Switch 延后**：受控/重置走 checked 惯例，无表单集成本体。
+- **Form.Switch**：已由 `SemiFormSwitch` 便捷包装提供（值 bool——checked 口径适配，docs/semi_form.md）。
 
 ```dart
 SemiSwitch(

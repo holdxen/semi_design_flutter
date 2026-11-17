@@ -165,7 +165,7 @@ onChanged `ValueChanged<Object?>?`（double | 升序 List<double>）。onAfterCh
 - **受控拖拽跟手为契约覆盖**：foundation.ts:552 允许受控拖拽回调，但上游 adapter 在受控时跳过状态更新（index.tsx:250-253）导致手柄不动；本契约要求跟手、松手回渲染 value、value 流回即对齐（见 API）。
 - **tooltip/边界文本 `'$value'`**：JS 渲染数字 `30`，Dart `'$value'` 得 `30.0`（tipFormatter 可自定义抹平）。
 - **style / railStyle / className 不移植**（样式走私有 theme patch / 外层 Widget）。
-- **Form.Slider 延后**：受控/重置走 value 惯例，无表单集成本体。controlled-zero（props.value 显式置 undefined → 重置 min，index.tsx:310-311）不可移植——Dart `null` 即非受控，释放控制保留最后值。
+- **Form.Slider**：已由 `SemiFormSlider` 便捷包装提供（值取单值 double，docs/semi_form.md）。controlled-zero（props.value 显式置 undefined → 重置 min，index.tsx:310-311）不可移植——Dart `null` 即非受控，释放控制保留最后值。
 - **aria 透传简化**：`aria-label`/`aria-labelledby`/`aria-valuetext` prop 不移植；语义以 `Semantics(slider: true, value: …)` + `getAriaValueText` 表达。
 - **checkWhichHandle verticalReverse 翻转不移植**：上游在最近手柄判定后再 `isMin = !isMin`（foundation.ts:840-842，reverse 下会跳较远手柄，疑为上游 bug）；本移植恒跳最近手柄。
 - **2 条事实死**：`$color-slider_disabled-text-default`（死赋值）与 `$spacing-slider_tooltip-top`（死 CSS 块）保留 theme 字段但 widget 不消费，见主题表。

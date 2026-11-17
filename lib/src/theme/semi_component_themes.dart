@@ -38,6 +38,7 @@ import 'semi_pagination_theme_data.dart';
 import 'semi_tree_theme_data.dart';
 import 'semi_tree_select_theme_data.dart';
 import 'semi_cascader_theme_data.dart';
+import 'semi_form_theme_data.dart';
 import 'semi_steps_theme_data.dart';
 import 'semi_upload_theme_data.dart';
 import 'semi_skeleton_theme_data.dart';
@@ -56,6 +57,7 @@ import 'semi_scroll_list_theme_data.dart';
 import 'semi_float_button_theme_data.dart';
 import 'semi_image_theme_data.dart';
 import 'semi_toast_theme_data.dart';
+import 'semi_feedback_theme_data.dart';
 
 @immutable
 class SemiComponentThemes {
@@ -98,6 +100,7 @@ class SemiComponentThemes {
     this.tree = const SemiTreeThemeData(),
     this.treeSelect = const SemiTreeSelectThemeData(),
     this.cascader = const SemiCascaderThemeData(),
+    this.form = const SemiFormThemeData(),
     this.steps = const SemiStepsThemeData(),
     this.upload = const SemiUploadThemeData(),
     this.skeleton = const SemiSkeletonThemeData(),
@@ -116,6 +119,7 @@ class SemiComponentThemes {
     this.floatButton = const SemiFloatButtonThemeData(),
     this.image = const SemiImageThemeData(),
     this.toast = const SemiToastThemeData(),
+    this.feedback = const SemiFeedbackThemeData(),
   });
   final SemiTagThemeData tag;
   final SemiTypographyThemeData typography;
@@ -158,6 +162,7 @@ class SemiComponentThemes {
   final SemiTreeThemeData tree;
   final SemiTreeSelectThemeData treeSelect;
   final SemiCascaderThemeData cascader;
+  final SemiFormThemeData form;
   final SemiStepsThemeData steps;
   final SemiUploadThemeData upload;
   final SemiSkeletonThemeData skeleton;
@@ -176,6 +181,7 @@ class SemiComponentThemes {
   final SemiFloatButtonThemeData floatButton;
   final SemiImageThemeData image;
   final SemiToastThemeData toast;
+  final SemiFeedbackThemeData feedback;
   SemiComponentThemes copyWith({
     SemiTagThemeData? tag,
     SemiTypographyThemeData? typography,
@@ -215,6 +221,7 @@ class SemiComponentThemes {
     SemiTreeThemeData? tree,
     SemiTreeSelectThemeData? treeSelect,
     SemiCascaderThemeData? cascader,
+    SemiFormThemeData? form,
     SemiStepsThemeData? steps,
     SemiUploadThemeData? upload,
     SemiSkeletonThemeData? skeleton,
@@ -233,6 +240,7 @@ class SemiComponentThemes {
     SemiFloatButtonThemeData? floatButton,
     SemiImageThemeData? image,
     SemiToastThemeData? toast,
+    SemiFeedbackThemeData? feedback,
   }) => SemiComponentThemes(
     tag: tag ?? this.tag,
     typography: typography ?? this.typography,
@@ -272,6 +280,7 @@ class SemiComponentThemes {
     tree: tree ?? this.tree,
     treeSelect: treeSelect ?? this.treeSelect,
     cascader: cascader ?? this.cascader,
+    form: form ?? this.form,
     steps: steps ?? this.steps,
     upload: upload ?? this.upload,
     skeleton: skeleton ?? this.skeleton,
@@ -290,6 +299,7 @@ class SemiComponentThemes {
     floatButton: floatButton ?? this.floatButton,
     image: image ?? this.image,
     toast: toast ?? this.toast,
+    feedback: feedback ?? this.feedback,
   );
   @override
   bool operator ==(Object other) =>
@@ -333,6 +343,7 @@ class SemiComponentThemes {
           tree == other.tree &&
           treeSelect == other.treeSelect &&
           cascader == other.cascader &&
+          form == other.form &&
           steps == other.steps &&
           upload == other.upload &&
           skeleton == other.skeleton &&
@@ -350,7 +361,8 @@ class SemiComponentThemes {
           scrollList == other.scrollList &&
           floatButton == other.floatButton &&
           image == other.image &&
-          toast == other.toast;
+          toast == other.toast &&
+          feedback == other.feedback;
   @override
   int get hashCode => Object.hashAll([
     tag,
@@ -391,6 +403,7 @@ class SemiComponentThemes {
     tree,
     treeSelect,
     cascader,
+    form,
     steps,
     upload,
     skeleton,
@@ -409,5 +422,6 @@ class SemiComponentThemes {
     floatButton,
     image,
     toast,
+    feedback,
   ]);
 }

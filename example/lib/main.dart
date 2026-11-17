@@ -19,9 +19,11 @@ import 'package:example/pages/descriptions.dart';
 import 'package:example/pages/divider.dart';
 import 'package:example/pages/dropdown.dart';
 import 'package:example/pages/empty.dart';
+import 'package:example/pages/feedback.dart';
 import 'package:example/pages/float_button.dart';
 import 'package:example/pages/highlight.dart';
 import 'package:example/pages/image.dart';
+import 'package:example/pages/form.dart';
 import 'package:example/pages/input.dart';
 import 'package:example/pages/input_number.dart';
 import 'package:example/pages/modal.dart';
@@ -144,6 +146,7 @@ const List<DemoGroup> demoGroups = [
       'doc-datepicker.svg',
       DatePickerPage(),
     ),
+    DemoSpec('form', 'Form 表单', 'doc-form.svg', FormPage()),
     DemoSpec('input', 'Input 输入框', 'doc-input.svg', InputPage()),
     DemoSpec(
       'inputNumber',
@@ -244,6 +247,7 @@ const List<DemoGroup> demoGroups = [
     DemoSpec('tooltip', 'Tooltip 工具提示', 'doc-tooltip.svg', TooltipPage()),
   ]),
   DemoGroup('反馈类', [
+    DemoSpec('feedback', 'Feedback 反馈收集', 'doc-feedback.svg', FeedbackPage()),
     DemoSpec(
       'notification',
       'Notification 通知',
