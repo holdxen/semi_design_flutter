@@ -22,7 +22,7 @@ image `ImageProvider`（上游 `src`）。shape `SemiCropperShape`（rect/round/
 
 ### 裁切框
 
-拖框移动：中心钳制在 `[宽/2, 容器宽-宽/2]`（handleCropperBoxMouseDown/Move）；角柄命中（`target.dataset.dir`）不触发移动。角柄缩放：自由模式各向独立（越零翻柄）；定比模式按 `getRangeForAspectChange` 方向范围 + `getAspectHW` 内收（handleCornerAspectMouseMove），尺寸归零 `changeDir` 翻柄重算范围。角柄光标按方向（nwse/nesw/ns/ew-resize → `resizeUpLeftDownRight`/`resizeUpRightDownLeft`/`resizeUpDown`/`resizeLeftRight`；macOS 对角线退化见差异清单）。角柄钳回容器整只可命中（见差异清单）。`round` 形状仅显示 `tm`/`ml`/`mr`/`bm` 四柄。
+拖框移动：中心钳制在 `[宽/2, 容器宽-宽/2]`（handleCropperBoxMouseDown/Move）；角柄命中（`target.dataset.dir`）不触发移动。角柄缩放：自由模式各向独立（越零翻柄）；定比模式按 `getRangeForAspectChange` 方向范围 + `getAspectHW` 内收（handleCornerAspectMouseMove），尺寸归零 `changeDir` 翻柄重算范围。角柄光标按方向（nwse/nesw/ns/ew-resize → `resizeUpLeftDownRight`/`resizeUpRightDownLeft`/`resizeUpDown`/`resizeLeftRight`；macOS 四个对角角柄自绘见差异清单）。角柄钳回容器整只可命中（见差异清单）。`round` 形状仅显示 `tm`/`ml`/`mr`/`bm` 四柄。
 
 ### 图片拖动与预览
 
@@ -89,8 +89,8 @@ image `ImageProvider`（上游 `src`）。shape `SemiCropperShape`（rect/round/
 - **viewIMGDragStart**：HTML 拖影抑制不适用（Flutter 图片不可拖拽），留档。
 - **未移植 API**：`aspectRatio` 受控语义保留（变化仅影响后续拖动，照抄 componentDidUpdate）。
 - **角柄钳回容器**：上游角柄以 `$half_corner_width` 半格外悬裁切框角（DOM 命中不受父盒边界限制，外悬部分可点可悬停）；Flutter `RenderBox.hitTest` 不收自身边界外的点，裁切框贴住容器边（初始态即顶满容器高）时外悬半格落在容器外成死区——拖不动、光标不切换，故柄位钳回 `[0, 容器-柄]` 整只可命中（不贴边时与上游同形）。
-- **角柄光标 kind**：上游 CSS 全双向（`nwse`/`nesw`/`ns`/`ew-resize`）→ `resizeUpLeftDownRight`/`resizeUpRightDownLeft`/`resizeUpDown`/`resizeLeftRight`；macOS 桌面引擎 cursor 表无对角线光标（NSCursor 公共 API 缺失，flutter/flutter#138887 → #89351 跟踪，未映射 → 箭头），`nwse` 组退化 `resizeUpDown`、`nesw` 组退化 `resizeLeftRight`（Web 无此缺口不退化）。
-- **平移光标 kind**：上游 `-mask`/`-view-box` 的 `cursor: move` → `SystemMouseCursors.move`；macOS 引擎 cursor 表无 `move`（WebKit 走私有 CoreCursor `kCoreCursorWindowMove`，Flutter 的 NSCursor 表未映射 → 箭头），改为 `SystemMouseCursors.none` 隐藏系统光标 + 组件内自绘四向箭头跟随指针（`SemiCropper.moveCursorKey`），Web/Windows/Linux 走系统 move。
+- **角柄光标 kind**：上游 CSS 全双向（`nwse`/`nesw`/`ns`/`ew-resize`）→ `resizeUpLeftDownRight`/`resizeUpRightDownLeft`/`resizeUpDown`/`resizeLeftRight`；macOS 桌面引擎 cursor 表无对角线光标（NSCursor 公共 API 缺失，flutter/flutter#138887 → #89351 跟踪），四个对角角柄（tl/tr/bl/br）改为 `SystemMouseCursors.none` 隐藏系统光标 + 组件内自绘双向对角箭头（`SemiCropper.resizeCursorKey`），边中点（tm/bm/ml/mr）仍用系统双向箭头；Web/Windows/Linux 全部走系统对角线光标。
+- **平移光标 kind**：上游 `-mask`/`-view-box` 的 `cursor: move` → `SystemMouseCursors.move`；macOS 引擎 cursor 表无 `move`（WebKit 走私有 CoreCursor `kCoreCursorWindowMove`，Flutter 的 NSCursor 表未映射 → 箭头），改用系统支持的 `grab`（openHandCursor），Web/Windows/Linux 走 move。
 
 ## 用法
 

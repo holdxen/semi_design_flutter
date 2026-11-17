@@ -44,14 +44,13 @@
 // - 角柄光标 kind：cropper.scss 全双向（nwse/nesw/ns/ew-resize）→
 //   resizeUpLeftDownRight / resizeUpRightDownLeft / resizeUpDown /
 //   resizeLeftRight；macOS 桌面引擎 cursor 表无对角线光标（NSCursor 公共
-//   API 缺失，flutter/flutter#138887 → #89351 跟踪；未映射 → 箭头），
-//   nwse 组退化 resizeUpDown、nesw 组退化 resizeLeftRight（Web 无此缺口
-//   不退化）。
+//   API 缺失，flutter/flutter#138887 → #89351 跟踪；WebKit 走私有
+//   CoreCursor），四个对角角柄（tl/tr/bl/br）改为隐藏系统光标 + 自绘双向
+//   对角箭头（`_DiagonalResizeCursorPainter`），边中点（tm/bm/ml/mr）仍用
+//   系统双向箭头；Web/Windows/Linux 全部走系统对角线光标。
 // - 平移光标 kind（`-mask`/`-view-box` `cursor: move`）：macOS 引擎
-//   cursor 表无 `move`（WebKit 走私有 CoreCursor `kCoreCursorWindowMove`；
-//   Flutter 的 NSCursor 表未映射 → 箭头），改为 `SystemMouseCursors.none`
-//   隐藏系统光标 + 组件内自绘四向箭头（`_MoveCursorPainter`）；Web/
-//   Windows/Linux 走系统 move。
+//   cursor 表无 `move`（WebKit 走私有 CoreCursor `kCoreCursorWindowMove`），
+//   改用系统支持的 `grab`（openHandCursor）；Web/Windows/Linux 走 move。
 // - 角柄钳回容器：RenderBox.hitTest 不收自身边界外的点，贴边裁切框
 //   （初始态）的 $half_corner_width 外悬半格落在容器外成死区（拖不动、
 //   光标不切换；上游 DOM 命中不受父盒边界限制），柄位钳回
@@ -182,8 +181,9 @@ class SemiCropper extends StatefulWidget {
   static const imageKey = ValueKey<String>('semi-cropper-image');
   static const cropViewKey = ValueKey<String>('semi-cropper-crop-view');
 
-  /// macOS 绘制式 move 光标（系统光标已隐藏）。
-  static const moveCursorKey = ValueKey<String>('semi-cropper-move-cursor');
+  /// 角柄自绘的对角光标（macOS 系统光标表无对角线 resize）。
+  static Key resizeCursorKey(String dir) =>
+      ValueKey<String>('semi-cropper-resize-cursor-$dir');
   static Key cornerKey(String dir) =>
       ValueKey<String>('semi-cropper-corner-$dir');
 
@@ -216,16 +216,17 @@ double _getMiddle(double value, (double, double) range) =>
 }
 
 /// 平移光标（`-mask` / `-view-box` 的 `cursor: move`）：macOS 桌面引擎
-/// cursor 表缺 `move`（WebKit 走私有 CoreCursor，Flutter 的 NSCursor 表
-/// 未映射 → 箭头），改为隐藏系统光标、由 [_SemiCropperState] 绘制
-/// macOS move 字形（四向箭头）；Web/Windows/Linux 走系统 move。
+/// cursor 表缺 `move`（WebKit 走私有 CoreCursor），改用系统支持的 `grab`
+/// （openHandCursor）；Web/Windows/Linux 走系统 move。
 MouseCursor _moveCursor() {
-  if (_usesDrawnMoveCursor) return SystemMouseCursors.none;
+  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.macOS) {
+    return SystemMouseCursors.grab;
+  }
   return SystemMouseCursors.move;
 }
 
-/// macOS 桌面：系统无 move 光标，需绘制（见 [_SemiCropperState]）。
-bool get _usesDrawnMoveCursor =>
+/// macOS 桌面：无对角系统光标，四角需自绘（边中点仍用系统双向箭头）。
+bool get _usesDrawnCornerCursor =>
     !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS;
 
 /// 角柄光标（cropper.scss 全双向）：tl/br nwse-resize、tr/bl nesw-resize、
@@ -242,16 +243,16 @@ MouseCursor _cornerCursor(String dir) {
     'br': SystemMouseCursors.resizeUpLeftDownRight,
   };
   // macOS 桌面引擎 cursor 表无对角线光标（NSCursor 公共 API 缺失，
-  // flutter/flutter#138887 → #89351 跟踪；未映射 → 箭头），退化为同组
-  // 双向箭头（nwse ↖↘ 组 → resizeUpDown、nesw ↗↙ 组 → resizeLeftRight）。
-  // Web 无此缺口（CSS 原生对角线），不退化。
-  if (kIsWeb || defaultTargetPlatform != TargetPlatform.macOS) {
+  // flutter/flutter#138887 → #89351 跟踪；未映射 → 箭头），四个对角角柄
+  // 改为隐藏系统光标 + 自绘（_CornerHandle / _DiagonalResizeCursorPainter）；
+  // 边中点用系统双向箭头。Web 无此缺口（CSS 原生对角线），不退化。
+  if (!_usesDrawnCornerCursor) {
     return cursors[dir]!;
   }
   return switch (dir) {
-    'tl' || 'br' => SystemMouseCursors.resizeUpDown,
-    'tr' || 'bl' => SystemMouseCursors.resizeLeftRight,
-    _ => cursors[dir]!,
+    'tm' || 'bm' => SystemMouseCursors.resizeUpDown,
+    'ml' || 'mr' => SystemMouseCursors.resizeLeftRight,
+    _ => SystemMouseCursors.none,
   };
 }
 
@@ -283,27 +284,6 @@ class _SemiCropperState extends State<SemiCropper> {
 
   _DragMode _dragMode = _DragMode.none;
 
-  /// 绘制式 move 光标位置（容器坐标；null 不绘制）。macOS 系统无该光标，
-  /// 隐藏系统光标后按指针位置自绘。
-  final ValueNotifier<Offset?> _moveCursorAt = ValueNotifier<Offset?>(null);
-
-  /// 指针是否按下——拖动中 hover 事件停发，改由 Listener 续跟光标位置。
-  bool _pressed = false;
-
-  /// 角柄命中区（容器坐标，布局时收集）：悬停角柄时系统 resize 光标生效，
-  /// 不叠加绘制的 move 光标。
-  List<Rect> _cornerHitRects = const <Rect>[];
-
-  bool _shouldDrawMoveCursor(Offset? at) {
-    if (at == null || !_usesDrawnMoveCursor) return false;
-    if (_dragMode == _DragMode.cornerResize) return false;
-    if (!_pressed) {
-      if (!(Offset.zero & _containerData).contains(at)) return false;
-      if (_cornerHitRects.any((r) => r.contains(at))) return false;
-    }
-    return true;
-  }
-
   @override
   void initState() {
     super.initState();
@@ -327,7 +307,6 @@ class _SemiCropperState extends State<SemiCropper> {
 
   @override
   void dispose() {
-    _moveCursorAt.dispose();
     if (_listener != null) _stream?.removeListener(_listener!);
     widget.controller?._detach(this);
     super.dispose();
@@ -1117,16 +1096,13 @@ class _SemiCropperState extends State<SemiCropper> {
       container: true,
       label: '图片裁切',
       child: MouseRegion(
-        cursor: _moveCursor(),
-        // 绘制式 move 光标跟随指针（macOS）；离开容器即撤掉。
-        onHover: (e) => _moveCursorAt.value = e.localPosition,
-        onExit: (_) {
-          if (!_pressed) _moveCursorAt.value = null;
-        },
+        // 对角角柄拖动时整个容器都隐藏系统光标，由 _CornerHandle 自绘。
+        cursor: _usesDrawnCornerCursor && _dragMode == _DragMode.cornerResize
+            ? SystemMouseCursors.none
+            : _moveCursor(),
         child: Listener(
           behavior: HitTestBehavior.opaque,
           onPointerDown: (e) {
-            _pressed = true;
             // down 自叶向根派发：子级先定模式，这里统一以容器坐标记起点。
             switch (_dragMode) {
               case _DragMode.imgMove:
@@ -1134,17 +1110,12 @@ class _SemiCropperState extends State<SemiCropper> {
               case _DragMode.boxMove:
                 _handleBoxDown(e.localPosition);
               case _DragMode.cornerResize:
-                // 角柄拖动走系统 resize 光标，撤掉绘制的 move 光标。
-                _moveCursorAt.value = null;
               case _DragMode.none:
                 break;
             }
           },
           onPointerMove: (e) {
             if (!e.down) return;
-            if (_dragMode != _DragMode.cornerResize) {
-              _moveCursorAt.value = e.localPosition;
-            }
             switch (_dragMode) {
               case _DragMode.imgMove:
                 _handleImgMoveUpdate(e.localPosition);
@@ -1217,8 +1188,6 @@ class _SemiCropperState extends State<SemiCropper> {
               // `$half_corner_width`：角柄外悬半格——盒层扩一圈让角柄可命中
               //（RenderBox.hitTest 不收自身边界外的子级）。
               final pad = t.widthCropperBoxCorner / 2;
-              // 角柄未渲染时清空命中区（toggle showResizeBox 后无残留）。
-              _cornerHitRects = const <Rect>[];
 
               // 裁切框（outline 外描边语义：画在盒外）。
               final box = Positioned(
@@ -1281,21 +1250,6 @@ class _SemiCropperState extends State<SemiCropper> {
                   ),
                   mask,
                   box,
-                  // macOS 绘制式 move 光标（系统光标已隐藏）。
-                  if (_usesDrawnMoveCursor)
-                    Positioned.fill(
-                      child: IgnorePointer(
-                        child: ValueListenableBuilder<Offset?>(
-                          valueListenable: _moveCursorAt,
-                          builder: (context, at, _) => _shouldDrawMoveCursor(at)
-                              ? CustomPaint(
-                                  key: SemiCropper.moveCursorKey,
-                                  painter: _MoveCursorPainter(at!),
-                                )
-                              : const SizedBox.shrink(),
-                        ),
-                      ),
-                    ),
                 ],
               );
             },
@@ -1337,6 +1291,7 @@ class _SemiCropperState extends State<SemiCropper> {
   }
 
   void _endDrag() {
+    final wasCorner = _dragMode == _DragMode.cornerResize;
     switch (_dragMode) {
       case _DragMode.imgMove:
         _handleImgMoveUp();
@@ -1348,11 +1303,8 @@ class _SemiCropperState extends State<SemiCropper> {
         break;
     }
     _dragMode = _DragMode.none;
-    _pressed = false;
-    final at = _moveCursorAt.value;
-    if (at != null && !_shouldDrawMoveCursor(at)) {
-      _moveCursorAt.value = null;
-    }
+    // 根光标在角柄拖动期间是 none，结束后恢复 move/grab。
+    if (wasCorner && _usesDrawnCornerCursor) setState(() {});
   }
 
   List<Widget> _buildCorners(SemiResolvedCropperThemeData t, double pad) {
@@ -1379,46 +1331,186 @@ class _SemiCropperState extends State<SemiCropper> {
     };
     double clampToContainer(double value, double extent) =>
         _getMiddle(value, (0, math.max(0, extent - size)));
-    final rects = <Rect>[];
-    final corners = <Widget>[];
-    for (final dir in dirs) {
-      // 各偏移 + pad：盒层扩一圈后的坐标（半格外悬可命中）。
-      final left =
-          clampToContainer(handleLeft(dir), _containerData.width) -
-          box.left +
-          pad;
-      final top =
-          clampToContainer(handleTop(dir), _containerData.height) -
-          box.top +
-          pad;
-      // 命中区换算回容器坐标（盒层原点 = box.topLeft - pad）。
-      rects.add(
-        Rect.fromLTWH(left + box.left - pad, top + box.top - pad, size, size),
-      );
-      corners.add(
+    return [
+      for (final dir in dirs)
         Positioned(
-          left: left,
-          top: top,
+          // 各偏移 + pad：盒层扩一圈后的坐标（半格外悬可命中）。
+          left:
+              clampToContainer(handleLeft(dir), _containerData.width) -
+              box.left +
+              pad,
+          top:
+              clampToContainer(handleTop(dir), _containerData.height) -
+              box.top +
+              pad,
           width: size,
           height: size,
-          child: MouseRegion(
+          child: _CornerHandle(
+            dir: dir,
             cursor: _cornerCursor(dir),
-            child: Listener(
-              key: SemiCropper.cornerKey(dir),
-              behavior: HitTestBehavior.opaque,
-              onPointerDown: (e) {
-                _dragMode = _DragMode.cornerResize;
-                _handleCornerDown(dir);
-              },
-              child: ColoredBox(color: t.colorCropperBoxCornerBg),
-            ),
+            // 对角线四角在 macOS 上自绘（系统无对角 resize 光标）。
+            drawn:
+                _usesDrawnCornerCursor &&
+                dir != 'tm' &&
+                dir != 'bm' &&
+                dir != 'ml' &&
+                dir != 'mr',
+            onPointerDown: () {
+              _dragMode = _DragMode.cornerResize;
+              _handleCornerDown(dir);
+              // 根光标切 none（拖动中指针可能离开角柄）。
+              if (_usesDrawnCornerCursor) setState(() {});
+            },
+            child: ColoredBox(color: t.colorCropperBoxCornerBg),
           ),
         ),
-      );
-    }
-    _cornerHitRects = rects;
-    return corners;
+    ];
   }
+}
+
+/// 角柄（macOS 对角四角：系统光标表无对角 resize，隐藏系统光标 + 自绘）。
+class _CornerHandle extends StatefulWidget {
+  const _CornerHandle({
+    required this.dir,
+    required this.cursor,
+    required this.drawn,
+    required this.onPointerDown,
+    required this.child,
+  });
+
+  final String dir;
+  final MouseCursor cursor;
+
+  /// 是否自绘对角光标（macOS 的 tl/tr/bl/br）。
+  final bool drawn;
+  final VoidCallback onPointerDown;
+  final Widget child;
+
+  @override
+  State<_CornerHandle> createState() => _CornerHandleState();
+}
+
+class _CornerHandleState extends State<_CornerHandle> {
+  final ValueNotifier<Offset?> _at = ValueNotifier<Offset?>(null);
+  bool _hovered = false;
+  bool _pressed = false;
+
+  @override
+  void dispose() {
+    _at.dispose();
+    super.dispose();
+  }
+
+  void _release() {
+    _pressed = false;
+    if (!_hovered && _at.value != null) _at.value = null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final drawn = widget.drawn;
+    return MouseRegion(
+      cursor: drawn ? SystemMouseCursors.none : widget.cursor,
+      onEnter: drawn ? (_) => _hovered = true : null,
+      onHover: drawn ? (e) => _at.value = e.localPosition : null,
+      onExit: drawn
+          ? (_) {
+              _hovered = false;
+              if (!_pressed) _at.value = null;
+            }
+          : null,
+      child: Listener(
+        key: SemiCropper.cornerKey(widget.dir),
+        behavior: HitTestBehavior.opaque,
+        onPointerDown: (e) {
+          _pressed = true;
+          _at.value = e.localPosition;
+          widget.onPointerDown();
+        },
+        onPointerMove: (e) {
+          if (e.down && drawn) _at.value = e.localPosition;
+        },
+        onPointerUp: (_) => _release(),
+        onPointerCancel: (_) => _release(),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned.fill(child: widget.child),
+            if (drawn)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: ValueListenableBuilder<Offset?>(
+                    valueListenable: _at,
+                    builder: (context, at, _) =>
+                        at != null && (_hovered || _pressed)
+                        ? CustomPaint(
+                            key: SemiCropper.resizeCursorKey(widget.dir),
+                            painter: _DiagonalResizeCursorPainter(
+                              hotspot: at,
+                              nwse: widget.dir == 'tl' || widget.dir == 'br',
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 对角 resize 光标字形（nwse / nesw 双向箭头，白描边黑填充，热点在中心）。
+class _DiagonalResizeCursorPainter extends CustomPainter {
+  const _DiagonalResizeCursorPainter({
+    required this.hotspot,
+    required this.nwse,
+  });
+
+  /// 热点（角柄局部坐标；绘制可越界，父 Stack 不裁剪）。
+  final Offset hotspot;
+
+  /// true = ↖↘（tl/br），false = ↗↙（tr/bl）。
+  final bool nwse;
+
+  static final Path _glyph = _buildGlyph();
+
+  static Path _buildGlyph() {
+    const double l = 7, aw = 2.8, hl = 2.8, sh = 0.9;
+    return Path()
+      ..moveTo(l, 0)
+      ..lineTo(l - hl, -aw)
+      ..lineTo(l - hl, -sh)
+      ..lineTo(-(l - hl), -sh)
+      ..lineTo(-(l - hl), -aw)
+      ..lineTo(-l, 0)
+      ..lineTo(-(l - hl), aw)
+      ..lineTo(-(l - hl), sh)
+      ..lineTo(l - hl, sh)
+      ..lineTo(l - hl, aw)
+      ..close();
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.save();
+    canvas.translate(hotspot.dx, hotspot.dy);
+    canvas.rotate(nwse ? math.pi / 4 : -math.pi / 4);
+    final outline = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.2
+      ..strokeJoin = StrokeJoin.round
+      ..color = const Color(0xFFFFFFFF);
+    final fill = Paint()..color = const Color(0xFF000000);
+    canvas.drawPath(_glyph, outline);
+    canvas.drawPath(_glyph, fill);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_DiagonalResizeCursorPainter oldDelegate) =>
+      oldDelegate.hotspot != hotspot || oldDelegate.nwse != nwse;
 }
 
 /// 裁切框 outline 外描边（CSS `outline: w solid` 画在盒外）。
@@ -1453,58 +1545,4 @@ class _CropperBoxOutlinePainter extends CustomPainter {
       color != oldDelegate.color ||
       strokeWidth != oldDelegate.strokeWidth ||
       oval != oldDelegate.oval;
-}
-
-/// macOS 绘制式 move 光标字形：四向箭头，白描边黑填充，热点在中心。
-///
-/// macOS 引擎 cursor 表无 `move`（WebKit 走私有 CoreCursor），系统光标
-/// 隐藏后按此绘制；整体约 14pt，对齐系统光标尺寸。
-class _MoveCursorPainter extends CustomPainter {
-  const _MoveCursorPainter(this.hotspot);
-
-  /// 热点（容器坐标）。
-  final Offset hotspot;
-
-  static final Path _glyph = _buildGlyph();
-
-  static Path _buildGlyph() {
-    // 单臂：长 7、箭头宽 2.8、头长 2.8、杆半宽 0.9。
-    const double l = 7, aw = 2.8, hl = 2.8, sh = 0.9;
-    final arm = Path()
-      ..moveTo(0, -l)
-      ..lineTo(-aw, -l + hl)
-      ..lineTo(-sh, -l + hl)
-      ..lineTo(-sh, 0)
-      ..lineTo(sh, 0)
-      ..lineTo(sh, -l + hl)
-      ..lineTo(aw, -l + hl)
-      ..close();
-    final glyph = Path();
-    for (var i = 0; i < 4; i++) {
-      glyph.addPath(
-        arm.transform(Matrix4.rotationZ(i * math.pi / 2).storage),
-        Offset.zero,
-      );
-    }
-    return glyph;
-  }
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.save();
-    canvas.translate(hotspot.dx, hotspot.dy);
-    final outline = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.2
-      ..strokeJoin = StrokeJoin.round
-      ..color = const Color(0xFFFFFFFF);
-    final fill = Paint()..color = const Color(0xFF000000);
-    canvas.drawPath(_glyph, outline);
-    canvas.drawPath(_glyph, fill);
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(_MoveCursorPainter oldDelegate) =>
-      oldDelegate.hotspot != hotspot;
 }

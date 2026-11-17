@@ -669,13 +669,14 @@ void main() {
       }
     });
 
-    testWidgets('macOS degrades diagonal corner cursors to double arrows', (
+    testWidgets('macOS draws diagonal corners and keeps system edge arrows', (
       tester,
     ) async {
-      // macOS 引擎 cursor 表无对角线光标（flutter/flutter#138887 → #89351），
-      // nwse 组退化 resizeUpDown、nesw 组退化 resizeLeftRight。
+      // macOS 引擎 cursor 表无对角线光标（flutter/flutter#138887 → #89351）：
+      // 对角四角 none + 自绘，边中点系统双向箭头。
       debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
       try {
+        final kinds = captureCursorKinds(tester);
         await pumpHost(
           tester,
           SemiCropper(image: _TestImageProvider(sampleImage)),
@@ -689,20 +690,88 @@ void main() {
             )
             .map((w) => w.cursor)
             .firstWhere((c) => c != SystemMouseCursors.move);
-        expect(cursorOf('tl'), SystemMouseCursors.resizeUpDown);
-        expect(cursorOf('br'), SystemMouseCursors.resizeUpDown);
-        expect(cursorOf('tr'), SystemMouseCursors.resizeLeftRight);
-        expect(cursorOf('bl'), SystemMouseCursors.resizeLeftRight);
-        expect(cursorOf('tm'), SystemMouseCursors.resizeUpDown);
-        expect(cursorOf('bm'), SystemMouseCursors.resizeUpDown);
-        expect(cursorOf('ml'), SystemMouseCursors.resizeLeftRight);
-        expect(cursorOf('mr'), SystemMouseCursors.resizeLeftRight);
+        for (final dir in const ['tm', 'bm']) {
+          expect(cursorOf(dir), SystemMouseCursors.resizeUpDown, reason: dir);
+        }
+        for (final dir in const ['ml', 'mr']) {
+          expect(
+            cursorOf(dir),
+            SystemMouseCursors.resizeLeftRight,
+            reason: dir,
+          );
+        }
+        for (final dir in const ['tl', 'tr', 'bl', 'br']) {
+          expect(cursorOf(dir), SystemMouseCursors.none, reason: dir);
+        }
+        // 悬停对角角柄：系统光标隐藏（none），自绘对角箭头出现；离开即撤。
+        for (final dir in const ['tl', 'tr', 'bl', 'br']) {
+          final at = tester.getCenter(find.byKey(SemiCropper.cornerKey(dir)));
+          final gesture = await tester.createGesture(
+            kind: ui.PointerDeviceKind.mouse,
+          );
+          await gesture.addPointer(location: at);
+          await gesture.moveTo(at);
+          await tester.pump();
+          expect(kinds.last, 'none', reason: dir);
+          expect(
+            find.byKey(SemiCropper.resizeCursorKey(dir)),
+            findsOneWidget,
+            reason: dir,
+          );
+          await gesture.removePointer();
+          await tester.pump();
+          expect(
+            find.byKey(SemiCropper.resizeCursorKey(dir)),
+            findsNothing,
+            reason: dir,
+          );
+        }
+        // 拖动对角角柄：系统光标保持 none，自绘箭头继续跟随；松开后撤掉。
+        final start = tester.getCenter(find.byKey(SemiCropper.cornerKey('tl')));
+        final drag = await tester.createGesture(
+          kind: ui.PointerDeviceKind.mouse,
+        );
+        await drag.addPointer(location: start);
+        await drag.down(start);
+        await drag.moveTo(start + const Offset(40, 30));
+        await tester.pump();
+        expect(kinds.last, 'none');
+        expect(find.byKey(SemiCropper.resizeCursorKey('tl')), findsOneWidget);
+        await drag.up();
+        // 松手后仍停在角柄上（角柄跟着指针走）→ 保持绘制；移开后撤掉。
+        await drag.moveTo(start + const Offset(200, 150));
+        await tester.pump();
+        expect(find.byKey(SemiCropper.resizeCursorKey('tl')), findsNothing);
+        await drag.removePointer();
+        await tester.pump();
+
+        // 边中点仍走系统光标，无自绘层。
+        for (final (dir, kind) in const [
+          ('tm', 'resizeUpDown'),
+          ('ml', 'resizeLeftRight'),
+        ]) {
+          final at = tester.getCenter(find.byKey(SemiCropper.cornerKey(dir)));
+          final gesture = await tester.createGesture(
+            kind: ui.PointerDeviceKind.mouse,
+          );
+          await gesture.addPointer(location: at);
+          await gesture.moveTo(at);
+          await tester.pump();
+          expect(kinds.last, kind, reason: dir);
+          expect(
+            find.byKey(SemiCropper.resizeCursorKey(dir)),
+            findsNothing,
+            reason: dir,
+          );
+          await gesture.removePointer();
+          await tester.pump();
+        }
       } finally {
         debugDefaultTargetPlatformOverride = null;
       }
     });
 
-    testWidgets('mask/view-box hover draws the macOS move cursor', (
+    testWidgets('mask/view-box hover uses a system move cursor', (
       tester,
     ) async {
       Future<void> expectHoverKind(
@@ -722,34 +791,7 @@ void main() {
           );
           await gesture.addPointer(location: at);
           await tester.pump();
-          expect(kinds.last, expected, reason: '$platform $at cursor kind');
-          // 悬停事件驱动绘制式光标（addPointer 本身不发 hover）。
-          await gesture.moveTo(at + const Offset(1, 0));
-          await tester.pump();
-          expect(
-            find.byKey(SemiCropper.moveCursorKey),
-            platform == TargetPlatform.macOS ? findsOneWidget : findsNothing,
-            reason: '$platform $at drawn cursor',
-          );
-          await gesture.removePointer();
-          await tester.pump();
-        }
-        if (platform == TargetPlatform.macOS) {
-          // 悬停角柄：系统 resize 光标生效，不叠加绘制的 move 光标。
-          final corner = tester.getCenter(
-            find.byKey(SemiCropper.cornerKey('tm')),
-          );
-          final gesture = await tester.createGesture(
-            kind: ui.PointerDeviceKind.mouse,
-          );
-          await gesture.addPointer(location: corner);
-          await gesture.moveTo(corner + const Offset(1, 0));
-          await tester.pump();
-          expect(
-            find.byKey(SemiCropper.moveCursorKey),
-            findsNothing,
-            reason: 'corner suppresses drawn cursor',
-          );
+          expect(kinds.last, expected, reason: '$platform $at');
           await gesture.removePointer();
           await tester.pump();
         }
@@ -758,8 +800,8 @@ void main() {
       try {
         // cropper.scss：-mask / -view-box 均 `cursor: move`。
         await expectHoverKind(TargetPlatform.linux, 'move');
-        // macOS 系统无 move：隐藏系统光标（none）+ 自绘四向箭头。
-        await expectHoverKind(TargetPlatform.macOS, 'none');
+        // macOS 引擎 cursor 表无 move（未映射 → 箭头），改用系统 grab。
+        await expectHoverKind(TargetPlatform.macOS, 'grab');
       } finally {
         debugDefaultTargetPlatformOverride = null;
       }

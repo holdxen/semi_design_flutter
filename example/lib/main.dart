@@ -4,6 +4,7 @@ import 'package:example/pages/autocomplete.dart';
 import 'package:example/pages/avatar.dart';
 import 'package:example/pages/badge.dart';
 import 'package:example/pages/banner.dart';
+import 'package:example/pages/border_beam.dart';
 import 'package:example/pages/breadcrumb.dart';
 import 'package:example/pages/button.dart';
 import 'package:example/pages/card.dart';
@@ -213,6 +214,7 @@ const List<DemoGroup> demoGroups = [
     DemoSpec('avatar', 'Avatar 头像', 'doc-avatar.svg', AvatarPage()),
     DemoSpec('badge', 'Badge 徽标', 'doc-badge.svg', BadgePage()),
     DemoSpec('banner', 'Banner 通知横幅', 'doc-banner.svg', BannerPage()),
+    DemoSpec('borderBeam', 'BorderBeam 边框光束', 'doc-card.svg', BorderBeamPage()),
     DemoSpec('card', 'Card 卡片', 'doc-card.svg', CardPage()),
     DemoSpec('carousel', 'Carousel 轮播图', 'doc-carousel.svg', CarouselPage()),
     DemoSpec('collapse', 'Collapse 折叠面板', 'doc-accordion.svg', CollapsePage()),
@@ -394,8 +396,9 @@ class _DemoShellState extends State<DemoShell> {
       const SizedBox(width: 8),
       SemiSwitch(
         checked: widget.themeMode == SemiThemeMode.dark,
-        onChanged: (dark) => widget.onThemeModeChanged
-            ?.call(dark ? SemiThemeMode.dark : SemiThemeMode.light),
+        onChanged: (dark) => widget.onThemeModeChanged?.call(
+          dark ? SemiThemeMode.dark : SemiThemeMode.light,
+        ),
       ),
     ],
   );
@@ -447,7 +450,10 @@ class _DemoShellState extends State<DemoShell> {
                   onSelect: (info) =>
                       setState(() => _selected = info.itemKey as String),
                   header: SemiNavigationHeader(
-                    logo: SemiIcon.asset('assets/semi-logo.svg', customSize: 36),
+                    logo: SemiIcon.asset(
+                      'assets/semi-logo.svg',
+                      customSize: 36,
+                    ),
                     text: 'Semi Design',
                   ),
                   footer: const SemiNavigationFooter(collapseButton: true),

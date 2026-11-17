@@ -111,11 +111,79 @@ void main() {
       debugDefaultTargetPlatformOverride = null;
     }
   });
+
+  testWidgets('probe corner hover cursors', (tester) async {
+    for (final platform in [
+      TargetPlatform.macOS,
+      TargetPlatform.linux,
+      TargetPlatform.windows,
+    ]) {
+      debugDefaultTargetPlatformOverride = platform;
+      try {
+        addTearDown(() async => tester.pumpWidget(const SizedBox.shrink()));
+        await tester.binding.setSurfaceSize(const Size(600, 320));
+        await tester.pumpWidget(
+          SemiTheme(
+            data: const SemiThemeData.light(),
+            child: Directionality(
+              textDirection: TextDirection.ltr,
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: SizedBox(
+                  width: 600,
+                  height: 300,
+                  child: SemiCropper(image: _TestImageProvider(sampleImage)),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+        final kinds = <String>[];
+        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.mouseCursor,
+          (call) async {
+            final args = call.arguments as Map<Object?, Object?>;
+            kinds.add('${args['kind']}');
+            return null;
+          },
+        );
+        for (final dir in const ['tl', 'tm', 'tr', 'ml', 'mr', 'bl', 'bm', 'br']) {
+          kinds.clear();
+          final at = tester.getCenter(find.byKey(SemiCropper.cornerKey(dir)));
+          final gesture = await tester.createGesture(
+            kind: PointerDeviceKind.mouse,
+          );
+          await gesture.addPointer(location: at);
+          await tester.pump();
+          debugPrint(
+            'CORNER $platform $dir at=$at hit=${_hitCursors(tester, at)} kind=${kinds.last}',
+          );
+          await gesture.removePointer();
+          await tester.pump();
+        }
+        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.mouseCursor,
+          null,
+        );
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    }
+  });
 }
+
+List<String> _hitCursors(WidgetTester tester, Offset at) => tester
+    .hitTestOnBinding(at)
+    .path
+    .map((e) => e.target)
+    .whereType<RenderMouseRegion>()
+    .map((r) => r.cursor.toString())
+    .toList();
 
 Future<void> _dump(WidgetTester tester) async {
   addTearDown(() async => tester.pumpWidget(const SizedBox.shrink()));
-  await tester.binding.setSurfaceSize(const Size(600, 320));
+  await tester.binding.setSurfaceSize(const Size(760, 460));
   final boundaryKey = GlobalKey();
   await tester.pumpWidget(
     SemiTheme(
@@ -126,10 +194,14 @@ Future<void> _dump(WidgetTester tester) async {
           alignment: Alignment.topLeft,
           child: RepaintBoundary(
             key: boundaryKey,
-            child: SizedBox(
-              width: 600,
-              height: 300,
-              child: SemiCropper(image: _TestImageProvider(sampleImage)),
+            // 外留 60：对角光标绘制可越出裁切器边界（父级不裁剪）。
+            child: Padding(
+              padding: const EdgeInsets.all(60),
+              child: SizedBox(
+                width: 600,
+                height: 300,
+                child: SemiCropper(image: _TestImageProvider(sampleImage)),
+              ),
             ),
           ),
         ),
@@ -138,16 +210,18 @@ Future<void> _dump(WidgetTester tester) async {
   );
   await tester.pump();
   final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
-  await gesture.addPointer(location: const Offset(60, 150));
-  await gesture.moveTo(const Offset(61, 151));
+  final corner = tester.getCenter(find.byKey(SemiCropper.cornerKey('tl')));
+  await gesture.addPointer(location: corner);
+  await gesture.moveTo(corner);
   await tester.pump();
+  debugPrint('DUMP corner=$corner glyphs=${find.byKey(SemiCropper.resizeCursorKey('tl')).evaluate().length}');
   await tester.runAsync(() async {
     final boundary =
         boundaryKey.currentContext!.findRenderObject()!
             as RenderRepaintBoundary;
     final image = await boundary.toImage(pixelRatio: 3);
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-    File('/tmp/semi_drawn_move_cursor.png')
+    File('/tmp/semi_drawn_corner_cursor.png')
         .writeAsBytesSync(bytes!.buffer.asUint8List());
   });
   await gesture.removePointer();

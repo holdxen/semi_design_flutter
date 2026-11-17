@@ -178,6 +178,7 @@ export 'src/theme/semi_avatar_theme_data.dart';
 export 'src/components/semi_cropper.dart';
 export 'src/theme/semi_cropper_theme.dart';
 export 'src/theme/semi_cropper_theme_data.dart';
+export 'src/components/semi_border_beam.dart';
 export 'src/components/semi_overflow_list.dart';
 export 'src/components/semi_side_sheet.dart';
 export 'src/theme/semi_side_sheet_theme.dart';
