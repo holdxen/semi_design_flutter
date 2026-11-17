@@ -52,8 +52,10 @@ enum SemiUserGuideThemeMode { defaultTheme, primary }
 class SemiUserGuideButtonProps {
   const SemiUserGuideButtonProps({this.child, this.onPressed});
 
-  /// 按钮文案（覆盖 locale 缺省）。
-  final Widget? child;
+  /// 按钮文案（String | Widget；覆盖 locale 缺省——String 走按钮文字色/字号
+  /// （SemiButton 对 String child 才套按钮样式、Widget child 原样透传），
+  /// Widget 自带样式）。
+  final Object? child;
 
   /// 点击处理（覆盖内置 handlePrev/handleNext——上游 `{...prevButtonProps}`
   /// 在 onClick 之后展开，props.onClick 顶替）。
@@ -554,14 +556,19 @@ class _SemiUserGuideState extends State<SemiUserGuide>
     final rootColor = isPrimary
         ? t.colorUserGuidePopupTextPrimary
         : t.colorUserGuidePopupTextDefault;
-    final skipLabel = widget.skipText ?? _UserGuideMetrics.skipLabel;
-    final prevLabel =
+    // ★文案走 String：SemiButton 仅对 String child 套按钮文字色/字号（Widget
+    // child 原样透传——上游按钮 CSS `color` 对 children 为继承语义，此处以
+    // String 通道承担；`*.child` 传 Widget 自带样式）。
+    final Object skipLabel = widget.skipText ?? _UserGuideMetrics.skipLabel;
+    final Object prevLabel =
         widget.prevButtonProps?.child ??
-        Text(widget.prevText ?? _UserGuideMetrics.prevLabel);
-    final nextLabel = isLast
-        ? Text(widget.finishText ?? _UserGuideMetrics.finishLabel)
+        widget.prevText ??
+        _UserGuideMetrics.prevLabel;
+    final Object nextLabel = isLast
+        ? (widget.finishText ?? _UserGuideMetrics.finishLabel)
         : (widget.nextButtonProps?.child ??
-              Text(widget.nextText ?? _UserGuideMetrics.nextLabel));
+              widget.nextText ??
+              _UserGuideMetrics.nextLabel);
     return DefaultTextStyle.merge(
       style: TextStyle(color: rootColor),
       child: DecoratedBox(
@@ -678,7 +685,7 @@ class _SemiUserGuideState extends State<SemiUserGuide>
                                 children: _withGaps([
                                   if (widget.showSkipButton && !isLast)
                                     _guideButton(
-                                      label: Text(skipLabel),
+                                      label: skipLabel,
                                       type: isPrimary
                                           ? SemiButtonType.primary
                                           : SemiButtonType.tertiary,
@@ -753,14 +760,19 @@ class _SemiUserGuideState extends State<SemiUserGuide>
     final index = _current;
     final isFirst = index == 0;
     final isLast = index == widget.steps.length - 1;
-    final skipLabel = widget.skipText ?? _UserGuideMetrics.skipLabel;
-    final prevLabel =
+    // ★文案走 String：SemiButton 仅对 String child 套按钮文字色/字号（Widget
+    // child 原样透传——上游按钮 CSS `color` 对 children 为继承语义，此处以
+    // String 通道承担；`*.child` 传 Widget 自带样式）。
+    final Object skipLabel = widget.skipText ?? _UserGuideMetrics.skipLabel;
+    final Object prevLabel =
         widget.prevButtonProps?.child ??
-        Text(widget.prevText ?? _UserGuideMetrics.prevLabel);
-    final nextLabel = isLast
-        ? Text(widget.finishText ?? _UserGuideMetrics.finishLabel)
+        widget.prevText ??
+        _UserGuideMetrics.prevLabel;
+    final Object nextLabel = isLast
+        ? (widget.finishText ?? _UserGuideMetrics.finishLabel)
         : (widget.nextButtonProps?.child ??
-              Text(widget.nextText ?? _UserGuideMetrics.nextLabel));
+              widget.nextText ??
+              _UserGuideMetrics.nextLabel);
     return SemiModal(
       visible: true,
       // 上游 `header={null}` / `footer={null}`（'x' in props 显式空——无 header
@@ -916,7 +928,7 @@ class _SemiUserGuideState extends State<SemiUserGuide>
   /// 带内联 bg 覆写的按钮（上游 `style={{ backgroundColor: ... }}`——内联压过
   /// :hover/:active 各态，覆色恒定）。
   Widget _guideButton({
-    required Widget label,
+    required Object label,
     required SemiButtonType type,
     required SemiButtonVariant variant,
     required Color? bg,

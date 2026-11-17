@@ -489,6 +489,35 @@ void main() {
       expect(find.text('1/2'), findsOneWidget);
     });
 
+    testWidgets('★按钮文案走 String 通道取按钮色（下一步/完成回归）', (tester) async {
+      const light = SemiThemeData.light();
+      await pumpHost(tester);
+      await setBody(tester, guidePage(steps: const [_stepA, _stepB]));
+      await tester.pumpAndSettle();
+      // default 主题 next = solid primary → `colorButtonPrimaryTextDefault`
+      // 白字（★不得吃卡片 DefaultTextStyle 正文色）。
+      final next = tester.widget<Text>(find.text('下一步'));
+      expect(next.style?.color, light.colors.colorWhite);
+
+      await tester.tap(find.text('下一步'));
+      await tester.pumpAndSettle();
+      final finish = tester.widget<Text>(find.text('完成'));
+      expect(finish.style?.color, light.colors.colorWhite);
+
+      // primary 主题 next = borderless + #FFF 底 → `*BorderlessTextDefault`
+      // primary 蓝字。
+      await setBody(
+        tester,
+        guidePage(
+          steps: const [_stepA, _stepB],
+          theme: SemiUserGuideThemeMode.primary,
+        ),
+      );
+      await tester.pumpAndSettle();
+      final primaryNext = tester.widget<Text>(find.text('下一步'));
+      expect(primaryNext.style?.color, light.colors.colorPrimary);
+    });
+
     testWidgets('buttonProps：child 覆文案、onPressed 顶替步进', (tester) async {
       final events = <String>[];
       await pumpHost(tester);
@@ -544,6 +573,12 @@ void main() {
       expect(find.byKey(SemiUserGuide.modalIndicatorKey), findsNothing);
       expect(find.text('第二页'), findsOneWidget);
       expect(find.text('完成'), findsOneWidget);
+      // ★modal next = solid primary → 白字（String 通道）。
+      final finish = tester.widget<Text>(find.text('完成'));
+      expect(
+        finish.style?.color,
+        const SemiThemeData.light().colors.colorWhite,
+      );
       await pumpDismissed(tester);
     });
 

@@ -10,7 +10,7 @@ current `int?`（非 null 即受控——上游 `_isInProps('current')` 的显�
 
 `SemiUserGuideStep({target, cover, title, description, mask, showArrow, spotlightPadding, theme, position})`：target `String?`（`SemiUserGuideTarget` 注册 id——上游 `(() => Element) | Element`，见差异清单；popup 无 target 步整棵不出）。cover `Widget?`（popup 定高 200 + top 圆角、modal 定高 300）。title/description `Object?`（String | Widget）。mask `bool?`、showArrow `bool?`（缺省 true）、spotlightPadding `double?`（★0 照消费）、theme `SemiUserGuideThemeMode?`、position `SemiTooltipPosition?`。
 
-`SemiUserGuideButtonProps({child, onPressed})`：上游 `nextButtonProps`/`prevButtonProps`（ButtonProps）的局部展开——`children`/`onClick` 两槽（`onPressed` 顶替内置步进）。
+`SemiUserGuideButtonProps({child, onPressed})`：上游 `nextButtonProps`/`prevButtonProps`（ButtonProps）的局部展开——`children`/`onClick` 两槽（`onPressed` 顶替内置步进）；child `Object?`（String | Widget——String 走按钮文字色/字号通道，Widget 自带样式）。
 
 `SemiUserGuideTarget({key, required id, required child})`：目标注册（★上游 DOM 元素引用无对应——anchor `SemiAnchorTarget` 先例）；重复 id 取首注册。
 
@@ -136,7 +136,7 @@ cover（定高 `heightUserGuidePopupContentCoverDefault` 200 + `radiusUserGuideP
 24. **syncSpotlightOrigin 不适用**：fixed 含块偏移补偿（index.tsx:408-422，transformed ancestor）——本移植 overlay 直接视口坐标落位。
 25. **触发面对应**：window `resize`（:152）→ `didChangeMetrics`、window `scroll` capture（:153）→ 目标全部祖先 ScrollPosition 监听、rerender（:190）→ didUpdateWidget/didChangeDependencies——逐事件重测同口径。
 26. **scrollIntoViewIfNeeded → ensureVisible**：`scrollIntoView({ behavior: 'auto', block: 'center' })` → `Scrollable.ensureVisible(alignment: 0.5)`（仅最近滚动容器——多层嵌套滚动不逐层保证 centered；behavior auto = 无动画）。
-27. **ButtonProps 局部展开**：`nextButtonProps`/`prevButtonProps` 完整 ButtonProps（type/theme/style 等任意覆写）不移植 → `SemiUserGuideButtonProps(child, onPressed)` 两槽。
+27. **ButtonProps 局部展开**：`nextButtonProps`/`prevButtonProps` 完整 ButtonProps（type/theme/style 等任意覆写）不移植 → `SemiUserGuideButtonProps(child, onPressed)` 两槽（child `Object?`：String | Widget）。★按钮文案一律走 String 通道取按钮文字色/字号（SemiButton 仅对 String child 套按钮样式、Widget child 原样透传——上游按钮 CSS `color` 对 children 为继承语义，此处以 String 通道承担；Widget child 自带样式不继承按钮色）。
 28. **skipText/prevText/nextText 参数新增**：上游 locale skip/prev/next 无 Flutter locale 对应（popconfirm `okText` 先例）；缺省中文文案照 zh_CN.ts:197-202。
 29. **current 非 null 即受控**：上游 `_isInProps('current')` 的显式 `current: null` 受控无对应（treeSelect 先例）。
 30. **越界 current 防御**：上游 `steps[current]` 越界 TypeError（renderSpotlight/renderModal 解构 undefined）→ 本移植跳过渲染。
