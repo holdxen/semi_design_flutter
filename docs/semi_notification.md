@@ -148,6 +148,7 @@ type `SemiNotificationType`（normal/info/success/warning/error；`default` 是 
 - **margin 折叠**：CSS 相邻卡片纵向折叠 → 纵向半值对拆 + 列首尾补半值（间距等价）。
 - **退出释放**：`scheduleRemovedNoticeRelease` 350ms 兜底不需要（Flutter 动画状态回调可靠，reverse 完成即释放）。
 - **semiGlobal `overrideDefaultProps`**：未移植（React 全局 defaultProps 覆盖机制）。
+- **inset 阴影层由专用画师渲染**：Flutter 无 CSS inset box-shadow 对应物——drop 层进 BoxDecoration（`toDropBoxShadows()`）、inset 层（dark `--semi-shadow-elevated` 首层 `inset 0 0 0 1px`）由 `SemiInsetShadow` 画师精确绘制（贴 padding-box 的内环、零布局影响）；`toBoxShadows()` 对 inset 抛错的显式合同保留，带 blur/offset 的 inset 层构造即抛。
 
 ## 用法
 

@@ -155,6 +155,7 @@ rtl.scss `text-align: right` + text 边距互换（两侧同值 12，no-op）→
 - **`className`/`style` 未移植**（外层布局承担）。
 - **主题解析**：带 `context` 调用时快照（含本地 `SemiToastTheme` patch）；缺省宿主构建时随环境主题（SemiModal `_resolveTheme` 先例）。
 - **RTL**：rtl.scss 镜像 → EdgeInsetsDirectional + Directionality 自动翻转（物理等价）。
+- **inset 阴影层由专用画师渲染**：Flutter 无 CSS inset box-shadow 对应物——drop 层进 BoxDecoration（`toDropBoxShadows()`）、inset 层（dark `--semi-shadow-elevated` 首层 `inset 0 0 0 1px`）由 `SemiInsetShadow` 画师精确绘制（贴 padding-box 的内环、零布局影响）；`toBoxShadows()` 对 inset 抛错的显式合同保留，带 blur/offset 的 inset 层构造即抛。
 
 ## 用法
 

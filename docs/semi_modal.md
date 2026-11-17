@@ -138,3 +138,4 @@ title/content `Object?`（String | Widget）。okType `SemiButtonType`（上游 
 - **蒙层动画**：蒙层独立 90ms 简写时长随引擎主动画（120ms）渐显，`modal_mask-*` 时长/曲线/延迟/opacity 槽注释引用（内容 scale/opacity/曲线/时长精确消费）。
 - **async 按钮 loading**：上游 `onCancelReturnPromiseStatus` 自动 loading → `FutureOr` 回调返回 `Future` 时按钮 loading（语义等价）。
 - **useModal hook**：React hooks 形态无 Flutter 对应（声明式 + 静态族覆盖其能力）。
+- **inset 阴影层由专用画师渲染**：Flutter 无 CSS inset box-shadow 对应物——drop 层进 BoxDecoration（`toDropBoxShadows()`）、inset 层（dark `--semi-shadow-elevated` 首层 `inset 0 0 0 1px`）由 `SemiInsetShadow` 画师精确绘制（贴 padding-box 的内环、零布局影响）；`toBoxShadows()` 对 inset 抛错的显式合同保留，带 blur/offset 的 inset 层构造即抛。

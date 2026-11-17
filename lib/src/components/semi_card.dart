@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import '../theme/semi_card_theme.dart';
 import '../theme/semi_card_theme_data.dart';
 import '../theme/semi_theme.dart';
+import 'semi_inset_shadow.dart';
 import 'semi_tooltip.dart';
 import 'typography/semi_text.dart';
 import 'typography/semi_title.dart';
@@ -460,15 +461,10 @@ class _CardShellState extends State<_CardShell> {
     final borderInset = widget.bordered ? theme.widthCardBorder : 0.0;
     final shadowLayers = widget.shadows == null
         ? null
-        : [
-            // `box-shadow: $shadow-card` on `.semi-card-shadows-*`.
-            // `SemiShadows.toBoxShadows` refuses CSS inset layers and the
-            // dark-mode default `--semi-shadow-elevated` carries one
-            // (`inset 0 0 0 1px`); only the drop layers reach BoxDecoration
-            // (docs/semi_card.md 差异清单).
-            for (final layer in theme.shadowCard.layers)
-              if (!layer.inset) layer.toBoxShadow(),
-          ];
+        // `box-shadow: $shadow-card` on `.semi-card-shadows-*` — drop layers
+        // reach BoxDecoration; the inset layer paints via SemiInsetShadow
+        // (docs/semi_card.md 差异清单).
+        : theme.shadowCard.toDropBoxShadows();
     final shadowed =
         widget.shadows == SemiCardShadows.always ||
         (widget.shadows == SemiCardShadows.hover && _hovering);
@@ -512,7 +508,14 @@ class _CardShellState extends State<_CardShell> {
             borderRadius: BorderRadius.circular(theme.radiusCard),
             boxShadow: shadowed ? shadowLayers : null,
           ),
-          child: content,
+          child: shadowed
+              ? SemiInsetShadow(
+                  shadows: theme.shadowCard,
+                  borderRadius: BorderRadius.circular(theme.radiusCard),
+                  borderWidth: widget.bordered ? theme.widthCardBorder : 0,
+                  child: content,
+                )
+              : content,
         ),
       ),
     );

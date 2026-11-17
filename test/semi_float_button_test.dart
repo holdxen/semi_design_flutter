@@ -1069,18 +1069,24 @@ void main() {
       final t = resolved();
       await tester.pumpWidget(host(floatPage(floatGroup(items: items()))));
       await tester.pumpAndSettle();
-      final container = tester.widget<Container>(
-        find.byKey(SemiFloatButtonGroup.groupKey),
+      // padding 在 SemiInsetShadow 内层 Padding 上（画师需占满装饰盒，
+      // 见差异清单）。
+      final painterBox = tester.widget<SemiInsetShadow>(
+        find.descendant(
+          of: find.byKey(SemiFloatButtonGroup.groupKey),
+          matching: find.byType(SemiInsetShadow),
+        ),
       );
-      expect(container.padding, const EdgeInsets.all(6));
+      final padding = painterBox.child as Padding;
+      expect(padding.padding, const EdgeInsets.all(6));
       expect(
-        container.padding,
+        padding.padding,
         EdgeInsets.all(t.spacingFloatButtonGroupPadding),
       );
       final box = groupBox(tester);
       expect(box.color, t.colorFloatButtonGroupBg);
       expect(box.borderRadius, BorderRadius.circular(8));
-      expect(box.boxShadow, t.shadowFloatButtonGroup.toBoxShadows());
+      expect(box.boxShadow, t.shadowFloatButtonGroup.toDropBoxShadows());
     });
 
     testWidgets('子项行：padding 12×6 / 圆角 4 / 文字样式四件 / 内容间距 8', (tester) async {
@@ -1357,9 +1363,9 @@ void main() {
   });
 
   // dark 模式回归：dark 默认 `--semi-shadow-elevated` 首层为 `inset 0 0 0 1px`
-  // （tokens_test 合同：`toBoxShadows()` 拒绝 inset）——渲染仅转换 drop 层
-  // （card 先例，docs/semi_float_button.md 差异清单），不得抛 UnsupportedError。
-  testWidgets('dark 模式渲染跳过 inset 阴影层', (tester) async {
+  // （tokens_test 合同：`toBoxShadows()` 拒绝 inset）——drop 层进 BoxDecoration、
+  // inset 内环由 SemiInsetShadow 画师渲染（docs/semi_float_button.md 差异清单）。
+  testWidgets('dark 模式 inset 内环由画师渲染', (tester) async {
     const dark = SemiThemeData.dark();
     final expected = [
       for (final layer in dark.shadows.shadowElevated.layers)
@@ -1391,5 +1397,20 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(bodyBox(tester).boxShadow, expected);
     expect(groupBox(tester).boxShadow, expected);
+    // inset 内环画师挂在 body / 组盒最外层子节点。
+    expect(
+      find.descendant(
+        of: find.byKey(SemiFloatButton.bodyKey),
+        matching: find.byType(SemiInsetShadow),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(SemiFloatButtonGroup.groupKey),
+        matching: find.byType(SemiInsetShadow),
+      ),
+      findsOneWidget,
+    );
   });
 }

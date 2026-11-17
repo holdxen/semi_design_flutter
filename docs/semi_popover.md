@@ -110,6 +110,7 @@ rtl.scss 的 `direction: rtl`（卡片）由 Directionality 承担；无边距�
 - **主题补丁的溢出**：`SemiTooltipTheme` 补丁 ≈ 上游编译期变量遮蔽；差异是内容内嵌套 tooltip 也继承补丁（上游不影响嵌套 tooltip 的独立编译样式）。
 - **最小尺寸**：带箭头卡片 `min-width/min-height: 36px`（arrow.scss mixin）未移植——本地 tooltip 壳同样未实现按放置向的最小尺寸。
 - **水平角位 5.76**：对应 Sass `round($horizontal-rate * $width-tooltip_arrow)` 保留未取整值（上游编译 6px），与 `SemiTooltipThemeData.arrowAdjustedOffsetX` 同一约定。
+- **inset 阴影层由专用画师渲染**：Flutter 无 CSS inset box-shadow 对应物——drop 层进 BoxDecoration（`toDropBoxShadows()`）、inset 层（dark `--semi-shadow-elevated` 首层 `inset 0 0 0 1px`）由 `SemiInsetShadow` 画师精确绘制（贴 padding-box 的内环、零布局影响）；`toBoxShadows()` 对 inset 抛错的显式合同保留，带 blur/offset 的 inset 层构造即抛。
 
 ## 用法
 

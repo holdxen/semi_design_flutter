@@ -167,6 +167,26 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  // 官方 stories 搬用冒烟（floatButton.stories.jsx）：4 个 story 渲染 +
+  // Single 矩阵恰 45 枚按钮（9 列 × 5 行）。
+  testWidgets('official stories demos render (Single/ HrefTarget / Group*)', (
+    tester,
+  ) async {
+    await start(tester);
+    expect(keyed('floatbutton-official-single'), findsOneWidget);
+    expect(keyed('floatbutton-official-href'), findsOneWidget);
+    expect(keyed('floatbutton-official-group-normal'), findsOneWidget);
+    expect(keyed('floatbutton-official-group-click'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: keyed('floatbutton-official-single'),
+        matching: find.byKey(SemiFloatButton.bodyKey),
+      ),
+      findsNWidgets(45),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   // dark 模式回归：`--semi-shadow-elevated` 首层为 `inset 0 0 0 1px`，
   // 渲染仅转换 drop 层（docs/semi_float_button.md 差异清单 18）——
   // 曾直调 `toBoxShadows()` 抛 UnsupportedError（unsupported operation）。
@@ -180,7 +200,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     expect(bodyOf('floatbutton-basic'), findsOneWidget);
-    // 页面有正常组 + 禁用组两个演示。
-    expect(find.byKey(SemiFloatButtonGroup.groupKey), findsNWidgets(2));
+    // 页面 6 个组演示：悬浮按钮组 / 禁用 / 官方 GroupNormal×3 / GroupItemClick。
+    expect(find.byKey(SemiFloatButtonGroup.groupKey), findsNWidgets(6));
   });
 }

@@ -16,6 +16,7 @@ import 'package:flutter/widgets.dart';
 import '../theme/semi_float_button_theme.dart';
 import '../theme/semi_float_button_theme_data.dart';
 import 'semi_badge.dart';
+import 'semi_inset_shadow.dart';
 
 /// 形状（上游 `shape` / `strings.SHAPE`，缺省 `round`）。
 enum SemiFloatButtonShape { square, round }
@@ -262,34 +263,37 @@ class _SemiFloatButtonState extends State<SemiFloatButton> {
 
     // floatButton.scss:14-20 body 盒（flex 居中——`display: flex` /
     // `align-items: center` / `justify-content: center` → Alignment.center）。
+    // floatButton.scss:115-121 形状圆角（`-square` 方形 / `-round` 全圆）。
+    final bodyRadius = BorderRadius.circular(
+      widget.shape == SemiFloatButtonShape.square
+          ? t.radiusFloatButtonSquare
+          : t.radiusFloatButtonRound,
+    );
     Widget body = Container(
       key: SemiFloatButton.bodyKey,
       width: width,
       height: width,
-      alignment: Alignment.center,
       decoration: BoxDecoration(
         color: colors.bg,
         gradient: colors.gradient,
-        // floatButton.scss:115-121 形状圆角（`-square` 方形 /
-        // `-round` 全圆）。
-        borderRadius: BorderRadius.circular(
-          widget.shape == SemiFloatButtonShape.square
-              ? t.radiusFloatButtonSquare
-              : t.radiusFloatButtonRound,
-        ),
-        // `SemiShadows.toBoxShadows` 拒绝 inset 层、dark 默认
-        // `--semi-shadow-elevated` 首层即 `inset 0 0 0 1px`；仅 drop 层进
-        // BoxDecoration（card 先例，docs/semi_float_button.md 差异清单）。
-        boxShadow: [
-          for (final layer in t.shadowFloatButton.layers)
-            if (!layer.inset) layer.toBoxShadow(),
-        ],
+        borderRadius: bodyRadius,
+        // drop 层进 BoxDecoration；inset 层走 SemiInsetShadow 画师
+        // （见差异清单）。
+        boxShadow: t.shadowFloatButton.toDropBoxShadows(),
       ),
-      // body `color: $color-floatButton-text`（:17）——icon 走 currentColor
-      // / DefaultTextStyle 色。
-      child: DefaultTextStyle(
-        style: TextStyle(color: colors.text),
-        child: widget.icon ?? const SizedBox.shrink(),
+      child: SemiInsetShadow(
+        shadows: t.shadowFloatButton,
+        borderRadius: bodyRadius,
+        // body `color: $color-floatButton-text`（:17）——icon 走 currentColor
+        // / DefaultTextStyle 色。Alignment.center 从 Container 移入画师
+        // 内层（画师需占满 body 盒；Align 继续给 icon 松约束）。
+        child: Align(
+          alignment: Alignment.center,
+          child: DefaultTextStyle(
+            style: TextStyle(color: colors.text),
+            child: widget.icon ?? const SizedBox.shrink(),
+          ),
+        ),
       ),
     );
 
@@ -456,24 +460,30 @@ class SemiFloatButtonGroup extends StatelessWidget {
             borderRadius: BorderRadius.circular(
               t.radiusFloatButtonGroupBorderRadius,
             ),
-            // inset 层跳过同 body（card 先例，docs/semi_float_button.md 差异清单）。
-            boxShadow: [
-              for (final layer in t.shadowFloatButtonGroup.layers)
-                if (!layer.inset) layer.toBoxShadow(),
-            ],
+            // drop 层进 BoxDecoration；inset 层走 SemiInsetShadow 画师
+            // （见差异清单）。
+            boxShadow: t.shadowFloatButtonGroup.toDropBoxShadows(),
           ),
-          padding: EdgeInsets.all(t.spacingFloatButtonGroupPadding),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            spacing: t.spacingFloatButtonGroupColumnGap,
-            children: [
-              for (final (index, item) in items.indexed)
-                _GroupItemView(
-                  key: SemiFloatButtonGroup.itemKey(index),
-                  item: item,
-                  onTap: () => _dispatch(item),
-                ),
-            ],
+          child: SemiInsetShadow(
+            shadows: t.shadowFloatButtonGroup,
+            borderRadius: BorderRadius.circular(
+              t.radiusFloatButtonGroupBorderRadius,
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(t.spacingFloatButtonGroupPadding),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: t.spacingFloatButtonGroupColumnGap,
+                children: [
+                  for (final (index, item) in items.indexed)
+                    _GroupItemView(
+                      key: SemiFloatButtonGroup.itemKey(index),
+                      item: item,
+                      onTap: () => _dispatch(item),
+                    ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

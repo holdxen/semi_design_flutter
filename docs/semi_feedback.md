@@ -108,6 +108,7 @@
 - **locale**：上游 LocaleConsumer → zh_CN 硬编码缺省 + 参数覆写（okText/cancelText/textAreaProps.placeholder）。
 - **数字 0 / 空串 falsy 约定**：`!Boolean(value)` 照抄——空串禁用、`SemiFeedbackEmojiResult` 对象恒可提交（JS truthy）；custom 类型 value 恒空 → 提交钮默认禁用（上游同），`okDisabled: false` 覆写。
 - **感谢文字**：`&-thank-text` 钩子上游 JSX 从不渲染 → 不提供渲染路径，6 字段留档 theme 供主题定制（消费方自建内容自行取用）。
+- **inset 阴影层由专用画师渲染**：Flutter 无 CSS inset box-shadow 对应物——drop 层进 BoxDecoration（`toDropBoxShadows()`）、inset 层（dark `--semi-shadow-elevated` 首层 `inset 0 0 0 1px`）由 `SemiInsetShadow` 画师精确绘制（贴 padding-box 的内环、零布局影响）；`toBoxShadows()` 对 inset 抛错的显式合同保留，带 blur/offset 的 inset 层构造即抛。
 
 ## 用法
 

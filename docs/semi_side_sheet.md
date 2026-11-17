@@ -84,3 +84,4 @@ title/content `Object?`（String | Widget）。footer `Widget?`（null 不渲染
 - **宽度/高度字符串**：上游 `width`/`height` 支持 `'50%'` 等字符串 → 只支持数值（`double`）。
 - **afterVisibleChange**：上游 onAnimationEnd 通知 → 入场完成后 `Future.delayed(180ms)` 通知 `(true)`、show Future 完成（出场动画结束）通知 `(false)`；dispose 强关不通知（上游 componentWillUnmount 语义）。
 - **fixed 模式点击**：`mask: false` 上游无 mask 节点（点击直达页面）→ 引擎 `usePenetrate: true` 点击穿透（蒙层不占位命中）。
+- **inset 阴影层由专用画师渲染**：Flutter 无 CSS inset box-shadow 对应物——drop 层进 BoxDecoration（`toDropBoxShadows()`）、inset 层（dark `--semi-shadow-elevated` 首层 `inset 0 0 0 1px`）由 `SemiInsetShadow` 画师精确绘制（贴 padding-box 的内环、零布局影响）；`toBoxShadows()` 对 inset 抛错的显式合同保留，带 blur/offset 的 inset 层构造即抛。

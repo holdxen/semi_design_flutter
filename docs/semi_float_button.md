@@ -83,7 +83,7 @@ badge 包裹 body（index.tsx:72 `<Badge {...badge}>{body}</Badge>`），且被 
 | `$font-floatButton_group_item-fontWeight: 400` | `fontFloatButtonGroupItemFontWeight` | `FontWeight.w400`（子项字重） |
 | `$font-floatButton_group_item-lineHeight: 20px` | `fontFloatButtonGroupItemLineHeight` | `20`（子项行高） |
 | `$font-floatButton_group_item-fontSize: 14px` | `fontFloatButtonGroupItemFontSize` | `14`（子项字号） |
-| `$shadow-floatButton_group: var(--semi-shadow-elevated)` | `shadowFloatButtonGroup` | `theme.shadows.shadowElevated`（SemiShadows——渲染仅转换 drop 层，见差异清单） |
+| `$shadow-floatButton_group: var(--semi-shadow-elevated)` | `shadowFloatButtonGroup` | `theme.shadows.shadowElevated`（SemiShadows——drop 层进 BoxDecoration + inset 层走 SemiInsetShadow 画师，见差异清单） |
 | `$shadow-floatButton: var(--semi-shadow-elevated)` | `shadowFloatButton` | `theme.shadows.shadowElevated`（同上） |
 
 ### B. HARDCODES 另列（`_FloatButtonMetrics` / 调用点，widget 源内含原始片段）
@@ -144,7 +144,7 @@ badge 包裹 body（index.tsx:72 `<Badge {...badge}>{body}</Badge>`），且被 
 15. **键盘激活补强**：上游静态 div 无键盘激活（index.tsx:63 jsx-a11y 禁用注释）→ Focus + Enter（统一交互约定；Space/可打印键忽略）。
 16. **Semantics 补强**：上游无 aria-label → `Semantics(button: true)` + `semanticsLabel`。
 17. **多彩渐变解析口径**：fluid 盒的 `_SemiGradientBox` 涂装 → body 固定 width×width 盒按已知边长 `forSize` 预解析（同角等价）。
-18. **inset 阴影层不渲染**：`toBoxShadows()` 对 inset 层抛 `UnsupportedError`，dark 模式默认 `--semi-shadow-elevated` 首层为 `inset 0 0 0 1px`；body/组容器渲染跳过 inset 层（仅转换 drop 层，card 先例），light 模式与 `toBoxShadows()` 完全一致。
+18. **inset 阴影层由专用画师渲染**：`toBoxShadows()` 对 inset 层抛 `UnsupportedError`（显式合同保留），dark 模式默认 `--semi-shadow-elevated` 首层为 `inset 0 0 0 1px`——body/组容器 drop 层进 BoxDecoration（`toDropBoxShadows()`）、inset 层由 `SemiInsetShadow` 画师精确绘制（贴 padding-box 的内环、零布局影响），light 模式与 `toBoxShadows()` 完全一致；带 blur/offset 的 inset 层构造即抛。
 
 ## 用法
 

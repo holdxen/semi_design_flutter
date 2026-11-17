@@ -30,6 +30,7 @@ import '../theme/semi_modal_theme.dart';
 import '../theme/semi_modal_theme_data.dart';
 import '../theme/semi_theme_data.dart';
 import 'semi_button.dart';
+import 'semi_inset_shadow.dart';
 import 'icon/semi_icon.dart';
 import 'icon/semi_icons.dart';
 import 'typography/semi_title.dart';
@@ -1262,12 +1263,6 @@ class _ModalContent extends StatelessWidget {
       height: config.fullScreen
           ? MediaQuery.sizeOf(context).height
           : config.height,
-      padding:
-          config.contentPadding ??
-          EdgeInsets.symmetric(
-            vertical: t.spacingModalContentPaddingY,
-            horizontal: t.spacingModalContentPaddingX,
-          ),
       decoration: BoxDecoration(
         color: t.colorModalBg,
         // `-content-fullScreen { border: none }`（占位的 1px 透明边也会
@@ -1283,38 +1278,56 @@ class _ModalContent extends StatelessWidget {
               ? t.radiusModalContentFullscreen
               : t.radiusModalContent,
         ),
-        boxShadow: t.shadowModalContent.toBoxShadows(),
+        // inset 层走 SemiInsetShadow 画师（见差异清单）。
+        boxShadow: t.shadowModalContent.toDropBoxShadows(),
       ),
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ?headerArea,
-          if (_isBodyWrapper(config, header))
-            // 无 header 时 body-wrapper：icon + body + closer 行。
-            Padding(
-              padding: EdgeInsets.symmetric(
-                vertical: t.spacingModalBodyWrapperMarginY,
+      child: SemiInsetShadow(
+        shadows: t.shadowModalContent,
+        borderRadius: BorderRadius.circular(
+          config.fullScreen
+              ? t.radiusModalContentFullscreen
+              : t.radiusModalContent,
+        ),
+        borderWidth: config.fullScreen ? 0 : t.widthModalContentBorder,
+        child: Padding(
+          padding:
+              config.contentPadding ??
+              EdgeInsets.symmetric(
+                vertical: t.spacingModalContentPaddingY,
+                horizontal: t.spacingModalContentPaddingX,
               ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ?iconSlot,
-                  Expanded(child: _slot(config.content)),
-                  closer,
-                ],
-              ),
-            )
-          else if (config.fullScreen || config.height != null)
-            // `-body { flex: 1 1 auto }`：定高容器（`-content-fullScreen
-            // { height: 100% }` / `-content-height-set`）里 body 吃满余量，
-            // footer 被推到容器底部（`marginY` 24 距底）。
-            Expanded(child: body)
-          else
-            body,
-          ?footer,
-        ],
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ?headerArea,
+              if (_isBodyWrapper(config, header))
+                // 无 header 时 body-wrapper：icon + body + closer 行。
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    vertical: t.spacingModalBodyWrapperMarginY,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ?iconSlot,
+                      Expanded(child: _slot(config.content)),
+                      closer,
+                    ],
+                  ),
+                )
+              else if (config.fullScreen || config.height != null)
+                // `-body { flex: 1 1 auto }`：定高容器（`-content-fullScreen
+                // { height: 100% }` / `-content-height-set`）里 body 吃满余量，
+                // footer 被推到容器底部（`marginY` 24 距底）。
+                Expanded(child: body)
+              else
+                body,
+              ?footer,
+            ],
+          ),
+        ),
       ),
     );
 

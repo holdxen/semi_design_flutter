@@ -86,7 +86,7 @@ CSS 边框盒模型由 Flutter `Container` 自动等价：`Container` 会把 dec
 - `shadows: SemiCardShadows.always`：始终显示主题 `shadowCard`（resolve `theme.shadows.shadowElevated`），指针变 click（上游 `.semi-card-shadows { cursor: pointer }` quirk，卡片不可点击也显示手型）。
 - `shadows: SemiCardShadows.hover`：hover 进入/离开以 `motionCardTransitionDuration`（300ms，`$motion-card-transition_duration`）过渡阴影（`transition: box-shadow 300ms`）。
 
-阴影渲染只转换 **非 inset** 的 `SemiShadowLayer` 为 `BoxShadow`；`SemiShadows.toBoxShadows()` 对 inset 层抛错，dark 模式默认 `--semi-shadow-elevated` 首层即 `inset 0 0 0 1px`（见差异清单）。阴影画在被装饰的盒子上、ClipRRect 之内——与 CSS `overflow: hidden` 不裁自身 `box-shadow` 一致。
+阴影渲染分两路：drop 层转 `BoxShadow` 进 BoxDecoration（`toDropBoxShadows()`），inset 层由 `SemiInsetShadow` 画师绘制（`toBoxShadows()` 对 inset 层仍抛错——显式合同；dark 模式默认 `--semi-shadow-elevated` 首层即 `inset 0 0 0 1px`，见差异清单）。阴影画在被装饰的盒子上、ClipRRect 之内——与 CSS `overflow: hidden` 不裁自身 `box-shadow` 一致。
 
 ## loading 与语义
 
@@ -173,6 +173,6 @@ CSS 边框盒模型由 Flutter `Container` 自动等价：`Container` 会把 dec
 - **cursor:pointer quirk**：`shadows` 非空时指针显示 click 手型（上游 `.semi-card-shadows { cursor: pointer }`），但卡片不可点击——原样复刻并在 API 注明。
 - **title tooltip 接入情况**：上游 `ellipsis: { showTooltip: true }` 仅在文本被省略时弹 tooltip；此处对 String 标题 hover 即以 `SemiTooltip` 显示全文（不做省略检测），Widget 标题不套 tooltip。
 - **`aria-busy` → `SemanticsRole.status`**：Flutter 语义没有 busy 标志（SemanticsProperties/SemanticsFlags 均无），loading 时根 `Semantics` 置 `role: SemanticsRole.status` 近似"更新中"区域。
-- **inset 阴影层不渲染**：`toBoxShadows()` 对 inset 层抛 `UnsupportedError`，dark 模式默认 `--semi-shadow-elevated` 首层为 `inset 0 0 0 1px`；渲染时跳过 inset 层（仅转换 drop 层），light 模式与 `toBoxShadows()` 完全一致。
+- **inset 阴影层由专用画师渲染**：`toBoxShadows()` 对 inset 层抛 `UnsupportedError`（显式合同保留），dark 模式默认 `--semi-shadow-elevated` 首层为 `inset 0 0 0 1px`——drop 层进 BoxDecoration（`toDropBoxShadows()`）、inset 层由 `SemiInsetShadow` 画师精确绘制（贴 padding-box 的内环、零布局影响；bordered 时环在边框内侧），light 模式与 `toBoxShadows()` 完全一致；带 blur/offset 的 inset 层构造即抛。
 - **ClipRRect 在装饰盒之内**：计划文字为"根 ClipRRect + AnimatedContainer"；实现将 ClipRRect 放在 AnimatedContainer 内侧，否则 box-shadow 会被根裁剪整块裁掉。CSS `overflow: hidden` 本就不裁自身 `box-shadow`，行为对齐上游。
 - **loading 占位不设 children 门控**：上游 `children && <Skeleton ...>` 仅在 children 存在时渲染占位；此处 `loading: true` 即显示占位（body 为空也显示），header/cover/footer 不动。

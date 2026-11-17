@@ -35,6 +35,7 @@ import '../theme/semi_tooltip_theme_data.dart';
 import '../theme/semi_user_guide_theme.dart';
 import '../theme/semi_user_guide_theme_data.dart';
 import 'semi_button.dart';
+import 'semi_inset_shadow.dart';
 import 'semi_modal.dart';
 import 'semi_tooltip.dart';
 
@@ -579,154 +580,164 @@ class _SemiUserGuideState extends State<SemiUserGuide>
           borderRadius: BorderRadius.circular(
             SemiPopoverTheme.resolve(context).radiusPopover,
           ),
+          // inset 层走 SemiInsetShadow 画师（见差异清单）。
           boxShadow: SemiTheme.of(context).shadows.shadowElevated
-              .toBoxShadows(),
+              .toDropBoxShadows(),
         ),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: t.widthUserGuidePopoverDefault),
-          child: IntrinsicWidth(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (step.cover != null)
-                  ClipRRect(
-                    // userGuide.scss:38-43 img：`display: block` +
-                    // `height: $height-userGuide_popup_content_cover-default` +
-                    // `width: 100%` + `$radius-userGuide_popup_content_cover`。
-                    borderRadius: t.radiusUserGuidePopupContentCover,
-                    child: SizedBox(
-                      height: t.heightUserGuidePopupContentCoverDefault,
-                      width: double.infinity,
-                      child: step.cover,
+        child: SemiInsetShadow(
+          shadows: SemiTheme.of(context).shadows.shadowElevated,
+          borderRadius: BorderRadius.circular(
+            SemiPopoverTheme.resolve(context).radiusPopover,
+          ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: t.widthUserGuidePopoverDefault,
+            ),
+            child: IntrinsicWidth(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (step.cover != null)
+                    ClipRRect(
+                      // userGuide.scss:38-43 img：`display: block` +
+                      // `height: $height-userGuide_popup_content_cover-default` +
+                      // `width: 100%` + `$radius-userGuide_popup_content_cover`。
+                      borderRadius: t.radiusUserGuidePopupContentCover,
+                      child: SizedBox(
+                        height: t.heightUserGuidePopupContentCoverDefault,
+                        width: double.infinity,
+                        child: step.cover,
+                      ),
                     ),
-                  ),
-                Padding(
-                  padding: EdgeInsets.all(
-                    t.spacingUserGuidePopupContentBodyPadding,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (step.title != null)
-                        Padding(
-                          padding: EdgeInsetsDirectional.only(
-                            bottom:
-                                t.spacingUserGuidePopupContentTitleMarginBottom,
-                          ),
-                          child: _styled(
-                            step.title,
-                            fontSize: t.fontUserGuidePopupContentTitleFontSize,
-                            fontWeight:
-                                t.fontUserGuidePopupContentTitleFontWeight,
-                            lineHeight:
-                                t.fontUserGuidePopupContentTitleLineHeight,
-                          ),
-                        ),
-                      if (step.description != null)
-                        Padding(
-                          padding: EdgeInsetsDirectional.only(
-                            bottom: t
-                                .spacingUserGuidePopupContentDescriptionMarginBottom,
-                          ),
-                          child: _styled(
-                            step.description,
-                            fontSize:
-                                t.fontUserGuidePopupContentDescriptionFontSize,
-                            fontWeight: null,
-                            lineHeight: t
-                                .fontUserGuidePopupContentDescriptionLineHeight,
-                          ),
-                        ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          if (widget.steps.length > 1)
-                            // userGuide.scss:75-78 `&-indicator`——★字号直写
-                            // `font-size: $font-size-regular`（顶替死变量）。
-                            Text(
-                              '${index + 1}/${widget.steps.length}',
-                              key: SemiUserGuide.indicatorKey,
-                              style: TextStyle(
-                                fontSize: _UserGuideMetrics.fontSizeRegular,
-                                height:
-                                    t.fontUserGuidePopupContentIndicatorLineHeight /
-                                    _UserGuideMetrics.fontSizeRegular,
-                              ),
-                            ),
+                  Padding(
+                    padding: EdgeInsets.all(
+                      t.spacingUserGuidePopupContentBodyPadding,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (step.title != null)
                           Padding(
-                            // userGuide.scss:53 `margin-left:
-                            // $spacing-userGuide_popup_content_button-marginLeft`。
                             padding: EdgeInsetsDirectional.only(
-                              start: t
-                                  .spacingUserGuidePopupContentButtonMarginLeft,
+                              bottom: t
+                                  .spacingUserGuidePopupContentTitleMarginBottom,
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: _withGaps([
-                                if (widget.showSkipButton && !isLast)
+                            child: _styled(
+                              step.title,
+                              fontSize:
+                                  t.fontUserGuidePopupContentTitleFontSize,
+                              fontWeight:
+                                  t.fontUserGuidePopupContentTitleFontWeight,
+                              lineHeight:
+                                  t.fontUserGuidePopupContentTitleLineHeight,
+                            ),
+                          ),
+                        if (step.description != null)
+                          Padding(
+                            padding: EdgeInsetsDirectional.only(
+                              bottom: t
+                                  .spacingUserGuidePopupContentDescriptionMarginBottom,
+                            ),
+                            child: _styled(
+                              step.description,
+                              fontSize: t
+                                  .fontUserGuidePopupContentDescriptionFontSize,
+                              fontWeight: null,
+                              lineHeight: t
+                                  .fontUserGuidePopupContentDescriptionLineHeight,
+                            ),
+                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            if (widget.steps.length > 1)
+                              // userGuide.scss:75-78 `&-indicator`——★字号直写
+                              // `font-size: $font-size-regular`（顶替死变量）。
+                              Text(
+                                '${index + 1}/${widget.steps.length}',
+                                key: SemiUserGuide.indicatorKey,
+                                style: TextStyle(
+                                  fontSize: _UserGuideMetrics.fontSizeRegular,
+                                  height:
+                                      t.fontUserGuidePopupContentIndicatorLineHeight /
+                                      _UserGuideMetrics.fontSizeRegular,
+                                ),
+                              ),
+                            Padding(
+                              // userGuide.scss:53 `margin-left:
+                              // $spacing-userGuide_popup_content_button-marginLeft`。
+                              padding: EdgeInsetsDirectional.only(
+                                start: t
+                                    .spacingUserGuidePopupContentButtonMarginLeft,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: _withGaps([
+                                  if (widget.showSkipButton && !isLast)
+                                    _guideButton(
+                                      label: Text(skipLabel),
+                                      type: isPrimary
+                                          ? SemiButtonType.primary
+                                          : SemiButtonType.tertiary,
+                                      variant: isPrimary
+                                          ? SemiButtonVariant.solid
+                                          : SemiButtonVariant.light,
+                                      // index.tsx:301/311 `style={isPrimaryTheme
+                                      // ? { backgroundColor:
+                                      // 'var(--semi-color-fill-2)' } : {}}`。
+                                      bg: isPrimary
+                                          ? SemiTheme.of(context)
+                                                .colors
+                                                .colorFill2
+                                          : null,
+                                      onPressed: _handleSkip,
+                                    ),
+                                  if (widget.showPrevButton && !isFirst)
+                                    _guideButton(
+                                      label: prevLabel,
+                                      type: isPrimary
+                                          ? SemiButtonType.primary
+                                          : SemiButtonType.tertiary,
+                                      variant: isPrimary
+                                          ? SemiButtonVariant.solid
+                                          : SemiButtonVariant.light,
+                                      bg: isPrimary
+                                          ? SemiTheme.of(context)
+                                                .colors
+                                                .colorFill2
+                                          : null,
+                                      onPressed:
+                                          widget.prevButtonProps?.onPressed ??
+                                          _handlePrev,
+                                    ),
                                   _guideButton(
-                                    label: Text(skipLabel),
-                                    type: isPrimary
-                                        ? SemiButtonType.primary
-                                        : SemiButtonType.tertiary,
+                                    label: nextLabel,
+                                    type: SemiButtonType.primary,
                                     variant: isPrimary
-                                        ? SemiButtonVariant.solid
-                                        : SemiButtonVariant.light,
-                                    // index.tsx:301/311 `style={isPrimaryTheme
-                                    // ? { backgroundColor:
-                                    // 'var(--semi-color-fill-2)' } : {}}`。
+                                        ? SemiButtonVariant.borderless
+                                        : SemiButtonVariant.solid,
+                                    // index.tsx:321 `style={isPrimaryTheme
+                                    // ? { backgroundColor: '#FFF' } : {}}`。
                                     bg: isPrimary
-                                        ? SemiTheme.of(context)
-                                              .colors
-                                              .colorFill2
-                                        : null,
-                                    onPressed: _handleSkip,
-                                  ),
-                                if (widget.showPrevButton && !isFirst)
-                                  _guideButton(
-                                    label: prevLabel,
-                                    type: isPrimary
-                                        ? SemiButtonType.primary
-                                        : SemiButtonType.tertiary,
-                                    variant: isPrimary
-                                        ? SemiButtonVariant.solid
-                                        : SemiButtonVariant.light,
-                                    bg: isPrimary
-                                        ? SemiTheme.of(context)
-                                              .colors
-                                              .colorFill2
+                                        ? const Color(0xFFFFFFFF)
                                         : null,
                                     onPressed:
-                                        widget.prevButtonProps?.onPressed ??
-                                        _handlePrev,
+                                        widget.nextButtonProps?.onPressed ??
+                                        _handleNext,
                                   ),
-                                _guideButton(
-                                  label: nextLabel,
-                                  type: SemiButtonType.primary,
-                                  variant: isPrimary
-                                      ? SemiButtonVariant.borderless
-                                      : SemiButtonVariant.solid,
-                                  // index.tsx:321 `style={isPrimaryTheme
-                                  // ? { backgroundColor: '#FFF' } : {}}`。
-                                  bg: isPrimary
-                                      ? const Color(0xFFFFFFFF)
-                                      : null,
-                                  onPressed:
-                                      widget.nextButtonProps?.onPressed ??
-                                      _handleNext,
-                                ),
-                              ], t.spacingUserGuidePopupContentButtonGap),
+                                ], t.spacingUserGuidePopupContentButtonGap),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

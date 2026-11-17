@@ -931,7 +931,9 @@ void main() {
     tester,
   ) async {
     final theme = resolve();
-    final expected = theme.shadowCard.toBoxShadows();
+    // drop 层进 BoxDecoration；inset 层（dark elevated）由 SemiInsetShadow
+    // 画师渲染（见差异清单）。
+    final expected = theme.shadowCard.toDropBoxShadows();
     // null (default): no shadow and the deferred cursor.
     await tester.pumpWidget(
       host(width: hostWidth, const SemiCard(body: Text('B'))),

@@ -32,7 +32,9 @@ import '../overlay/dialog_engine/flutter_smart_dialog.dart';
 import '../theme/semi_side_sheet_theme.dart';
 import '../theme/semi_side_sheet_theme_data.dart';
 import '../theme/semi_theme.dart';
+import '../tokens/token_types.dart';
 import 'semi_button.dart';
+import 'semi_inset_shadow.dart';
 import 'icon/semi_icon.dart';
 import 'icon/semi_icons.dart';
 
@@ -428,22 +430,30 @@ class _SideSheetContent extends StatelessWidget {
       decoration: BoxDecoration(
         color: t.colorSideSheetBg,
         // fixed 模式（mask: false）inner `box-shadow: var(--semi-shadow-elevated)`
-        // ——mask 模式无投影（变量非 Sass 声明，另列硬编码）。
+        // ——mask 模式无投影（变量非 Sass 声明，另列硬编码）；inset 层走
+        // SemiInsetShadow 画师（见差异清单）。
         boxShadow: mask
             ? null
-            : SemiTheme.of(context).shadows.shadowElevated.toBoxShadows(),
+            : SemiTheme.of(context).shadows.shadowElevated.toDropBoxShadows(),
       ),
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        // `.semi-sidesheet-content { height: 100%; flex-direction: column;
-        // overflow: hidden }`。
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          header,
-          // `.semi-sidesheet-body { flex: 1; overflow: auto }`。
-          Expanded(child: SingleChildScrollView(child: body)),
-          ?footerArea,
-        ],
+      child: SemiInsetShadow(
+        shadows: mask
+            ? SemiShadows(const [])
+            : SemiTheme.of(context).shadows.shadowElevated,
+        // `-inner` 无圆角。
+        borderRadius: BorderRadius.zero,
+        child: Column(
+          // `.semi-sidesheet-content { height: 100%; flex-direction: column;
+          // overflow: hidden }`。
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            header,
+            // `.semi-sidesheet-body { flex: 1; overflow: auto }`。
+            Expanded(child: SingleChildScrollView(child: body)),
+            ?footerArea,
+          ],
+        ),
       ),
     );
 

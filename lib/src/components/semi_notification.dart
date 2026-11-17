@@ -62,6 +62,7 @@ import 'icon/semi_icon.dart';
 import 'icon/semi_icon_data.dart';
 import 'icon/semi_icons.dart';
 import 'semi_button.dart';
+import 'semi_inset_shadow.dart';
 
 /// 类型（上游 `strings.types`；`default` 是 Dart 保留字——avatar `normal`
 /// 先例，`SemiNotification.open()` 强制此值）。
@@ -310,8 +311,9 @@ class _SemiNotificationNoticeState extends State<SemiNotificationNotice> {
     final t = SemiNotificationTheme.resolve(context);
     final typography = SemiTheme.of(context).typography;
     // notification.scss `-notice` `@include shadow-elevated`——mixin 非声明
-    // 变量，走全局 shadow token（generate_card `shadowElevated` 先例）。
-    final shadows = SemiTheme.of(context).shadows.shadowElevated.toBoxShadows();
+    // 变量，走全局 shadow token（generate_card `shadowElevated` 先例）；
+    // drop 层进 BoxDecoration、inset 层走 SemiInsetShadow 画师（见差异清单）。
+    final shadows = SemiTheme.of(context).shadows.shadowElevated;
     final icon = _typeIcon(t);
     final iconSlot = icon == null
         ? null
@@ -451,14 +453,6 @@ class _SemiNotificationNoticeState extends State<SemiNotificationNotice> {
               minWidth: t.widthNotificationNoticeMinWidth,
             ),
             child: Container(
-              padding: EdgeInsetsDirectional.only(
-                top: t.spacingNotificationNoticePaddingTop,
-                // rtl.scss `padding-right: …-paddingLeft` /
-                // `padding-left: …-paddingRight`——方向性边距自动镜像。
-                bottom: t.spacingNotificationNoticePaddingBottom,
-                start: t.spacingNotificationNoticePaddingLeft,
-                end: t.spacingNotificationNoticePaddingRight,
-              ),
               decoration: BoxDecoration(
                 // light：`background-image: linear-gradient(0deg, …-light-bg, …-light-bg)`
                 // 等价单色覆盖层与 `background-color: $color-notification_ambient-bg`
@@ -474,9 +468,24 @@ class _SemiNotificationNoticeState extends State<SemiNotificationNotice> {
                         color: lightBorder,
                       )
                     : null,
-                boxShadow: shadows,
+                boxShadow: shadows.toDropBoxShadows(),
               ),
-              child: body,
+              child: SemiInsetShadow(
+                shadows: shadows,
+                borderRadius: BorderRadius.circular(t.radiusNotificationNotice),
+                borderWidth: isLight ? t.widthNotificationNoticeBorder : 0,
+                child: Padding(
+                  padding: EdgeInsetsDirectional.only(
+                    top: t.spacingNotificationNoticePaddingTop,
+                    // rtl.scss `padding-right: …-paddingLeft` /
+                    // `padding-left: …-paddingRight`——方向性边距自动镜像。
+                    bottom: t.spacingNotificationNoticePaddingBottom,
+                    start: t.spacingNotificationNoticePaddingLeft,
+                    end: t.spacingNotificationNoticePaddingRight,
+                  ),
+                  child: body,
+                ),
+              ),
             ),
           ),
         ),

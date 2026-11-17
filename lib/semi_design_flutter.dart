@@ -75,6 +75,7 @@ export 'src/theme/semi_checkbox_theme_data.dart';
 export 'src/components/semi_input.dart';
 export 'src/theme/semi_input_theme.dart';
 export 'src/theme/semi_input_theme_data.dart';
+export 'src/components/semi_inset_shadow.dart';
 export 'src/components/semi_input_number.dart';
 export 'src/theme/semi_input_number_theme.dart';
 export 'src/theme/semi_input_number_theme_data.dart';

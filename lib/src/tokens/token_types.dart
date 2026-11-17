@@ -128,6 +128,14 @@ class SemiShadows {
   /// Refuses inset rather than silently dropping it.
   List<BoxShadow> toBoxShadows() =>
       layers.map((e) => e.toBoxShadow()).toList(growable: false);
+
+  /// Explicit drop-only conversion: skips inset layers *on purpose* — they
+  /// are rendered by the dedicated painter (SemiInsetShadow, the "dedicated
+  /// painter" [toBoxShadow] points at), not silently lost.
+  List<BoxShadow> toDropBoxShadows() => [
+    for (final e in layers)
+      if (!e.inset) e.toBoxShadow(),
+  ];
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||

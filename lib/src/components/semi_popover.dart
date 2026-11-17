@@ -47,6 +47,7 @@ import '../theme/semi_theme.dart';
 import '../theme/semi_tooltip_theme.dart';
 import '../theme/semi_tooltip_theme_data.dart';
 import '../overlay/tooltip_positioning.dart';
+import 'semi_inset_shadow.dart';
 import 'semi_tooltip.dart';
 
 /// Arrow tint overrides (upstream `arrowStyle`, popover/index.tsx ArrowStyle).
@@ -327,21 +328,26 @@ class _PopoverCard extends StatelessWidget {
         // order in the local overlay) + `$radius-popover` on the wrapper.
         color: t.colorPopoverBgDefault,
         borderRadius: BorderRadius.circular(t.radiusPopover),
-        boxShadow: global.shadows.shadowElevated.toBoxShadows(),
+        // inset 层走 SemiInsetShadow 画师（见差异清单）。
+        boxShadow: global.shadows.shadowElevated.toDropBoxShadows(),
       ),
-      child: Padding(
-        padding: padding,
-        child: DefaultTextStyle.merge(
-          // `@include font-size-regular` (14/20) on the wrapper; the hidden →
-          // shown wrapper states are `opacity: 0;` → `opacity: 1;`, played by
-          // the shell motion.
-          style: TextStyle(
-            fontSize: global.typography.fontSizeRegular,
-            height:
-                global.typography.lineHeightRegular /
-                global.typography.fontSizeRegular,
+      child: SemiInsetShadow(
+        shadows: global.shadows.shadowElevated,
+        borderRadius: BorderRadius.circular(t.radiusPopover),
+        child: Padding(
+          padding: padding,
+          child: DefaultTextStyle.merge(
+            // `@include font-size-regular` (14/20) on the wrapper; the hidden →
+            // shown wrapper states are `opacity: 0;` → `opacity: 1;`, played by
+            // the shell motion.
+            style: TextStyle(
+              fontSize: global.typography.fontSizeRegular,
+              height:
+                  global.typography.lineHeightRegular /
+                  global.typography.fontSizeRegular,
+            ),
+            child: content,
           ),
-          child: content,
         ),
       ),
     );

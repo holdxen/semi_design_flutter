@@ -62,11 +62,13 @@ import '../theme/semi_modal_theme.dart';
 import '../theme/semi_side_sheet_theme.dart';
 import '../theme/semi_side_sheet_theme_data.dart';
 import '../theme/semi_theme.dart';
+import '../tokens/token_types.dart';
 import 'icon/semi_icon.dart';
 import 'icon/semi_icons.dart';
 import 'semi_button.dart';
 import 'semi_checkbox.dart';
 import 'semi_input.dart';
+import 'semi_inset_shadow.dart';
 import 'semi_modal.dart';
 import 'semi_radio.dart';
 
@@ -931,26 +933,33 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
       key: const ValueKey('semi-feedback-sheet-box'),
       width: widget.width,
       // `.#{$prefix}-sidesheet-inner` 圆角 + bg；fixed 模式（`mask={false}`）
-      // 投影（sideSheet.scss 硬编码 `box-shadow: var(--semi-shadow-elevated)`）。
+      // 投影（sideSheet.scss 硬编码 `box-shadow: var(--semi-shadow-elevated)`）
+      // ——inset 层走 SemiInsetShadow 画师（见差异清单）。
       decoration: BoxDecoration(
         color: s.colorSideSheetBg,
         borderRadius: BorderRadius.circular(f.radiusFeedbackSidesheetInner),
         boxShadow: widget.mask
             ? null
-            : SemiTheme.of(context).shadows.shadowElevated.toBoxShadows(),
+            : SemiTheme.of(context).shadows.shadowElevated.toDropBoxShadows(),
       ),
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          header,
-          ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: maxBody),
-            child: SingleChildScrollView(child: body),
-          ),
-          ?footerArea,
-        ],
+      child: SemiInsetShadow(
+        shadows: widget.mask
+            ? SemiShadows(const [])
+            : SemiTheme.of(context).shadows.shadowElevated,
+        borderRadius: BorderRadius.circular(f.radiusFeedbackSidesheetInner),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            header,
+            ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: maxBody),
+              child: SingleChildScrollView(child: body),
+            ),
+            ?footerArea,
+          ],
+        ),
       ),
     );
 

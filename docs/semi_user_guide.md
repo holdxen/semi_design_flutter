@@ -148,6 +148,7 @@ cover（定高 `heightUserGuidePopupContentCoverDefault` 200 + `radiusUserGuideP
 36. **zIndex parity**：插入序层叠（SemiPopover.zIndex 同口径）。
 37. **rePosKey → repositionKey**：`JSON.stringify(spotlightRect)` → Rect 值比较触发重定位（等价）。
 38. **锚 div 矩形取 state**：上游 renderStep 每渲染即时取 `target.getBoundingClientRect()` 外扩 padding → 统一用 state spotlightRect（稳态等价；瞬态差一帧）。
+39. **inset 阴影层由专用画师渲染**：Flutter 无 CSS inset box-shadow 对应物——drop 层进 BoxDecoration（`toDropBoxShadows()`）、inset 层（dark `--semi-shadow-elevated` 首层 `inset 0 0 0 1px`）由 `SemiInsetShadow` 画师精确绘制（贴 padding-box 的内环、零布局影响）；`toBoxShadows()` 对 inset 抛错的显式合同保留，带 blur/offset 的 inset 层构造即抛。
 
 ## 用法
 

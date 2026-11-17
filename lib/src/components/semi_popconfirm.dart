@@ -26,6 +26,7 @@ import '../overlay/tooltip_positioning.dart';
 import 'icon/semi_icon.dart';
 import 'icon/semi_icons.dart';
 import 'semi_button.dart';
+import 'semi_inset_shadow.dart';
 import 'semi_tooltip.dart';
 
 /// Sentinel for [SemiPopconfirm.icon]'s default: upstream `icon` defaults to
@@ -574,16 +575,21 @@ class _PopconfirmCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: global.colors.colorBg3,
           borderRadius: BorderRadius.circular(t.radiusPopconfirmPopover),
-          boxShadow: global.shadows.shadowElevated.toBoxShadows(),
+          // inset 层走 SemiInsetShadow 画师（见差异清单）。
+          boxShadow: global.shadows.shadowElevated.toDropBoxShadows(),
         ),
-        child: Padding(
-          padding: withArrow
-              ? _PopconfirmMetrics.withArrowInnerPadding(t, rtl: rtl)
-              : _PopconfirmMetrics.innerPadding(t, rtl: rtl),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [header, ?body, footer],
+        child: SemiInsetShadow(
+          shadows: global.shadows.shadowElevated,
+          borderRadius: BorderRadius.circular(t.radiusPopconfirmPopover),
+          child: Padding(
+            padding: withArrow
+                ? _PopconfirmMetrics.withArrowInnerPadding(t, rtl: rtl)
+                : _PopconfirmMetrics.innerPadding(t, rtl: rtl),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [header, ?body, footer],
+            ),
           ),
         ),
       ),

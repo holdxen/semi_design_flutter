@@ -92,6 +92,7 @@ import 'icon/semi_icon.dart';
 import 'icon/semi_icon_data.dart';
 import 'icon/semi_icons.dart';
 import 'semi_button.dart';
+import 'semi_inset_shadow.dart';
 
 /// 类型（上游 `strings.types`；'default' 是 Dart 关键字，枚举名 `defaultType`）。
 enum SemiToastType { warning, success, info, error, defaultType }
@@ -353,7 +354,9 @@ class SemiToast {
     if (context != null && context.mounted) {
       overlay = Overlay.maybeOf(context);
     }
-    overlay ??= DialogProxy.instance.isBound ? DialogProxy.instance.overlay : null;
+    overlay ??= DialogProxy.instance.isBound
+        ? DialogProxy.instance.overlay
+        : null;
     assert(
       overlay != null,
       'SemiToast 需要环境 Overlay（SemiApp 零初始化绑定或 DialogProxy.bind）'
@@ -647,7 +650,8 @@ class _ToastDeckState extends State<_ToastDeck>
       final box = GlobalObjectKey(item).currentContext?.findRenderObject();
       if (box is RenderBox && box.hasSize) {
         final size = box.size;
-        if (_heights[item.id] != size.height || _widths[item.id] != size.width) {
+        if (_heights[item.id] != size.height ||
+            _widths[item.id] != size.width) {
           _heights[item.id] = size.height;
           _widths[item.id] = size.width;
           changed = true;
@@ -877,35 +881,43 @@ class _ToastItemViewState extends State<_ToastItemView>
     final direction =
         spec.direction ?? Directionality.maybeOf(context) ?? TextDirection.ltr;
     final isLight = spec.themeMode == SemiToastThemeMode.light;
-    final (Color bg, Color? iconColor, Color? borderColor) = switch (spec.type) {
-      SemiToastType.warning => isLight
-          ? (
-              _t.colorToastWarningLightBg,
-              _t.colorToastWarningLightIcon,
-              _t.colorToastWarningLightBorder,
-            )
-          : (_t.colorToastBgDefault, _t.colorToastWarningIcon, null),
-      SemiToastType.success => isLight
-          ? (
-              _t.colorToastSuccessLightBg,
-              _t.colorToastSuccessLightIcon,
-              _t.colorToastSuccessLightBorder,
-            )
-          : (_t.colorToastBgDefault, _t.colorToastSuccessIcon, null),
-      SemiToastType.info => isLight
-          ? (
-              _t.colorToastInfoLightBg,
-              _t.colorToastInfoLightIcon,
-              _t.colorToastInfoLightBorder,
-            )
-          : (_t.colorToastBgDefault, _t.colorToastInfoIcon, null),
-      SemiToastType.error => isLight
-          ? (
-              _t.colorToastDangerLightBg,
-              _t.colorToastDangerLightIcon,
-              _t.colorToastDangerLightBorder,
-            )
-          : (_t.colorToastBgDefault, _t.colorToastDangerIcon, null),
+    final (
+      Color bg,
+      Color? iconColor,
+      Color? borderColor,
+    ) = switch (spec.type) {
+      SemiToastType.warning =>
+        isLight
+            ? (
+                _t.colorToastWarningLightBg,
+                _t.colorToastWarningLightIcon,
+                _t.colorToastWarningLightBorder,
+              )
+            : (_t.colorToastBgDefault, _t.colorToastWarningIcon, null),
+      SemiToastType.success =>
+        isLight
+            ? (
+                _t.colorToastSuccessLightBg,
+                _t.colorToastSuccessLightIcon,
+                _t.colorToastSuccessLightBorder,
+              )
+            : (_t.colorToastBgDefault, _t.colorToastSuccessIcon, null),
+      SemiToastType.info =>
+        isLight
+            ? (
+                _t.colorToastInfoLightBg,
+                _t.colorToastInfoLightIcon,
+                _t.colorToastInfoLightBorder,
+              )
+            : (_t.colorToastBgDefault, _t.colorToastInfoIcon, null),
+      SemiToastType.error =>
+        isLight
+            ? (
+                _t.colorToastDangerLightBg,
+                _t.colorToastDangerLightIcon,
+                _t.colorToastDangerLightBorder,
+              )
+            : (_t.colorToastBgDefault, _t.colorToastDangerIcon, null),
       // `type: 'default'` 无图标（renderIcon `return null;`），`-light`
       // 样式也仅四类型消费。
       SemiToastType.defaultType => (_t.colorToastBgDefault, null, null),
@@ -983,12 +995,6 @@ class _ToastItemViewState extends State<_ToastItemView>
 
     final Widget content = Container(
       margin: EdgeInsets.all(_t.spacingToastContentMargin),
-      padding: EdgeInsets.only(
-        top: _t.spacingToastContentPaddingTop,
-        right: _t.spacingToastContentPaddingRight,
-        bottom: _t.spacingToastContentPaddingBottom,
-        left: _t.spacingToastContentPaddingLeft,
-      ),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(_t.radiusToastContent),
@@ -996,15 +1002,29 @@ class _ToastItemViewState extends State<_ToastItemView>
         border: borderColor == null
             ? null
             : Border.all(width: _t.widthToastLightBorder, color: borderColor),
-        // `@include shadow-elevated;`。
-        boxShadow: semiTheme.shadows.shadowElevated.toBoxShadows(),
+        // `@include shadow-elevated;`——inset 层走 SemiInsetShadow 画师
+        // （见差异清单）。
+        boxShadow: semiTheme.shadows.shadowElevated.toDropBoxShadows(),
       ),
-      child: Row(
-        // `display: inline-flex;` / `align-items: flex-start;` /
-        // `justify-content: center;`（shrink-to-fit 由 mainAxisSize.min 表达）。
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [?iconSlot, textSlot, ?closeSlot],
+      child: SemiInsetShadow(
+        shadows: semiTheme.shadows.shadowElevated,
+        borderRadius: BorderRadius.circular(_t.radiusToastContent),
+        borderWidth: borderColor == null ? 0 : _t.widthToastLightBorder,
+        child: Padding(
+          padding: EdgeInsets.only(
+            top: _t.spacingToastContentPaddingTop,
+            right: _t.spacingToastContentPaddingRight,
+            bottom: _t.spacingToastContentPaddingBottom,
+            left: _t.spacingToastContentPaddingLeft,
+          ),
+          child: Row(
+            // `display: inline-flex;` / `align-items: flex-start;` /
+            // `justify-content: center;`（shrink-to-fit 由 mainAxisSize.min 表达）。
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [?iconSlot, textSlot, ?closeSlot],
+          ),
+        ),
       ),
     );
 

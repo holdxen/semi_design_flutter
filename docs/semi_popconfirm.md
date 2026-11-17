@@ -101,7 +101,7 @@ SemiTooltip(popupBare) 弹层
 | `@include font-size-header-6`（16/22） | 标题 `TextStyle`（`theme.typography.fontSizeHeading6/lineHeightHeading6`） |
 | `@include font-size-regular`（14） | 正文 `DefaultTextStyle`（popover wrapper 继承字号） |
 | `$color-popover-bg-default: var(--semi-color-bg-3)` | 气泡表面 `theme.colors.colorBg3` |
-| `box-shadow: var(--semi-shadow-elevated)` | `theme.shadows.shadowElevated.toBoxShadows()` |
+| `box-shadow: var(--semi-shadow-elevated)` | `theme.shadows.shadowElevated`（drop → `toDropBoxShadows()` 进 BoxDecoration，inset → `SemiInsetShadow` 画师，见差异清单） |
 | `z-index: $z-popover`（1030） | `zIndex` 默认值 |
 | `spacing = showArrow ? numbers.SPACING_WITH_ARROW : numbers.SPACING`（popover/index.tsx，10 : 4） | `spacing` 缺省推导 |
 | `fill: var(--semi-color-border)`（popover/Arrow.tsx `path:nth-child(1)`） | 箭头描边 `arrowFringeColor` |
@@ -117,3 +117,4 @@ SemiTooltip(popupBare) 弹层
 - `zIndex` 仅 API 兼容（overlay 叠序为插入序）；`rePosKey` 以 `SemiTooltip.repositionKey` 形态存在（如需可后续透传）。
 - 加载中不禁用另一按钮（上游无互斥禁用语义，忠实移植）；按钮自身 loading 拦截点击。
 - RTL：内边距、图标间距、footer 按钮间距镜像；`-body-withIcon` 缩进上游无 RTL 规则，照抄物理 left。
+- **inset 阴影层由专用画师渲染**：Flutter 无 CSS inset box-shadow 对应物——drop 层进 BoxDecoration（`toDropBoxShadows()`）、inset 层（dark `--semi-shadow-elevated` 首层 `inset 0 0 0 1px`）由 `SemiInsetShadow` 画师精确绘制（贴 padding-box 的内环、零布局影响）；`toBoxShadows()` 对 inset 抛错的显式合同保留，带 blur/offset 的 inset 层构造即抛。
