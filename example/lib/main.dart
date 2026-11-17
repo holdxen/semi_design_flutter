@@ -64,14 +64,27 @@ void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  /// 示例主题模式——顶栏 Switch 切换明亮/暗黑。
+  SemiThemeMode _themeMode = SemiThemeMode.light;
+
+  @override
   Widget build(BuildContext context) {
-    return const SemiApp(
-      themeMode: SemiThemeMode.light,
-      home: SafeArea(child: DemoShell()),
+    return SemiApp(
+      themeMode: _themeMode,
+      home: SafeArea(
+        child: DemoShell(
+          themeMode: _themeMode,
+          onThemeModeChanged: (mode) => setState(() => _themeMode = mode),
+        ),
+      ),
     );
   }
 }
@@ -286,7 +299,17 @@ DemoSpec _specOf(String key) {
 
 /// 示例基座：左侧 SemiNavigation 切换右侧示例页。
 class DemoShell extends StatefulWidget {
-  const DemoShell({super.key});
+  const DemoShell({
+    super.key,
+    this.themeMode = SemiThemeMode.light,
+    this.onThemeModeChanged,
+  });
+
+  /// 当前主题模式（顶栏 Switch 受控渲染）。
+  final SemiThemeMode themeMode;
+
+  /// 主题切换回调。
+  final ValueChanged<SemiThemeMode>? onThemeModeChanged;
 
   @override
   State<DemoShell> createState() => _DemoShellState();
@@ -295,11 +318,37 @@ class DemoShell extends StatefulWidget {
 class _DemoShellState extends State<DemoShell> {
   String _selected = demoGroups.first.demos.first.key;
 
+  /// 搜索关键词（对标题/itemKey 做子串过滤侧栏条目）。
+  String _query = '';
+
+  /// 折叠态受控——侧栏搜索行宽度跟随 widthNavigationContainer* 同步收放。
+  bool _collapsed = false;
+
+  /// 展开键受控——搜索过滤后自动展开命中分组，保证结果可见。
+  List<Object> _openKeys = [for (final g in demoGroups) 'group-${g.label}'];
+
   SemiIcon _icon(String file) =>
       SemiIcon.asset('assets/doc_icons/$file', customSize: 20);
 
-  List<Object> _navItems() => [
+  bool _matches(DemoSpec demo) {
+    final q = _query.trim().toLowerCase();
+    return q.isEmpty ||
+        demo.title.toLowerCase().contains(q) ||
+        demo.key.toLowerCase().contains(q);
+  }
+
+  /// 过滤后的分组（空分组丢弃）。
+  List<DemoGroup> get _filteredGroups => [
     for (final group in demoGroups)
+      if (group.demos.any(_matches))
+        DemoGroup(group.label, [
+          for (final demo in group.demos)
+            if (_matches(demo)) demo,
+        ]),
+  ];
+
+  List<Object> _navItems(List<DemoGroup> groups) => [
+    for (final group in groups)
       SemiNavigationItem(
         itemKey: 'group-${group.label}',
         text: group.label,
@@ -314,29 +363,108 @@ class _DemoShellState extends State<DemoShell> {
       ),
   ];
 
+  void _onSearchChanged(String text) {
+    setState(() {
+      _query = text;
+      // 命中分组全部展开。
+      _openKeys = [for (final g in _filteredGroups) 'group-${g.label}'];
+    });
+  }
+
+  Widget _searchInput() => SemiInput(
+    key: const ValueKey('demo-search'),
+    placeholder: '搜索组件',
+    size: SemiInputSize.small,
+    prefix: SemiIcon(SemiIcons.search),
+    showClear: true,
+    onChanged: _onSearchChanged,
+    onClear: () => _onSearchChanged(''),
+  );
+
+  Widget _themeSwitch() => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      const Text('暗黑模式'),
+      const SizedBox(width: 8),
+      SemiSwitch(
+        checked: widget.themeMode == SemiThemeMode.dark,
+        onChanged: (dark) => widget.onThemeModeChanged
+            ?.call(dark ? SemiThemeMode.dark : SemiThemeMode.light),
+      ),
+    ],
+  );
+
   @override
   Widget build(BuildContext context) {
+    final groups = _filteredGroups;
+    // 侧栏搜索行宽度对齐导航容器（折叠态同步收缩/隐藏）。
+    final theme = SemiTheme.of(context);
+    final navTheme = theme.components.navigation.resolve(theme);
+    final navWidth = _collapsed
+        ? navTheme.widthNavigationContainerCollapsed
+        : navTheme.widthNavigationContainerBase;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // 基座 SemiNavigation：条目区内部滚动（_buildList 的 SingleChildScrollView），
-        // 头/尾贴上下——需要有界高度，stretch 铺满行高。
-        SemiNavigation(
-          selectedKeys: [_selected],
-          defaultOpenKeys: [for (final g in demoGroups) 'group-${g.label}'],
-          onSelect: (info) =>
-              setState(() => _selected = info.itemKey as String),
-          header: SemiNavigationHeader(
-            logo: SemiIcon.asset('assets/semi-logo.svg', customSize: 36),
-            text: 'Semi Design',
+        SizedBox(
+          width: navWidth,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+                child: _collapsed ? const SizedBox.shrink() : _searchInput(),
+              ),
+              // 基座 SemiNavigation：条目区内部滚动（_buildList 的
+              // SingleChildScrollView），头/尾贴上下——需要有界高度，
+              // stretch 铺满行高。
+              Expanded(
+                child: SemiNavigation(
+                  selectedKeys: [_selected],
+                  openKeys: _openKeys,
+                  isCollapsed: _collapsed,
+                  onCollapseChange: (v) => setState(() => _collapsed = v),
+                  onOpenChange: (info) =>
+                      setState(() => _openKeys = info.openKeys),
+                  onSelect: (info) =>
+                      setState(() => _selected = info.itemKey as String),
+                  header: SemiNavigationHeader(
+                    logo: SemiIcon.asset('assets/semi-logo.svg', customSize: 36),
+                    text: 'Semi Design',
+                  ),
+                  footer: const SemiNavigationFooter(collapseButton: true),
+                  items: groups.isEmpty
+                      ? [
+                          const SemiNavigationItem(
+                            itemKey: 'no-match',
+                            text: '无匹配组件',
+                            disabled: true,
+                          ),
+                        ]
+                      : _navItems(groups),
+                ),
+              ),
+            ],
           ),
-          footer: const SemiNavigationFooter(collapseButton: true),
-          items: _navItems(),
         ),
         Expanded(
-          child: KeyedSubtree(
-            key: ValueKey(_selected),
-            child: _specOf(_selected).page,
+          child: Column(
+            children: [
+              // 顶栏：明亮/暗黑主题切换。
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: _themeSwitch(),
+                ),
+              ),
+              Expanded(
+                child: KeyedSubtree(
+                  key: ValueKey(_selected),
+                  child: _specOf(_selected).page,
+                ),
+              ),
+            ],
           ),
         ),
       ],
