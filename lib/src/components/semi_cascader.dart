@@ -2033,14 +2033,20 @@ class _SemiCascaderState extends State<SemiCascader> {
     if (!searchable) {
       if (_multiple) {
         if (_checked.isEmpty) {
-          return Text(
-            widget.placeholder ?? '',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: placeholderColor,
-              fontSize: fontSize,
-              fontWeight: theme.fontCascaderFontWeight,
+          return SizedBox(
+            height: lineHeight,
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(
+                widget.placeholder ?? '',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: placeholderColor,
+                  fontSize: fontSize,
+                  fontWeight: theme.fontCascaderFontWeight,
+                ),
+              ),
             ),
           );
         }
@@ -2049,28 +2055,29 @@ class _SemiCascaderState extends State<SemiCascader> {
       final text = _selectedKeys.isEmpty
           ? null
           : _displayString(_selectedKeys.first);
-      return Text(
-        text ?? widget.placeholder ?? '',
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          color: text == null ? placeholderColor : textColor,
-          fontSize: fontSize,
-          fontWeight: theme.fontCascaderFontWeight,
-          // line-height → 行盒高度（CSS line-height 的 Flutter 映射）。
-          height: lineHeight / fontSize,
+      return SizedBox(
+        height: lineHeight,
+        child: Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: Text(
+            text ?? widget.placeholder ?? '',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: text == null ? placeholderColor : textColor,
+              fontSize: fontSize,
+              fontWeight: theme.fontCascaderFontWeight,
+              // Follow SemiInput's established centering fix: keep the natural
+              // glyph metrics and center that natural text box in the fixed slot.
+              // TextStyle.height would scale ascent/descent and shift the baseline.
+            ),
+          ),
         ),
       );
     }
     return _multiple
-        ? _buildMultipleFilterInput(theme, placeholderColor, lineHeight)
-        : _buildSingleFilterInput(
-            theme,
-            textColor,
-            placeholderColor,
-            fontSize,
-            lineHeight,
-          );
+        ? _buildMultipleFilterInput(theme, placeholderColor)
+        : _buildSingleFilterInput(theme, textColor, placeholderColor, fontSize);
   }
 
   /// index.tsx:803-825 `renderMultipleTags`（maxTagCount 折叠 + "+N"）。
@@ -2177,7 +2184,6 @@ class _SemiCascaderState extends State<SemiCascader> {
     Color textColor,
     Color placeholderColor,
     double fontSize,
-    double lineHeight,
   ) {
     final text = _selectedKeys.isEmpty
         ? null
@@ -2279,7 +2285,6 @@ class _SemiCascaderState extends State<SemiCascader> {
   Widget _buildMultipleFilterInput(
     SemiResolvedCascaderThemeData theme,
     Color placeholderColor,
-    double lineHeight,
   ) {
     final keys = _tagKeys;
     final fold =

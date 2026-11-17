@@ -85,16 +85,15 @@ visibleItemRenderer `Widget? Function(T item, int index)?`（缺省渲染空盒�
 
 ## 用法
 
+间隔约定（上游示例同）：间隔统一由可见项的 `right: 8` 提供（renderItem `marginRight: 8`），溢出节点**不自带朝内边距**——尾部折叠时溢出节点跟在末项的 right 8 之后即 8px 间隔；头部折叠（`collapseFrom: start`）时溢出节点在行首，需自带 `right: 8` 与后随项隔开。不要给溢出节点再加朝内 padding，否则该处间隔翻倍。
+
 ```dart
 // 折叠（默认）：放不下的项折叠成 "+N"
 SemiOverflowList<String>(
   items: const ['alarm', 'bookmark', 'camera', 'duration', 'edit', 'folder'],
   overflowRenderer: (items) => items.isEmpty
       ? null
-      : Padding(
-          padding: const EdgeInsets.only(left: 8),
-          child: Text('+${items.length}'),
-        ),
+      : Text('+${items.length}'),
   visibleItemRenderer: (item, index) => Padding(
     padding: const EdgeInsets.only(right: 8),
     child: Text(item),
@@ -107,8 +106,14 @@ SemiOverflowList<String>(
 SemiOverflowList<String>(
   items: names,
   collapseFrom: SemiOverflowListCollapseFrom.start,
-  overflowRenderer: (items) => Text('+${items.length}'),
-  visibleItemRenderer: (item, index) => Text(item),
+  overflowRenderer: (items) => Padding(
+    padding: const EdgeInsets.only(right: 8),
+    child: Text('+${items.length}'),
+  ),
+  visibleItemRenderer: (item, index) => Padding(
+    padding: const EdgeInsets.only(right: 8),
+    child: Text(item),
+  ),
 )
 ```
 
@@ -119,8 +124,14 @@ SemiOverflowList<String>(
   renderMode: SemiOverflowListRenderMode.scroll,
   overflowRenderDirection: SemiOverflowListOverflowRenderDirection.both,
   scrollOverflowRenderer: (start, end) => [
-    Text('← ${start.length}'),
-    Text('${end.length} →'),
+    Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Text('← ${start.length}'),
+    ),
+    Padding(
+      padding: const EdgeInsets.only(left: 8),
+      child: Text('${end.length} →'),
+    ),
   ],
   visibleItemRenderer: (item, index) => Padding(
     padding: const EdgeInsets.only(right: 8),

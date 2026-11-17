@@ -44,12 +44,21 @@ class _OverflowListPageState extends State<OverflowListPage> {
     child: SemiTag(text, key: ValueKey('overflow-item-$text')),
   );
 
-  Widget? _overflow(List<String> items) => items.isEmpty
+  // 间隔统一由 item 的 right 8 提供（上游 renderItem `marginRight: 8`）——
+  // 尾部折叠的溢出节点不自带朝内边距；头部折叠（collapseFrom: start）的
+  // 溢出节点在行首，需 right 8 与后随 item 隔开（上游 renderOverflow 同）。
+  Widget? _overflow(
+    List<String> items, {
+    EdgeInsets padding = EdgeInsets.zero,
+  }) => items.isEmpty
       ? null
       : Padding(
-          padding: const EdgeInsets.only(left: 8),
+          padding: padding,
           child: SemiTag('+${items.length}', key: const ValueKey('overflow-n')),
         );
+
+  Widget? _overflowAtStart(List<String> items) =>
+      _overflow(items, padding: const EdgeInsets.only(right: 8));
 
   @override
   Widget build(BuildContext context) {
@@ -92,7 +101,7 @@ class _OverflowListPageState extends State<OverflowListPage> {
                   key: const ValueKey('overflow-from-start'),
                   items: _items,
                   collapseFrom: SemiOverflowListCollapseFrom.start,
-                  overflowRenderer: _overflow,
+                  overflowRenderer: _overflowAtStart,
                   visibleItemRenderer: _item,
                 ),
               ),
@@ -123,15 +132,16 @@ class _OverflowListPageState extends State<OverflowListPage> {
                   items: _items,
                   renderMode: SemiOverflowListRenderMode.scroll,
                   scrollOverflowRenderer: (start, end) => [
+                    // 与 item 的 right 8 对齐 —— 行内间隔统一 8。
                     Padding(
-                      padding: const EdgeInsets.only(right: 4),
+                      padding: const EdgeInsets.only(right: 8),
                       child: SemiTag(
                         '←${start.length}',
                         key: const ValueKey('overflow-scroll-start'),
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(left: 4),
+                      padding: const EdgeInsets.only(left: 8),
                       child: SemiTag(
                         '${end.length}→',
                         key: const ValueKey('overflow-scroll-end'),

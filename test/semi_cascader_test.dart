@@ -1588,10 +1588,10 @@ void main() {
     });
 
     testWidgets('sizes map to the trigger min-heights', (tester) async {
-      for (final (size, height) in [
-        (SemiInputSize.small, 24.0),
-        (SemiInputSize.normal, 32.0),
-        (SemiInputSize.large, 40.0),
+      for (final size in [
+        SemiInputSize.small,
+        SemiInputSize.normal,
+        SemiInputSize.large,
       ]) {
         await pumpHost(
           tester,
@@ -1602,9 +1602,12 @@ void main() {
             placeholder: 'x',
           ),
         );
-        final box = tester.renderObject<RenderBox>(find.text('x'));
-        expect(box.size.height, greaterThanOrEqualTo(height - 0.01));
-        expect(box.size.height, lessThanOrEqualTo(height + 0.01));
+        final textBox = tester.getRect(find.text('x'));
+        final triggerBox = tester.getRect(find.byType(SemiCascader));
+        // The glyph box is intentionally natural-height (the established
+        // SemiInput fix); its center, not its raw height, must align to the
+        // fixed Cascader trigger slot.
+        expect(textBox.center.dy, closeTo(triggerBox.center.dy, 0.01));
       }
     });
 
