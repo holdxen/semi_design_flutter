@@ -152,16 +152,16 @@ class _SemiTextState extends State<SemiText> {
               ? inherited.fontFamilyFallback
               : typography.fontFamilyFallback,
           fontSize: fontSize,
-          height: paragraph?.extendedLineHeight != null
-              ? paragraph!.extendedLineHeight! /
-                    (fontSize ?? colors.fontSizeRegular)
-              : switch (w.size) {
-                  SemiTextSize.normal =>
-                    colors.lineHeightRegular / colors.fontSizeRegular,
-                  SemiTextSize.small =>
-                    colors.lineHeightSmall / colors.fontSizeSmall,
-                  SemiTextSize.inherit => inherited.height,
-                },
+          // height: paragraph?.extendedLineHeight != null
+          //     ? paragraph!.extendedLineHeight! /
+          //           (fontSize ?? colors.fontSizeRegular)
+          //     : switch (w.size) {
+          //         SemiTextSize.normal =>
+          //           colors.lineHeightRegular / colors.fontSizeRegular,
+          //         SemiTextSize.small =>
+          //           colors.lineHeightSmall / colors.fontSizeSmall,
+          //         SemiTextSize.inherit => inherited.height,
+          //       },
           fontWeight:
               w.weight ??
               (w.strong
