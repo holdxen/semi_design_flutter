@@ -1592,7 +1592,7 @@ class _CloseGlyphPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = color
-      ..strokeWidth = 1;
+      ..strokeWidth = 1.5;
     final center = size.center(Offset.zero);
     const half = 4.5;
     canvas
