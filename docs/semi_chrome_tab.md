@@ -75,6 +75,7 @@ class SemiChromeTabReorderInfo {
 - **宽度收缩**：标签宽度 = `clamp((视口宽 - 加号槽 - 分隔线) / 标签数, minWidth, maxWidth)`，等价于 CSS `flex: 0 1 120px; min-width: 52px`；放不下时整排横向滚动。
 - `immediate`：直接使用目标布局；`chromium`：tab bounds 按 ID 同步插值 left/width/height，默认 200ms `easeOut`。这是 Flutter 对 Chromium TabContainer bounds 动画的实现，不是 qn Web Component 自带的 CSS transition。
 - **活动页签几何**：顶部圆角 `radius + 2`，底部两侧用二次曲线绘制外扩的凹圆角（Chrome 缺口）。
+- **标题尾部渐隐**：标题溢出可用空间时，仅对 title glyph 使用 Chromium 风格 alpha shader；LTR 淡出右尾，RTL 淡出左尾。渐隐宽度按当前字体约 3 字宽并限制在 title 区域内；极窄时淡出端保留最多约 20% alpha。它不是覆盖关闭按钮的背景渐变，也不插入省略号；hover 时 title region 会为 close button 预留空间。
 - **关闭动画**：标签内容 `scaleX 1→0.88`、透明度 `1→0`；默认 `layoutAnimation: chromium` 时，关闭标签后剩余标签的宽度和位置同时以 200ms `easeOut` bounds 动画重排。设置为 `immediate` 可恢复立即重排。`onTabClose` 仍在关闭动画结束后触发（140ms）。
 - **进入动画**：新标签的 bounds 在默认 Chromium 模式下从旧位置过渡到目标位置（200ms `easeOut`），内容另以 `scaleX 0.88→1`、透明度 `0→1` 进入（160ms）。
 - **拖拽**：拖起时源标签 45% 透明；目标标签按指针位于其左/右半区显示 2px accent 指示线，松手发 `onTabReorder`。

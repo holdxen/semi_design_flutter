@@ -992,9 +992,10 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
     bool hasIcon,
     SemiResolvedChromeTabThemeData theme,
   ) {
-    final available = math.max(
-      0.0,
-      tabWidth - 8 - 12 - (hasIcon ? _iconSize + _iconGap : 0),
+    final available = _titleAvailableWidth(
+      tabWidth,
+      hasIcon,
+      reserveClose: false,
     );
     final painter = TextPainter(
       text: TextSpan(
@@ -1005,8 +1006,23 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
       textDirection: Directionality.of(context),
       ellipsis: '…',
     )..layout(maxWidth: available);
-    return painter.didExceedMaxLines;
+    final truncated = painter.didExceedMaxLines;
+    painter.dispose();
+    return truncated;
   }
+
+  double _titleAvailableWidth(
+    double tabWidth,
+    bool hasIcon, {
+    required bool reserveClose,
+  }) => math.max(
+    0.0,
+    tabWidth -
+        8 -
+        12 -
+        (hasIcon ? _iconSize + _iconGap : 0) -
+        (reserveClose ? _closeButtonSize : 0),
+  );
 
   Widget _buildTab(
     BuildContext context,
@@ -1081,47 +1097,27 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
                   ),
                   const SizedBox(width: _iconGap),
                 ],
-                Expanded(
-                  child: Text(
-                    tab.title,
-                    maxLines: 1,
-                    softWrap: false,
-                    overflow: TextOverflow.ellipsis,
+                SizedBox(
+                  width: _titleAvailableWidth(
+                    width,
+                    icon != null,
+                    reserveClose: hovered,
+                  ),
+                  child: _ChromiumFadeText(
+                    key: ValueKey<String>('semi-chrome-tab-title-${tab.id}'),
+                    title: tab.title,
                     style: TextStyle(
                       fontSize: theme.chromeTabsFontSize,
                       color: textColor,
                     ),
+                    textDirection: Directionality.of(context),
+                    enabled: _truncated[tab.id] ?? false,
                   ),
                 ),
               ],
             ),
           ),
         ),
-        if (hovered)
-          Positioned(
-            right: 4,
-            top: (theme.chromeTabHeight - 18) / 2,
-            width: 30,
-            height: 18,
-            child: IgnorePointer(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: <Color>[
-                      (active
-                              ? activeBackground
-                              : theme.chromeTabHoverBackground)
-                          .withValues(alpha: 0),
-                      active
-                          ? activeBackground
-                          : theme.chromeTabHoverBackground,
-                    ],
-                    stops: const <double>[0, 0.8],
-                  ),
-                ),
-              ),
-            ),
-          ),
         Positioned(
           right: 4,
           top: (theme.chromeTabHeight - _closeButtonSize) / 2,
@@ -1721,6 +1717,94 @@ class _FixedPopup extends StatelessWidget {
 // -----------------------------------------------------------------------------
 // Tab internals
 // -----------------------------------------------------------------------------
+
+class _ChromiumFadeText extends StatelessWidget {
+  const _ChromiumFadeText({
+    super.key,
+    required this.title,
+    required this.style,
+    required this.textDirection,
+    required this.enabled,
+  });
+
+  final String title;
+  final TextStyle style;
+  final TextDirection textDirection;
+  final bool enabled;
+
+  double _measure(String value, TextScaler textScaler) {
+    final painter = TextPainter(
+      text: TextSpan(text: value, style: style),
+      textDirection: textDirection,
+      textScaler: textScaler,
+      maxLines: 1,
+    )..layout();
+    final width = painter.width;
+    painter.dispose();
+    return width;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scaler = MediaQuery.textScalerOf(context);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final contentWidth = _measure(title, scaler);
+        final text = Text(
+          title,
+          style: style,
+          textDirection: textDirection,
+          textScaler: scaler,
+          maxLines: 1,
+          softWrap: false,
+          overflow: TextOverflow.clip,
+        );
+        if (!enabled ||
+            !width.isFinite ||
+            width <= 0 ||
+            contentWidth <= width) {
+          return text;
+        }
+
+        // Chromium's FADE_TAIL is an alpha shader over glyphs, not a surface
+        // colored overlay. Approximate its three/four-glyph width calculation.
+        final fadeWidth = _measure('000', scaler).clamp(0.0, width / 3);
+        if (fadeWidth <= 0) return text;
+        final fourGlyphWidth = _measure('0000', scaler);
+        final fadeAlpha = fourGlyphWidth <= 0 || width >= fourGlyphWidth
+            ? 0.0
+            : ((1 - width / fourGlyphWidth) * 0.2).clamp(0.0, 0.2);
+        final transparent = Color.fromARGB(
+          (fadeAlpha * 255).round(),
+          255,
+          255,
+          255,
+        );
+        const opaque = Color(0xffffffff);
+        final fadeFraction = (fadeWidth / width).clamp(0.0, 1.0);
+        final colors = textDirection == TextDirection.rtl
+            ? <Color>[transparent, opaque, opaque]
+            : <Color>[opaque, opaque, transparent];
+        final stops = textDirection == TextDirection.rtl
+            ? <double>[0, fadeFraction, 1]
+            : <double>[0, 1 - fadeFraction, 1];
+
+        return ShaderMask(
+          key: const ValueKey<String>('semi-chrome-tab-title-fade'),
+          blendMode: BlendMode.dstIn,
+          shaderCallback: (bounds) => LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: colors,
+            stops: stops,
+          ).createShader(bounds),
+          child: text,
+        );
+      },
+    );
+  }
+}
 
 class _ActiveTabBackgroundPainter extends CustomPainter {
   const _ActiveTabBackgroundPainter({
