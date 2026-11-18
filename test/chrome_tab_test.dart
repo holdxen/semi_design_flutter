@@ -31,7 +31,9 @@ void main() {
 
     expect(find.text('One'), findsOneWidget);
     expect(find.text('Two'), findsOneWidget);
-    await tester.tap(find.text('Two'));
+    expect(tester.getSize(find.text('Two')).height, greaterThan(0));
+    final twoCenter = tester.getCenter(find.text('Two'));
+    await tester.tapAt(twoCenter);
     expect(active, 'two');
   });
 
@@ -101,6 +103,9 @@ void main() {
     );
 
     expect(find.text('Disabled'), findsOneWidget);
-    expect(tester.getSize(find.byType(ChromeTab)).height, 48);
+    expect(
+      tester.getSize(find.byKey(const ValueKey('chrome-tab-tap-one'))).height,
+      48,
+    );
   });
 }

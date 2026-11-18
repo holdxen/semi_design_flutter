@@ -61,7 +61,7 @@ class _ChromeTabPageState extends State<ChromeTabPage> {
                     type: _locale == locale
                         ? SemiButtonType.primary
                         : SemiButtonType.tertiary,
-                    onClick: () => setState(() => _locale = locale),
+                    onPressed: () => setState(() => _locale = locale),
                   ),
                 ),
             ],
@@ -94,8 +94,9 @@ class _ChromeTabPageState extends State<ChromeTabPage> {
               onTabClose: (id) {
                 setState(() {
                   _tabs = _tabs.where((tab) => tab.id != id).toList();
-                  if (_active == id && _tabs.isNotEmpty)
+                  if (_active == id && _tabs.isNotEmpty) {
                     _active = _tabs.first.id;
+                  }
                 });
                 _push('close: $id');
               },

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' show Material, showDialog;
+import 'package:flutter/material.dart' show showDialog;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -492,30 +492,40 @@ class _ChromeTabState extends State<ChromeTab> {
         ],
       ),
     );
-    final tabWithInteraction = Focus(
-      onKeyEvent: (_, event) => _handleKey(tab, event),
-      child: MouseRegion(
-        cursor: tab.disabled
-            ? SystemMouseCursors.basic
-            : SystemMouseCursors.click,
-        child: GestureDetector(
-          onTap: () => _activate(tab),
-          onDoubleTap: tab.disabled
-              ? null
-              : () => (widget.onTabEditAddress ?? widget.onEdit)?.call(tab.id),
-          onLongPress: tab.disabled
-              ? null
-              : () => _showTabActions(context, tab),
-          child: body,
+    final tabWithInteraction = SizedBox(
+      key: ValueKey('chrome-tab-tap-${tab.id}'),
+      width: theme.tabMaxWidth,
+      height: theme.stripHeight,
+      child: Focus(
+        onKeyEvent: (_, event) => _handleKey(tab, event),
+        child: MouseRegion(
+          cursor: tab.disabled
+              ? SystemMouseCursors.basic
+              : SystemMouseCursors.click,
+          child: Listener(
+            behavior: HitTestBehavior.opaque,
+            onPointerUp: (_) {
+              if (tab.disabled) return;
+              (widget.onTabActivate ?? widget.onActivate)?.call(tab.id);
+              _ensureTabVisible(tab.id);
+            },
+            child: GestureDetector(
+              onLongPress: tab.disabled
+                  ? null
+                  : () => _showTabActions(context, tab),
+              child: body,
+            ),
+          ),
         ),
       ),
     );
     final tooltip = widget.renderTabTooltip?.call(tab);
     Widget result = tabWithInteraction;
-    if (widget.tooltipMode != ChromeTabTooltipMode.never &&
-        (widget.tooltipMode == ChromeTabTooltipMode.always ||
+    final tooltipMode = widget.tabTooltipMode ?? widget.tooltipMode;
+    if (tooltipMode != ChromeTabTooltipMode.never &&
+        (tooltipMode == ChromeTabTooltipMode.always ||
             tooltip != null ||
-            (widget.tooltipMode == ChromeTabTooltipMode.truncated &&
+            (tooltipMode == ChromeTabTooltipMode.truncated &&
                 tab.title.length > 18))) {
       result = SemiTooltip(
         content: tooltip ?? Text(tab.title),
@@ -540,22 +550,7 @@ class _ChromeTabState extends State<ChromeTab> {
       },
       builder: (_, _, _) => dragChild,
     );
-    return Draggable<String>(
-      data: tab.id,
-      maxSimultaneousDrags: tab.disabled ? 0 : 1,
-      feedback: Material(
-        color: const Color(0x00000000),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minWidth: theme.tabMinWidth,
-            maxWidth: theme.tabMaxWidth,
-          ),
-          child: body,
-        ),
-      ),
-      childWhenDragging: Opacity(opacity: 0.35, child: result),
-      child: result,
-    );
+    return result;
   }
 
   Widget _closeButton(

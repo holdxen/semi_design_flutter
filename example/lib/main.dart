@@ -7,6 +7,7 @@ import 'package:example/pages/banner.dart';
 import 'package:example/pages/border_beam.dart';
 import 'package:example/pages/breadcrumb.dart';
 import 'package:example/pages/button.dart';
+import 'package:example/pages/cascader.dart';
 import 'package:example/pages/card.dart';
 import 'package:example/pages/carousel.dart';
 import 'package:example/pages/chrome_tab.dart';
