@@ -43,7 +43,7 @@ import 'semi_steps_theme_data.dart';
 import 'semi_upload_theme_data.dart';
 import 'semi_skeleton_theme_data.dart';
 import 'semi_tabs_theme_data.dart';
-import 'chrome_tab_theme_data.dart';
+import 'semi_chrome_tab_theme_data.dart';
 import 'semi_carousel_theme_data.dart';
 import 'semi_modal_theme_data.dart';
 import 'semi_popover_theme_data.dart';
@@ -107,7 +107,7 @@ class SemiComponentThemes {
     this.upload = const SemiUploadThemeData(),
     this.skeleton = const SemiSkeletonThemeData(),
     this.tabs = const SemiTabsThemeData(),
-    this.chromeTab = const ChromeTabThemeData(),
+    this.chromeTab = const SemiChromeTabThemeData(),
     this.carousel = const SemiCarouselThemeData(),
     this.modal = const SemiModalThemeData(),
     this.popover = const SemiPopoverThemeData(),
@@ -171,7 +171,7 @@ class SemiComponentThemes {
   final SemiUploadThemeData upload;
   final SemiSkeletonThemeData skeleton;
   final SemiTabsThemeData tabs;
-  final ChromeTabThemeData chromeTab;
+  final SemiChromeTabThemeData chromeTab;
   final SemiCarouselThemeData carousel;
   final SemiModalThemeData modal;
   final SemiPopoverThemeData popover;
@@ -232,7 +232,7 @@ class SemiComponentThemes {
     SemiUploadThemeData? upload,
     SemiSkeletonThemeData? skeleton,
     SemiTabsThemeData? tabs,
-    ChromeTabThemeData? chromeTab,
+    SemiChromeTabThemeData? chromeTab,
     SemiCarouselThemeData? carousel,
     SemiModalThemeData? modal,
     SemiPopoverThemeData? popover,

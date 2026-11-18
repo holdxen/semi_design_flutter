@@ -1,0 +1,615 @@
+import 'package:flutter/gestures.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:semi_design_flutter/semi_design_flutter.dart';
+
+const _hostWidth = 640.0;
+
+final ValueNotifier<Widget> _body = ValueNotifier<Widget>(
+  const SizedBox.shrink(),
+);
+
+Widget _host() => SemiTheme(
+  data: const SemiThemeData.light(),
+  child: Directionality(
+    textDirection: TextDirection.ltr,
+    child: MediaQuery(
+      data: const MediaQueryData(size: Size(800, 600)),
+      child: Overlay(
+        initialEntries: <OverlayEntry>[
+          OverlayEntry(
+            builder: (_) => Align(
+              alignment: Alignment.topLeft,
+              child: SizedBox(
+                width: _hostWidth,
+                child: ValueListenableBuilder<Widget>(
+                  valueListenable: _body,
+                  builder: (_, child, _) => child,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  ),
+);
+
+Future<void> pumpHost(WidgetTester tester, Widget child) async {
+  await tester.binding.setSurfaceSize(const Size(800, 600));
+  _body.value = child;
+  await tester.pumpWidget(_host());
+  await tester.pump();
+}
+
+Future<void> update(WidgetTester tester, Widget child) async {
+  _body.value = child;
+  await tester.pump();
+}
+
+Future<TestGesture> startMouse(WidgetTester tester) async {
+  final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+  await gesture.addPointer(location: const Offset(1, 1));
+  addTearDown(gesture.removePointer);
+  return gesture;
+}
+
+List<SemiChromeTabItem> manyTabs(int count) => <SemiChromeTabItem>[
+  for (var i = 0; i < count; i++) SemiChromeTabItem(id: 't$i', title: 'T$i'),
+];
+
+double tabWidth(WidgetTester tester, String id) =>
+    tester.getSize(find.byKey(ValueKey<String>('semi-chrome-tab-$id'))).width;
+
+/// The semantics tree requires a WidgetsApp host; these tests assert the
+/// installed labels directly on the [Semantics] widgets instead.
+Finder byLabel(String label) => find.byWidgetPredicate(
+  (widget) => widget is Semantics && widget.properties.label == label,
+);
+
+SemiChromeTab _tabs({
+  required List<SemiChromeTabItem> tabs,
+  String? activeTabId,
+  List<SemiChromeTabGroup> groups = const <SemiChromeTabGroup>[],
+  String? activeGroupId,
+  SemiChromeTabLocale locale = SemiChromeTabLocale.en,
+  bool hideAddButton = false,
+  bool hideGroupButton = false,
+  SemiChromeTabTooltipMode tooltipMode = SemiChromeTabTooltipMode.truncated,
+  ValueChanged<String>? onTabActivate,
+  ValueChanged<String>? onTabEditAddress,
+  ValueChanged<String>? onTabClose,
+  VoidCallback? onTabAdd,
+  ValueChanged<SemiChromeTabReorderInfo>? onTabReorder,
+  ValueChanged<String>? onTabCloseLeft,
+  ValueChanged<String>? onTabCloseRight,
+  ValueChanged<String>? onTabCloseOthers,
+  ValueChanged<String>? onGroupSwitch,
+  VoidCallback? onGroupAdd,
+  ValueChanged<String>? onGroupRename,
+  ValueChanged<String>? onGroupDelete,
+  Widget? Function(SemiChromeTabItem tab)? renderTabIcon,
+  Widget? Function(SemiChromeTabItem tab)? renderTabTooltip,
+}) => SemiChromeTab(
+  tabs: tabs,
+  activeTabId: activeTabId,
+  groups: groups,
+  activeGroupId: activeGroupId,
+  locale: locale,
+  hideAddButton: hideAddButton,
+  hideGroupButton: hideGroupButton,
+  tooltipMode: tooltipMode,
+  onTabActivate: onTabActivate,
+  onTabEditAddress: onTabEditAddress,
+  onTabClose: onTabClose,
+  onTabAdd: onTabAdd,
+  onTabReorder: onTabReorder,
+  onTabCloseLeft: onTabCloseLeft,
+  onTabCloseRight: onTabCloseRight,
+  onTabCloseOthers: onTabCloseOthers,
+  onGroupSwitch: onGroupSwitch,
+  onGroupAdd: onGroupAdd,
+  onGroupRename: onGroupRename,
+  onGroupDelete: onGroupDelete,
+  renderTabIcon: renderTabIcon,
+  renderTabTooltip: renderTabTooltip,
+);
+
+ScrollPosition _scrollPosition(WidgetTester tester) => tester
+    .state<ScrollableState>(
+      find
+          .descendant(
+            of: find.byType(SemiChromeTab),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    )
+    .position;
+
+void main() {
+  test('resolved chrome defaults match the upstream stylesheet', () {
+    final resolved = const SemiChromeTabThemeData().resolve(
+      const SemiThemeData.light(),
+    );
+    expect(resolved.chromeTabsHeight, 38);
+    expect(resolved.chromeTabHeight, 38);
+    expect(resolved.chromeTabMinWidth, 52);
+    expect(resolved.chromeTabMaxWidth, 120);
+    expect(resolved.chromeTabRadius, 8);
+    expect(resolved.chromeTabsBackground, const Color(0xffdee1e6));
+    expect(resolved.chromeTabTextColor, const Color(0xff5f6368));
+    expect(resolved.chromeTabActiveTextColor, const Color(0xff202124));
+    expect(resolved.chromeTabHoverBackground, const Color(0xfff4f5f6));
+    expect(resolved.chromeTabActiveBackground, const Color(0xffffffff));
+    expect(resolved.chromeTabDividerColor, const Color(0x4faeb5c6));
+    expect(resolved.chromeTabsAccentColor, const Color(0xff1a73e8));
+    expect(resolved.chromeTabsMenuIconBackground, const Color(0x9effffff));
+    expect(resolved.chromeTabsMenuTextColor, resolved.chromeTabTextColor);
+    expect(resolved.chromeTabEnterDuration, const Duration(milliseconds: 160));
+    expect(resolved.chromeTabCloseDuration, const Duration(milliseconds: 140));
+    expect(
+      resolved.chromeTabTooltipMoveDuration,
+      const Duration(milliseconds: 140),
+    );
+  });
+
+  test('chrome-tab-height is max(strip height, 28)', () {
+    final short = const SemiChromeTabThemeData(chromeTabsHeight: 24)
+        .resolve(const SemiThemeData.light());
+    final tall = const SemiChromeTabThemeData(chromeTabsHeight: 46)
+        .resolve(const SemiThemeData.light());
+    expect(short.chromeTabHeight, 28);
+    expect(tall.chromeTabHeight, 46);
+  });
+
+  testWidgets('tabs shrink from max to min width before overflowing', (
+    tester,
+  ) async {
+    await pumpHost(tester, _tabs(tabs: manyTabs(3), activeTabId: 't0'));
+    expect(tabWidth(tester, 't0'), 120);
+
+    await update(tester, _tabs(tabs: manyTabs(10), activeTabId: 't0'));
+    expect(tabWidth(tester, 't0'), closeTo(56.2, 0.01));
+
+    await update(tester, _tabs(tabs: manyTabs(12), activeTabId: 't0'));
+    await tester.pump();
+    expect(tabWidth(tester, 't0'), 52);
+    expect(_scrollPosition(tester).maxScrollExtent, greaterThan(0));
+  });
+
+  testWidgets('click activates and a second click reports edit-address', (
+    tester,
+  ) async {
+    final activated = <String>[];
+    final edited = <String>[];
+    await pumpHost(
+      tester,
+      _tabs(
+        tabs: manyTabs(3),
+        activeTabId: 't0',
+        onTabActivate: activated.add,
+        onTabEditAddress: edited.add,
+      ),
+    );
+    await tester.tap(find.byKey(const ValueKey('semi-chrome-tab-t1')));
+    await tester.pump();
+    expect(activated, <String>['t1']);
+    expect(edited, isEmpty);
+
+    await tester.tap(find.byKey(const ValueKey('semi-chrome-tab-t1')));
+    await tester.pump();
+    expect(activated, <String>['t1', 't1']);
+    expect(edited, <String>['t1']);
+
+    await tester.pump(const Duration(milliseconds: 320));
+    await tester.tap(find.byKey(const ValueKey('semi-chrome-tab-t1')));
+    await tester.pump();
+    expect(activated, <String>['t1', 't1', 't1']);
+    expect(edited, <String>['t1']);
+  });
+
+  testWidgets('close animates, freezes widths, then emits once', (
+    tester,
+  ) async {
+    final closed = <String>[];
+    final activated = <String>[];
+    final mouse = await startMouse(tester);
+    await pumpHost(
+      tester,
+      _tabs(
+        tabs: manyTabs(3),
+        activeTabId: 't0',
+        onTabClose: closed.add,
+        onTabActivate: activated.add,
+      ),
+    );
+    await mouse.moveTo(
+      tester.getCenter(find.byKey(const ValueKey('semi-chrome-tab-t2'))),
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('semi-chrome-tab-close-t2')));
+    await tester.pump();
+    expect(closed, isEmpty);
+    // A closing tab stops hit-testing immediately (`pointer-events: none`).
+    await tester.tap(find.byKey(const ValueKey('semi-chrome-tab-t2')));
+    await tester.pump();
+    expect(activated, isEmpty);
+    // Last tab: its width is distributed to the two preceding tabs.
+    expect(tabWidth(tester, 't0'), 180);
+    await tester.pump(const Duration(milliseconds: 80));
+    expect(closed, isEmpty);
+    await tester.pump(const Duration(milliseconds: 80));
+    expect(closed, <String>['t2']);
+
+    await update(tester, _tabs(tabs: manyTabs(2), activeTabId: 't0'));
+    expect(tabWidth(tester, 't0'), 180);
+
+    await mouse.moveTo(const Offset(790, 590));
+    await tester.pump();
+    expect(tabWidth(tester, 't0'), 120);
+  });
+
+  testWidgets('a new tab enters with a scale/opacity animation', (
+    tester,
+  ) async {
+    await pumpHost(tester, _tabs(tabs: manyTabs(2), activeTabId: 't0'));
+    await update(tester, _tabs(tabs: manyTabs(3), activeTabId: 't0'));
+    final animation = find.byKey(const ValueKey('semi-chrome-tab-entering-t2'));
+    expect(tester.widget<Opacity>(animation).opacity, 0);
+    await tester.pump(const Duration(milliseconds: 80));
+    final mid = tester.widget<Opacity>(animation).opacity;
+    expect(mid, greaterThan(0));
+    expect(mid, lessThan(1));
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(animation, findsNothing);
+  });
+
+  testWidgets('drag and drop reports before/after against the target', (
+    tester,
+  ) async {
+    SemiChromeTabReorderInfo? reorder;
+    await pumpHost(
+      tester,
+      _tabs(
+        tabs: manyTabs(3),
+        activeTabId: 't0',
+        onTabReorder: (info) => reorder = info,
+      ),
+    );
+    final mouse = await startMouse(tester);
+    final source = tester.getCenter(
+      find.byKey(const ValueKey('semi-chrome-tab-t0')),
+    );
+    final target = tester.getCenter(
+      find.byKey(const ValueKey('semi-chrome-tab-t1')),
+    );
+    await mouse.moveTo(source);
+    await mouse.down(source);
+    await tester.pump();
+    await mouse.moveTo(target + const Offset(30, 0));
+    await tester.pump();
+    await mouse.up();
+    await tester.pump();
+    expect(reorder, isNotNull);
+    expect(reorder!.tabId, 't0');
+    expect(reorder!.targetTabId, 't1');
+    expect(reorder!.position, SemiChromeTabReorderPosition.after);
+  });
+
+  testWidgets('context menu emits batch close actions', (tester) async {
+    String? closeLeft;
+    await pumpHost(
+      tester,
+      _tabs(
+        tabs: manyTabs(3),
+        activeTabId: 't1',
+        onTabCloseLeft: (id) => closeLeft = id,
+      ),
+    );
+    await tester.tap(
+      find.byKey(const ValueKey('semi-chrome-tab-t1')),
+      buttons: kSecondaryButton,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Close all to the right'), findsOneWidget);
+    expect(find.text('Close other tabs'), findsOneWidget);
+    await tester.tap(find.text('Close all to the left'));
+    await tester.pumpAndSettle();
+    expect(closeLeft, 't1');
+    expect(find.text('Close all to the left'), findsNothing);
+  });
+
+  testWidgets('long press opens the context menu on touch devices', (
+    tester,
+  ) async {
+    await pumpHost(tester, _tabs(tabs: manyTabs(3), activeTabId: 't0'));
+    await tester.longPress(find.byKey(const ValueKey('semi-chrome-tab-t1')));
+    await tester.pumpAndSettle();
+    expect(find.text('Close all to the left'), findsOneWidget);
+    expect(find.text('Close other tabs'), findsOneWidget);
+  });
+
+  testWidgets('group menu switches groups and exposes row actions on hover', (
+    tester,
+  ) async {
+    String? switched;
+    String? renamed;
+    var added = false;
+    await pumpHost(
+      tester,
+      _tabs(
+        tabs: manyTabs(2),
+        activeTabId: 't0',
+        groups: const <SemiChromeTabGroup>[
+          SemiChromeTabGroup(id: 'work', name: 'Work'),
+          SemiChromeTabGroup(id: 'study', name: 'Study'),
+        ],
+        activeGroupId: 'work',
+        onGroupSwitch: (id) => switched = id,
+        onGroupRename: (id) => renamed = id,
+        onGroupAdd: () => added = true,
+      ),
+    );
+    await tester.tap(byLabel('Select group'));
+    await tester.pumpAndSettle();
+    final work = tester.widget<Text>(find.text('Work'));
+    expect(work.style?.color, const Color(0xff1a73e8));
+    expect(work.style?.fontWeight, FontWeight.w600);
+    expect(find.text('＋ New group'), findsOneWidget);
+    expect(byLabel('Rename Work'), findsNothing);
+
+    final mouse = await startMouse(tester);
+    await mouse.moveTo(tester.getCenter(find.text('Work')));
+    await tester.pump();
+    expect(byLabel('Rename Work'), findsOneWidget);
+    await tester.tap(byLabel('Rename Work'));
+    await tester.pumpAndSettle();
+    expect(renamed, 'work');
+    expect(find.text('Study'), findsNothing);
+
+    await tester.tap(byLabel('Select group'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Study'));
+    await tester.pumpAndSettle();
+    expect(switched, 'study');
+
+    await tester.tap(byLabel('Select group'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('＋ New group'));
+    await tester.pumpAndSettle();
+    expect(added, isTrue);
+  });
+
+  testWidgets('overflow buttons and hidden-tab popover', (tester) async {
+    String? activated;
+    await pumpHost(
+      tester,
+      _tabs(
+        tabs: manyTabs(12),
+        activeTabId: 't0',
+        onTabActivate: (id) => activated = id,
+      ),
+    );
+    await tester.pump();
+    expect(byLabel('Scroll tabs left'), findsNothing);
+    expect(byLabel('Scroll tabs right'), findsOneWidget);
+
+    final mouse = await startMouse(tester);
+    await mouse.moveTo(tester.getCenter(byLabel('Scroll tabs right')));
+    await tester.pumpAndSettle();
+    // The last tab is clipped to the right of the visible area.
+    expect(find.text('T11'), findsNWidgets(2));
+    await tester.tap(find.text('T11').last);
+    await tester.pump();
+    expect(activated, 't11');
+
+    await tester.tap(byLabel('Scroll tabs right'));
+    await tester.pumpAndSettle();
+    expect(_scrollPosition(tester).pixels, greaterThan(0));
+    expect(byLabel('Scroll tabs left'), findsOneWidget);
+  });
+
+  testWidgets('mouse wheel scrolls the strip horizontally', (tester) async {
+    await pumpHost(tester, _tabs(tabs: manyTabs(12), activeTabId: 't0'));
+    await tester.pump();
+    final mouse = await startMouse(tester);
+    final center = tester.getCenter(
+      find.byKey(const ValueKey('semi-chrome-tab-t3')),
+    );
+    await mouse.moveTo(center);
+    await tester.sendEventToBinding(
+      PointerScrollEvent(position: center, scrollDelta: const Offset(0, 120)),
+    );
+    await tester.pump();
+    expect(_scrollPosition(tester).pixels, 62);
+  });
+
+  testWidgets('active tab is revealed when it changes', (tester) async {
+    await pumpHost(tester, _tabs(tabs: manyTabs(12), activeTabId: 't11'));
+    await tester.pump();
+    expect(_scrollPosition(tester).pixels, greaterThan(0));
+    final scrolled = _scrollPosition(tester).pixels;
+
+    await update(tester, _tabs(tabs: manyTabs(12), activeTabId: 't0'));
+    await tester.pump();
+    expect(_scrollPosition(tester).pixels, lessThan(scrolled));
+    expect(_scrollPosition(tester).pixels, 0);
+  });
+
+  testWidgets('tooltip follows truncated/always/never and custom renderers', (
+    tester,
+  ) async {
+    final mouse = await startMouse(tester);
+    const longTitle = 'A very long tab title that cannot possibly fit';
+    var rendererCalls = 0;
+
+    await pumpHost(
+      tester,
+      _tabs(
+        tabs: const <SemiChromeTabItem>[
+          SemiChromeTabItem(id: 'long', title: longTitle),
+          SemiChromeTabItem(id: 'short', title: 'Short'),
+        ],
+        activeTabId: 'long',
+        renderTabTooltip: (tab) {
+          rendererCalls++;
+          return Text('TIP ${tab.id}');
+        },
+      ),
+    );
+    await mouse.moveTo(
+      tester.getCenter(find.byKey(const ValueKey('semi-chrome-tab-long'))),
+    );
+    await tester.pump();
+    expect(find.text('TIP long'), findsOneWidget);
+
+    await mouse.moveTo(
+      tester.getCenter(find.byKey(const ValueKey('semi-chrome-tab-short'))),
+    );
+    await tester.pump();
+    expect(find.text('TIP short'), findsNothing);
+    await tester.pump(const Duration(milliseconds: 140));
+    expect(find.text('TIP long'), findsNothing);
+
+    await update(
+      tester,
+      _tabs(
+        tabs: const <SemiChromeTabItem>[
+          SemiChromeTabItem(id: 'short', title: 'Short'),
+        ],
+        activeTabId: 'short',
+        tooltipMode: SemiChromeTabTooltipMode.always,
+        renderTabTooltip: (_) => const Text('ALWAYS'),
+      ),
+    );
+    await tester.pump();
+    await mouse.moveTo(
+      tester.getCenter(find.byKey(const ValueKey('semi-chrome-tab-short'))),
+    );
+    await tester.pump();
+    expect(find.text('ALWAYS'), findsOneWidget);
+
+    await update(
+      tester,
+      _tabs(
+        tabs: const <SemiChromeTabItem>[
+          SemiChromeTabItem(id: 'long', title: longTitle),
+        ],
+        activeTabId: 'long',
+        renderTabTooltip: (_) => null,
+      ),
+    );
+    await tester.pump();
+    await mouse.moveTo(const Offset(1, 1));
+    await tester.pump(const Duration(milliseconds: 140));
+    await mouse.moveTo(
+      tester.getCenter(find.byKey(const ValueKey('semi-chrome-tab-long'))),
+    );
+    await tester.pump();
+    expect(rendererCalls, greaterThan(0));
+    expect(find.text('TIP long'), findsNothing);
+
+    await update(
+      tester,
+      _tabs(
+        tabs: const <SemiChromeTabItem>[
+          SemiChromeTabItem(id: 'long', title: longTitle),
+        ],
+        activeTabId: 'long',
+        tooltipMode: SemiChromeTabTooltipMode.never,
+        renderTabTooltip: (_) => const Text('NEVER'),
+      ),
+    );
+    await mouse.moveTo(const Offset(1, 1));
+    await tester.pump(const Duration(milliseconds: 140));
+    await mouse.moveTo(
+      tester.getCenter(find.byKey(const ValueKey('semi-chrome-tab-long'))),
+    );
+    await tester.pump();
+    expect(find.text('NEVER'), findsNothing);
+  });
+
+  testWidgets('locale switches built-in accessibility labels', (tester) async {
+    await pumpHost(
+      tester,
+      _tabs(
+        tabs: manyTabs(1),
+        activeTabId: 't0',
+        locale: SemiChromeTabLocale.zh,
+      ),
+    );
+    expect(byLabel('添加标签页'), findsOneWidget);
+
+    await update(
+      tester,
+      _tabs(
+        tabs: manyTabs(1),
+        activeTabId: 't0',
+        locale: SemiChromeTabLocale.ko,
+      ),
+    );
+    expect(byLabel('탭 추가'), findsOneWidget);
+  });
+
+  testWidgets('hide flags remove the add and group controls', (tester) async {
+    await pumpHost(
+      tester,
+      _tabs(
+        tabs: manyTabs(2),
+        activeTabId: 't0',
+        hideAddButton: true,
+        hideGroupButton: true,
+      ),
+    );
+    expect(find.text('+'), findsNothing);
+    expect(byLabel('Select group'), findsNothing);
+    expect(byLabel('Add tab'), findsNothing);
+  });
+
+  testWidgets('empty tabs still show the add button and group menu', (
+    tester,
+  ) async {
+    await pumpHost(
+      tester,
+      _tabs(
+        tabs: const <SemiChromeTabItem>[],
+        activeGroupId: 'work',
+        groups: const <SemiChromeTabGroup>[
+          SemiChromeTabGroup(id: 'work', name: 'Work'),
+        ],
+      ),
+    );
+    expect(find.text('+'), findsOneWidget);
+    await tester.tap(byLabel('Select group'));
+    await tester.pumpAndSettle();
+    expect(find.text('＋ New group'), findsOneWidget);
+  });
+
+  testWidgets('local and nested themes merge before resolving', (tester) async {
+    late SemiResolvedChromeTabThemeData resolved;
+    await pumpHost(
+      tester,
+      SemiChromeTabTheme(
+        data: const SemiChromeTabThemeData(chromeTabsHeight: 48),
+        child: SemiChromeTabTheme(
+          data: const SemiChromeTabThemeData(chromeTabRadius: 12),
+          child: Builder(
+            builder: (context) {
+              resolved = SemiChromeTabTheme.resolve(context);
+              return _tabs(
+                tabs: manyTabs(2),
+                activeTabId: 't0',
+                hideAddButton: true,
+                hideGroupButton: true,
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    expect(resolved.chromeTabsHeight, 48);
+    expect(resolved.chromeTabHeight, 48);
+    expect(resolved.chromeTabRadius, 12);
+    expect(tester.getSize(find.byType(SemiChromeTab)).height, 48);
+  });
+}

@@ -10,7 +10,7 @@ import 'package:example/pages/button.dart';
 import 'package:example/pages/cascader.dart';
 import 'package:example/pages/card.dart';
 import 'package:example/pages/carousel.dart';
-import 'package:example/pages/chrome_tab.dart';
+import 'package:example/pages/semi_chrome_tab.dart';
 import 'package:example/pages/checkbox.dart';
 import 'package:example/pages/collapse.dart';
 import 'package:example/pages/collapsible.dart';
@@ -208,7 +208,12 @@ const List<DemoGroup> demoGroups = [
     ),
     DemoSpec('steps', 'Steps 步骤', 'doc-steps.svg', StepsPage()),
     DemoSpec('tabs', 'Tabs 标签栏', 'doc-tabs.svg', TabsPage()),
-    DemoSpec('chromeTab', 'ChromeTab 浏览器标签', 'doc-tabs.svg', ChromeTabPage()),
+    DemoSpec(
+      'chromeTab',
+      'SemiChromeTab 浏览器标签',
+      'doc-tabs.svg',
+      SemiChromeTabPage(),
+    ),
     DemoSpec('tree', 'Tree 树形控件', 'doc-tree.svg', TreePage()),
     DemoSpec('treeSelect', 'TreeSelect 树选择器', 'doc-tree.svg', TreeSelectPage()),
   ]),
