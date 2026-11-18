@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../overlay/tooltip_positioning.dart';
+import '../localization/semi_localizations.dart';
 import '../theme/semi_tag_input_theme.dart';
 import '../theme/semi_tag_input_theme_data.dart';
 import '../theme/semi_theme.dart';
@@ -1044,7 +1045,7 @@ class _SemiTagInputState extends State<SemiTagInput> {
         onPointerCancel: (_) => _cancelDrag(),
         child: Semantics(
           button: true,
-          label: 'Reorder',
+          label: SemiLocalizations.of(context).reorder,
           child: ExcludeSemantics(
             child: SemiIcon(
               SemiIcons.handle,
@@ -1307,7 +1308,7 @@ class _SemiTagInputState extends State<SemiTagInput> {
               onTap: widget.disabled ? null : _handleClear,
               child: Semantics(
                 button: true,
-                label: 'Clear TagInput value',
+                label: SemiLocalizations.of(context).clearTagInput,
                 child: ExcludeSemantics(child: icon),
               ),
             ),

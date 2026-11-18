@@ -15,6 +15,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import '../localization/semi_localizations.dart';
 import '../overlay/tooltip_positioning.dart';
 import '../theme/semi_breadcrumb_theme.dart';
 import '../theme/semi_breadcrumb_theme_data.dart';
@@ -293,7 +294,7 @@ class _SemiBreadcrumbState extends State<SemiBreadcrumb> {
     }
 
     return Semantics(
-      label: widget.semanticsLabel ?? 'Breadcrumb',
+      label: widget.semanticsLabel ?? SemiLocalizations.of(context).breadcrumb,
       container: true,
       child: DefaultTextStyle.merge(
         style: TextStyle(fontSize: fontSize),
@@ -439,7 +440,7 @@ class _SemiBreadcrumbState extends State<SemiBreadcrumb> {
                   onTap: _usesPopover ? null : _handleExpand,
                   child: Semantics(
                     button: true,
-                    label: 'Expand breadcrumb items',
+                    label: SemiLocalizations.of(context).expandBreadcrumb,
                     child: Padding(
                       // breadcrumb.scss:35-36
                       // `display: inline-flex; align-items: center`。

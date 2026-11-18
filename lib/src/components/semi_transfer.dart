@@ -14,6 +14,8 @@
 import 'package:flutter/rendering.dart' show OverflowBoxFit;
 import 'package:flutter/widgets.dart';
 
+import '../localization/semi_localizations.dart';
+
 import '../theme/semi_button_theme.dart';
 import '../theme/semi_button_theme_data.dart';
 import '../theme/semi_transfer_theme.dart';
@@ -835,6 +837,7 @@ class _SemiTransferState extends State<SemiTransfer> {
   // -- left panel -----------------------------------------------------------
 
   Widget _buildLeft(SemiResolvedTransferThemeData t, bool rtl) {
+    final strings = SemiLocalizations.of(context);
     if (widget.renderSourcePanel != null) {
       return KeyedSubtree(
         key: SemiTransfer.leftPanelKey,
@@ -865,7 +868,7 @@ class _SemiTransferState extends State<SemiTransfer> {
           height: t.heightTransferLeftEmpty,
           child:
               widget.emptySearch ??
-              _defaultEmptyText(t, _TransferMetrics.emptySearch),
+              _defaultEmptyText(t, strings.transferNoSearchResult),
         ),
       );
     } else if (_entries.isEmpty) {
@@ -873,9 +876,7 @@ class _SemiTransferState extends State<SemiTransfer> {
         _buildEmpty(
           t,
           height: t.heightTransferLeftEmpty,
-          child:
-              widget.emptyLeft ??
-              _defaultEmptyText(t, _TransferMetrics.emptyLeft),
+          child: widget.emptyLeft ?? _defaultEmptyText(t, strings.noData),
         ),
       );
     } else if (_isTree) {
@@ -883,8 +884,8 @@ class _SemiTransferState extends State<SemiTransfer> {
         ..add(
           _buildHeader(
             t,
-            totalText: _totalText(_TransferMetrics.totalTemplate, _showNumber),
-            buttonLabel: _TransferMetrics.clearSelectAllLabel,
+            totalText: strings.transferTotal(_showNumber),
+            buttonLabel: strings.transferClearSelectAll,
             showButton: false,
             onAllClick: () {},
             allChecked: false,
@@ -896,10 +897,10 @@ class _SemiTransferState extends State<SemiTransfer> {
         ..add(
           _buildHeader(
             t,
-            totalText: _totalText(_TransferMetrics.totalTemplate, _showNumber),
+            totalText: strings.transferTotal(_showNumber),
             buttonLabel: leftContainsNotInSelected
-                ? _TransferMetrics.selectAllLabel
-                : _TransferMetrics.clearSelectAllLabel,
+                ? strings.transferSelectAll
+                : strings.transferClearSelectAll,
             showButton: !filterDataAllDisabled,
             onAllClick: () => _handleAll(leftContainsNotInSelected),
             allChecked: !leftContainsNotInSelected,
@@ -1002,6 +1003,7 @@ class _SemiTransferState extends State<SemiTransfer> {
   }
 
   Widget _buildFilter(SemiResolvedTransferThemeData t) {
+    final strings = SemiLocalizations.of(context);
     return Padding(
       padding: EdgeInsetsDirectional.only(
         top: t.spacingTransferFilterMarginTop,
@@ -1015,7 +1017,7 @@ class _SemiTransferState extends State<SemiTransfer> {
           controller: _inputController,
           size: SemiInputSize.small,
           disabled: widget.disabled,
-          placeholder: _TransferMetrics.searchPlaceholder,
+          placeholder: strings.search,
           prefix: const SemiIcon(SemiIcons.search, excludeFromSemantics: true),
           showClear: true,
           onChanged: widget.disabled
@@ -1200,6 +1202,7 @@ class _SemiTransferState extends State<SemiTransfer> {
   // -- right panel ----------------------------------------------------------
 
   Widget _buildRight(SemiResolvedTransferThemeData t) {
+    final strings = SemiLocalizations.of(context);
     if (widget.renderSelectedPanel != null) {
       return KeyedSubtree(
         key: SemiTransfer.rightPanelKey,
@@ -1214,11 +1217,8 @@ class _SemiTransferState extends State<SemiTransfer> {
     final header = _buildHeader(
       t,
       right: true,
-      totalText: _totalText(
-        _TransferMetrics.selectedTemplate,
-        selectedData.length,
-      ),
-      buttonLabel: _TransferMetrics.clearLabel,
+      totalText: strings.transferSelected(selectedData.length),
+      buttonLabel: strings.clear,
       showButton: selectedData.isNotEmpty && hasValidSelected,
       onAllClick: _handleClear,
       allChecked: false,
@@ -1240,7 +1240,7 @@ class _SemiTransferState extends State<SemiTransfer> {
             _buildRightEmpty(
               t,
               widget.emptyRight ??
-                  _defaultEmptyText(t, _TransferMetrics.emptyRight),
+                  _defaultEmptyText(t, strings.transferEmptyRight),
             ),
         ],
       ),

@@ -15,6 +15,7 @@
 // HARDCODES（另列）上游片段以注释逐字留档在 `_CascaderMetrics` / 调用点，
 // 生成器 HARDCODES 锚点断言这些片段出现在本文件。
 import '../overlay/tooltip_positioning.dart';
+import '../localization/semi_localizations.dart';
 
 import 'package:flutter/rendering.dart' show RenderProxyBox;
 import 'package:flutter/services.dart';
@@ -1851,7 +1852,7 @@ class _SemiCascaderState extends State<SemiCascader> {
         if (_showClearButton)
           Semantics(
             button: true,
-            label: _CascaderMetrics.clearButtonSemantics,
+            label: SemiLocalizations.of(context).clearCascaderValue,
             child: GestureDetector(
               key: SemiCascader.clearButtonKey,
               behavior: HitTestBehavior.opaque,
@@ -1929,7 +1930,8 @@ class _SemiCascaderState extends State<SemiCascader> {
       button: true,
       enabled: !widget.disabled,
       expanded: _open,
-      label: widget.semanticsLabel ?? _CascaderMetrics.defaultSemanticsLabel,
+      label:
+          widget.semanticsLabel ?? SemiLocalizations.of(context).cascaderLabel,
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: bg,
@@ -2022,7 +2024,10 @@ class _SemiCascaderState extends State<SemiCascader> {
               if (_entities[key] != null) _entities[key]!.pos,
           ],
           inputValue: _inputValue,
-          placeholder: widget.searchPlaceholder ?? widget.placeholder ?? '',
+          placeholder:
+              widget.searchPlaceholder ??
+              widget.placeholder ??
+              SemiLocalizations.of(context).search,
           disabled: widget.disabled,
           onSearch: _handleInputChange,
           onClear: _handleClear,
@@ -2257,7 +2262,7 @@ class _SemiCascaderState extends State<SemiCascader> {
                     text ??
                         widget.searchPlaceholder ??
                         widget.placeholder ??
-                        '',
+                        SemiLocalizations.of(context).search,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -2326,7 +2331,10 @@ class _SemiCascaderState extends State<SemiCascader> {
               size: widget.size,
               disabled: widget.disabled,
               bare: true,
-              placeholder: widget.searchPlaceholder ?? widget.placeholder ?? '',
+              placeholder:
+                  widget.searchPlaceholder ??
+                  widget.placeholder ??
+                  SemiLocalizations.of(context).search,
               onChanged: widget.disabled ? null : _handleInputChange,
             ),
           ),
@@ -2861,7 +2869,7 @@ class _SemiCascaderState extends State<SemiCascader> {
           color: theme.colorCascaderOptionEmptyTextDefault,
           fontSize: _CascaderMetrics.fontSizeRegular,
         ),
-        child: _asWidget(content ?? _CascaderMetrics.localeEmptyText),
+        child: _asWidget(content ?? SemiLocalizations.of(context).noData),
       ),
     );
   }
@@ -2913,15 +2921,6 @@ abstract final class _CascaderMetrics {
   ///（`$font-size-header-6: 16px`，semi-theme-default/scss/variables.scss:61
   /// ——large 尺寸触发器文本号）。
   static const double selectionLargeFontSize = 16;
-
-  /// zh_CN.ts:122 `emptyText: '暂无数据'`（Cascader locale）。
-  static const String localeEmptyText = '暂无数据';
-
-  /// index.tsx:225 `'aria-label': 'Cascader'`（触发器缺省语义标签）。
-  static const String defaultSemanticsLabel = 'Cascader';
-
-  /// 清空按钮语义（上游无 aria-label——Flutter 侧补）。
-  static const String clearButtonSemantics = 'Clear Cascader value';
 
   /// index.tsx:202 `zIndex: popoverNumbers.DEFAULT_Z_INDEX`
   ///（popover/constants.ts:44 `DEFAULT_Z_INDEX: 1030`）。

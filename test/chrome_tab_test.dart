@@ -32,8 +32,7 @@ void main() {
     expect(find.text('One'), findsOneWidget);
     expect(find.text('Two'), findsOneWidget);
     expect(tester.getSize(find.text('Two')).height, greaterThan(0));
-    final twoCenter = tester.getCenter(find.text('Two'));
-    await tester.tapAt(twoCenter);
+    await tester.tap(find.text('Two'));
     expect(active, 'two');
   });
 

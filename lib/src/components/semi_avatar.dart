@@ -54,6 +54,7 @@ import 'package:flutter/semantics.dart' show OrdinalSortKey;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import '../localization/semi_localizations.dart';
 import '../theme/semi_avatar_theme.dart';
 import '../theme/semi_avatar_theme_data.dart';
 import '../theme/semi_theme.dart';
@@ -215,8 +216,7 @@ class SemiAvatar extends StatefulWidget {
   State<SemiAvatar> createState() => _SemiAvatarState();
 }
 
-class _SemiAvatarState extends State<SemiAvatar>
-    with TickerProviderStateMixin {
+class _SemiAvatarState extends State<SemiAvatar> with TickerProviderStateMixin {
   bool _imgFailed = false, _hovering = false, _focused = false;
   final _focus = FocusNode();
   late final AnimationController _content = AnimationController(
@@ -307,7 +307,10 @@ class _SemiAvatarState extends State<SemiAvatar>
       // `font-size-header-1`；xxs/xl 用显式 Sass 字号。customSize 无尺寸类 →
       // 回落 `font-size-regular`。
       final (fontSize, lineHeight) = widget.customSize != null
-          ? (global.typography.fontSizeRegular, global.typography.lineHeightRegular)
+          ? (
+              global.typography.fontSizeRegular,
+              global.typography.lineHeightRegular,
+            )
           : _labelOf(size, global, t);
       // foundation.ts:57 `gap * 2 < nodeWidth` —— 可用宽 nodeWidth-gap*2，
       // FittedBox.scaleDown 与 scale(nodeWidth-gap*2)/textWidth 等价。
@@ -370,10 +373,8 @@ class _SemiAvatarState extends State<SemiAvatar>
       if (!_content.isAnimating) _content.repeat();
       body = AnimatedBuilder(
         animation: _content,
-        builder: (context, child) => Transform.scale(
-          scale: _pulse(_content.value, t),
-          child: child,
-        ),
+        builder: (context, child) =>
+            Transform.scale(scale: _pulse(_content.value, t), child: child),
         child: body,
       );
     } else if (_content.isAnimating) {
@@ -381,7 +382,8 @@ class _SemiAvatarState extends State<SemiAvatar>
       _content.value = 0;
     }
 
-    final label = widget.semanticsLabel ??
+    final label =
+        widget.semanticsLabel ??
         (() {
           // index.tsx:221/231-232 `clickable Avatar: ${alt}` 前缀 quirk。
           final base = widget.alt ?? widget.text ?? '';
@@ -409,7 +411,11 @@ class _SemiAvatarState extends State<SemiAvatar>
           }
           return KeyEventResult.ignored;
         },
-        child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: widget.onTap, child: body),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: widget.onTap,
+          child: body,
+        ),
       ),
     );
 
@@ -417,7 +423,8 @@ class _SemiAvatarState extends State<SemiAvatar>
     final ringGap = t.spacingAvatarAdditionalBorderGap;
     final hasRing = widget.border != null;
     final slotSizes = _slotSizes.contains(size);
-    final showTop = widget.topSlot != null && slotSizes && shape == SemiAvatarShape.circle;
+    final showTop =
+        widget.topSlot != null && slotSizes && shape == SemiAvatarShape.circle;
     final showBottom = widget.bottomSlot != null && slotSizes;
     if (!hasRing && !showTop && !showBottom) {
       return MouseRegion(
@@ -588,8 +595,10 @@ class _SemiAvatarState extends State<SemiAvatar>
                   Positioned(
                     top: switch (size) {
                       SemiAvatarSize.small => t.spacingAvatarTopSlotSmallShift,
-                      SemiAvatarSize.normal => t.spacingAvatarTopSlotDefaultShift,
-                      SemiAvatarSize.medium => t.spacingAvatarTopSlotMediumShift,
+                      SemiAvatarSize.normal =>
+                        t.spacingAvatarTopSlotDefaultShift,
+                      SemiAvatarSize.medium =>
+                        t.spacingAvatarTopSlotMediumShift,
                       SemiAvatarSize.large => t.spacingAvatarTopSlotLargeShift,
                       SemiAvatarSize.extraLarge =>
                         t.spacingAvatarTopSlotExtraLargeShift,
@@ -601,10 +610,14 @@ class _SemiAvatarState extends State<SemiAvatar>
                     child: Center(
                       child: Transform.scale(
                         scale: switch (size) {
-                          SemiAvatarSize.small => t.spacingAvatarTopSlotSmallScale,
-                          SemiAvatarSize.normal => t.spacingAvatarTopSlotDefaultScale,
-                          SemiAvatarSize.medium => t.spacingAvatarTopSlotMediumScale,
-                          SemiAvatarSize.large => t.spacingAvatarTopSlotLargeScale,
+                          SemiAvatarSize.small =>
+                            t.spacingAvatarTopSlotSmallScale,
+                          SemiAvatarSize.normal =>
+                            t.spacingAvatarTopSlotDefaultScale,
+                          SemiAvatarSize.medium =>
+                            t.spacingAvatarTopSlotMediumScale,
+                          SemiAvatarSize.large =>
+                            t.spacingAvatarTopSlotLargeScale,
                           SemiAvatarSize.extraLarge =>
                             t.spacingAvatarTopSlotExtraLargeScale,
                           _ => 1.0,
@@ -614,8 +627,10 @@ class _SemiAvatarState extends State<SemiAvatar>
                           height: 52,
                           child: CustomPaint(
                             painter: _TopSlotShieldPainter(
-                              slot.gradientStart ?? t.colorAvatarTopSlotGradientStart,
-                              slot.gradientEnd ?? t.colorAvatarTopSlotGradientEnd,
+                              slot.gradientStart ??
+                                  t.colorAvatarTopSlotGradientStart,
+                              slot.gradientEnd ??
+                                  t.colorAvatarTopSlotGradientEnd,
                             ),
                           ),
                         ),
@@ -648,7 +663,8 @@ class _SemiAvatarState extends State<SemiAvatar>
       // index.tsx:301-303 顶层 wrapper 同样带 `-animated` 脉冲。
       child = AnimatedBuilder(
         animation: _content,
-        builder: (context, c) => Transform.scale(scale: _pulse(_content.value, t), child: c),
+        builder: (context, c) =>
+            Transform.scale(scale: _pulse(_content.value, t), child: c),
         child: child,
       );
     }
@@ -693,11 +709,8 @@ class _SemiAvatarState extends State<SemiAvatar>
           ),
           child: Center(
             child: DefaultTextStyle(
-              style: DefaultTextStyle.of(context).style.copyWith(
-                color: fg,
-                fontSize: fontSize,
-                height: 1,
-              ),
+              style: DefaultTextStyle.of(context).style
+                  .copyWith(color: fg, fontSize: fontSize, height: 1),
               child: slot.text ?? const SizedBox.shrink(),
             ),
           ),
@@ -818,13 +831,17 @@ class SemiAvatarGroup extends StatelessWidget {
     final box = _boxOf(size, t);
     final borderWidth = _groupBorderOf(size, t);
     final margin = _groupMarginOf(size, t);
+    final strings = SemiLocalizations.of(context);
     var items = List<Widget>.of(children);
     var restAvatars = const <Widget>[];
     var restNumber = 0;
     if (maxCount != null && items.length > maxCount!) {
       restNumber = items.length - maxCount!;
       restAvatars = items.sublist(maxCount!);
-      items = [...items.sublist(0, maxCount!), _moreAvatar(restNumber, restAvatars, t)];
+      items = [
+        ...items.sublist(0, maxCount!),
+        _moreAvatar(restNumber, restAvatars, t, strings),
+      ];
     }
     final n = items.length;
     // avatar.scss:409-416 `z-index: $z-avatar-default - $i`（start）/
@@ -835,7 +852,10 @@ class SemiAvatarGroup extends StatelessWidget {
         : t.zAvatarDefault - 20 + i;
     final order = [for (var i = 0; i < n; i++) i];
     order.sort((a, b) {
-      final (za, zb) = (a <= 20 ? zOf(a) : double.negativeInfinity, b <= 20 ? zOf(b) : double.negativeInfinity);
+      final (za, zb) = (
+        a <= 20 ? zOf(a) : double.negativeInfinity,
+        b <= 20 ? zOf(b) : double.negativeInfinity,
+      );
       if (za != zb) return za.compareTo(zb);
       return a.compareTo(b);
     });
@@ -879,7 +899,12 @@ class SemiAvatarGroup extends StatelessWidget {
     );
   }
 
-  Widget _moreAvatar(int restNumber, List<Widget> rest, SemiResolvedAvatarThemeData t) {
+  Widget _moreAvatar(
+    int restNumber,
+    List<Widget> rest,
+    SemiResolvedAvatarThemeData t,
+    SemiLocalizations strings,
+  ) {
     if (renderMore != null) return renderMore!(restNumber, rest);
     // avatarGroup.tsx:65-66 语义 `Number of remaining Avatars：N,alt...`。
     final altList = rest
@@ -890,7 +915,7 @@ class SemiAvatarGroup extends StatelessWidget {
       // avatarGroup.tsx:66 `+${restNumber}`。
       text: '+$restNumber',
       backgroundColor: t.colorAvatarMoreDefaultBgDefault,
-      semanticsLabel: 'Number of remaining Avatars：$restNumber,$altList',
+      semanticsLabel: strings.avatarRemaining(restNumber, altList),
     );
   }
 }
@@ -1062,16 +1087,15 @@ class _TopSlotShieldPainter extends CustomPainter {
   final Color gradientStart, gradientEnd;
   @override
   void paint(Canvas canvas, Size size) {
-    final path =
-        Path()
-          ..moveTo(40.4918, 46.5592)
-          ..cubicTo(44.6795, 43.176, 46.261, 34.1333, 47.5301, 25.6141)
-          ..cubicTo(49.5854, 11.8168, 39.6662, 1, 25.8097, 1)
-          ..cubicTo(11.2857, 1, 3, 11.4279, 3, 25.3518)
-          ..cubicTo(3, 33.7866, 6.29361, 43.8947, 10.4602, 46.5592)
-          ..cubicTo(12.5868, 47.9192, 12.5868, 47.9051, 25.8097, 47.9192)
-          ..cubicTo(38.3651, 47.9282, 38.5352, 48.14, 40.4918, 46.5592)
-          ..close();
+    final path = Path()
+      ..moveTo(40.4918, 46.5592)
+      ..cubicTo(44.6795, 43.176, 46.261, 34.1333, 47.5301, 25.6141)
+      ..cubicTo(49.5854, 11.8168, 39.6662, 1, 25.8097, 1)
+      ..cubicTo(11.2857, 1, 3, 11.4279, 3, 25.3518)
+      ..cubicTo(3, 33.7866, 6.29361, 43.8947, 10.4602, 46.5592)
+      ..cubicTo(12.5868, 47.9192, 12.5868, 47.9051, 25.8097, 47.9192)
+      ..cubicTo(38.3651, 47.9282, 38.5352, 48.14, 40.4918, 46.5592)
+      ..close();
     final shadow = Paint()
       ..color = const Color(0x4d000000)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.10539);

@@ -19,6 +19,29 @@ void main() {
 
     expect(find.text('ChromeTab'), findsOneWidget);
     expect(find.text('首页'), findsNWidgets(2));
-    expect(find.byKey(const ValueKey('chrome-tab-status')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('chrome-tab-official-preview')),
+      findsOneWidget,
+    );
+
+    expect(
+      find.byKey(const ValueKey('chrome-tab-theme-presets')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('chrome-tab-theme-editor')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('chrome-tab-script-controls')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('chrome-tab-state-json')), findsOneWidget);
+    expect(find.byKey(const ValueKey('chrome-tab-event-log')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('chrome-tab-quick-start')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('chrome-tab-icon-demo')), findsOneWidget);
   });
 }

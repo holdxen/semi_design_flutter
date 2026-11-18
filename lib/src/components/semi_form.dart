@@ -16,6 +16,8 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 
+import '../localization/semi_localizations.dart';
+
 import '../theme/semi_form_theme.dart';
 import '../theme/semi_form_theme_data.dart';
 import '../theme/semi_icon_theme.dart';
@@ -108,16 +110,21 @@ class SemiFormFieldRule {
 }
 
 /// 自定义校验（上游字段级 `validator`——`FutureOr<String>`，空串 = 通过）。
-typedef SemiFormFieldValidator =
-    FutureOr<String> Function(Object? value, Map<String, Object?> values);
+typedef SemiFormFieldValidator = FutureOr<String> Function(
+  Object? value,
+  Map<String, Object?> values,
+);
 
 /// 表单级校验（上游 `validator`/`validateFields`——返回错误表或空）。
-typedef SemiFormValidator =
-    FutureOr<Map<String, Object?>> Function(Map<String, Object?> values);
+typedef SemiFormValidator = FutureOr<Map<String, Object?>> Function(
+  Map<String, Object?> values,
+);
 
 /// 字段控件构建器。
-typedef SemiFormFieldBuilder =
-    Widget Function(BuildContext context, SemiFormFieldControl control);
+typedef SemiFormFieldBuilder = Widget Function(
+  BuildContext context,
+  SemiFormFieldControl control,
+);
 
 /// ArrayField 行（上游 `{ key, field, remove }`）。
 class SemiArrayFieldItem {
@@ -155,8 +162,10 @@ class SemiArrayFieldApi {
   final void Function(Object? value, [int? index]) addWithInitValue;
 }
 
-typedef SemiArrayFieldBuilder =
-    Widget Function(BuildContext context, SemiArrayFieldApi api);
+typedef SemiArrayFieldBuilder = Widget Function(
+  BuildContext context,
+  SemiArrayFieldApi api,
+);
 
 /// 字段构建器入参（withField 注入 props 的 Flutter 口径）。
 class SemiFormFieldControl {
@@ -256,7 +265,9 @@ Map<String, Object?> _deepCopyMap(Map<String, Object?> src) {
     } else if (v is List) {
       out[k] = [
         for (final e in v)
-          e is Map<String, Object?> ? _deepCopyMap(e) : (e is List ? List.of(e) : e),
+          e is Map<String, Object?>
+              ? _deepCopyMap(e)
+              : (e is List ? List.of(e) : e),
       ];
     } else {
       out[k] = v;
@@ -506,18 +517,21 @@ class SemiFormController {
 
   void _notify() {
     _version++;
-    _notifyState?.call(SemiFormState(
-      values: _values,
-      errors: _errors,
-      touched: _touched,
-    ));
+    _notifyState?.call(
+      SemiFormState(values: _values, errors: _errors, touched: _touched),
+    );
     // baseForm adapter notifyChange → onChange(formState)。
     _onChange?.call();
   }
 
   // -- register / unRegister (foundation.ts:93-188) --------------------------
 
-  void _registerStaff(String field, _FieldStaff staff, {Object? value, Object? error}) {
+  void _registerStaff(
+    String field,
+    _FieldStaff staff, {
+    Object? value,
+    Object? error,
+  }) {
     _fields[field] = staff;
     final allowEmpty = staff.allowEmpty || _allowEmpty;
     // 注册发生在 build 阶段——只静默同步 state（value/error 由字段侧算好传入）。
@@ -531,7 +545,11 @@ class SemiFormController {
       _updateStateError(field, error, notNotify: true);
     }
     if (_pathHas(_touched, field)) {
-      _updateStateTouched(field, _pathGet(_touched, field) == true, notNotify: true);
+      _updateStateTouched(
+        field,
+        _pathGet(_touched, field) == true,
+        notNotify: true,
+      );
     }
   }
 
@@ -613,7 +631,9 @@ class SemiFormController {
   Object? getValue([String? field]) {
     if (field == null) return _deepCopyMap(_values);
     final v = _pathGet(_values, field);
-    return v is Map<String, Object?> ? _deepCopyMap(v) : (v is List ? List.of(v) : v);
+    return v is Map<String, Object?>
+        ? _deepCopyMap(v)
+        : (v is List ? List.of(v) : v);
   }
 
   /// `getValues()`。
@@ -719,14 +739,18 @@ class SemiFormController {
 
   /// `submitForm()`（foundation.ts:352-366 submit）。
   void submitForm() {
-    validate().then((values) {
-      _notifySubmit?.call(_deepCopyMap(values));
-    }).catchError((Object errors) {
-      _notifySubmitFail?.call(
-        errors is Map<String, Object?> ? _deepCopyMap(errors) : <String, Object?>{},
-        _deepCopyMap(_values),
-      );
-    });
+    validate()
+        .then((values) {
+          _notifySubmit?.call(_deepCopyMap(values));
+        })
+        .catchError((Object errors) {
+          _notifySubmitFail?.call(
+            errors is Map<String, Object?>
+                ? _deepCopyMap(errors)
+                : <String, Object?>{},
+            _deepCopyMap(_values),
+          );
+        });
   }
 
   /// `reset(fields?)`（foundation.ts:419-447——ArrayField 还原 + updateKey）。
@@ -764,7 +788,9 @@ class SemiFormController {
     if (v is List) {
       return [
         for (final e in v)
-          e is Map<String, Object?> ? _deepCopyMap(e) : (e is List ? List.of(e) : e),
+          e is Map<String, Object?>
+              ? _deepCopyMap(e)
+              : (e is List ? List.of(e) : e),
       ];
     }
     return v;
@@ -839,7 +865,8 @@ class SemiFormController {
   bool _isValid(List<String> targets) {
     for (final field in targets) {
       final error = _pathGet(_errors, field);
-      if (error != null && !(error is String && error.isEmpty) &&
+      if (error != null &&
+          !(error is String && error.isEmpty) &&
           !(error is List && error.isEmpty)) {
         return false;
       }
@@ -929,8 +956,8 @@ class _FormScope extends InheritedWidget {
     required super.child,
   });
 
-  static _FormScope of(BuildContext context) => context
-      .dependOnInheritedWidgetOfExactType<_FormScope>()!;
+  static _FormScope of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_FormScope>()!;
 
   final SemiFormController controller;
   final _FormProps props;
@@ -1069,11 +1096,17 @@ class SemiForm extends StatefulWidget {
   final VoidCallback? onReset;
 
   /// 值变化（上游 `onValueChange(values, changedValue)`）。
-  final void Function(Map<String, Object?> values, Map<String, Object?> changed)?
+  final void Function(
+    Map<String, Object?> values,
+    Map<String, Object?> changed,
+  )?
   onValueChange;
 
   /// 错误变化（上游 `onErrorChange(errors, changedError)`）。
-  final void Function(Map<String, Object?> errors, Map<String, Object?> changed)?
+  final void Function(
+    Map<String, Object?> errors,
+    Map<String, Object?> changed,
+  )?
   onErrorChange;
 
   /// 状态变化（上游 `onChange(formState)`）。
@@ -1210,8 +1243,7 @@ class _SemiFormState extends State<SemiForm> {
       controller: _controller,
       props: props,
       version: _controller._version,
-      child:
-          widget.builder?.call(context, state, _controller) ?? widget.child!,
+      child: widget.builder?.call(context, state, _controller) ?? widget.child!,
     );
   }
 }
@@ -1341,7 +1373,9 @@ class SemiFormField extends StatefulWidget {
 }
 
 class _SemiFormFieldState extends State<SemiFormField> {
-  late final GlobalKey _scrollKey = GlobalKey(debugLabel: 'SemiForm:${widget.field}');
+  late final GlobalKey _scrollKey = GlobalKey(
+    debugLabel: 'SemiForm:${widget.field}',
+  );
   late SemiFormController _controller;
   late _FormProps _formProps;
 
@@ -1392,9 +1426,7 @@ class _SemiFormFieldState extends State<SemiFormField> {
         _controller._registered[widget.field] == true &&
         _pathHas(_controller._values, widget.field);
     // utils.ts:100-119 `transformTrigger`（field > form > DEFAULT_TRIGGER）。
-    _triggers = [
-      widget.trigger ?? _formProps.trigger,
-    ];
+    _triggers = [widget.trigger ?? _formProps.trigger];
     _value = restore ? _pathGet(_controller._values, widget.field) : _initVal;
     if (restore) {
       _error = _pathGet(_controller._errors, widget.field);
@@ -1482,7 +1514,11 @@ class _SemiFormFieldState extends State<SemiFormField> {
     _controller._updateStateTouched(widget.field, t, notNotify: notNotify);
   }
 
-  void _updateError(Object? errors, {bool notNotify = false, bool silent = false}) {
+  void _updateError(
+    Object? errors, {
+    bool notNotify = false,
+    bool silent = false,
+  }) {
     // withField.tsx:230-249（结果未变不重复更新；silent 不写 UI）。
     if (errors == _error) return;
     if (!silent) {
@@ -1493,11 +1529,7 @@ class _SemiFormFieldState extends State<SemiFormField> {
             : SemiFormValidateStatus.success;
       });
     }
-    _controller._updateStateError(
-      widget.field,
-      errors,
-      notNotify: notNotify,
-    );
+    _controller._updateStateError(widget.field, errors, notNotify: notNotify);
   }
 
   bool _isError(Object? errors) {
@@ -1554,7 +1586,8 @@ class _SemiFormFieldState extends State<SemiFormField> {
   /// withField.tsx:274-346 `_validateInternal`（rules；`first:` 即
   /// stopValidateWithError）。
   Future<void> _validateRules(Object? val, int seq) async {
-    final stopFirst = widget.stopValidateWithError ?? _formProps.stopValidateWithError;
+    final stopFirst =
+        widget.stopValidateWithError ?? _formProps.stopValidateWithError;
     final messages = <String>[];
     for (final rule in widget.rules!) {
       final message = _checkRule(rule, val);
@@ -1576,88 +1609,93 @@ class _SemiFormFieldState extends State<SemiFormField> {
   String? _checkRule(SemiFormFieldRule rule, Object? rawValue) {
     var value = rawValue;
     if (rule.transform != null) value = rule.transform!(value);
+    final strings = SemiLocalizations.of(context);
     final label = widget.field;
     final empty =
-        value == null || (value is String && value.isEmpty) || (value is List && value.isEmpty);
+        value == null ||
+        (value is String && value.isEmpty) ||
+        (value is List && value.isEmpty);
     if (rule.required && empty) {
-      return rule.message ?? _FormMetrics.requiredMessage(label);
+      return rule.message ?? strings.formRequired(label);
     }
     if (empty && !rule.required) {
       // async-validator：非必填空值跳过其余检查。
       return null;
     }
     if (rule.whitespace && value is String && value.trim().isEmpty) {
-      return rule.message ?? _FormMetrics.whitespaceMessage(label);
+      return rule.message ?? strings.formWhitespace(label);
     }
     switch (rule.type) {
       case SemiFormFieldRuleType.string:
         if (value is! String) {
-          return rule.message ?? _FormMetrics.typeMessage(label, 'string');
+          return rule.message ?? strings.formType(label, 'string');
         }
         if (rule.len != null && value.length != rule.len) {
-          return rule.message ?? _FormMetrics.lenMessage(label, rule.len!);
+          return rule.message ?? strings.formLength(label, rule.len!);
         }
         if (rule.min != null && value.length < rule.min!) {
-          return rule.message ?? _FormMetrics.minMessage(label, rule.min!);
+          return rule.message ?? strings.formMinLength(label, rule.min!);
         }
         if (rule.max != null && value.length > rule.max!) {
-          return rule.message ?? _FormMetrics.maxMessage(label, rule.max!);
+          return rule.message ?? strings.formMaxLength(label, rule.max!);
         }
       case SemiFormFieldRuleType.number:
       case SemiFormFieldRuleType.integer:
         final n = value is num ? value : num.tryParse('$value');
         if (n == null) {
           return rule.message ??
-              _FormMetrics.typeMessage(
+              strings.formType(
                 label,
-                rule.type == SemiFormFieldRuleType.integer ? 'integer' : 'number',
+                rule.type == SemiFormFieldRuleType.integer
+                    ? 'integer'
+                    : 'number',
               );
         }
         if (rule.type == SemiFormFieldRuleType.integer && n is! int) {
-          return rule.message ?? _FormMetrics.typeMessage(label, 'integer');
+          return rule.message ?? strings.formType(label, 'integer');
         }
         if (rule.len != null && n != rule.len) {
-          return rule.message ?? _FormMetrics.numberLenMessage(label, rule.len!);
+          return rule.message ?? strings.formNumberLength(label, rule.len!);
         }
         if (rule.min != null && n < rule.min!) {
-          return rule.message ?? _FormMetrics.numberMinMessage(label, rule.min!);
+          return rule.message ?? strings.formNumberMin(label, rule.min!);
         }
         if (rule.max != null && n > rule.max!) {
-          return rule.message ?? _FormMetrics.numberMaxMessage(label, rule.max!);
+          return rule.message ?? strings.formNumberMax(label, rule.max!);
         }
       case SemiFormFieldRuleType.boolean:
         if (value is! bool) {
-          return rule.message ?? _FormMetrics.typeMessage(label, 'boolean');
+          return rule.message ?? strings.formType(label, 'boolean');
         }
       case SemiFormFieldRuleType.array:
         if (value is! List) {
-          return rule.message ?? _FormMetrics.typeMessage(label, 'array');
+          return rule.message ?? strings.formType(label, 'array');
         }
         if (rule.len != null && value.length != rule.len) {
-          return rule.message ?? _FormMetrics.lenMessage(label, rule.len!);
+          return rule.message ?? strings.formLength(label, rule.len!);
         }
         if (rule.min != null && value.length < rule.min!) {
-          return rule.message ?? _FormMetrics.minMessage(label, rule.min!);
+          return rule.message ?? strings.formMinLength(label, rule.min!);
         }
         if (rule.max != null && value.length > rule.max!) {
-          return rule.message ?? _FormMetrics.maxMessage(label, rule.max!);
+          return rule.message ?? strings.formMaxLength(label, rule.max!);
         }
       case SemiFormFieldRuleType.enum_:
         if (rule.values == null || !rule.values!.contains(value)) {
           return rule.message ??
-              _FormMetrics.enumMessage(label, '${rule.values ?? const []}');
+              strings.formEnum(label, '${rule.values ?? const []}');
         }
       case SemiFormFieldRuleType.url:
         if (!_FormMetrics.urlRegex.hasMatch('$value')) {
-          return rule.message ?? _FormMetrics.typeMessage(label, 'url');
+          return rule.message ?? strings.formType(label, 'url');
         }
       case SemiFormFieldRuleType.email:
         if (!_FormMetrics.emailRegex.hasMatch('$value')) {
-          return rule.message ?? _FormMetrics.typeMessage(label, 'email');
+          return rule.message ?? strings.formType(label, 'email');
         }
       case SemiFormFieldRuleType.regexp:
         if (rule.pattern == null || !rule.pattern!.hasMatch('$value')) {
-          return rule.message ?? _FormMetrics.patternMessage(label);
+          return rule.message ?? strings.formPattern(label);
         }
       case SemiFormFieldRuleType.any:
         break;
@@ -1665,7 +1703,7 @@ class _SemiFormFieldState extends State<SemiFormField> {
     if (rule.pattern != null &&
         rule.type != SemiFormFieldRuleType.regexp &&
         !rule.pattern!.hasMatch('$value')) {
-      return rule.message ?? _FormMetrics.patternMessage(label);
+      return rule.message ?? strings.formPattern(label);
     }
     return null;
   }
@@ -1708,7 +1746,8 @@ class _SemiFormFieldState extends State<SemiFormField> {
     final labelPos = widget.labelPosition ?? _formProps.labelPosition;
     final control = SemiFormFieldControl(
       field: widget.field,
-      insetLabel: (labelPos == SemiFormLabelPosition.top ||
+      insetLabel:
+          (labelPos == SemiFormLabelPosition.top ||
               labelPos == SemiFormLabelPosition.left ||
               widget.noLabel)
           ? null
@@ -1729,7 +1768,9 @@ class _SemiFormFieldState extends State<SemiFormField> {
       },
       reset: _reset,
     );
-    final child = Builder(builder: (context) => widget.builder(context, control));
+    final child = Builder(
+      builder: (context) => widget.builder(context, control),
+    );
 
     // withField.tsx:649-651（InputGroup 内不渲染 chrome）。
     if (inGroup || widget.pure) {
@@ -1753,7 +1794,8 @@ class _SemiFormFieldState extends State<SemiFormField> {
     final labelTop = (!widget.noLabel && labelPos == SemiFormLabelPosition.top)
         ? _buildLabel(theme, labelWidth, labelAlign, top: true)
         : null;
-    final labelLeft = (!widget.noLabel && labelPos == SemiFormLabelPosition.left)
+    final labelLeft =
+        (!widget.noLabel && labelPos == SemiFormLabelPosition.left)
         ? _buildLabel(theme, labelWidth, labelAlign)
         : null;
 
@@ -1784,8 +1826,7 @@ class _SemiFormFieldState extends State<SemiFormField> {
       children: [
         if (extraPos == 'middle') extra ?? const SizedBox.shrink(),
         child,
-        if (!widget.noErrorMessage)
-          _buildErrorMessage(theme, formProps),
+        if (!widget.noErrorMessage) _buildErrorMessage(theme, formProps),
         if (extraPos == 'bottom') extra ?? const SizedBox.shrink(),
       ],
     );
@@ -1813,16 +1854,14 @@ class _SemiFormFieldState extends State<SemiFormField> {
 
     // form.scss:23-50（layout 决定字段间距；group_* 变体由 SemiFormGroup 用）。
     final pad = formProps.layout == SemiFormLayout.horizontal
-        ? EdgeInsetsDirectional.only(end: theme.spacingFormFieldHorizontalPaddingRight)
+        ? EdgeInsetsDirectional.only(
+            end: theme.spacingFormFieldHorizontalPaddingRight,
+          )
         : EdgeInsets.only(
             top: theme.spacingFormFieldVerticalPaddingTop,
             bottom: theme.spacingFormFieldVerticalPaddingBottom,
           );
-    return Container(
-      key: _scrollKey,
-      padding: pad,
-      child: inner,
-    );
+    return Container(key: _scrollKey, padding: pad, child: inner);
   }
 
   /// label.tsx（required `*` / optional「（可选）」/ extra / width / align）。
@@ -1895,7 +1934,7 @@ class _SemiFormFieldState extends State<SemiFormField> {
                         start: theme.spacingFormLabelExtraMarginLeft,
                       ),
                       child: Text(
-                        _FormMetrics.localeOptional,
+                        SemiLocalizations.of(context).optional,
                         style: TextStyle(
                           color: theme.colorFormLabelOptionalTextDefault,
                         ),
@@ -1922,7 +1961,10 @@ class _SemiFormFieldState extends State<SemiFormField> {
   }
 
   /// errorMessage.tsx（error/helpText + 状态图标 + `message: ''` quirk）。
-  Widget _buildErrorMessage(SemiResolvedFormThemeData theme, _FormProps formProps) {
+  Widget _buildErrorMessage(
+    SemiResolvedFormThemeData theme,
+    _FormProps formProps,
+  ) {
     final error = _error;
     // errorMessage.tsx:74-76（空串错误 + error 态 → 整行不渲染）。
     if (error == '' && _resolvedStatus == SemiFormValidateStatus.error) {
@@ -1935,7 +1977,10 @@ class _SemiFormFieldState extends State<SemiFormField> {
     String? text;
     if (hasError) {
       if (error is List) {
-        final filtered = [for (final e in error) if (e != null) '$e'];
+        final filtered = [
+          for (final e in error)
+            if (e != null) '$e',
+        ];
         text = filtered.isEmpty ? null : filtered.join(', ');
       } else {
         text = '$error';
@@ -1945,7 +1990,8 @@ class _SemiFormFieldState extends State<SemiFormField> {
     }
     final status = _resolvedStatus;
     Widget? icon;
-    if (formProps.showValidateIcon && (text != null || widget.helpText != null)) {
+    if (formProps.showValidateIcon &&
+        (text != null || widget.helpText != null)) {
       // errorMessage.tsx:77-98（warning=alertTriangle / error=alertCircle）。
       final iconData = switch (status) {
         SemiFormValidateStatus.warning => SemiIcons.alertTriangle,
@@ -1973,7 +2019,9 @@ class _SemiFormFieldState extends State<SemiFormField> {
     return Container(
       key: SemiFormField.errorKey(widget.field),
       // form.scss:139-151（`margin-top` + font-size-regular）。
-      margin: EdgeInsetsDirectional.only(top: theme.spacingFormMessageMarginTop),
+      margin: EdgeInsetsDirectional.only(
+        top: theme.spacingFormMessageMarginTop,
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2078,15 +2126,17 @@ class _SemiArrayFieldState extends State<SemiArrayField> {
     final list = base == null
         ? null
         : _controller.getValue(base) as List<Object?>?;
-    final rows = list ?? _listCopy(_controller._arrayFields[base]?.initValue) ?? <Object?>[];
+    final rows =
+        list ??
+        _listCopy(_controller._arrayFields[base]?.initValue) ??
+        <Object?>[];
     _rowKeys
       ..clear()
       ..addAll([for (final _ in rows) 'array-${_keySeq++}']);
   }
 
-  List<Object?>? _listCopy(Object? src) => src is List
-      ? [for (final e in src) _controller._deepCopyValue(e)]
-      : null;
+  List<Object?>? _listCopy(Object? src) =>
+      src is List ? [for (final e in src) _controller._deepCopyValue(e)] : null;
 
   List<Object?> _currentList() {
     final base = widget.field;
@@ -2105,9 +2155,7 @@ class _SemiArrayFieldState extends State<SemiArrayField> {
 
   void _add([int? index, Object? value]) {
     final list = _currentList();
-    final i = index == null
-        ? list.length
-        : index.clamp(0, list.length);
+    final i = index == null ? list.length : index.clamp(0, list.length);
     list.insert(i, value);
     _rowKeys.insert(i, 'array-${_keySeq++}');
     _writeList(list);
@@ -2597,7 +2645,11 @@ class SemiFormInput extends StatelessWidget {
   final bool disabled;
 
   /// 追加定制（拿到 control 后包装输入）。
-  final Widget Function(BuildContext context, SemiFormFieldControl control, Widget input)?
+  final Widget Function(
+    BuildContext context,
+    SemiFormFieldControl control,
+    Widget input,
+  )?
   builder;
 
   @override

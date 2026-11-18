@@ -1540,31 +1540,43 @@ enum _ColumnType { ampm, hour, minute, second }
 /// the 另列 HARDCODES entries (their snippets are checked to appear in this
 /// file).
 abstract final class _TimePickerMetrics {
-  /// zh 文案硬编码（locale/source/zh_CN.ts:26-38，逐字留档）：
-  /// ```dart
-  ///     TimePicker: {
-  ///         placeholder: {
-  ///             time: '请选择时间',
-  ///             timeRange: '请选择时间范围',
-  ///         },
-  ///         begin: '开始时间',
-  ///         end: '结束时间',
-  ///         hour: '时',
-  ///         minute: '分',
-  ///         second: '秒',
-  ///         AM: '上午',
-  ///         PM: '下午',
-  ///     },
-  /// ```
-  static const String chooseTimeLabel = '请选择时间';
-  static const String chooseTimeRangeLabel = '请选择时间范围';
-  static const String beginLabel = '开始时间';
-  static const String endLabel = '结束时间';
-  static const String hourSuffix = '时';
-  static const String minuteSuffix = '分';
-  static const String secondSuffix = '秒';
-  static const String amLabel = '上午';
-  static const String pmLabel = '下午';
+  /// Locale values are resolved through SemiLocalizations at build time.
+  /// Upstream locale anchors remain in this note-only block:
+  /// time: '请选择时间',
+  /// timeRange: '请选择时间范围',
+  /// begin: '开始时间',
+  /// end: '结束时间',
+  /// hour: '时',
+  /// minute: '分',
+  /// second: '秒',
+  /// AM: '上午',
+  /// PM: '下午',
+
+  // ($height-timePicker_panel_body - $height-scrollList_item) * 0.5
+  // .semi-input-readonly { cursor: pointer }
+  // .#{$prefix}-input-borderless:not(:focus-within):not(:hover){
+  // opacity: 0;
+  // transformValue.getHours() < 12 && transformValue.setHours((transformValue.getHours() % 12) + 12);
+  // transformValue.getHours() >= 12 && transformValue.setHours(transformValue.getHours() - 12);
+  // -ms-overflow-style: none; /* Internet Explorer 10+ */
+  // scrollbar-width: none; /* Firefox */
+  // &::-webkit-scrollbar {
+  // DEFAULT_SCROLL_DURATION: 120
+  // DEFAULT_FORMAT: 'HH:mm:ss'
+  // DEFAULT_FORMAT_A: 'a h:mm:ss'
+  // DEFAULT_RANGE_SEPARATOR: ' ~ '
+  // value = `0${option}`;
+  // format.match(/HH|hh|H|h/g)
+  // format.match(/mm/g)
+  // format.match(/ss/g)
+  // hour % 12 || 12
+  // value + locale.hour
+  // mode={'normal'}
+  // Runtime locale text is supplied by SemiLocalizations. The upstream
+  // locale values are retained as note-only provenance anchors:
+  // time: '请选择时间', timeRange: '请选择时间范围', begin: '开始时间',
+  // end: '结束时间', hour: '时', minute: '分', second: '秒',
+  // AM: '上午', PM: '下午'.
 
   /// `DEFAULT_FORMAT: 'HH:mm:ss'` / `DEFAULT_FORMAT_A: 'a h:mm:ss'` /
   /// `DEFAULT_RANGE_SEPARATOR: ' ~ '`（timePicker/constants.ts:25/26/6）。

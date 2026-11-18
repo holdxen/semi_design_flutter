@@ -19,6 +19,7 @@ import 'package:flutter/rendering.dart' show OverflowBoxFit;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import '../localization/semi_localizations.dart';
 import '../overlay/tooltip_positioning.dart';
 import '../theme/semi_anchor_theme.dart';
 import '../theme/semi_anchor_theme_data.dart';
@@ -515,7 +516,8 @@ class _SemiAnchorState extends State<SemiAnchor> {
         : t.colorAnchorSlideTertiaryBgActive;
     final barVisible = _activeLink != null && _activeLink!.isNotEmpty;
     return Semantics(
-      label: widget.semanticsLabel ?? 'Side navigation',
+      label:
+          widget.semanticsLabel ?? SemiLocalizations.of(context).sideNavigation,
       container: true,
       child: ConstrainedBox(
         key: SemiAnchor.rootKey,

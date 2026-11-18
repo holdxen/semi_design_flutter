@@ -2,6 +2,7 @@ import 'package:flutter/rendering.dart' show OverflowBoxFit;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import '../localization/semi_localizations.dart';
 import '../theme/semi_theme.dart';
 import '../theme/semi_tag_theme.dart';
 import '../tokens/token_types.dart';
@@ -130,6 +131,7 @@ class _SemiTagState extends State<SemiTag> {
   Widget build(BuildContext context) {
     if (!(widget.visible ?? _visible)) return const SizedBox.shrink();
     final global = SemiTheme.of(context);
+    final strings = SemiLocalizations.of(context);
     final t = SemiTagTheme.resolve(context);
     final p = global.palette;
     final c = global.colors;
@@ -419,7 +421,8 @@ class _SemiTagState extends State<SemiTag> {
             }),
             child: Semantics(
               button: true,
-              label: widget.closeSemanticsLabel ?? 'Close ${widget.text}',
+              label:
+                  widget.closeSemanticsLabel ?? strings.closeTag(widget.text),
               onTap: _close,
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,

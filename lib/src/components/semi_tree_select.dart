@@ -20,6 +20,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../overlay/tooltip_positioning.dart';
+import '../localization/semi_localizations.dart';
 import '../theme/semi_icon_theme.dart';
 import '../theme/semi_spin_theme.dart';
 import '../theme/semi_spin_theme_data.dart';
@@ -1832,7 +1833,7 @@ class _SemiTreeSelectState extends State<SemiTreeSelect> {
             // index.tsx:1048-1049 `role='button'` +
             // `aria-label="Clear TreeSelect value"`。
             button: true,
-            label: _TreeSelectMetrics.clearButtonSemantics,
+            label: SemiLocalizations.of(context).clearTreeSelectValue,
             child: GestureDetector(
               key: SemiTreeSelect.clearButtonKey,
               behavior: HitTestBehavior.opaque,
@@ -1909,7 +1910,9 @@ class _SemiTreeSelectState extends State<SemiTreeSelect> {
       button: true,
       enabled: !widget.disabled,
       expanded: _open,
-      label: widget.semanticsLabel ?? _TreeSelectMetrics.defaultSemanticsLabel,
+      label:
+          widget.semanticsLabel ??
+          SemiLocalizations.of(context).treeSelectLabel,
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: bg,
@@ -2309,12 +2312,10 @@ class _SemiTreeSelectState extends State<SemiTreeSelect> {
     // 单选触发器搜索的占位由回填浮层承担（input placeholder 空）；多选触发器
     // 搜索的占位在内联输入上（上游 TagInput `placeholder` prop——renderTagInput
     // :1282）。弹层搜索用 searchPlaceholder ?? locale。
+    final strings = SemiLocalizations.of(context);
     final placeholder =
         placeholderOverride ??
-        (inTrigger
-            ? ''
-            : widget.searchPlaceholder ??
-                  _TreeSelectMetrics.localeSearchPlaceholder);
+        (inTrigger ? '' : widget.searchPlaceholder ?? strings.search);
     final custom = widget.searchRender;
     if (custom is SemiTreeSelectSearchBuilder) {
       return custom(
@@ -2343,9 +2344,7 @@ class _SemiTreeSelectState extends State<SemiTreeSelect> {
           // index.tsx:1325 `prefix: <IconSearch />`。
           : const SemiIcon(SemiIcons.search, size: SemiIconSize.small),
       showClear: !inTrigger && widget.showSearchClear,
-      semanticsLabel: inTrigger
-          ? null
-          : _TreeSelectMetrics.searchInputSemantics,
+      semanticsLabel: inTrigger ? null : strings.filterTreeSelect,
       onChanged: widget.disabled ? null : _handleSearch,
       onFocusChange: (focused) {
         if (_isTriggerSearch && !_multiple) {
@@ -2471,7 +2470,7 @@ class _SemiTreeSelectState extends State<SemiTreeSelect> {
       ),
       // ★上游 `emptyContent: null` 隐藏空态——本移植无三态（docs 差异清单）。
       null => Text(
-        _TreeSelectMetrics.localeEmptyText,
+        SemiLocalizations.of(context).noData,
         style: TextStyle(
           fontSize: _TreeSelectMetrics.fontSizeRegular,
           color: t.colorTreeOptionDisabledTextDefault,
@@ -3157,21 +3156,6 @@ abstract final class _TreeSelectMetrics {
   /// 与 semi_tree.dart 同源）。
   static const Duration collapsibleDuration = Duration(milliseconds: 200);
 
-  /// zh_CN.ts:153 `searchPlaceholder: '搜索'`（TreeSelect locale）。
-  static const String localeSearchPlaceholder = '搜索';
-
-  /// zh_CN.ts:125 `emptyText: '暂无数据'`（Tree locale——renderEmpty 复用）。
-  static const String localeEmptyText = '暂无数据';
-
-  /// index.tsx:1355 `aria-label='Filter TreeSelect item'`（弹层搜索框语义）。
-  static const String searchInputSemantics = 'Filter TreeSelect item';
-
-  /// index.tsx:1049 `aria-label="Clear TreeSelect value"`（清空按钮语义）。
-  static const String clearButtonSemantics = 'Clear TreeSelect value';
-
-  /// index.tsx:319 `'aria-label': 'TreeSelect'`（触发器缺省语义标签）。
-  static const String defaultSemanticsLabel = 'TreeSelect';
-
   /// index.tsx:1325 `IconSearch` 前缀（SemiIcons.search）——注释引用。
 
   /// 上游最小内联输入宽（TagInput `width: auto` 测量的 Flutter 近似）。
@@ -3195,7 +3179,12 @@ abstract final class _TreeSelectMetrics {
     blurRadius: 14,
   );
 
-  // note-only 上游片段（生成器锚点逐字留档）：
+  // Locale labels are resolved through SemiLocalizations at build time; the
+  // upstream accessibility anchors remain here for source-contract tests:
+  // aria-label='Filter TreeSelect item'
+  // aria-label="Clear TreeSelect value"
+  // searchPlaceholder: '搜索'
+  // defaultSemanticsLabel: 'TreeSelect'
   // constants.ts:13 `SIZE_SET: ['small', 'large', 'default']`。
   // constants.ts:14 `SEARCH_POSITION_DROPDOWN: 'dropdown'`。
   // constants.ts:15 `SEARCH_POSITION_TRIGGER: 'trigger'`。

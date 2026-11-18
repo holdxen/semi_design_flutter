@@ -496,27 +496,14 @@ class _ChromeTabState extends State<ChromeTab> {
       key: ValueKey('chrome-tab-tap-${tab.id}'),
       width: theme.tabMaxWidth,
       height: theme.stripHeight,
-      child: Focus(
-        onKeyEvent: (_, event) => _handleKey(tab, event),
-        child: MouseRegion(
-          cursor: tab.disabled
-              ? SystemMouseCursors.basic
-              : SystemMouseCursors.click,
-          child: Listener(
-            behavior: HitTestBehavior.opaque,
-            onPointerUp: (_) {
-              if (tab.disabled) return;
-              (widget.onTabActivate ?? widget.onActivate)?.call(tab.id);
-              _ensureTabVisible(tab.id);
-            },
-            child: GestureDetector(
-              onLongPress: tab.disabled
-                  ? null
-                  : () => _showTabActions(context, tab),
-              child: body,
-            ),
-          ),
-        ),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: tab.disabled ? null : () => _activate(tab),
+        onDoubleTap: tab.disabled
+            ? null
+            : () => (widget.onTabEditAddress ?? widget.onEdit)?.call(tab.id),
+        onLongPress: tab.disabled ? null : () => _showTabActions(context, tab),
+        child: body,
       ),
     );
     final tooltip = widget.renderTabTooltip?.call(tab);
@@ -535,22 +522,33 @@ class _ChromeTabState extends State<ChromeTab> {
         child: result,
       );
     }
-    final dragChild = result;
-    result = DragTarget<String>(
-      onWillAcceptWithDetails: (details) => details.data != tab.id,
-      onAcceptWithDetails: (details) {
-        if (details.data == tab.id) return;
-        (widget.onTabReorder ?? widget.onReorder)?.call(
-          ChromeTabReorderInfo(
-            tabId: details.data,
-            targetTabId: tab.id,
-            position: ChromeTabReorderPosition.before,
-          ),
-        );
-      },
-      builder: (_, _, _) => dragChild,
+    return RepaintBoundary(
+      child: DragTarget<String>(
+        onWillAcceptWithDetails: (details) => details.data != tab.id,
+        onAcceptWithDetails: (details) {
+          if (details.data == tab.id) return;
+          final targetContext = _tabKeys[tab.id]?.currentContext;
+          final renderObject = targetContext?.findRenderObject();
+          final targetWidth = renderObject is RenderBox
+              ? renderObject.size.width
+              : theme.tabMaxWidth;
+          final localPosition = renderObject is RenderBox
+              ? renderObject.globalToLocal(details.offset)
+              : Offset(targetWidth / 2, 0);
+          final position = localPosition.dx < targetWidth / 2
+              ? ChromeTabReorderPosition.before
+              : ChromeTabReorderPosition.after;
+          (widget.onTabReorder ?? widget.onReorder)?.call(
+            ChromeTabReorderInfo(
+              tabId: details.data,
+              targetTabId: tab.id,
+              position: position,
+            ),
+          );
+        },
+        builder: (_, _, _) => tabWithInteraction,
+      ),
     );
-    return result;
   }
 
   Widget _closeButton(

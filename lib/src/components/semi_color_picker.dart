@@ -23,6 +23,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
 
+import '../localization/semi_localizations.dart';
 import '../overlay/tooltip_positioning.dart';
 import '../theme/semi_color_picker_theme.dart';
 import '../theme/semi_color_picker_theme_data.dart';
@@ -810,6 +811,7 @@ class _SemiColorPickerState extends State<SemiColorPicker> {
   // -- SV area ---------------------------------------------------------------
 
   Widget _buildSvArea(SemiResolvedColorPickerThemeData theme) {
+    final strings = SemiLocalizations.of(context);
     final pos = _posValue;
     final current = _current;
     final hueOfPos = _hsvaToRgba(pos.h, 100, 100, 1);
@@ -846,10 +848,11 @@ class _SemiColorPickerState extends State<SemiColorPicker> {
       container: true,
       // `aria-label="Color"` + `aria-valuetext={`Saturation …%, Brightness
       // …%`}` (ColorChooseArea index.tsx:100-105).
-      label: 'Color',
-      value:
-          'Saturation ${_round(current.s).toInt()}%, '
-          'Brightness ${_round(current.v).toInt()}%',
+      label: strings.colorLabel,
+      value: strings.colorRange(
+        _round(current.s).toInt().toString(),
+        _round(current.v).toInt().toString(),
+      ),
       child: MouseRegion(
         // `.semi-colorPicker-colorChooseArea` — `cursor` is `pointer`,
         // `grabbing` while dragging (index.tsx:99).
@@ -1083,6 +1086,7 @@ class _SemiColorPickerState extends State<SemiColorPicker> {
   // -- alpha slider ----------------------------------------------------------
 
   Widget _buildAlphaSlider(SemiResolvedColorPickerThemeData theme) {
+    final strings = SemiLocalizations.of(context);
     final pos = _posValue;
     final hsla = _hsvaToHsla(pos.h, pos.s, pos.v, pos.a);
     // `hsvaToHslaString({ ...hsva, a: 0 })` -> `hsla(h, s%, l%, 0)` and the
@@ -1094,7 +1098,7 @@ class _SemiColorPickerState extends State<SemiColorPicker> {
     return Semantics(
       container: true,
       // `aria-label="Alpha"` + `aria-valuetext={`${round(a * 100)}%`}`.
-      label: 'Alpha',
+      label: strings.alphaLabel,
       value: '${_round(pos.a * 100).toInt()}%',
       child: MouseRegion(
         // `.semi-colorPicker-alphaSlider` — `cursor: pointer`.

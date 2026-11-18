@@ -505,8 +505,8 @@ void main() {
       expect(controller.getError('name'), isNull);
       await tester.enterText(find.byType(SemiInput), '');
       await tester.pump();
-      expect(controller.getError('name'), 'name is required');
-      expect(find.text('name is required'), findsOneWidget);
+      expect(controller.getError('name'), 'name为必填项');
+      expect(find.text('name为必填项'), findsOneWidget);
     });
 
     testWidgets('custom validator sync and async', (tester) async {
@@ -594,7 +594,7 @@ void main() {
         await controller.validate(fields: ['name']);
       } catch (_) {}
       await tester.pumpAndSettle();
-      expect(controller.getError('name'), 'name is required');
+      expect(controller.getError('name'), 'name为必填项');
     });
 
     testWidgets('mount trigger validates once on mount', (tester) async {
@@ -612,7 +612,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(controller.getError('name'), 'name is required');
+      expect(controller.getError('name'), 'name为必填项');
     });
 
     testWidgets('submit reports onSubmit or onSubmitFail', (tester) async {
@@ -636,7 +636,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(submitted, isNull);
       expect(failed, isNotNull);
-      expect(failed!['name'], 'name is required');
+      expect(failed!['name'], 'name为必填项');
       await tester.enterText(find.byType(SemiInput), 'ok');
       await tester.pumpAndSettle();
       controller.submitForm();
@@ -668,10 +668,7 @@ void main() {
       await tester.enterText(find.byType(SemiInput).at(0), '');
       await tester.enterText(find.byType(SemiInput).at(1), 'x');
       await tester.pump();
-      expect(
-        controller.getError('a'),
-        'name is required'.replaceFirst('name', 'a'),
-      );
+      expect(controller.getError('a'), 'name为必填项'.replaceFirst('name', 'a'));
       controller.reset();
       await tester.pumpAndSettle();
       expect(controller.getValue('a'), 'init-a');

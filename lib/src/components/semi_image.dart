@@ -124,6 +124,8 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import '../localization/semi_localizations.dart';
+
 import '../theme/semi_image_theme.dart';
 import '../theme/semi_image_theme_data.dart';
 import '../theme/semi_slider_theme.dart';
@@ -1816,7 +1818,7 @@ class _SemiImagePreviewInnerState extends State<SemiImagePreviewInner> {
     // image.scss:141-208 `-footer`：wrapper `bottom: 16px` 居中；content 高
     // `$height-image_preview_footer`、`$color-image_preview_footer-bg`、
     // `$radius-image_preview_footer`、padding `$spacing-image_preview_footer-paddingY/X`；
-    // `preview-footer-disabled` 禁用色 `$color-image_preview_disabled`。
+    final strings = SemiLocalizations.of(context);
     final props = _p;
     final total = _imgSrc.length;
     final zoomPercent = _zoom * 100;
@@ -1876,7 +1878,7 @@ class _SemiImagePreviewInnerState extends State<SemiImagePreviewInner> {
         disabled: !showPrev,
         // rtl.scss:38 `$transform_rotate-image_preview_icon-rtl`（180°）。
         rotate: rtl ? t.transformRotateImagePreviewIconRtl.degrees : 0,
-        tip: props.prevTip ?? '上一张',
+        tip: props.prevTip ?? strings.imagePrevious,
       ),
       Padding(
         padding: EdgeInsets.symmetric(
@@ -1885,7 +1887,7 @@ class _SemiImagePreviewInnerState extends State<SemiImagePreviewInner> {
         ),
         // image.scss:163 `font-size-header-6`。
         child: Text(
-          '${_currentIndex + 1}/$total',
+          strings.imagePageOf(_currentIndex + 1, total),
           style: TextStyle(
             color: t.colorImagePreviewFooterIcon,
             fontSize: global.typography.fontSizeHeading6,
@@ -1900,21 +1902,21 @@ class _SemiImagePreviewInnerState extends State<SemiImagePreviewInner> {
         () => _handleSwitchImage('next'),
         disabled: !showNext,
         rotate: rtl ? t.transformRotateImagePreviewIconRtl.degrees : 0,
-        tip: props.nextTip ?? '下一张',
+        tip: props.nextTip ?? strings.imageNext,
       ),
       _divider(t),
       icon(
         SemiIcons.minus,
         () => _changeSliderValue(false),
         disabled: zoomPercent <= props.minZoom * 100,
-        tip: props.zoomOutTip ?? '缩小',
+        tip: props.zoomOutTip ?? strings.imageZoomOut,
       ),
       _zoomSlider(t),
       icon(
         SemiIcons.plus,
         () => _changeSliderValue(true),
         disabled: zoomPercent >= props.maxZoom * 100,
-        tip: props.zoomInTip ?? '放大',
+        tip: props.zoomInTip ?? strings.imageZoomIn,
       ),
       icon(
         // `ratio === "adaptation" ? "realSize" : "adaptation"` —— 图标显示
@@ -1929,22 +1931,22 @@ class _SemiImagePreviewInnerState extends State<SemiImagePreviewInner> {
         ),
         gap: true,
         tip: _ratio == SemiImageRatioType.adaptation
-            ? props.originTip ?? '原始尺寸'
-            : props.adaptiveTip ?? '适应页面',
+            ? props.originTip ?? strings.imageOriginalSize
+            : props.adaptiveTip ?? strings.imageFit,
       ),
       _divider(t),
       icon(
         SemiIcons.rotate,
         // `handleRotateLeft` —— footer 恒左旋。
         () => _handleRotateImage('left'),
-        tip: props.rotateTip ?? '旋转',
+        tip: props.rotateTip ?? strings.imageRotate,
       ),
       icon(
         SemiIcons.download,
         props.disableDownload ? null : _handleDownload,
         disabled: props.disableDownload,
         gap: true,
-        tip: props.downloadTip ?? '下载',
+        tip: props.downloadTip ?? strings.imageDownload,
       ),
     ];
 

@@ -31,6 +31,7 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 
+import '../localization/semi_localizations.dart';
 import '../theme/semi_carousel_theme.dart';
 import '../theme/semi_carousel_theme_data.dart';
 import 'icon/semi_icon.dart';
@@ -508,6 +509,7 @@ class _SemiCarouselState extends State<SemiCarousel>
 
   List<Widget> _buildArrows(SemiResolvedCarouselThemeData theme) {
     final rtl = Directionality.of(context) == TextDirection.rtl;
+    final strings = SemiLocalizations.of(context);
     final size = theme.widthCarouselArrow;
     final prev = _Arrow(
       key: const ValueKey('carousel-arrow-prev'),
@@ -520,7 +522,7 @@ class _SemiCarouselState extends State<SemiCarousel>
               ),
             )
           : SemiIcon(SemiIcons.chevronLeft, customSize: size, color: color),
-      semanticLabel: 'Previous index',
+      semanticLabel: strings.previousCarouselItem(_activeIndex + 1),
       colorTheme: widget.theme,
       alwaysVisible: widget.arrowType == SemiCarouselArrowType.always,
       visible: _hovered,
@@ -545,7 +547,7 @@ class _SemiCarouselState extends State<SemiCarousel>
               ),
             )
           : SemiIcon(SemiIcons.chevronRight, customSize: size, color: color),
-      semanticLabel: 'Next index',
+      semanticLabel: strings.nextCarouselItem(_activeIndex + 1),
       colorTheme: widget.theme,
       alwaysVisible: widget.arrowType == SemiCarouselArrowType.always,
       visible: _hovered,

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../overlay/tooltip_positioning.dart';
+import '../localization/semi_localizations.dart';
 import '../theme/semi_icon_theme.dart';
 import '../theme/semi_select_theme.dart';
 import '../theme/semi_select_theme_data.dart';
@@ -1584,7 +1585,9 @@ class _SemiSelectState extends State<SemiSelect> {
       // dropdown search keeps the regular input box — upstream styles just
       // its wrapper (padding + divider) in `&-dropdown-search-wrapper`.
       bare: inTrigger,
-      placeholder: inTrigger ? null : widget.searchPlaceholder,
+      placeholder: inTrigger
+          ? null
+          : widget.searchPlaceholder ?? SemiLocalizations.of(context).search,
       // Upstream's dropdown search input renders an `IconSearch` prefix and
       // a clear button (`selectInputProps`, index.tsx); the bare trigger
       // input has neither. The icon is `1em` — the input's font size.
@@ -1638,7 +1641,7 @@ class _SemiSelectState extends State<SemiSelect> {
           ),
         )
       else if (visible.isEmpty)
-        widget.emptyContent ?? const SizedBox.shrink()
+        widget.emptyContent ?? Text(SemiLocalizations.of(context).noData)
       else
         ..._buildOptionRows(theme, visible),
       if (widget.innerBottomSlot != null)
@@ -1933,7 +1936,7 @@ class _SelectOptionRowState extends State<_SelectOptionRow> {
         option.value as String,
       );
     } else if (createOnly) {
-      // Default create row: `&-create-tips` label then the typed text.
+      // Default create row: localized `create` label then the typed text.
       content = Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1942,7 +1945,7 @@ class _SelectOptionRowState extends State<_SelectOptionRow> {
               end: theme.spacingSelectCreateTipsMarginRight,
             ),
             child: Text(
-              '创建',
+              SemiLocalizations.of(context).create,
               style: TextStyle(
                 color: theme.colorSelectCreateTipsText,
                 fontSize: global.typography.fontSizeRegular,

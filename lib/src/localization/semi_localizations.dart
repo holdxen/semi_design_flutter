@@ -132,8 +132,25 @@ abstract class SemiLocalizations {
   String get modalOk;
   String get popconfirmConfirm;
 
-  // Accessibility labels.
+  // Form validation messages.
+  String formRequired(String label);
+  String formWhitespace(String label);
+  String formType(String label, String type);
+  String formLength(String label, int length);
+  String formMinLength(String label, double min);
+  String formMaxLength(String label, double max);
+  String formNumberLength(String label, int length);
+  String formNumberMin(String label, double min);
+  String formNumberMax(String label, double max);
+  String formEnum(String label, String values);
+  String formPattern(String label);
+
+  // Additional component accessibility text.
+  String colorRange(String saturation, String brightness);
+  String avatarRemaining(int count, String altList);
+  String get uploadProgressSemantics;
   String get sideNavigation;
+  String get chromeTabs;
   String get breadcrumb;
   String get expandBreadcrumb;
   String previousCarouselItem(int index);
@@ -339,7 +356,39 @@ class _SemiZhCNLocalizations extends SemiLocalizations {
   @override
   String get popconfirmConfirm => '确认';
   @override
+  String formRequired(String label) => '$label为必填项';
+  @override
+  String formWhitespace(String label) => '$label不能为空';
+
+  @override
+  String formType(String label, String type) => '$label不是有效的$type';
+  @override
+  String formLength(String label, int length) => '$label长度必须为$length';
+  @override
+  String formMinLength(String label, double min) => '$label长度不能少于$min';
+  @override
+  String formMaxLength(String label, double max) => '$label长度不能超过$max';
+  @override
+  String formNumberLength(String label, int length) => '$label必须等于$length';
+  @override
+  String formNumberMin(String label, double min) => '$label不能小于$min';
+  @override
+  String formNumberMax(String label, double max) => '$label不能大于$max';
+  @override
+  String formEnum(String label, String values) => '$label必须是以下值之一：$values';
+  @override
+  String formPattern(String label) => '$label格式不正确';
+  @override
+  String colorRange(String saturation, String brightness) =>
+      '色相 $saturation%，明度 $brightness%';
+  @override
+  String avatarRemaining(int count, String altList) => '剩余$count个头像：$altList';
+  @override
+  String get uploadProgressSemantics => '正在上传文件';
+  @override
   String get sideNavigation => '侧边导航';
+  @override
+  String get chromeTabs => '浏览器标签页';
   @override
   String get breadcrumb => '面包屑导航';
   @override
@@ -563,8 +612,51 @@ class _SemiEnUSLocalizations extends SemiLocalizations {
   String get modalOk => 'OK';
   @override
   String get popconfirmConfirm => 'Confirm';
+
+  @override
+  String formRequired(String label) => '$label is required';
+  @override
+  String formWhitespace(String label) => '$label cannot be empty';
+
+  @override
+  String formType(String label, String type) => '$label is not a valid $type';
+
+  @override
+  String formLength(String label, int length) =>
+      '$label must be exactly $length characters';
+  @override
+  String formMinLength(String label, double min) =>
+      '$label must be at least $min characters';
+
+  @override
+  String formMaxLength(String label, double max) =>
+      '$label cannot be longer than $max characters';
+  @override
+  String formNumberLength(String label, int length) =>
+      '$label must equal $length';
+  @override
+  String formNumberMin(String label, double min) =>
+      '$label cannot be less than $min';
+  @override
+  String formNumberMax(String label, double max) =>
+      '$label cannot be greater than $max';
+  @override
+  String formEnum(String label, String values) =>
+      '$label must be one of $values';
+  @override
+  String formPattern(String label) => '$label format is incorrect';
+  @override
+  String colorRange(String saturation, String brightness) =>
+      'Saturation $saturation%, Brightness $brightness%';
+  @override
+  String avatarRemaining(int count, String altList) =>
+      'Number of remaining Avatars: $count, $altList';
+  @override
+  String get uploadProgressSemantics => 'Uploading file progress';
   @override
   String get sideNavigation => 'Side navigation';
+  @override
+  String get chromeTabs => 'Chrome tabs';
   @override
   String get breadcrumb => 'Breadcrumb';
   @override

@@ -66,20 +66,23 @@ BoxDecoration bodyColorOf(WidgetTester tester) => decorationOf(
 );
 
 /// 圆角在 ClipRRect 上（body DecoratedBox 只有颜色）。
-BorderRadius clipRadiusOf(WidgetTester tester) => tester
-    .widget<ClipRRect>(
-      find.descendant(
-        of: find.byType(SemiAvatar),
-        matching: find.byType(ClipRRect),
-      ),
-    )
-    .borderRadius as BorderRadius;
+BorderRadius clipRadiusOf(WidgetTester tester) =>
+    tester
+            .widget<ClipRRect>(
+              find.descendant(
+                of: find.byType(SemiAvatar),
+                matching: find.byType(ClipRRect),
+              ),
+            )
+            .borderRadius
+        as BorderRadius;
 
 /// slot 文字样式来自 DefaultTextStyle（Text 自身 style 可能为 null）。
 double fontSizeOf(WidgetTester tester, String text) {
   final finder = find.text(text);
   final widget = tester.widget<Text>(finder);
-  final style = widget.style ?? DefaultTextStyle.of(tester.element(finder)).style;
+  final style =
+      widget.style ?? DefaultTextStyle.of(tester.element(finder)).style;
   return style.fontSize!;
 }
 
@@ -256,7 +259,9 @@ void main() {
       expect(focus.focusNode!.hasFocus, isFalse);
     });
 
-    testWidgets('hoverMask appears on hover and clears on exit', (tester) async {
+    testWidgets('hoverMask appears on hover and clears on exit', (
+      tester,
+    ) async {
       await pumpHost(
         tester,
         const SemiAvatar(text: 'x', hoverMask: Text('mask')),
@@ -339,43 +344,44 @@ void main() {
       expect(painters, contains('_TopSlotShieldPainter'));
     });
 
-    testWidgets('top slot guards: no xxs, no square; extra-small is zero-style', (
-      tester,
-    ) async {
-      await pumpHost(
-        tester,
-        const SemiAvatar(
-          size: SemiAvatarSize.extraExtraSmall,
-          topSlot: SemiAvatarTopSlot(text: Text('新')),
-        ),
-      );
-      expect(find.text('新'), findsNothing);
-      await pumpHost(
-        tester,
-        const SemiAvatar(
-          shape: SemiAvatarShape.square,
-          topSlot: SemiAvatarTopSlot(text: Text('新')),
-        ),
-      );
-      expect(find.text('新'), findsNothing);
-      await pumpHost(
-        tester,
-        const SemiAvatar(
-          size: SemiAvatarSize.extraSmall,
-          topSlot: SemiAvatarTopSlot(text: Text('新')),
-        ),
-      );
-      // ★零样式 quirk：无 bg/shield，文字回落基础 `font-size-regular`。
-      expect(
-        fontSizeOf(tester, '新'),
-        const SemiThemeData.light().typography.fontSizeRegular,
-      );
-      final painters = tester
-          .widgetList<CustomPaint>(find.byType(CustomPaint))
-          .map((p) => p.painter.runtimeType.toString())
-          .toList();
-      expect(painters, isNot(contains('_TopSlotShieldPainter')));
-    });
+    testWidgets(
+      'top slot guards: no xxs, no square; extra-small is zero-style',
+      (tester) async {
+        await pumpHost(
+          tester,
+          const SemiAvatar(
+            size: SemiAvatarSize.extraExtraSmall,
+            topSlot: SemiAvatarTopSlot(text: Text('新')),
+          ),
+        );
+        expect(find.text('新'), findsNothing);
+        await pumpHost(
+          tester,
+          const SemiAvatar(
+            shape: SemiAvatarShape.square,
+            topSlot: SemiAvatarTopSlot(text: Text('新')),
+          ),
+        );
+        expect(find.text('新'), findsNothing);
+        await pumpHost(
+          tester,
+          const SemiAvatar(
+            size: SemiAvatarSize.extraSmall,
+            topSlot: SemiAvatarTopSlot(text: Text('新')),
+          ),
+        );
+        // ★零样式 quirk：无 bg/shield，文字回落基础 `font-size-regular`。
+        expect(
+          fontSizeOf(tester, '新'),
+          const SemiThemeData.light().typography.fontSizeRegular,
+        );
+        final painters = tester
+            .widgetList<CustomPaint>(find.byType(CustomPaint))
+            .map((p) => p.painter.runtimeType.toString())
+            .toList();
+        expect(painters, isNot(contains('_TopSlotShieldPainter')));
+      },
+    );
 
     testWidgets('bottom slot circle straddles the bottom edge', (tester) async {
       await pumpHost(
@@ -411,10 +417,7 @@ void main() {
       );
       final decoration = decorationOf(
         tester,
-        find.ancestor(
-          of: find.text('9'),
-          matching: find.byType(DecoratedBox),
-        ),
+        find.ancestor(of: find.text('9'), matching: find.byType(DecoratedBox)),
       );
       expect(decoration.border!.top.width, 2);
       expect(
@@ -437,10 +440,7 @@ void main() {
       );
       final quirk = decorationOf(
         tester,
-        find.ancestor(
-          of: find.text('9'),
-          matching: find.byType(DecoratedBox),
-        ),
+        find.ancestor(of: find.text('9'), matching: find.byType(DecoratedBox)),
       );
       expect(quirk.border!.top.width, 3);
       expect(
@@ -470,10 +470,7 @@ void main() {
       expect(c.left - b.left, 36);
       final ringBox = borderedBoxOf(tester, find.byType(SemiAvatarGroup));
       final decoration = ringBox.decoration as BoxDecoration;
-      expect(
-        tester.getRect(find.byWidget(ringBox)).width,
-        48,
-      );
+      expect(tester.getRect(find.byWidget(ringBox)).width, 48);
       expect(decoration.border!.top.width, 2);
       expect(
         decoration.border!.top.color,
@@ -524,16 +521,10 @@ void main() {
       expect(find.text('C'), findsNothing);
       expect(find.text('+1'), findsOneWidget);
       // avatarGroup.tsx:65 语义标签（aria-label 覆盖内容文本）。
-      expect(
-        find.bySemanticsLabel('Number of remaining Avatars：1,c'),
-        findsOneWidget,
-      );
+      expect(find.bySemanticsLabel('剩余1个头像：c'), findsOneWidget);
       final decoration = decorationOf(
         tester,
-        find.ancestor(
-          of: find.text('+1'),
-          matching: find.byType(DecoratedBox),
-        ),
+        find.ancestor(of: find.text('+1'), matching: find.byType(DecoratedBox)),
       );
       expect(
         decoration.color,
@@ -547,7 +538,10 @@ void main() {
         SemiAvatarGroup(
           maxCount: 1,
           renderMore: (restNumber, rest) => Text('more $restNumber'),
-          children: const [SemiAvatar(text: 'A'), SemiAvatar(text: 'B')],
+          children: const [
+            SemiAvatar(text: 'A'),
+            SemiAvatar(text: 'B'),
+          ],
         ),
       );
       expect(find.text('A'), findsOneWidget);

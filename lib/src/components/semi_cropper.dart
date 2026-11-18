@@ -63,6 +63,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
+import '../localization/semi_localizations.dart';
 import '../theme/semi_cropper_theme.dart';
 import '../theme/semi_cropper_theme_data.dart';
 
@@ -1154,7 +1155,7 @@ class _SemiCropperState extends State<SemiCropper> {
     final t = SemiCropperTheme.resolve(context);
     final content = Semantics(
       container: true,
-      label: '图片裁切',
+      label: SemiLocalizations.of(context).imageCrop,
       child: MouseRegion(
         // 角柄拖动期间整个容器保持该方向的 resize 光标（指针可能离开
         // 10px 角柄或越出组件再拖回）；其余时候 macOS 隐藏系统光标，
