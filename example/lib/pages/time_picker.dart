@@ -487,7 +487,6 @@ class _TimePickerPageState extends State<TimePickerPage> {
           const SizedBox(height: 40),
           const SemiText(
             '未支持/延期（照 docs/semi_time_picker.md 差异清单）：'
-            'wheel 无限滚动（scrollItemProps，仅 normal 滚动列表）、'
             'timeZone 时区换算、locale 多语言（zh 文案/上午下午硬编码）、'
             'Form 联动、键盘导航/Esc/autofocus、'
             'getPopupContainer/dropdownMargin/popupStyle/popupClassName 等'

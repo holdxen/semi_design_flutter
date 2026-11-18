@@ -3,6 +3,7 @@
 // live in the widget's `_TransferMetrics` / call sites, the 2 dead FIELDS
 // (上游未消费) must NOT appear in the widget, and the 2 drag-deferred FIELDS
 // carry 「本移植未消费（draggable 延期）」 in the docs.
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -170,6 +171,8 @@ Widget transfer({
   Widget Function(BuildContext, SemiTransferSelectedPanelProps)?
   renderSelectedPanel,
   SemiTransferController? controller,
+  SemiTransferTreeProps? treeProps,
+  bool showPath = false,
 }) => SemiTransfer(
   dataSource: dataSource,
   type: type,
@@ -193,6 +196,8 @@ Widget transfer({
   renderSourcePanel: renderSourcePanel,
   renderSelectedPanel: renderSelectedPanel,
   controller: controller,
+  treeProps: treeProps,
+  showPath: showPath,
 );
 
 // -- theme field table -------------------------------------------------------
@@ -1078,6 +1083,113 @@ void main() {
       // 分组条目照常勾选穿梭。
       await tapLabel(tester, 'Alpha');
       expect(rightLabels(tester), ['Alpha']);
+    });
+  });
+
+  group('treeList', () {
+    const tree = [
+      SemiTransferItem(
+        key: 'root',
+        label: 'Root',
+        children: [
+          SemiTransferItem(key: 'leaf', value: 'leaf', label: 'Leaf'),
+          SemiTransferItem(
+            key: 'disabled',
+            value: 'disabled',
+            label: 'Disabled',
+            disabled: true,
+          ),
+        ],
+      ),
+    ];
+
+    testWidgets('renders nested nodes and transfers leaf selection', (
+      tester,
+    ) async {
+      final changes = <List<Object?>>[];
+      await pumpHost(
+        tester,
+        transfer(
+          type: SemiTransferType.treeList,
+          dataSource: tree,
+          onChanged: (values, _) => changes.add(values),
+        ),
+      );
+      expect(leftText('Root'), findsOneWidget);
+      expect(leftText('Leaf'), findsOneWidget);
+      await tester.tap(leftText('Leaf'));
+      await tester.pumpAndSettle();
+      expect(rightText('Leaf'), findsOneWidget);
+      expect(changes.last, ['leaf']);
+    });
+
+    testWidgets('showPath and fullPath do not mutate source nodes', (
+      tester,
+    ) async {
+      SemiTransferItem? rendered;
+      await pumpHost(
+        tester,
+        transfer(
+          type: SemiTransferType.treeList,
+          dataSource: tree,
+          defaultValue: ['leaf'],
+          showPath: true,
+          renderSelectedItem: (context, item, onRemove) {
+            rendered = item;
+            return Text(item.label?.toString() ?? '');
+          },
+        ),
+      );
+      expect(find.text('Root > Leaf'), findsOneWidget);
+      expect(rendered?.fullPath?.map((item) => item.label), ['Root', 'Leaf']);
+      expect(tree.single.children!.single.fullPath, isNull);
+    });
+
+    testWidgets('tree controller search delegates to the tree', (tester) async {
+      final controller = SemiTransferController();
+      await pumpHost(
+        tester,
+        transfer(
+          type: SemiTransferType.treeList,
+          dataSource: tree,
+          controller: controller,
+        ),
+      );
+      controller.search('Leaf');
+      await tester.pumpAndSettle();
+      expect(leftText('Leaf'), findsOneWidget);
+      expect(leftText('Disabled'), findsNothing);
+    });
+
+    testWidgets('tree lazy loading shows spin and calls onLoad', (
+      tester,
+    ) async {
+      final completer = Completer<void>();
+      var loads = 0;
+      final loaded = <Object>{};
+      await pumpHost(
+        tester,
+        transfer(
+          type: SemiTransferType.treeList,
+          dataSource: const [
+            SemiTransferItem(key: 'lazy', label: 'Lazy', isLeaf: false),
+          ],
+          treeProps: SemiTransferTreeProps(
+            loadData: (_) async {
+              loads++;
+              await completer.future;
+            },
+            onLoad: (keys, _) => loaded.addAll(keys),
+          ),
+        ),
+      );
+      await tester.tap(find.byKey(const ValueKey('tree-expand-String:lazy')));
+      await tester.pump();
+      expect(find.byType(SemiSpin), findsOneWidget);
+      completer.complete();
+      await tester.pumpAndSettle();
+      expect(loads, 1);
+      expect(loaded, {'lazy'});
     });
   });
 

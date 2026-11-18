@@ -129,6 +129,7 @@ Widget picker({
   Object? defaultValue,
   String? format,
   bool use12Hours = false,
+  bool infinite = false,
   int? hourStep,
   int? minuteStep,
   int? secondStep,
@@ -169,6 +170,7 @@ Widget picker({
   defaultValue: defaultValue,
   format: format,
   use12Hours: use12Hours,
+  infinite: infinite,
   hourStep: hourStep,
   minuteStep: minuteStep,
   secondStep: secondStep,
@@ -899,7 +901,7 @@ void main() {
     ) async {
       await pumpHost(
         tester,
-        picker(defaultValue: DateTime(2024, 1, 1, 12, 30, 45)),
+        picker(infinite: false, defaultValue: DateTime(2024, 1, 1, 12, 30, 45)),
       );
       await openPicker(tester);
       // scrollItem.scrollToNode: centered offset = itemHeight * index (the
@@ -916,6 +918,7 @@ void main() {
       await pumpHost(
         tester,
         picker(
+          infinite: false,
           defaultValue: DateTime(2024, 1, 1, 12, 30, 45),
           onChanged: (date, dateStr) => changes.add((date, dateStr)),
         ),
@@ -935,6 +938,48 @@ void main() {
         rowColor(tester, SemiTimePicker.hourListKey, '20时'),
         _lightPrimary,
       );
+    });
+
+    testWidgets('infinite columns start in the middle and settle a drag', (
+      tester,
+    ) async {
+      final changes = <(Object?, Object?)>[];
+      await pumpHost(
+        tester,
+        picker(
+          infinite: true,
+          defaultValue: DateTime(2024, 1, 1, 23, 59, 59),
+          onChanged: (date, dateStr) => changes.add((date, dateStr)),
+        ),
+      );
+      await openPicker(tester);
+      final hour = tester.state<ScrollableState>(
+        find.descendant(
+          of: find.byKey(SemiTimePicker.hourListKey),
+          matching: find.byType(Scrollable),
+        ),
+      );
+      expect(hour.position.pixels, greaterThan(10000));
+      await tester.drag(
+        find.byKey(SemiTimePicker.hourListKey),
+        const Offset(0, -180),
+      );
+      await tester.pumpAndSettle(const Duration(milliseconds: 250));
+      expect(changes, isNotEmpty);
+      expect((changes.last.$1 as DateTime).hour, inInclusiveRange(0, 23));
+      expect(hour.position.pixels, greaterThan(0));
+      expect(hour.position.pixels, lessThan(hour.position.maxScrollExtent));
+    });
+
+    testWidgets('infinite can be disabled for the finite list behavior', (
+      tester,
+    ) async {
+      await pumpHost(
+        tester,
+        picker(infinite: false, defaultValue: DateTime(2024, 1, 1, 12, 30, 45)),
+      );
+      await openPicker(tester);
+      expect(columnOffset(tester, SemiTimePicker.hourListKey), 12 * 36.0);
     });
   });
 

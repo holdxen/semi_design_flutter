@@ -24,6 +24,7 @@ import 'semi_button.dart';
 import 'semi_checkbox.dart';
 import 'semi_input.dart';
 import 'semi_spin.dart';
+import 'semi_tree.dart';
 
 /// 穿梭框条目（上游 `DataItem`）。
 ///
@@ -38,6 +39,9 @@ class SemiTransferItem {
     this.value,
     this.label,
     this.disabled = false,
+    this.children,
+    this.isLeaf,
+    this.fullPath,
   });
 
   /// 唯一标识（String | int）。
@@ -51,6 +55,57 @@ class SemiTransferItem {
   final Object? label;
 
   final bool disabled;
+
+  /// treeList 子节点。
+  final List<SemiTransferItem>? children;
+
+  /// treeList 叶子标记；未指定时按 children 推断。
+  final bool? isLeaf;
+
+  /// showPath 时传给 selected item render 的路径副本。
+  final List<SemiTransferItem>? fullPath;
+}
+
+/// treeList 的树配置。
+class SemiTransferTreeProps {
+  const SemiTransferTreeProps({
+    this.treeData,
+    this.defaultExpandAll = true,
+    this.expandedKeys,
+    this.defaultExpandedKeys,
+    this.autoExpandParent = false,
+    this.checkRelation = SemiTreeCheckRelation.related,
+    this.leafOnly = true,
+    this.autoMergeValue = true,
+    this.onChangeWithObject = false,
+    this.filterTreeNode = true,
+    this.showFilteredOnly = false,
+    this.loadData,
+    this.loadedKeys,
+    this.onLoad,
+    this.onExpand,
+  });
+
+  final List<SemiTransferItem>? treeData;
+  final bool defaultExpandAll;
+  final List<Object>? expandedKeys;
+  final List<Object>? defaultExpandedKeys;
+  final bool autoExpandParent;
+  final SemiTreeCheckRelation checkRelation;
+  final bool leafOnly;
+  final bool autoMergeValue;
+  final bool onChangeWithObject;
+  final Object? filterTreeNode;
+  final bool showFilteredOnly;
+  final Future<void> Function(SemiTransferItem item)? loadData;
+  final List<Object>? loadedKeys;
+  final void Function(Set<Object> loadedKeys, SemiTransferItem item)? onLoad;
+  final void Function(
+    List<Object> expandedKeys,
+    bool expanded,
+    SemiTransferItem item,
+  )?
+  onExpand;
 }
 
 /// `groupList` 模式的分组（上游 `GroupItem`）。
@@ -79,6 +134,7 @@ class SemiTransferHeaderProps {
     required this.showButton,
     required this.allChecked,
     required this.onAllClick,
+    this.leafOnlyNum,
   });
 
   /// 「总个数：${total}」的 `showNumber`（搜索态 = 命中数，否则全量）。
@@ -89,6 +145,9 @@ class SemiTransferHeaderProps {
 
   /// 过滤结果中不存在未选非 disabled 项。
   final bool allChecked;
+
+  /// treeList 叶节点计数。
+  final int? leafOnlyNum;
 
   final VoidCallback onAllClick;
 }
@@ -126,6 +185,8 @@ class SemiTransferSourcePanelProps {
     required this.onAllClick,
     required this.onSelectOrRemove,
     required this.selectedItems,
+    this.propsDataSource,
+    this.onSelect,
   });
 
   /// 选中 values（value 轨）。
@@ -359,9 +420,8 @@ class _SemiTransferState extends State<SemiTransfer> {
 
   bool get _isTree => widget.type == SemiTransferType.treeList;
 
-  List<SemiTransferItem> get _data => _isTree ? _treeItems : [
-    for (final entry in _entries) entry.item,
-  ];
+  List<SemiTransferItem> get _data =>
+      _isTree ? _treeItems : [for (final entry in _entries) entry.item];
 
   bool get _inSearch => _inputValue.isNotEmpty;
 
@@ -385,7 +445,7 @@ class _SemiTransferState extends State<SemiTransfer> {
     // 覆盖（受控优先）。
     _selected = _generateSelectedItems(
       widget.value ?? widget.defaultValue ?? const [],
-      _data,
+      _selectionData(),
     );
     widget.controller?._attach(this);
   }
@@ -404,7 +464,7 @@ class _SemiTransferState extends State<SemiTransfer> {
     //（数据变化时未匹配项被静默丢弃）；非受控保留内部状态（defaultValue 引用
     // 变化不重置——SemiTransferItem 列表字面量 churn 回归）。
     if (widget.value != null) {
-      _selected = _generateSelectedItems(widget.value!, _data);
+      _selected = _generateSelectedItems(widget.value!, _selectionData());
     }
     // ★数据变化且搜索词非空时重算搜索结果（gDSFP :310-319 quirk）。
     if (_inputValue.isNotEmpty && !_sameEntries(oldEntries, _entries)) {
@@ -439,6 +499,107 @@ class _SemiTransferState extends State<SemiTransfer> {
       for (final object in widget.dataSource)
         _FlatEntry(object as SemiTransferItem),
     ];
+  }
+
+  List<SemiTransferItem> _treeSource() {
+    final override = widget.treeProps?.treeData;
+    if (override != null) return override;
+    return [for (final object in widget.dataSource) object as SemiTransferItem];
+  }
+
+  List<SemiTransferItem> _flattenTreeItems(List<SemiTransferItem> roots) {
+    final result = <SemiTransferItem>[];
+    void walk(List<SemiTransferItem> nodes) {
+      for (final node in nodes) {
+        result.add(node);
+        if (node.children != null) {
+          walk(node.children!);
+        }
+      }
+    }
+
+    walk(roots);
+    return result;
+  }
+
+  String _treeKey(Object key) => '${key.runtimeType}:$key';
+
+  void _rebuildTree() {
+    if (!_isTree) {
+      _treeItems = const <SemiTransferItem>[];
+      _treeEntities = <Object, _TransferTreeEntity>{};
+      _treeNodes = const <SemiTreeNodeData>[];
+      return;
+    }
+    final entities = <Object, _TransferTreeEntity>{};
+    final nodes = <SemiTreeNodeData>[];
+    void walk(
+      List<SemiTransferItem> items,
+      _TransferTreeEntity? parent,
+      List<SemiTransferItem> parentPath,
+      List<SemiTreeNodeData> output,
+    ) {
+      for (final item in items) {
+        final path = [...parentPath, item];
+        final entity = _TransferTreeEntity(
+          item: item,
+          parent: parent,
+          path: path,
+          internalKey: _treeKey(item.key),
+        );
+        entities[item.key] = entity;
+        final children = <SemiTreeNodeData>[];
+        if (item.children != null) {
+          walk(item.children!, entity, path, children);
+        }
+        entity.children.addAll([
+          for (final child in item.children ?? const <SemiTransferItem>[])
+            entities[child.key]!,
+        ]);
+        output.add(
+          SemiTreeNodeData(
+            key: entity.internalKey,
+            label: item.label,
+            value: item.value ?? entity.internalKey,
+            disabled: item.disabled,
+            isLeaf: item.isLeaf,
+            children: children.isEmpty ? null : children,
+          ),
+        );
+      }
+    }
+
+    walk(_treeSource(), null, const <SemiTransferItem>[], nodes);
+    _treeItems = _flattenTreeItems(_treeSource());
+    _treeEntities = entities;
+    _treeNodes = nodes;
+  }
+
+  SemiTransferItem? _treeItemFromNode(SemiTreeNodeData node) {
+    final prefix = '${node.key.runtimeType}:';
+    final raw = node.key.toString().startsWith(prefix)
+        ? node.key.toString().substring(prefix.length)
+        : node.key.toString();
+    for (final item in _treeItems) {
+      if (_treeKey(item.key) == node.key || item.key.toString() == raw) {
+        return item;
+      }
+    }
+    return null;
+  }
+
+  List<SemiTransferItem> _selectionData() {
+    if (!_isTree || widget.treeProps?.treeData == null) return _data;
+    final source = <Object, SemiTransferItem>{
+      for (final item in _flattenTreeItems([
+        for (final object in widget.dataSource) object as SemiTransferItem,
+      ]))
+        item.key: item,
+    };
+    for (final item in _treeItems) {
+      source[item.key] = item;
+    }
+    return source.values.toList();
   }
 
   bool _sameEntries(List<_FlatEntry> a, List<_FlatEntry> b) {
@@ -502,6 +663,40 @@ class _SemiTransferState extends State<SemiTransfer> {
         _inputController.text = input;
       }
     });
+  }
+
+  void _handleTreeChanged(Object? value) {
+    if (widget.disabled || value is! List) return;
+    final next = Map<Object, SemiTransferItem>.of(_selected);
+    final visible = <Object, SemiTransferItem>{
+      for (final item in _treeItems) item.key: item,
+    };
+    final keys = <Object>{};
+    for (final raw in value) {
+      if (raw is SemiTreeNodeData) {
+        final item = _treeItemFromNode(raw);
+        if (item != null) keys.add(item.key);
+      } else {
+        for (final item in _treeItems) {
+          if (item.value == raw || item.key.toString() == raw.toString()) {
+            keys.add(item.key);
+            break;
+          }
+        }
+      }
+    }
+    for (final item in visible.values) {
+      if (keys.contains(item.key)) {
+        if (!item.disabled) next[item.key] = item;
+      } else if (!item.disabled) {
+        next.remove(item.key);
+      }
+    }
+    _commit(next);
+  }
+
+  void _handleTreeSelect(List<Object> keys) {
+    _handleTreeChanged(keys);
   }
 
   void _toggle(SemiTransferItem item) {
@@ -660,6 +855,19 @@ class _SemiTransferState extends State<SemiTransfer> {
               _defaultEmptyText(t, _TransferMetrics.emptyLeft),
         ),
       );
+    } else if (_isTree) {
+      children
+        ..add(
+          _buildHeader(
+            t,
+            totalText: _totalText(_TransferMetrics.totalTemplate, _showNumber),
+            buttonLabel: _TransferMetrics.clearSelectAllLabel,
+            showButton: false,
+            onAllClick: () {},
+            allChecked: false,
+          ),
+        )
+        ..add(Expanded(child: _buildTreeList()));
     } else {
       children
         ..add(
@@ -697,6 +905,72 @@ class _SemiTransferState extends State<SemiTransfer> {
     );
   }
 
+  Widget _buildTreeList() {
+    final props = widget.treeProps ?? const SemiTransferTreeProps();
+    final selectedValues = <Object?>[
+      for (final item in _selected.values) item.value ?? item.key,
+    ];
+    final loadedKeys = props.loadedKeys?.map(_treeKey).toList();
+    return KeyedSubtree(
+      key: SemiTransfer.leftListKey,
+      child: SemiTree(
+        treeData: _treeNodes,
+        value: selectedValues,
+        multiple: true,
+        checkRelation: props.checkRelation,
+        leafOnly: props.leafOnly,
+        autoMergeValue: props.autoMergeValue,
+        onChangeWithObject: props.onChangeWithObject,
+        disabled: widget.disabled,
+        defaultExpandAll: props.defaultExpandAll,
+        expandedKeys: props.expandedKeys?.map(_treeKey).toList(),
+        defaultExpandedKeys: props.defaultExpandedKeys?.map(_treeKey).toList(),
+        autoExpandParent: props.autoExpandParent,
+        filterTreeNode: props.filterTreeNode,
+        showFilteredOnly: props.showFilteredOnly,
+        showSearch: false,
+        controller: _treeController,
+        loadedKeys: loadedKeys,
+        loadData: props.loadData == null
+            ? null
+            : (node) async {
+                final item = _treeItemFromNode(node);
+                if (item != null) await props.loadData!(item);
+              },
+        onLoad: props.onLoad == null
+            ? null
+            : (loaded, node) {
+                final item = _treeItemFromNode(node);
+                if (item != null) {
+                  props.onLoad!(
+                    loaded
+                        .map((key) => key.replaceFirst('String:', ''))
+                        .toSet(),
+                    item,
+                  );
+                }
+              },
+        onChange: _handleTreeChanged,
+        onExpand: props.onExpand == null
+            ? null
+            : (keys, expanded, node) {
+                final item = _treeItemFromNode(node);
+                if (item != null) {
+                  props.onExpand!(
+                    [
+                      for (final key in keys)
+                        for (final candidate in _treeItems)
+                          if (_treeKey(candidate.key) == key) candidate.key,
+                    ],
+                    expanded,
+                    item,
+                  );
+                }
+              },
+      ),
+    );
+  }
+
   Widget _buildFilter(SemiResolvedTransferThemeData t) {
     return Padding(
       padding: EdgeInsetsDirectional.only(
@@ -714,7 +988,18 @@ class _SemiTransferState extends State<SemiTransfer> {
           placeholder: _TransferMetrics.searchPlaceholder,
           prefix: const SemiIcon(SemiIcons.search, excludeFromSemantics: true),
           showClear: true,
-          onChanged: widget.disabled ? null : _handleInputChanged,
+          onChanged: widget.disabled
+              ? null
+              : _isTree
+              ? (value) {
+                  if (value.isNotEmpty) {
+                    _treeController.search(value);
+                  } else {
+                    _treeController.search('');
+                  }
+                  _handleInputChanged(value);
+                }
+              : _handleInputChanged,
           onEnterPress: widget.disabled
               ? null
               : () => _handleInputChanged(_inputController.text),
@@ -741,6 +1026,7 @@ class _SemiTransferState extends State<SemiTransfer> {
           showButton: showButton,
           allChecked: allChecked,
           onAllClick: onAllClick,
+          leafOnlyNum: _isTree ? _treeItems.where(_isLeafItem).length : null,
         ),
       );
     }
@@ -891,6 +1177,9 @@ class _SemiTransferState extends State<SemiTransfer> {
       );
     }
     final selectedData = _selected.values.toList();
+    final displayData = [
+      for (final item in selectedData) _withPathLabel(_withFullPath(item)),
+    ];
     final hasValidSelected = selectedData.any((item) => !item.disabled);
     final header = _buildHeader(
       t,
@@ -900,7 +1189,6 @@ class _SemiTransferState extends State<SemiTransfer> {
         selectedData.length,
       ),
       buttonLabel: _TransferMetrics.clearLabel,
-      // index.tsx:835-841：showButton = 有选中 && 含非 disabled。
       showButton: selectedData.isNotEmpty && hasValidSelected,
       onAllClick: _handleClear,
       allChecked: false,
@@ -908,11 +1196,10 @@ class _SemiTransferState extends State<SemiTransfer> {
     );
     final children = <Widget>[header];
     if (selectedData.isNotEmpty) {
-      children.add(Expanded(child: _buildRightList(t, selectedData)));
+      children.add(Expanded(child: _buildRightList(t, displayData)));
     }
     return KeyedSubtree(
       key: SemiTransfer.rightPanelKey,
-      // `&-right { position: relative }`（transfer.scss:144）——空态 absolute。
       child: Stack(
         children: [
           Column(
@@ -927,6 +1214,41 @@ class _SemiTransferState extends State<SemiTransfer> {
             ),
         ],
       ),
+    );
+  }
+
+  bool _isLeafItem(SemiTransferItem item) =>
+      item.isLeaf == true || (item.children?.isEmpty ?? true);
+
+  String _pathLabel(SemiTransferItem item) {
+    final path = _treeEntities[item.key]?.path ?? [item];
+    return path.map((part) => part.label?.toString() ?? '').join(' > ');
+  }
+
+  SemiTransferItem _withFullPath(SemiTransferItem item) {
+    if (!_isTree || !widget.showPath) return item;
+    final path = _treeEntities[item.key]?.path ?? [item];
+    return SemiTransferItem(
+      key: item.key,
+      value: item.value,
+      label: item.label,
+      disabled: item.disabled,
+      children: item.children,
+      isLeaf: item.isLeaf,
+      fullPath: List<SemiTransferItem>.unmodifiable(path),
+    );
+  }
+
+  SemiTransferItem _withPathLabel(SemiTransferItem item) {
+    if (!_isTree || !widget.showPath) return item;
+    return SemiTransferItem(
+      key: item.key,
+      value: item.value,
+      label: _pathLabel(item),
+      disabled: item.disabled,
+      children: item.children,
+      isLeaf: item.isLeaf,
+      fullPath: item.fullPath,
     );
   }
 
@@ -950,7 +1272,11 @@ class _SemiTransferState extends State<SemiTransfer> {
     if (widget.renderSelectedItem != null) {
       return KeyedSubtree(
         key: SemiTransfer.itemKey(item.key),
-        child: widget.renderSelectedItem!(context, item, () => _toggle(item)),
+        child: widget.renderSelectedItem!(
+          context,
+          _withFullPath(item),
+          () => _toggle(item),
+        ),
       );
     }
     return _TransferSelectedRow(
@@ -1039,6 +1365,8 @@ class _SemiTransferState extends State<SemiTransfer> {
         ),
         onSelectOrRemove: _toggle,
         selectedItems: Map<Object, SemiTransferItem>.of(_selected),
+        propsDataSource: _isTree ? widget.dataSource : null,
+        onSelect: _isTree ? _handleTreeSelect : null,
       );
 
   SemiTransferSelectedPanelProps _selectedPanelProps() =>

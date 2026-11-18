@@ -155,6 +155,7 @@ export 'src/theme/semi_skeleton_theme_data.dart';
 export 'src/components/semi_tabs.dart';
 export 'src/theme/semi_tabs_theme.dart';
 export 'src/theme/semi_tabs_theme_data.dart';
+export 'src/components/chrome_tab.dart';
 export 'src/theme/chrome_tab_theme.dart';
 export 'src/theme/chrome_tab_theme_data.dart';
 export 'src/components/semi_carousel.dart';
