@@ -109,6 +109,7 @@ class SemiChromeTab extends StatefulWidget {
     this.hideAddButton = false,
     this.hideGroupButton = false,
     this.hideScrollbar = true,
+    this.hideActiveTabBottomLine = false,
     this.tooltipMode = SemiChromeTabTooltipMode.truncated,
     this.onTabActivate,
     this.onTabEditAddress,
@@ -133,9 +134,10 @@ class SemiChromeTab extends StatefulWidget {
   final SemiChromeTabLocale? locale;
   final bool hideAddButton;
   final bool hideGroupButton;
-
-  /// Whether the horizontal scroll indicator is hidden.
   final bool hideScrollbar;
+
+  /// Whether the thin bottom edge of the active tab is hidden.
+  final bool hideActiveTabBottomLine;
   final SemiChromeTabTooltipMode tooltipMode;
 
   /// Click a tab.
@@ -1003,6 +1005,7 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
               painter: _ActiveTabBackgroundPainter(
                 color: activeBackground,
                 radius: theme.chromeTabRadius + 2,
+                hideBottomLine: widget.hideActiveTabBottomLine,
               ),
             ),
           ),
@@ -1514,10 +1517,12 @@ class _ActiveTabBackgroundPainter extends CustomPainter {
   const _ActiveTabBackgroundPainter({
     required this.color,
     required this.radius,
+    required this.hideBottomLine,
   });
 
   final Color color;
   final double radius;
+  final bool hideBottomLine;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1526,22 +1531,25 @@ class _ActiveTabBackgroundPainter extends CustomPainter {
     final top = 4.0;
     final bottom = size.height;
     final r = radius;
+    final bottomY = hideBottomLine ? bottom - 1 : bottom;
     final path = Path()
-      ..moveTo(left - r, bottom)
-      ..quadraticBezierTo(left, bottom, left, bottom - r)
+      ..moveTo(left - r, bottomY)
+      ..quadraticBezierTo(left, bottomY, left, bottomY - r)
       ..lineTo(left, top + r)
       ..quadraticBezierTo(left, top, left + r, top)
       ..lineTo(right - r, top)
       ..quadraticBezierTo(right, top, right, top + r)
-      ..lineTo(right, bottom - r)
-      ..quadraticBezierTo(right, bottom, right + r, bottom)
+      ..lineTo(right, bottomY - r)
+      ..quadraticBezierTo(right, bottomY, right + r, bottomY)
       ..close();
     canvas.drawPath(path, Paint()..color = color);
   }
 
   @override
   bool shouldRepaint(_ActiveTabBackgroundPainter oldDelegate) =>
-      color != oldDelegate.color || radius != oldDelegate.radius;
+      color != oldDelegate.color ||
+      radius != oldDelegate.radius ||
+      hideBottomLine != oldDelegate.hideBottomLine;
 }
 
 class _CloseButton extends StatefulWidget {
