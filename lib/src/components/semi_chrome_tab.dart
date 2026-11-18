@@ -1073,12 +1073,15 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: <Color>[
-                      activeBackground.withValues(alpha: 0),
+                      (active
+                              ? activeBackground
+                              : theme.chromeTabHoverBackground)
+                          .withValues(alpha: 0),
                       active
                           ? activeBackground
                           : theme.chromeTabHoverBackground,
                     ],
-                    stops: const <double>[0, 0.45],
+                    stops: const <double>[0, 0.8],
                   ),
                 ),
               ),
