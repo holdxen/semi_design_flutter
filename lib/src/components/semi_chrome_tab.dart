@@ -252,6 +252,7 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
     for (final id in newIds.difference(oldIds)) {
       _enteringIds.add(id);
     }
+    _enteringIds.removeWhere((id) => !newIds.contains(id));
     _closingIds.removeWhere((id) => !newIds.contains(id));
     if (widget.tabs.length < oldWidget.tabs.length) {
       _pendingAddAnchorX = null;
@@ -890,6 +891,15 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
         : null;
     final contentWidth = tabLeft + trailingWidth;
 
+    // While a tab is entering, keep the strip reflow on screen for as long as
+    // the entrance. Otherwise the bounds motion would finish well before the
+    // fade and the insert would read as faster than a close.
+    final layoutDuration =
+        _enteringIds.isEmpty ||
+            theme.chromeTabEnterDuration <= theme.chromeTabLayoutDuration
+        ? theme.chromeTabLayoutDuration
+        : theme.chromeTabEnterDuration;
+
     final layout = _ChromeTabBoundsLayout(
       bounds: tabBounds,
       children: tabChildren,
@@ -899,7 +909,7 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
       trailingLeft: tabLeft,
       trailingWidth: trailingWidth,
       animation: widget.layoutAnimation,
-      duration: theme.chromeTabLayoutDuration,
+      duration: layoutDuration,
       keepTrailingAnchored: _pendingAddAnchorX != null,
     );
 
@@ -1188,7 +1198,7 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
         duration: reduceMotion
             ? const Duration(milliseconds: 1)
             : theme.chromeTabEnterDuration,
-        curve: Curves.easeOut,
+        curve: Curves.easeInOut,
         onEnd: () {
           if (!mounted) return;
           if (_enteringIds.remove(tab.id)) setState(() {});

@@ -148,7 +148,7 @@ void main() {
     expect(resolved.chromeTabsAccentColor, const Color(0xff1a73e8));
     expect(resolved.chromeTabsMenuIconBackground, const Color(0x9effffff));
     expect(resolved.chromeTabsMenuTextColor, resolved.chromeTabTextColor);
-    expect(resolved.chromeTabEnterDuration, const Duration(milliseconds: 340));
+    expect(resolved.chromeTabEnterDuration, const Duration(milliseconds: 480));
     expect(resolved.chromeTabCloseDuration, const Duration(milliseconds: 140));
     expect(
       resolved.chromeTabTooltipMoveDuration,
@@ -223,7 +223,7 @@ void main() {
     expect(middleWidth, lessThan(startWidth));
     expect(middleWidth, greaterThan(56.2));
 
-    await tester.pump(const Duration(milliseconds: 120));
+    await tester.pump(const Duration(milliseconds: 400));
     expect(tabWidth(tester, 't0'), closeTo(56.2, 0.01));
   });
 
@@ -447,6 +447,13 @@ void main() {
       await tester.pump(const Duration(milliseconds: 120));
       expect(tester.takeException(), isNull);
       expect(tester.getRect(addButton).left, closeTo(initialAddLeft, 0.5));
+      // The insert reflow now spans the enter duration, so it is still moving
+      // past the old 200ms layout window.
+      expect(tester.getSize(lastTab).width, greaterThan(52));
+
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(tester.takeException(), isNull);
+      expect(tester.getRect(addButton).left, closeTo(initialAddLeft, 0.5));
       expect(tester.getSize(lastTab).width, 52);
     },
   );
@@ -480,7 +487,7 @@ void main() {
     // it is still running past the old 160ms point.
     await tester.pump(const Duration(milliseconds: 200));
     expect(animation, findsOneWidget);
-    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 240));
     expect(animation, findsNothing);
   });
 
