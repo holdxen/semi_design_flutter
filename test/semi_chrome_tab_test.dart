@@ -148,7 +148,7 @@ void main() {
     expect(resolved.chromeTabsAccentColor, const Color(0xff1a73e8));
     expect(resolved.chromeTabsMenuIconBackground, const Color(0x9effffff));
     expect(resolved.chromeTabsMenuTextColor, resolved.chromeTabTextColor);
-    expect(resolved.chromeTabEnterDuration, const Duration(milliseconds: 160));
+    expect(resolved.chromeTabEnterDuration, const Duration(milliseconds: 340));
     expect(resolved.chromeTabCloseDuration, const Duration(milliseconds: 140));
     expect(
       resolved.chromeTabTooltipMoveDuration,
@@ -476,7 +476,11 @@ void main() {
     final mid = tester.widget<Opacity>(animation).opacity;
     expect(mid, greaterThan(0));
     expect(mid, lessThan(1));
+    // The entrance now lasts as long as the close sequence (140 + 200ms), so
+    // it is still running past the old 160ms point.
     await tester.pump(const Duration(milliseconds: 200));
+    expect(animation, findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 100));
     expect(animation, findsNothing);
   });
 

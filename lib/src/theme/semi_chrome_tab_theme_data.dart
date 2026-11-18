@@ -118,7 +118,11 @@ class SemiChromeTabThemeData {
   /// `--chrome-tabs-tooltip-shadow: 0 2px 4px rgba(60, 64, 67, 0.067)`.
   final SemiShadows? chromeTabsTooltipShadow;
 
-  /// `chrome-tab-enter` animation duration (`160ms ease-out` upstream).
+  /// `chrome-tab-enter` animation duration.
+  ///
+  /// Defaults to 340ms so that a new tab's total entrance (content fade plus
+  /// the 200ms bounds transition) matches the close sequence (140ms content
+  /// exit plus the 200ms bounds reflow). Upstream CSS uses 160ms.
   final Duration? chromeTabEnterDuration;
 
   /// `chrome-tab-close` animation duration (`140ms ease-in` upstream).
@@ -289,7 +293,7 @@ class SemiChromeTabThemeData {
             SemiShadowLayer(false, 0, 2, 4, 0, Color(0x113c4043)),
           ]),
       chromeTabEnterDuration:
-          chromeTabEnterDuration ?? const Duration(milliseconds: 160),
+          chromeTabEnterDuration ?? const Duration(milliseconds: 340),
       chromeTabCloseDuration:
           chromeTabCloseDuration ?? const Duration(milliseconds: 140),
       chromeTabLayoutDuration:
