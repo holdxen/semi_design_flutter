@@ -9,6 +9,7 @@ import '../theme/semi_chrome_tab_theme_data.dart';
 import 'icon/semi_icon.dart';
 import 'icon/semi_icon_data.dart';
 import 'icon/semi_icons.dart';
+import 'semi_chrome_tab_add_button_painter.dart';
 
 /// Language used by [SemiChromeTab]'s built-in labels.
 ///
@@ -1743,23 +1744,11 @@ class _AddButtonState extends State<_AddButton> {
             behavior: HitTestBehavior.opaque,
             excludeFromSemantics: true,
             onTap: widget.onTap,
-            child: Container(
-              width: _SemiChromeTabState._addButtonSize,
-              height: _SemiChromeTabState._addButtonSize,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _hovered
-                    ? const Color(0x14000000)
-                    : const Color(0x00000000),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                '+',
-                style: TextStyle(
-                  fontSize: 22,
-                  height: 1,
-                  color: widget.theme.chromeTabTextColor,
-                ),
+            child: CustomPaint(
+              size: const Size.square(_SemiChromeTabState._addButtonSize),
+              painter: SemiChromeTabAddButtonPainter(
+                color: widget.theme.chromeTabTextColor,
+                hovered: _hovered,
               ),
             ),
           ),

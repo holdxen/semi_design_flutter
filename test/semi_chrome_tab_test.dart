@@ -578,7 +578,7 @@ void main() {
         ],
       ),
     );
-    expect(find.text('+'), findsOneWidget);
+    expect(byLabel('Add tab'), findsOneWidget);
     await tester.tap(byLabel('Select group'));
     await tester.pumpAndSettle();
     expect(find.text('＋ New group'), findsOneWidget);
