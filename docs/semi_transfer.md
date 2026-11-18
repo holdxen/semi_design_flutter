@@ -4,10 +4,12 @@
 
 ## API
 
-`SemiTransfer({key, dataSource, type, treeProps, showPath, value, defaultValue, filter, filterFn, onSearch, onSelect, onDeselect, onChanged, disabled, loading, emptyLeft, emptyRight, emptySearch, renderSourceItem, renderSelectedItem, renderSourceHeader, renderSelectedHeader, renderSourcePanel, renderSelectedPanel, controller})`。
+ false`SemiTransfer({key, dataSource, type, treeProps, pagination, showPath, value, defaultValue, filter, filterFn, onSearch, onSelect, onDeselect, onChanged, disabled, loading, emptyLeft, emptyRight, emptySearch, renderSourceItem, renderSelectedItem, renderSourceHeader, renderSelectedHeader, renderSourcePanel, renderSelectedPanel, controller})`。
+
+`SemiTransferPaginationProps({currentPage, defaultCurrentPage, pageSize, onPageChange})` 配置左栏分页：`pageSize` 缺省为 10，`currentPage` 为受控页码，`defaultCurrentPage` 为非受控初始页码（缺省 1），`onPageChange` 在换页后回调。分页仅作用于 `list/groupList`，`treeList` 不分页。
 
 `dataSource` 缺省 `const []`：`list/groupList` 与既有契约相同；`treeList` 时为 `List<SemiTransferItem>` 树（`children` 可嵌套，`isLeaf` 可用于异步节点）。`treeProps` 可配置树数据覆盖、展开、父子级联、过滤和 lazy loading；lazy 节点由 `loadData(item)` 触发，父级在 Future 完成时更新树数据，`onLoad(loadedKeys, item)` 接收原始 key。`showPath: true` 时右栏显示 `祖先 > 当前节点`，自定义 `renderSelectedItem` 收到 `fullPath` 路径副本；原始树节点不被修改。treeList 的缺失 value 回退到 key（list 仍保持缺 value 输出 null 的既有行为）。若 `treeProps.treeData` 覆盖 `dataSource`，左树使用覆盖数据，默认/受控 value 仍可匹配原始数据源中的条目，隐藏的已选项保留在右栏。
-dataSource `List<Object>` 缺省 `const []`（[SemiTransferType.list] 时 `List<SemiTransferItem>`、[SemiTransferType.groupList] 时 `List<SemiTransferGroup>`、[SemiTransferType.treeList] 时 `List<SemiTransferItem>` 树）。type `SemiTransferType.list`（`groupList`/`treeList`）；treeList `treeProps` 支持 treeData 覆盖、展开、级联、过滤、lazy load；`showPath` 控制路径显示。value/defaultValue `List<Object?>?`（value 非空即受控）。filter `true`（显隐搜索框；★上游 `filter` union 拆分为 bool + filterFn，见差异清单）。filterFn `bool Function(String input, SemiTransferItem item)?` 缺省 `label 包含 input`。onSearch `ValueChanged<String>?`（随输入触发；★`controller.search` 不触发）。onSelect/onDeselect `ValueChanged<SemiTransferItem>?`（勾选/取消单条目，含右栏 close）。onChanged `SemiTransferChanged?` = `void Function(List<Object?> values, List<SemiTransferItem> items)`。disabled `false`；loading `false`（Spin 覆盖左栏）。emptyLeft/emptyRight/emptySearch `Widget?` 缺省 zh 硬编码。renderSourceItem `Widget Function(BuildContext, SemiTransferItem item, bool checked, VoidCallback onToggle)?`（整行替换）；renderSelectedItem `Widget Function(BuildContext, SemiTransferItem item, VoidCallback onRemove)?`（整行替换）；renderSourceHeader `Widget Function(BuildContext, SemiTransferHeaderProps)?`（`{num, showButton, allChecked, onAllClick}`）；renderSelectedHeader `Widget Function(BuildContext, SemiTransferSelectedHeaderProps)?`（`{num, showButton, onClear}`）；renderSourcePanel `Widget Function(BuildContext, SemiTransferSourcePanelProps)?`（`{value, loading, noMatch, filterData, sourceData, allChecked, showNumber, inputValue, onSearch, onAllClick, onSelectOrRemove, selectedItems, propsDataSource?, onSelect?}`）；renderSelectedPanel `Widget Function(BuildContext, SemiTransferSelectedPanelProps)?`（`{length, selectedData, onClear, onRemove}`——`onSortEnd` 随 draggable 延期）。controller `SemiTransferController?`（`search(value)`，attach/detach 后 no-op——semi_date_picker.dart:84-117 先例）。SemiTransferItem `{key（String|int 唯一）, value（Object? 对外值轨）, label（String|Widget）, disabled, children?, isLeaf?, fullPath?}`；`treeList` 缺省 value 回退 key；SemiTransferGroup `{title: String?, children: List<SemiTransferItem>}`。静态 key：`rootKey`/`leftPanelKey`/`rightPanelKey`/`searchKey`/`leftListKey`/`rightListKey`/`selectAllKey`/`clearKey` + `itemKey(Object key)`。
+dataSource `List<Object>` 缺省 `const []`（[SemiTransferType.list] 时 `List<SemiTransferItem>`、[SemiTransferType.groupList] 时 `List<SemiTransferGroup>`、[SemiTransferType.treeList] 时 `List<SemiTransferItem>` 树）。type `SemiTransferType.list`（`groupList`/`treeList`）；`pagination` 为 `SemiTransferPaginationProps?`，仅 list/groupList 左栏生效；treeList `treeProps` 支持 treeData 覆盖、展开、级联、过滤、lazy load；`showPath` 控制路径显示。value/defaultValue `List<Object?>?`（value 非空即受控）。filter `true`（显隐搜索框；★上游 `filter` union 拆分为 bool + filterFn，见差异清单）。filterFn `bool Function(String input, SemiTransferItem item)?` 缺省 `label 包含 input`。onSearch `ValueChanged<String>?`（随输入触发；★`controller.search` 不触发）。onSelect/onDeselect `ValueChanged<SemiTransferItem>?`（勾选/取消单条目，含右栏 close）。onChanged `SemiTransferChanged?` = `void Function(List<Object?> values, List<SemiTransferItem> items)`。disabled `false`；loading `false`（Spin 覆盖左栏）。emptyLeft/emptyRight/emptySearch `Widget?` 缺省 zh 硬编码。renderSourceItem `Widget Function(BuildContext, SemiTransferItem item, bool checked, VoidCallback onToggle)?`（整行替换）；renderSelectedItem `Widget Function(BuildContext, SemiTransferItem item, VoidCallback onRemove)?`（整行替换）；renderSourceHeader `Widget Function(BuildContext, SemiTransferHeaderProps)?`（`{num, showButton, allChecked, onAllClick}`）；renderSelectedHeader `Widget Function(BuildContext, SemiTransferSelectedHeaderProps)?`（`{num, showButton, onClear}`）；renderSourcePanel `Widget Function(BuildContext, SemiTransferSourcePanelProps)?`（`{value, loading, noMatch, filterData, sourceData, allChecked, showNumber, inputValue, onSearch, onAllClick, onSelectOrRemove, selectedItems, propsDataSource?, onSelect?}`）；renderSelectedPanel `Widget Function(BuildContext, SemiTransferSelectedPanelProps)?`（`{length, selectedData, onClear, onRemove}`——`onSortEnd` 随 draggable 延期）。controller `SemiTransferController?`（`search(value)`，attach/detach 后 no-op——semi_date_picker.dart:84-117 先例）。SemiTransferItem `{key（String|int 唯一）, value（Object? 对外值轨）, label（String|Widget）, disabled, children?, isLeaf?, fullPath?}`；`treeList` 缺省 value 回退 key；SemiTransferGroup `{title: String?, children: List<SemiTransferItem>}`。静态 key：`rootKey`/`leftPanelKey`/`rightPanelKey`/`searchKey`/`leftListKey`/`rightListKey`/`selectAllKey`/`clearKey` + `itemKey(Object key)`。
 
 ## 行为
 
@@ -23,7 +25,10 @@ dataSource `List<Object>` 缺省 `const []`（[SemiTransferType.list] 时 `List<
 
 搜索框（`filter: true` 显隐；foundation.ts:89-108）：默认 `typeof item.label === 'string' && item.label.includes(input)`（Widget label 不匹配），`filterFn` 自定义；onSearch 随输入触发；搜索词非空且无命中→空态 `emptySearch`（noMatch）；★**数据变化且搜索词非空时重算搜索结果**（gDSFP :310-319 quirk——`!isEqual(state.data, newData)` 时 filterFunc 重跑）。`controller.search(value)`：设置搜索词并重算过滤但**不触发 onSearch**（index.tsx:375-379 `handleInputChange(value, false)` quirk），输入框文本同步。
 
-### treeList
+### 分页
+
+传入 `pagination` 后，左栏按搜索后的过滤结果切片；`SemiPagination.total` 使用过滤结果条数而不是页数。搜索输入和 `controller.search()` 会将页码重置为 1，分页条在总页数小于 2 时隐藏。分页只作用于 `list/groupList`，全选、header 计数和自定义 source panel 仍以完整过滤结果为准；`treeList` 不分页。
+
 
 `type: SemiTransferType.treeList`：左栏由 `SemiTree` 渲染，树 checkbox 使用关联级联、半选和 `leafOnly`/`autoMergeValue` 归一；不显示普通列表的全选按钮。`treeProps.treeData` 可覆盖左树数据，隐藏的原始选中项仍保留在右栏。Transfer 搜索输入会驱动树过滤，树负责祖先展开与 `showFilteredOnly`。异步节点需标记 `isLeaf: false`，展开时触发 `treeProps.loadData(item)` 并显示节点 Spin；异步完成后由调用方更新 `treeData` children，`loadedKeys` 可受控。`showPath` 在右栏拼接祖先 label，`fullPath` 是回调用的路径副本。
 
@@ -115,7 +120,7 @@ dataSource `List<Object>` 缺省 `const []`（[SemiTransferType.list] 时 `List<
 | `cursor: auto` | 右栏行不给 click 光标（transfer.scss:162） |
 | `transition: background-color` | 条目底色过渡（transfer.scss:81 三 MOTION 字段消费点） |
 | `cursor: move` / `opacity: 0` / `// max-height: 412px` | note-only——拖拽延期（transfer.scss:182-183 handler、:193 sortable-item-active、:8 根注释）；本移植未消费（draggable 延期） |
-| `DEFAULT_PAGE_SIZE: 10` | note-only——分页延期（transfer/constants.ts:14）；本移植未消费 |
+| `DEFAULT_PAGE_SIZE: 10` | Transfer 左栏分页默认每页 10 条（transfer/constants.ts:14；由 `SemiTransferPaginationProps` 消费） |
 | `replace('${total}',` | 「总个数：${total}」/「已选个数：${total}」replace 模式（index.tsx:506/834） |
 | `emptyLeft: '暂无数据',` `emptySearch: '无搜索结果',` `emptyRight: '暂无内容，可从左侧勾选',` `placeholder: '搜索',` `clear: '清空',` `selectAll: '全选',` `clearSelectAll: '取消全选',` `total: '总个数：${total}',` `selected: '已选个数：${total}',` | zh 文案硬编码（locale/source/zh_CN.ts:161-171） |
 | `$font-size-small: 12px` | header/空态/分组标题字号（mixin.scss `font-size-small`） |
@@ -141,7 +146,7 @@ dataSource `List<Object>` 缺省 `const []`（[SemiTransferType.list] 时 `List<
 
 偏差/裁剪：
 13. **treeList 支持**：以 [SemiTree] 处理树形展开/级联、搜索和 lazy loading；`showPath` 使用不可变路径副本。当前仍未移植 `keyMaps`、Tree 内部 `disableStrictly` 配置。
-14. **pagination 延期**（Pagination 未移植）：`pagination`/`leftCurrentPage`/`handlePageChange` 不移植（`DEFAULT_PAGE_SIZE: 10` note-only 留档）。
+14. **pagination 已移植**：`pagination` 配置提供 `currentPage`/`defaultCurrentPage`/`pageSize`/`onPageChange`；默认 `pageSize` 为 10，list/groupList 左栏按过滤结果切片并显示 `SemiPagination`，搜索重置页码为 1，treeList 不分页。
 15. **virtualize 裁剪**：`virtualize` 不移植（Flutter ListView 列表天然惰性）。
 16. **draggable 延期**（用户确认）：`draggable`/Sortable/`onSortEnd`/拖拽 handler 不移植；2 条拖拽字段（`$spacing-transfer_right_item_drag_handler-marginRight`、`$z-transfer_right_item_drag_item_move`）落 theme 标注「本移植未消费（draggable 延期）」。
 17. **inputProps 裁剪**：`inputProps` 透传不移植（SemiInput 直参）。
@@ -184,6 +189,18 @@ SemiTransfer(
   onChanged: (values, items) {
     // values: [item.value...]（缺 value 的条目出 null）；items: 选中条目
   },
+)
+
+SemiTransfer(
+  dataSource: [
+    for (var i = 1; i <= 21; i++)
+      SemiTransferItem(key: i, value: i, label: '选项 $i'),
+  ],
+  pagination: const SemiTransferPaginationProps(
+    pageSize: 10,
+    defaultCurrentPage: 1,
+  ),
+  onChanged: (values, items) {},
 )
 
 SemiTransfer(

@@ -25,6 +25,7 @@ import 'icon/semi_icons.dart';
 import 'semi_button.dart';
 import 'semi_checkbox.dart';
 import 'semi_input.dart';
+import 'semi_pagination.dart';
 import 'semi_spin.dart';
 import 'semi_tree.dart';
 
@@ -108,6 +109,31 @@ class SemiTransferTreeProps {
     SemiTransferItem item,
   )?
   onExpand;
+}
+
+/// 左栏分页配置（上游 `PaginationProps`）。
+///
+/// 分页只作用于 [SemiTransferType.list] 和 [SemiTransferType.groupList] 的
+/// 左栏；[SemiTransferType.treeList] 保持整棵树渲染。
+class SemiTransferPaginationProps {
+  const SemiTransferPaginationProps({
+    this.currentPage,
+    this.defaultCurrentPage,
+    this.pageSize,
+    this.onPageChange,
+  });
+
+  /// 当前页（受控）。
+  final int? currentPage;
+
+  /// 非受控初始页，缺省为 1。
+  final int? defaultCurrentPage;
+
+  /// 每页条数，缺省为 10。
+  final int? pageSize;
+
+  /// 页码变更回调。
+  final ValueChanged<int>? onPageChange;
 }
 
 /// `groupList` 模式的分组（上游 `GroupItem`）。
@@ -290,6 +316,7 @@ class SemiTransfer extends StatefulWidget {
     this.renderSourcePanel,
     this.renderSelectedPanel,
     this.controller,
+    this.pagination,
     this.treeProps,
     this.showPath = false,
   });
@@ -299,6 +326,7 @@ class SemiTransfer extends StatefulWidget {
   static const Key rightPanelKey = Key('SemiTransfer.rightPanel');
   static const Key searchKey = Key('SemiTransfer.search');
   static const Key leftListKey = Key('SemiTransfer.leftList');
+  static const Key leftPaginationKey = Key('SemiTransfer.leftPagination');
   static const Key rightListKey = Key('SemiTransfer.rightList');
   static const Key selectAllKey = Key('SemiTransfer.selectAll');
   static const Key clearKey = Key('SemiTransfer.clear');
@@ -372,6 +400,9 @@ class SemiTransfer extends StatefulWidget {
 
   final SemiTransferController? controller;
 
+  /// 左栏分页配置；treeList 不分页。
+  final SemiTransferPaginationProps? pagination;
+
   /// treeList 配置。
   final SemiTransferTreeProps? treeProps;
 
@@ -416,11 +447,37 @@ class _SemiTransferState extends State<SemiTransfer> {
   final SemiTreeController _treeController = SemiTreeController();
   String _inputValue = '';
   Set<Object> _searchResult = <Object>{};
+  int _leftCurrentPage = 1;
   late final TextEditingController _inputController = TextEditingController();
 
   bool get _isControlled => widget.value != null;
 
   bool get _isTree => widget.type == SemiTransferType.treeList;
+
+  bool get _hasPagination => !_isTree && widget.pagination != null;
+
+  int get _pageSize {
+    final value = widget.pagination?.pageSize;
+    return value != null && value > 0
+        ? value
+        : _TransferMetrics.defaultPageSize;
+  }
+
+  int get _totalPages {
+    if (!_hasPagination || _filterData.isEmpty) return 0;
+    return (_filterData.length + _pageSize - 1) ~/ _pageSize;
+  }
+
+  int get _effectiveCurrentPage {
+    if (!_hasPagination) return 1;
+    final totalPages = _totalPages;
+    if (totalPages == 0) return 1;
+    return _leftCurrentPage < 1
+        ? 1
+        : _leftCurrentPage > totalPages
+        ? totalPages
+        : _leftCurrentPage;
+  }
 
   List<SemiTransferItem> get _data =>
       _isTree ? _treeItems : [for (final entry in _entries) entry.item];
@@ -461,6 +518,10 @@ class _SemiTransferState extends State<SemiTransfer> {
     super.initState();
     _entries = _flatten();
     _rebuildTree();
+    _leftCurrentPage =
+        widget.pagination?.currentPage ??
+        widget.pagination?.defaultCurrentPage ??
+        1;
     // 上游 constructor：`defaultValue` 建初始选中；gDSFP 在首帧前用 `value`
     // 覆盖（受控优先）。
     _selected = _generateSelectedItems(
@@ -485,6 +546,11 @@ class _SemiTransferState extends State<SemiTransfer> {
     // 变化不重置——SemiTransferItem 列表字面量 churn 回归）。
     if (widget.value != null) {
       _selected = _generateSelectedItems(widget.value!, _selectionData());
+    }
+    if (widget.pagination?.currentPage != null) {
+      _leftCurrentPage = widget.pagination!.currentPage!;
+    } else if (widget.pagination == null || oldWidget.pagination == null) {
+      _leftCurrentPage = widget.pagination?.defaultCurrentPage ?? 1;
     }
     // ★数据变化且搜索词非空时重算搜索结果（gDSFP :310-319 quirk）。
     if (_inputValue.isNotEmpty && !_sameEntries(oldEntries, _entries)) {
@@ -595,6 +661,30 @@ class _SemiTransferState extends State<SemiTransfer> {
     _treeNodes = nodes;
   }
 
+  void _handlePageChange(int page) {
+    if (!_hasPagination) return;
+    final totalPages = _totalPages;
+    if (totalPages == 0) return;
+    final nextPage = page.clamp(1, totalPages);
+    if (widget.pagination?.currentPage == null) {
+      setState(() => _leftCurrentPage = nextPage);
+    }
+    widget.pagination?.onPageChange?.call(nextPage);
+  }
+
+  List<_FlatEntry> _leftEntries() {
+    final entries = <_FlatEntry>[
+      for (final entry in _entries)
+        if (!_inSearch || _searchResult.contains(entry.item.key)) entry,
+    ];
+    if (!_hasPagination || entries.isEmpty) return entries;
+    final page = _effectiveCurrentPage;
+    final start = (page - 1) * _pageSize;
+    if (start >= entries.length) return const <_FlatEntry>[];
+    final end = (start + _pageSize).clamp(start, entries.length);
+    return entries.sublist(start, end);
+  }
+
   SemiTransferItem? _treeItemFromNode(SemiTreeNodeData node) {
     final prefix = '${node.key.runtimeType}:';
     final raw = node.key.toString().startsWith(prefix)
@@ -683,6 +773,7 @@ class _SemiTransferState extends State<SemiTransfer> {
     setState(() {
       _inputValue = input;
       _searchResult = result;
+      if (_hasPagination) _leftCurrentPage = 1;
       // 手动 search() 路径同步输入框文本；用户输入路径文本已一致。
       if (_inputController.text != input) {
         _inputController.text = input;
@@ -906,7 +997,8 @@ class _SemiTransferState extends State<SemiTransfer> {
             allChecked: !leftContainsNotInSelected,
           ),
         )
-        ..add(Expanded(child: _buildLeftList(t)));
+        ..add(Expanded(child: _buildLeftList(t)))
+        ..add(_buildPagination());
     }
     final divider = BorderSide(
       width: t.widthTransferLeftBorder,
@@ -1136,19 +1228,38 @@ class _SemiTransferState extends State<SemiTransfer> {
     // 分组标题行：组内首条可见条目前插入（index.tsx:647-667 renderLeftList）。
     final rows = <Widget>[];
     final seenGroups = <String?>{};
-    for (final entry in _entries) {
-      if (!_inSearch || _searchResult.contains(entry.item.key)) {
-        if (entry.grouped && seenGroups.add(entry.groupTitle)) {
-          rows.add(_buildGroupTitle(t, entry.groupTitle));
-        }
-        rows.add(_buildSourceRow(t, entry.item));
+    for (final entry in _leftEntries()) {
+      if (entry.grouped && seenGroups.add(entry.groupTitle)) {
+        rows.add(_buildGroupTitle(t, entry.groupTitle));
       }
+      rows.add(_buildSourceRow(t, entry.item));
     }
     return ListView.builder(
       key: SemiTransfer.leftListKey,
       padding: EdgeInsets.zero,
       itemCount: rows.length,
       itemBuilder: (context, index) => rows[index],
+    );
+  }
+
+  Widget _buildPagination() {
+    if (!_hasPagination || _totalPages < 2) return const SizedBox.shrink();
+    return KeyedSubtree(
+      key: SemiTransfer.leftPaginationKey,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: SemiPagination(
+            total: _filterData.length,
+            currentPage: _effectiveCurrentPage,
+            pageSize: _pageSize,
+            hideOnSinglePage: true,
+            disabled: widget.disabled,
+            onPageChange: _handlePageChange,
+          ),
+        ),
+      ),
     );
   }
 
@@ -1706,8 +1817,8 @@ abstract final class _TransferMetrics {
   /// `$font-size-regular: 14px`（mixin.scss）。
   static const double fontSizeRegular = 14;
 
-  /// `DEFAULT_PAGE_SIZE: 10`（transfer/constants.ts:14；分页延期——本移植未消费）。
-  // ignore: unused_field
+  /// `DEFAULT_PAGE_SIZE: 10`（transfer/constants.ts:14；作为 Transfer 左栏分页
+  /// 的默认每页条数）。
   static const int defaultPageSize = 10;
 
   // -- HARDCODES（另列）上游片段逐字留档（生成器 assertIn 锚点）--------------

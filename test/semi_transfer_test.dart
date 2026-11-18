@@ -143,6 +143,11 @@ List<SemiTransferItem> items() => const [
   SemiTransferItem(key: 'c', value: 'C', label: 'Gamma'),
 ];
 
+List<SemiTransferItem> pagedItems([int count = 21]) => [
+  for (var i = 1; i <= count; i++)
+    SemiTransferItem(key: 'item-$i', value: 'value-$i', label: 'Item $i'),
+];
+
 Widget transfer({
   List<Object> dataSource = const [],
   SemiTransferType type = SemiTransferType.list,
@@ -171,6 +176,7 @@ Widget transfer({
   Widget Function(BuildContext, SemiTransferSelectedPanelProps)?
   renderSelectedPanel,
   SemiTransferController? controller,
+  SemiTransferPaginationProps? pagination,
   SemiTransferTreeProps? treeProps,
   bool showPath = false,
 }) => SemiTransfer(
@@ -196,6 +202,7 @@ Widget transfer({
   renderSourcePanel: renderSourcePanel,
   renderSelectedPanel: renderSelectedPanel,
   controller: controller,
+  pagination: pagination,
   treeProps: treeProps,
   showPath: showPath,
 );
@@ -761,6 +768,127 @@ void main() {
     });
   });
 
+  group('pagination', () {
+    testWidgets('pages the left list with the default page size of 10', (
+      tester,
+    ) async {
+      await pumpHost(
+        tester,
+        transfer(
+          dataSource: pagedItems(),
+          pagination: const SemiTransferPaginationProps(),
+        ),
+      );
+
+      expect(leftRow('item-1'), findsOneWidget);
+      expect(leftRow('item-11'), findsNothing);
+      expect(find.byKey(SemiTransfer.leftPaginationKey), findsOneWidget);
+      expect(find.byKey(SemiPagination.nextKey), findsOneWidget);
+    });
+
+    testWidgets('changes page and notifies the callback', (tester) async {
+      final pages = <int>[];
+      await pumpHost(
+        tester,
+        transfer(
+          dataSource: pagedItems(),
+          pagination: SemiTransferPaginationProps(
+            pageSize: 5,
+            onPageChange: pages.add,
+          ),
+        ),
+      );
+
+      await tapButton(tester, SemiPagination.nextKey);
+
+      expect(pages, [2]);
+      expect(leftRow('item-1'), findsNothing);
+      expect(leftRow('item-6'), findsOneWidget);
+      expect(leftRow('item-10'), findsOneWidget);
+      expect(leftRow('item-11'), findsNothing);
+    });
+
+    testWidgets('search resets the page and pagination total follows matches', (
+      tester,
+    ) async {
+      await pumpHost(
+        tester,
+        transfer(
+          dataSource: pagedItems(),
+          pagination: const SemiTransferPaginationProps(pageSize: 5),
+        ),
+      );
+      await tapButton(tester, SemiPagination.nextKey);
+      expect(leftRow('item-6'), findsOneWidget);
+
+      await search(tester, 'Item 2');
+
+      expect(leftRow('item-2'), findsOneWidget);
+      expect(leftRow('item-6'), findsNothing);
+      expect(find.byKey(SemiTransfer.leftPaginationKey), findsNothing);
+      expect(totalText(tester), '总个数：3');
+    });
+
+    testWidgets('groupList paginates entries but keeps page-local headings', (
+      tester,
+    ) async {
+      final groups = <Object>[
+        SemiTransferGroup(title: '一组', children: pagedItems(6)),
+        SemiTransferGroup(
+          title: '二组',
+          children: pagedItems(6)
+              .map(
+                (item) => SemiTransferItem(
+                  key: 'second-${item.key}',
+                  value: 'second-${item.value}',
+                  label: item.label,
+                ),
+              )
+              .toList(),
+        ),
+      ];
+      await pumpHost(
+        tester,
+        transfer(
+          type: SemiTransferType.groupList,
+          dataSource: groups,
+          pagination: const SemiTransferPaginationProps(pageSize: 6),
+        ),
+      );
+
+      expect(find.text('一组'), findsOneWidget);
+      expect(find.text('二组'), findsNothing);
+      await tapButton(tester, SemiPagination.nextKey);
+      expect(find.text('一组'), findsNothing);
+      expect(find.text('二组'), findsOneWidget);
+      expect(leftRow('second-item-1'), findsOneWidget);
+    });
+
+    testWidgets('treeList ignores transfer pagination', (tester) async {
+      const tree = <SemiTransferItem>[
+        SemiTransferItem(
+          key: 'root',
+          value: 'root',
+          label: 'Root',
+          children: [
+            SemiTransferItem(key: 'leaf', value: 'leaf', label: 'Leaf'),
+          ],
+        ),
+      ];
+      await pumpHost(
+        tester,
+        transfer(
+          type: SemiTransferType.treeList,
+          dataSource: tree,
+          pagination: const SemiTransferPaginationProps(pageSize: 1),
+        ),
+      );
+
+      expect(find.byKey(SemiTransfer.leftPaginationKey), findsNothing);
+      expect(find.byKey(SemiTransfer.leftListKey), findsOneWidget);
+    });
+  });
+
   group('勾选即穿梭 (no arrow buttons)', () {
     testWidgets('勾左栏进右栏、onChanged values 走 value 轨、onSelect', (tester) async {
       final changes = <(List<Object?>, List<SemiTransferItem>)>[];
@@ -1262,6 +1390,36 @@ void main() {
   });
 
   group('受控', () {
+    testWidgets('pagination currentPage is controlled by props', (
+      tester,
+    ) async {
+      late StateSetter setter;
+      var currentPage = 1;
+      final pages = <int>[];
+      await pumpHost(
+        tester,
+        StatefulBuilder(
+          builder: (context, setState) {
+            setter = setState;
+            return transfer(
+              dataSource: pagedItems(),
+              pagination: SemiTransferPaginationProps(
+                currentPage: currentPage,
+                onPageChange: pages.add,
+              ),
+            );
+          },
+        ),
+      );
+      await tapButton(tester, SemiPagination.nextKey);
+      expect(pages, [2]);
+      expect(leftRow('item-1'), findsOneWidget);
+      setter(() => currentPage = 2);
+      await tester.pumpAndSettle();
+      expect(leftRow('item-1'), findsNothing);
+      expect(leftRow('item-11'), findsOneWidget);
+    });
+
     testWidgets('value 变化渲染跟随、点击只发事件不落状态', (tester) async {
       final changes = <List<Object?>>[];
       late StateSetter setter;
