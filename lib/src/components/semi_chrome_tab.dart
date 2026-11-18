@@ -1097,17 +1097,28 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
                   ),
                   const SizedBox(width: _iconGap),
                 ],
-                Flexible(
-                  fit: FlexFit.tight,
-                  child: _ChromiumFadeText(
-                    key: ValueKey<String>('semi-chrome-tab-title-${tab.id}'),
-                    title: tab.title,
-                    style: TextStyle(
-                      fontSize: theme.chromeTabsFontSize,
-                      color: textColor,
-                    ),
-                    textDirection: Directionality.of(context),
-                    enabled: _truncated[tab.id] ?? false,
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final closeReserve = hovered
+                          ? math.min(_closeButtonSize, constraints.maxWidth)
+                          : 0.0;
+                      return Padding(
+                        padding: EdgeInsetsDirectional.only(end: closeReserve),
+                        child: _ChromiumFadeText(
+                          key: ValueKey<String>(
+                            'semi-chrome-tab-title-${tab.id}',
+                          ),
+                          title: tab.title,
+                          style: TextStyle(
+                            fontSize: theme.chromeTabsFontSize,
+                            color: textColor,
+                          ),
+                          textDirection: Directionality.of(context),
+                          enabled: true,
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
