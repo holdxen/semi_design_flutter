@@ -204,7 +204,6 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
   final Set<String> _enteringIds = <String>{};
   final Set<String> _closingIds = <String>{};
   final Map<String, Timer> _closeTimers = <String, Timer>{};
-  final Map<String, double> _frozenWidths = <String, double>{};
   final Map<String, bool> _truncated = <String, bool>{};
 
   String? _dropTargetId;
@@ -242,12 +241,8 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
       _enteringIds.add(id);
     }
     _closingIds.removeWhere((id) => !newIds.contains(id));
-    _frozenWidths.removeWhere((id, _) => !newIds.contains(id));
     if (widget.tabs.length < oldWidget.tabs.length) {
       _pendingAddAnchorX = null;
-    }
-    if (widget.tabs.isEmpty) {
-      _frozenWidths.clear();
     }
     if ((_popupKind == _PopupKind.groupMenu &&
             (!_listEquals(widget.groups, oldWidget.groups) ||
@@ -501,7 +496,6 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
 
   void _requestClose(SemiChromeTabItem item) {
     if (_closingIds.contains(item.id)) return;
-    _freezeWidths(item.id);
     final theme = SemiChromeTabTheme.resolve(context);
     final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     final duration = reduceMotion
@@ -514,34 +508,6 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
       if (!mounted) return;
       widget.onTabClose?.call(item.id);
     });
-  }
-
-  void _freezeWidths(String closingId) {
-    final tabs = widget.tabs;
-    if (tabs.isEmpty) return;
-    if (_frozenWidths.isEmpty) {
-      for (final tab in tabs) {
-        final box =
-            _tabKeys[tab.id]?.currentContext?.findRenderObject() as RenderBox?;
-        if (box != null) _frozenWidths[tab.id] = box.size.width;
-      }
-    }
-    final index = tabs.indexWhere((tab) => tab.id == closingId);
-    final closingWidth = _frozenWidths[closingId];
-    if (index == tabs.length - 1 && index > 0 && closingWidth != null) {
-      final extra = closingWidth / index;
-      for (var i = 0; i < index; i++) {
-        final id = tabs[i].id;
-        final width = _frozenWidths[id];
-        if (width != null) _frozenWidths[id] = width + extra;
-      }
-    }
-  }
-
-  void _releaseFrozenWidths() {
-    _pendingAddAnchorX = null;
-    if (_frozenWidths.isEmpty) return;
-    setState(_frozenWidths.clear);
   }
 
   void _updateDropTarget(String targetId, Offset globalPosition) {
@@ -794,7 +760,7 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
     final theme = SemiChromeTabTheme.resolve(context);
     final strip = MouseRegion(
       cursor: SystemMouseCursors.basic,
-      onExit: (_) => _releaseFrozenWidths(),
+      onExit: (_) {},
       child: DecoratedBox(
         decoration: BoxDecoration(color: theme.chromeTabsBackground),
         child: SizedBox(
@@ -837,7 +803,7 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
               .clamp(theme.chromeTabMinWidth, theme.chromeTabMaxWidth)
               .toDouble();
     final widths = <String, double>{
-      for (final tab in tabs) tab.id: _frozenWidths[tab.id] ?? naturalWidth,
+      for (final tab in tabs) tab.id: naturalWidth,
     };
     for (final tab in tabs) {
       _truncated[tab.id] = _isTitleTruncated(

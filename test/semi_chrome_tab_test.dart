@@ -208,7 +208,7 @@ void main() {
     expect(edited, <String>['t1']);
   });
 
-  testWidgets('close animates, freezes widths, then emits once', (
+  testWidgets('close animates then emits once and relayouts immediately', (
     tester,
   ) async {
     final closed = <String>[];
@@ -231,21 +231,20 @@ void main() {
     await tester.pump();
     expect(closed, isEmpty);
     // A closing tab stops hit-testing immediately (`pointer-events: none`).
-    await tester.tap(find.byKey(const ValueKey('semi-chrome-tab-t2')));
+    await tester.tap(
+      find.byKey(const ValueKey('semi-chrome-tab-t2')),
+      warnIfMissed: false,
+    );
     await tester.pump();
     expect(activated, isEmpty);
-    // Last tab: its width is distributed to the two preceding tabs.
-    expect(tabWidth(tester, 't0'), 180);
+    // Closing starts a fresh layout immediately, while the item fades out.
+    expect(tabWidth(tester, 't0'), 120);
     await tester.pump(const Duration(milliseconds: 80));
     expect(closed, isEmpty);
     await tester.pump(const Duration(milliseconds: 80));
     expect(closed, <String>['t2']);
 
     await update(tester, _tabs(tabs: manyTabs(2), activeTabId: 't0'));
-    expect(tabWidth(tester, 't0'), 180);
-
-    await mouse.moveTo(const Offset(790, 590));
-    await tester.pump();
     expect(tabWidth(tester, 't0'), 120);
   });
 
