@@ -77,7 +77,7 @@ class SemiChromeTabReorderInfo {
 - **活动页签几何**：顶部圆角 `radius + 2`，底部两侧用二次曲线绘制外扩的凹圆角（Chrome 缺口）。
 - **标题尾部渐隐**：标题溢出可用空间时，仅对 title glyph 使用 Chromium 风格 alpha shader；LTR 淡出右尾，RTL 淡出左尾。渐隐宽度按当前字体约 3 字宽并限制在 title 区域内；极窄时淡出端保留最多约 20% alpha。它不是覆盖关闭按钮的背景渐变，也不插入省略号；hover 时 title region 会为 close button 预留空间。
 - **关闭动画**：标签内容 `scaleX 1→0.88`、透明度 `1→0`；默认 `layoutAnimation: chromium` 时，关闭标签后剩余标签的宽度和位置同时以 200ms `easeOut` bounds 动画重排。设置为 `immediate` 可恢复立即重排。`onTabClose` 仍在关闭动画结束后触发（140ms）。
-- **进入动画**：新标签的内容以 `scaleX 0.88→1`、透明度 `0→1` 进入（默认 480ms `easeInOut`）；新增期间的 tab bounds 重排也使用同一时长，因此整个新增过程比关闭序列（140ms 内容退场 + 200ms 布局重排）更慢、更明显。非新增触发的布局变化仍使用 200ms。
+- **进入动画**：新标签的宽度从 44px 展开到目标宽度，内容同时以 `scaleX 0.88→1`、透明度 `0→1` 进入（默认 480ms `easeInOut`）；新增期间的 tab bounds 重排也使用同一时长，因此整个新增过程比关闭序列（140ms 内容退场 + 200ms 布局重排）更慢、更明显。非新增触发的布局变化仍使用 200ms。
 - **拖拽**：拖起时源标签 45% 透明；目标标签按指针位于其左/右半区显示 2px accent 指示线，松手发 `onTabReorder`。
 - **右键菜单**：close / closeRight / closeOthers / closeLeft，点击后关闭菜单并回调。第一次点击菜单外只关闭菜单。
 - **分组菜单**：触发器 30×30；下拉 210px、右对齐、顶部偏移 34px；行悬停时右侧出现重命名/删除按钮；当前分组 accent + 600。

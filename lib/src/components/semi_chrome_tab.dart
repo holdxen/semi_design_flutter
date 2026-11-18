@@ -910,6 +910,7 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
       trailingWidth: trailingWidth,
       animation: widget.layoutAnimation,
       duration: layoutDuration,
+      curve: _enteringIds.isEmpty ? Curves.easeOut : Curves.easeInOut,
       keepTrailingAnchored: _pendingAddAnchorX != null,
     );
 
@@ -1408,6 +1409,7 @@ class _ChromeTabBoundsLayout extends StatefulWidget {
     required this.trailingWidth,
     required this.animation,
     required this.duration,
+    required this.curve,
     required this.keepTrailingAnchored,
   });
 
@@ -1420,6 +1422,7 @@ class _ChromeTabBoundsLayout extends StatefulWidget {
   final double trailingWidth;
   final SemiChromeTabLayoutAnimation animation;
   final Duration duration;
+  final Curve curve;
   final bool keepTrailingAnchored;
 
   @override
@@ -1428,6 +1431,8 @@ class _ChromeTabBoundsLayout extends StatefulWidget {
 
 class _ChromeTabBoundsLayoutState extends State<_ChromeTabBoundsLayout>
     with SingleTickerProviderStateMixin {
+  static const double _insertStartWidth = 44;
+
   late final AnimationController _controller;
   late Map<String, Rect> _fromBounds;
   late Map<String, Rect> _toBounds;
@@ -1493,7 +1498,7 @@ class _ChromeTabBoundsLayoutState extends State<_ChromeTabBoundsLayout>
     final currentTrailing = _currentTrailing;
     _fromBounds = <String, Rect>{
       for (final entry in widget.bounds.entries)
-        entry.key: currentBounds[entry.key] ?? entry.value,
+        entry.key: currentBounds[entry.key] ?? _insertStartRect(entry.value),
     };
     _toBounds = Map<String, Rect>.from(widget.bounds);
     _fromTrailing = targetTrailing == null
@@ -1523,11 +1528,23 @@ class _ChromeTabBoundsLayoutState extends State<_ChromeTabBoundsLayout>
     if (mounted) setState(() {});
   }
 
+  /// New tabs grow from a narrow sliver at their right edge, so the insert has
+  /// a visible width expansion instead of only a low-contrast fade.
+  static Rect _insertStartRect(Rect target) {
+    final width = math.min(target.width, _insertStartWidth);
+    return Rect.fromLTWH(
+      target.right - width,
+      target.top,
+      width,
+      target.height,
+    );
+  }
+
   Map<String, Rect> get _currentBounds {
     if (widget.animation == SemiChromeTabLayoutAnimation.immediate) {
       return Map<String, Rect>.from(_toBounds);
     }
-    final value = Curves.easeOut.transform(_controller.value);
+    final value = widget.curve.transform(_controller.value);
     return <String, Rect>{
       for (final entry in _toBounds.entries)
         entry.key: Rect.lerp(
@@ -1544,7 +1561,7 @@ class _ChromeTabBoundsLayoutState extends State<_ChromeTabBoundsLayout>
         _fromTrailing == null) {
       return _toTrailing;
     }
-    final value = Curves.easeOut.transform(_controller.value);
+    final value = widget.curve.transform(_controller.value);
     return Rect.lerp(_fromTrailing, _toTrailing, value);
   }
 
