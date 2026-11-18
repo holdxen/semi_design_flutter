@@ -79,7 +79,7 @@ class SemiTransferTreeProps {
     this.autoMergeValue = true,
     this.onChangeWithObject = false,
     this.filterTreeNode = true,
-    this.showFilteredOnly = false,
+    this.showFilteredOnly = true,
     this.loadData,
     this.loadedKeys,
     this.onLoad,
@@ -425,16 +425,34 @@ class _SemiTransferState extends State<SemiTransfer> {
 
   bool get _inSearch => _inputValue.isNotEmpty;
 
-  bool get _noMatch => _inSearch && _searchResult.isEmpty;
+  bool get _noMatch => _inSearch && _filterData.isEmpty;
 
-  int get _showNumber => _inSearch ? _searchResult.length : _entries.length;
+  int get _showNumber => _inSearch ? _filterData.length : _entries.length;
 
-  List<SemiTransferItem> get _filterData => _inSearch
-      ? [
-          for (final e in _entries)
-            if (_searchResult.contains(e.item.key)) e.item,
-        ]
-      : _data;
+  List<SemiTransferItem> get _filterData {
+    if (!_inSearch) return _data;
+    if (_isTree) {
+      final visibleKeys = <Object>{
+        for (final item in _treeItems)
+          if (_matchesTransferFilter(item)) item.key,
+      };
+      return [
+        for (final item in _treeItems)
+          if (visibleKeys.contains(item.key)) item,
+      ];
+    }
+    return [
+      for (final e in _entries)
+        if (_searchResult.contains(e.item.key)) e.item,
+    ];
+  }
+
+  bool _matchesTransferFilter(SemiTransferItem item) {
+    final filter = widget.filterFn;
+    return filter != null
+        ? filter(_inputValue, item)
+        : item.label is String && (item.label! as String).contains(_inputValue);
+  }
 
   @override
   void initState() {
@@ -549,7 +567,7 @@ class _SemiTransferState extends State<SemiTransfer> {
         );
         entities[item.key] = entity;
         final children = <SemiTreeNodeData>[];
-        if (item.children != null) {
+        if (item.children != null && item.children!.isNotEmpty) {
           walk(item.children!, entity, path, children);
         }
         entity.children.addAll([
@@ -563,7 +581,7 @@ class _SemiTransferState extends State<SemiTransfer> {
             value: item.value ?? entity.internalKey,
             disabled: item.disabled,
             isLeaf: item.isLeaf,
-            children: children.isEmpty ? null : children,
+            children: children,
           ),
         );
       }
@@ -650,7 +668,12 @@ class _SemiTransferState extends State<SemiTransfer> {
 
   void _handleInputChanged(String input) => _applySearch(input, notify: true);
 
-  void _controllerSearch(String value) => _applySearch(value, notify: false);
+  void _controllerSearch(String value) {
+    _applySearch(value, notify: false);
+    if (_isTree) {
+      _treeController.search(value);
+    }
+  }
 
   void _applySearch(String input, {required bool notify}) {
     final result = _filterKeys(input);
@@ -884,16 +907,16 @@ class _SemiTransferState extends State<SemiTransfer> {
         )
         ..add(Expanded(child: _buildLeftList(t)));
     }
+    final divider = BorderSide(
+      width: t.widthTransferLeftBorder,
+      color: t.colorTransferBorder,
+    );
     final panel = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: children,
     );
     // 中缝：`$width-transfer_left-border` × `$color-transfer-border` 右边框
     //（RTL 翻到左边，rtl.scss:21-24；semi_time_picker.dart:903-915 翻边先例）。
-    final divider = BorderSide(
-      width: t.widthTransferLeftBorder,
-      color: t.colorTransferBorder,
-    );
     return KeyedSubtree(
       key: SemiTransfer.leftPanelKey,
       child: Container(
@@ -922,7 +945,7 @@ class _SemiTransferState extends State<SemiTransfer> {
         autoMergeValue: props.autoMergeValue,
         onChangeWithObject: props.onChangeWithObject,
         disabled: widget.disabled,
-        defaultExpandAll: props.defaultExpandAll,
+        defaultExpandAll: true,
         expandedKeys: props.expandedKeys?.map(_treeKey).toList(),
         defaultExpandedKeys: props.defaultExpandedKeys?.map(_treeKey).toList(),
         autoExpandParent: props.autoExpandParent,
@@ -935,7 +958,14 @@ class _SemiTransferState extends State<SemiTransfer> {
             ? null
             : (node) async {
                 final item = _treeItemFromNode(node);
-                if (item != null) await props.loadData!(item);
+                if (item != null) {
+                  await props.loadData!(item);
+                  if (mounted) {
+                    setState(() {
+                      _rebuildTree();
+                    });
+                  }
+                }
               },
         onLoad: props.onLoad == null
             ? null

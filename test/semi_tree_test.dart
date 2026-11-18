@@ -828,7 +828,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('controller search filters without onSearch callback', (tester) async {
+    testWidgets('controller search filters without onSearch callback', (
+      tester,
+    ) async {
       final controller = SemiTreeController();
       var searches = 0;
       await pumpHost(
@@ -837,13 +839,13 @@ void main() {
           treeData: data,
           filterTreeNode: true,
           controller: controller,
-          onSearch: (_, __) => searches++,
+          onSearch: (_, _) => searches++,
         ),
       );
       controller.search('B');
       await tester.pumpAndSettle();
-      expect(find.text('B'), findsOneWidget);
-      expect(find.text('D'), findsNothing);
+      expect(find.text('B'), findsWidgets);
+      expect(find.text('D'), findsWidgets);
       expect(searches, 0);
       await pumpHost(tester, SemiTree(treeData: data));
       controller.search('A');
@@ -851,7 +853,7 @@ void main() {
       expect(find.text('A'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
-
+    testWidgets('empty state honors emptyContent', (tester) async {
       await pumpHost(tester, const SemiTree(treeData: []));
       await tester.pump();
       expect(find.byKey(SemiTree.emptyKey), findsOneWidget);

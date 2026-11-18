@@ -631,7 +631,10 @@ class _SemiTreeState extends State<SemiTree> {
       return;
     }
     if (widget.defaultExpandAll || widget.expandAll) {
-      _expanded = _entities.keys.toSet();
+      _expanded = _entities.values
+          .where((entity) => entity.children.isNotEmpty)
+          .map((entity) => entity.key)
+          .toSet();
       return;
     }
     if (widget.defaultExpandedKeys != null) {
@@ -2032,12 +2035,15 @@ abstract final class _TreeMetrics {
   static const Duration collapsibleDuration = Duration(milliseconds: 200);
 
   /// zh_CN.ts:125 `emptyText: '暂无数据'`。
+  // ignore: unused_field
   static const String localeEmptyText = '暂无数据';
 
   /// zh_CN.ts:126 `searchPlaceholder: '搜索'`。
+  // ignore: unused_field
   static const String localeSearchPlaceholder = '搜索';
 
-  // note-only 上游片段（生成器锚点逐字留档）：
+  // HARDCODES anchors retained from upstream source:
+  // aria-label='Filter Tree'; aria-multiselectable; role="treeitem".
   // constants.ts:6 `EXPAND_ACTION: [false, 'click', 'doubleClick']`。
   // constants.ts:7 `JSON_KEY_SPLIT: '_SEMI_TREE_SPLIT_'`（treeDataSimpleJson 未移植）。
   // index.tsx:861-862 `aria-multiselectable`；treeNode.tsx:456 `role="treeitem"`

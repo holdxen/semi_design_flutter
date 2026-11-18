@@ -1142,7 +1142,14 @@ void main() {
       );
       expect(find.text('Root > Leaf'), findsOneWidget);
       expect(rendered?.fullPath?.map((item) => item.label), ['Root', 'Leaf']);
-      expect(tree.single.children!.single.fullPath, isNull);
+      expect(tree.single.children!.length, 2);
+      expect(
+        tree.single.children!
+            .where((item) => item.key == 'leaf')
+            .single
+            .fullPath,
+        isNull,
+      );
     });
 
     testWidgets('tree controller search delegates to the tree', (tester) async {

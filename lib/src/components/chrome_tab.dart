@@ -113,6 +113,18 @@ class ChromeTab extends StatefulWidget {
     this.onTabCloseLeft,
     this.onTabCloseRight,
     this.onTabCloseOthers,
+    this.onActivate,
+    this.onEdit,
+    this.onClose,
+    this.onAdd,
+    this.onSwitchGroup,
+    this.onAddGroup,
+    this.onRenameGroup,
+    this.onDeleteGroup,
+    this.onReorder,
+    this.onCloseLeft,
+    this.onCloseRight,
+    this.onCloseOthers,
     this.renderTabIcon,
     this.renderTabTooltip,
   });
@@ -123,6 +135,9 @@ class ChromeTab extends StatefulWidget {
   final String? activeGroupId;
   final ChromeTabLocale? locale;
   final ChromeTabTooltipMode tooltipMode;
+
+  /// Alias matching the web component property name.
+  final ChromeTabTooltipMode? tabTooltipMode;
   final bool hideAddButton;
   final bool hideGroupButton;
   final ValueChanged<String>? onTabActivate;
@@ -137,6 +152,20 @@ class ChromeTab extends StatefulWidget {
   final ValueChanged<String>? onTabCloseLeft;
   final ValueChanged<String>? onTabCloseRight;
   final ValueChanged<String>? onTabCloseOthers;
+
+  /// Short callback aliases matching the web component event vocabulary.
+  final ValueChanged<String>? onActivate;
+  final ValueChanged<String>? onEdit;
+  final ValueChanged<String>? onClose;
+  final VoidCallback? onAdd;
+  final ValueChanged<String>? onSwitchGroup;
+  final VoidCallback? onAddGroup;
+  final ValueChanged<String>? onRenameGroup;
+  final ValueChanged<String>? onDeleteGroup;
+  final ValueChanged<ChromeTabReorderInfo>? onReorder;
+  final ValueChanged<String>? onCloseLeft;
+  final ValueChanged<String>? onCloseRight;
+  final ValueChanged<String>? onCloseOthers;
   final Widget? Function(ChromeTabItem tab)? renderTabIcon;
   final Widget? Function(ChromeTabItem tab)? renderTabTooltip;
 
@@ -215,13 +244,19 @@ class _ChromeTabState extends State<ChromeTab> {
 
   void _activate(ChromeTabItem tab) {
     if (tab.disabled) return;
-    widget.onTabActivate?.call(tab.id);
+    (widget.onTabActivate ?? widget.onActivate)?.call(tab.id);
     _ensureTabVisible(tab.id);
   }
 
+  void _closeTab(String id) => (widget.onTabClose ?? widget.onClose)?.call(id);
+  void _addTab() => (widget.onTabAdd ?? widget.onAdd)?.call();
+  void _switchGroup(String id) =>
+      (widget.onGroupSwitch ?? widget.onSwitchGroup)?.call(id);
+
   ChromeTabLocale _locale(BuildContext context) {
     if (widget.locale != null) return widget.locale!;
-    final language = Localizations.localeOf(context).languageCode;
+    final localizations = Localizations.maybeLocaleOf(context);
+    final language = localizations?.languageCode ?? 'zh';
     if (language == 'en') return ChromeTabLocale.en;
     if (language == 'ko') return ChromeTabLocale.ko;
     return ChromeTabLocale.zh;
@@ -346,7 +381,7 @@ class _ChromeTabState extends State<ChromeTab> {
       label: _message(context, 'add'),
       child: GestureDetector(
         key: const ValueKey('chrome-tab-add'),
-        onTap: widget.onTabAdd,
+        onTap: _addTab,
         child: SizedBox(
           width: theme.newTabButtonSize,
           height: theme.stripHeight,
@@ -366,23 +401,27 @@ class _ChromeTabState extends State<ChromeTab> {
           name: group.name,
           active: group.id == _activeGroupId,
           onTap: () {
-            widget.onGroupSwitch?.call(group.id);
+            _switchGroup(group.id);
           },
         ),
       const SemiDropdownDividerData(),
       SemiDropdownItemData(
         name: _message(context, 'newGroup'),
-        onTap: widget.onGroupAdd,
+        onTap: widget.onGroupAdd ?? widget.onAddGroup,
       ),
       if (_activeGroupId != null)
         SemiDropdownItemData(
           name: _message(context, 'rename'),
-          onTap: () => widget.onGroupRename?.call(_activeGroupId!),
+          onTap: () => (widget.onGroupRename ?? widget.onRenameGroup)?.call(
+            _activeGroupId!,
+          ),
         ),
       if (_activeGroupId != null)
         SemiDropdownItemData(
           name: _message(context, 'delete'),
-          onTap: () => widget.onGroupDelete?.call(_activeGroupId!),
+          onTap: () => (widget.onGroupDelete ?? widget.onDeleteGroup)?.call(
+            _activeGroupId!,
+          ),
         ),
     ];
     return SemiDropdown(
@@ -463,7 +502,7 @@ class _ChromeTabState extends State<ChromeTab> {
           onTap: () => _activate(tab),
           onDoubleTap: tab.disabled
               ? null
-              : () => widget.onTabEditAddress?.call(tab.id),
+              : () => (widget.onTabEditAddress ?? widget.onEdit)?.call(tab.id),
           onLongPress: tab.disabled
               ? null
               : () => _showTabActions(context, tab),
@@ -486,11 +525,12 @@ class _ChromeTabState extends State<ChromeTab> {
         child: result,
       );
     }
+    final dragChild = result;
     result = DragTarget<String>(
       onWillAcceptWithDetails: (details) => details.data != tab.id,
       onAcceptWithDetails: (details) {
         if (details.data == tab.id) return;
-        widget.onTabReorder?.call(
+        (widget.onTabReorder ?? widget.onReorder)?.call(
           ChromeTabReorderInfo(
             tabId: details.data,
             targetTabId: tab.id,
@@ -498,7 +538,7 @@ class _ChromeTabState extends State<ChromeTab> {
           ),
         );
       },
-      builder: (_, _, _) => result,
+      builder: (_, _, _) => dragChild,
     );
     return Draggable<String>(
       data: tab.id,
@@ -528,7 +568,7 @@ class _ChromeTabState extends State<ChromeTab> {
       label: '${_message(context, 'close')} ${tab.title}',
       child: GestureDetector(
         key: ValueKey('chrome-tab-close-${tab.id}'),
-        onTap: () => widget.onTabClose?.call(tab.id),
+        onTap: () => _closeTab(tab.id),
         child: SizedBox(
           width: theme.closeButtonWidth,
           height: theme.closeButtonHeight,
@@ -541,15 +581,14 @@ class _ChromeTabState extends State<ChromeTab> {
   void _showTabActions(BuildContext context, ChromeTabItem tab) {
     // Long press is the touch equivalent of the browser context menu. The
     // desktop secondary-tap path is provided by the same menu wrapper below.
-    widget.onTabCloseOthers;
     showDialog<void>(
       context: context,
       builder: (context) => _TabActionMenu(
         tab: tab,
-        close: widget.onTabClose,
-        closeLeft: widget.onTabCloseLeft,
-        closeRight: widget.onTabCloseRight,
-        closeOthers: widget.onTabCloseOthers,
+        close: widget.onTabClose ?? widget.onClose,
+        closeLeft: widget.onTabCloseLeft ?? widget.onCloseLeft,
+        closeRight: widget.onTabCloseRight ?? widget.onCloseRight,
+        closeOthers: widget.onTabCloseOthers ?? widget.onCloseOthers,
         label: _message,
       ),
     );
@@ -566,7 +605,7 @@ class _ChromeTabState extends State<ChromeTab> {
     }
     if (key == LogicalKeyboardKey.delete ||
         key == LogicalKeyboardKey.backspace) {
-      if (tab.closable) widget.onTabClose?.call(tab.id);
+      if (tab.closable) _closeTab(tab.id);
       return KeyEventResult.handled;
     }
     final current = widget.tabs.indexWhere((item) => item.id == tab.id);

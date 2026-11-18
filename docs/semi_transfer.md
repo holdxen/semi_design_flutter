@@ -4,9 +4,10 @@
 
 ## API
 
-`SemiTransfer({key, dataSource, type, value, defaultValue, filter, filterFn, onSearch, onSelect, onDeselect, onChanged, disabled, loading, emptyLeft, emptyRight, emptySearch, renderSourceItem, renderSelectedItem, renderSourceHeader, renderSelectedHeader, renderSourcePanel, renderSelectedPanel, controller})`。
+`SemiTransfer({key, dataSource, type, treeProps, showPath, value, defaultValue, filter, filterFn, onSearch, onSelect, onDeselect, onChanged, disabled, loading, emptyLeft, emptyRight, emptySearch, renderSourceItem, renderSelectedItem, renderSourceHeader, renderSelectedHeader, renderSourcePanel, renderSelectedPanel, controller})`。
 
-dataSource `List<Object>` 缺省 `const []`（[SemiTransferType.list] 时 `List<SemiTransferItem>`、[SemiTransferType.groupList] 时 `List<SemiTransferGroup>`）。type `SemiTransferType.list`（| groupList；treeList 延期）。value/defaultValue `List<Object?>?`（value 非空即受控）。filter `true`（显隐搜索框；★上游 `filter` union 拆分为 bool + filterFn，见差异清单）。filterFn `bool Function(String input, SemiTransferItem item)?` 缺省 `label 包含 input`。onSearch `ValueChanged<String>?`（随输入触发；★`controller.search` 不触发）。onSelect/onDeselect `ValueChanged<SemiTransferItem>?`（勾选/取消单条目，含右栏 close）。onChanged `SemiTransferChanged?` = `void Function(List<Object?> values, List<SemiTransferItem> items)`。disabled `false`；loading `false`（Spin 覆盖左栏）。emptyLeft/emptyRight/emptySearch `Widget?` 缺省 zh 硬编码。renderSourceItem `Widget Function(BuildContext, SemiTransferItem item, bool checked, VoidCallback onToggle)?`（整行替换）；renderSelectedItem `Widget Function(BuildContext, SemiTransferItem item, VoidCallback onRemove)?`（整行替换）；renderSourceHeader `Widget Function(BuildContext, SemiTransferHeaderProps)?`（`{num, showButton, allChecked, onAllClick}`）；renderSelectedHeader `Widget Function(BuildContext, SemiTransferSelectedHeaderProps)?`（`{num, showButton, onClear}`）；renderSourcePanel `Widget Function(BuildContext, SemiTransferSourcePanelProps)?`（`{value, loading, noMatch, filterData, sourceData, allChecked, showNumber, inputValue, onSearch, onAllClick, onSelectOrRemove, selectedItems}`——`propsDataSource`/`onSelect`（treeList）随 treeList 延期）；renderSelectedPanel `Widget Function(BuildContext, SemiTransferSelectedPanelProps)?`（`{length, selectedData, onClear, onRemove}`——`onSortEnd` 随 draggable 延期）。controller `SemiTransferController?`（`search(value)`，attach/detach 后 no-op——semi_date_picker.dart:84-117 先例）。SemiTransferItem `{key（String|int 唯一）, value（Object? 对外值轨）, label（String|Widget）, disabled}`；SemiTransferGroup `{title: String?, children: List<SemiTransferItem>}`。静态 key：`rootKey`/`leftPanelKey`/`rightPanelKey`/`searchKey`/`leftListKey`/`rightListKey`/`selectAllKey`/`clearKey` + `itemKey(Object key)`。
+`dataSource` 缺省 `const []`：`list/groupList` 与既有契约相同；`treeList` 时为 `List<SemiTransferItem>` 树（`children` 可嵌套，`isLeaf` 可用于异步节点）。`treeProps` 可配置树数据覆盖、展开、父子级联、过滤和 lazy loading；lazy 节点由 `loadData(item)` 触发，父级在 Future 完成时更新树数据，`onLoad(loadedKeys, item)` 接收原始 key。`showPath: true` 时右栏显示 `祖先 > 当前节点`，自定义 `renderSelectedItem` 收到 `fullPath` 路径副本；原始树节点不被修改。treeList 的缺失 value 回退到 key（list 仍保持缺 value 输出 null 的既有行为）。若 `treeProps.treeData` 覆盖 `dataSource`，左树使用覆盖数据，默认/受控 value 仍可匹配原始数据源中的条目，隐藏的已选项保留在右栏。
+dataSource `List<Object>` 缺省 `const []`（[SemiTransferType.list] 时 `List<SemiTransferItem>`、[SemiTransferType.groupList] 时 `List<SemiTransferGroup>`、[SemiTransferType.treeList] 时 `List<SemiTransferItem>` 树）。type `SemiTransferType.list`（`groupList`/`treeList`）；treeList `treeProps` 支持 treeData 覆盖、展开、级联、过滤、lazy load；`showPath` 控制路径显示。value/defaultValue `List<Object?>?`（value 非空即受控）。filter `true`（显隐搜索框；★上游 `filter` union 拆分为 bool + filterFn，见差异清单）。filterFn `bool Function(String input, SemiTransferItem item)?` 缺省 `label 包含 input`。onSearch `ValueChanged<String>?`（随输入触发；★`controller.search` 不触发）。onSelect/onDeselect `ValueChanged<SemiTransferItem>?`（勾选/取消单条目，含右栏 close）。onChanged `SemiTransferChanged?` = `void Function(List<Object?> values, List<SemiTransferItem> items)`。disabled `false`；loading `false`（Spin 覆盖左栏）。emptyLeft/emptyRight/emptySearch `Widget?` 缺省 zh 硬编码。renderSourceItem `Widget Function(BuildContext, SemiTransferItem item, bool checked, VoidCallback onToggle)?`（整行替换）；renderSelectedItem `Widget Function(BuildContext, SemiTransferItem item, VoidCallback onRemove)?`（整行替换）；renderSourceHeader `Widget Function(BuildContext, SemiTransferHeaderProps)?`（`{num, showButton, allChecked, onAllClick}`）；renderSelectedHeader `Widget Function(BuildContext, SemiTransferSelectedHeaderProps)?`（`{num, showButton, onClear}`）；renderSourcePanel `Widget Function(BuildContext, SemiTransferSourcePanelProps)?`（`{value, loading, noMatch, filterData, sourceData, allChecked, showNumber, inputValue, onSearch, onAllClick, onSelectOrRemove, selectedItems, propsDataSource?, onSelect?}`）；renderSelectedPanel `Widget Function(BuildContext, SemiTransferSelectedPanelProps)?`（`{length, selectedData, onClear, onRemove}`——`onSortEnd` 随 draggable 延期）。controller `SemiTransferController?`（`search(value)`，attach/detach 后 no-op——semi_date_picker.dart:84-117 先例）。SemiTransferItem `{key（String|int 唯一）, value（Object? 对外值轨）, label（String|Widget）, disabled, children?, isLeaf?, fullPath?}`；`treeList` 缺省 value 回退 key；SemiTransferGroup `{title: String?, children: List<SemiTransferItem>}`。静态 key：`rootKey`/`leftPanelKey`/`rightPanelKey`/`searchKey`/`leftListKey`/`rightListKey`/`selectAllKey`/`clearKey` + `itemKey(Object key)`。
 
 ## 行为
 
@@ -22,7 +23,9 @@ dataSource `List<Object>` 缺省 `const []`（[SemiTransferType.list] 时 `List<
 
 搜索框（`filter: true` 显隐；foundation.ts:89-108）：默认 `typeof item.label === 'string' && item.label.includes(input)`（Widget label 不匹配），`filterFn` 自定义；onSearch 随输入触发；搜索词非空且无命中→空态 `emptySearch`（noMatch）；★**数据变化且搜索词非空时重算搜索结果**（gDSFP :310-319 quirk——`!isEqual(state.data, newData)` 时 filterFunc 重跑）。`controller.search(value)`：设置搜索词并重算过滤但**不触发 onSearch**（index.tsx:375-379 `handleInputChange(value, false)` quirk），输入框文本同步。
 
-### groupList
+### treeList
+
+`type: SemiTransferType.treeList`：左栏由 `SemiTree` 渲染，树 checkbox 使用关联级联、半选和 `leafOnly`/`autoMergeValue` 归一；不显示普通列表的全选按钮。`treeProps.treeData` 可覆盖左树数据，隐藏的原始选中项仍保留在右栏。Transfer 搜索输入会驱动树过滤，树负责祖先展开与 `showFilteredOnly`。异步节点需标记 `isLeaf: false`，展开时触发 `treeProps.loadData(item)` 并显示节点 Spin；异步完成后由调用方更新 `treeData` children，`loadedKeys` 可受控。`showPath` 在右栏拼接祖先 label，`fullPath` 是回调用的路径副本。
 
 `type: SemiTransferType.groupList`：dataSource 为 `List<SemiTransferGroup>`，条目扁平化后进同一列表（transferUtils.ts:5-14 `_generateGroupedData`）；分组标题行渲染在组内首条**可见**条目前（index.tsx:647-667 renderLeftList 的 groupStatus 索引），搜索过滤后同组剩余条目仍带标题；空标题组也渲染标题行（空文本，上游 `group.title` 原样）。
 
@@ -137,7 +140,7 @@ dataSource `List<Object>` 缺省 `const []`（[SemiTransferType.list] 时 `List<
 12. **MOTION `_`/`-` 命名 quirk**：声明 `$transition_function_transfer_item-bg`/`$transition_delay_transfer_item-bg`（下划线）、使用 `$transition_function-transfer_item-bg`/`$transition_delay-transfer_item-bg`（连字符，transfer.scss:81）——Sass `-`/`_` 等价同一变量。
 
 偏差/裁剪：
-13. **treeList 延期**（Tree 未移植）：`type: treeList`/`treeProps`/`showPath`/`_generatePath`/`handleSelect` 不移植；renderSourcePanel 的 `propsDataSource`/`onSelect`、renderSourceHeader 的 `leafOnlyNum` 随之裁剪。
+13. **treeList 支持**：以 [SemiTree] 处理树形展开/级联、搜索和 lazy loading；`showPath` 使用不可变路径副本。当前仍未移植 `keyMaps`、Tree 内部 `disableStrictly` 配置。
 14. **pagination 延期**（Pagination 未移植）：`pagination`/`leftCurrentPage`/`handlePageChange` 不移植（`DEFAULT_PAGE_SIZE: 10` note-only 留档）。
 15. **virtualize 裁剪**：`virtualize` 不移植（Flutter ListView 列表天然惰性）。
 16. **draggable 延期**（用户确认）：`draggable`/Sortable/`onSortEnd`/拖拽 handler 不移植；2 条拖拽字段（`$spacing-transfer_right_item_drag_handler-marginRight`、`$z-transfer_right_item_drag_item_move`）落 theme 标注「本移植未消费（draggable 延期）」。
@@ -155,6 +158,22 @@ dataSource `List<Object>` 缺省 `const []`（[SemiTransferType.list] 时 `List<
 ## 用法
 
 ```dart
+SemiTransfer(
+  type: SemiTransferType.treeList,
+  dataSource: [
+    SemiTransferItem(
+      key: 'region',
+      label: '地区',
+      children: const [
+        SemiTransferItem(key: 'city', value: 'city', label: '城市'),
+      ],
+    ),
+  ],
+  showPath: true,
+  treeProps: const SemiTransferTreeProps(defaultExpandAll: true),
+  onChanged: (values, items) {},
+)
+
 SemiTransfer(
   dataSource: [
     SemiTransferItem(key: 'a', value: 1, label: '选项 A'),
