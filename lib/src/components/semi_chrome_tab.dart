@@ -1097,12 +1097,8 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
                   ),
                   const SizedBox(width: _iconGap),
                 ],
-                SizedBox(
-                  width: _titleAvailableWidth(
-                    width,
-                    icon != null,
-                    reserveClose: hovered,
-                  ),
+                Flexible(
+                  fit: FlexFit.tight,
                   child: _ChromiumFadeText(
                     key: ValueKey<String>('semi-chrome-tab-title-${tab.id}'),
                     title: tab.title,

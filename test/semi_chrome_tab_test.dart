@@ -341,6 +341,52 @@ void main() {
     expect(tabWidth(tester, 't0'), 120);
   });
 
+  testWidgets('closing a tab while remaining tabs widen does not overflow', (
+    tester,
+  ) async {
+    final mouse = await startMouse(tester);
+    var tabs = manyTabs(10);
+    var activeTabId = 't0';
+    final closed = <String>[];
+
+    await pumpHost(
+      tester,
+      StatefulBuilder(
+        builder: (context, setState) => _tabs(
+          tabs: tabs,
+          activeTabId: activeTabId,
+          onTabActivate: (id) => setState(() => activeTabId = id),
+          onTabClose: (id) {
+            closed.add(id);
+            setState(() {
+              tabs = tabs.where((tab) => tab.id != id).toList();
+              if (activeTabId == id) activeTabId = tabs.first.id;
+            });
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final lastTab = find.byKey(const ValueKey('semi-chrome-tab-t9'));
+    await mouse.moveTo(tester.getCenter(lastTab));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('semi-chrome-tab-close-t9')));
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    expect(closed, isEmpty);
+
+    // The close callback removes the tab; all remaining bounds animate toward
+    // their wider targets. Check every intermediate frame for RenderFlex errors.
+    for (var elapsed = 0; elapsed < 360; elapsed += 20) {
+      await tester.pump(const Duration(milliseconds: 20));
+      expect(tester.takeException(), isNull);
+    }
+    expect(closed, <String>['t9']);
+    expect(tabs, hasLength(9));
+    expect(tabWidth(tester, 't0'), greaterThan(56));
+  });
+
   testWidgets('a new tab enters with a scale/opacity animation', (
     tester,
   ) async {
@@ -526,6 +572,94 @@ void main() {
     await tester.pump();
     expect(_scrollPosition(tester).pixels, lessThan(scrolled));
     expect(_scrollPosition(tester).pixels, 0);
+  });
+
+  testWidgets('Chromium title tail fade only wraps overflowing title text', (
+    tester,
+  ) async {
+    final mouse = await startMouse(tester);
+    await pumpHost(
+      tester,
+      _tabs(
+        tabs: const <SemiChromeTabItem>[
+          SemiChromeTabItem(
+            id: 'long',
+            title: 'A very long title that overflows the tab',
+          ),
+          SemiChromeTabItem(id: 'short', title: 'Short'),
+        ],
+        activeTabId: 'long',
+        renderTabIcon: (tab) => const SizedBox.square(dimension: 16),
+      ),
+    );
+
+    await mouse.moveTo(
+      tester.getCenter(find.byKey(const ValueKey('semi-chrome-tab-long'))),
+    );
+    await tester.pump();
+    final fade = find.byKey(const ValueKey('semi-chrome-tab-title-fade'));
+    expect(fade, findsOneWidget);
+    final fadeRect = tester.getRect(fade);
+    final titleRect = tester.getRect(
+      find.byKey(const ValueKey('semi-chrome-tab-title-long')),
+    );
+    final tabRect = tester.getRect(
+      find.byKey(const ValueKey('semi-chrome-tab-long')),
+    );
+    expect(fadeRect.left, greaterThanOrEqualTo(titleRect.left));
+    expect(fadeRect.right, lessThanOrEqualTo(titleRect.right));
+    expect(fadeRect.right, lessThanOrEqualTo(tabRect.right));
+    expect(find.byType(ShaderMask), findsOneWidget);
+  });
+
+  testWidgets('short titles do not create a Chromium fade mask', (
+    tester,
+  ) async {
+    final mouse = await startMouse(tester);
+    await pumpHost(
+      tester,
+      _tabs(
+        tabs: const <SemiChromeTabItem>[
+          SemiChromeTabItem(id: 'short', title: 'Short'),
+        ],
+        activeTabId: 'short',
+      ),
+    );
+    await mouse.moveTo(
+      tester.getCenter(find.byKey(const ValueKey('semi-chrome-tab-short'))),
+    );
+    await tester.pump();
+    expect(
+      find.byKey(const ValueKey('semi-chrome-tab-title-fade')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('Chromium title fade follows RTL tail direction', (tester) async {
+    final mouse = await startMouse(tester);
+    await pumpHost(
+      tester,
+      Directionality(
+        textDirection: TextDirection.rtl,
+        child: _tabs(
+          tabs: const <SemiChromeTabItem>[
+            SemiChromeTabItem(
+              id: 'rtl',
+              title: 'عنوان طويل جدا لا يتسع داخل اللسان',
+            ),
+          ],
+          activeTabId: 'rtl',
+        ),
+      ),
+    );
+    await mouse.moveTo(
+      tester.getCenter(find.byKey(const ValueKey('semi-chrome-tab-rtl'))),
+    );
+    await tester.pump();
+    expect(
+      find.byKey(const ValueKey('semi-chrome-tab-title-fade')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('tooltip follows truncated/always/never and custom renderers', (
