@@ -33,6 +33,7 @@ void main() {
     expect(find.text('Two'), findsOneWidget);
     expect(tester.getSize(find.text('Two')).height, greaterThan(0));
     await tester.tap(find.text('Two'));
+    await tester.pump(const Duration(milliseconds: 60));
     expect(active, 'two');
   });
 
@@ -54,7 +55,9 @@ void main() {
     );
 
     await tester.tap(find.byKey(const ValueKey('chrome-tab-add')));
+    await tester.pump(const Duration(milliseconds: 60));
     await tester.tap(find.byKey(const ValueKey('chrome-tab-close-one')));
+    await tester.pump(const Duration(milliseconds: 60));
     expect(added, isTrue);
     expect(closed, 'one');
     expect(tabs, hasLength(1));

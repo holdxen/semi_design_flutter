@@ -499,9 +499,6 @@ class _ChromeTabState extends State<ChromeTab> {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: tab.disabled ? null : () => _activate(tab),
-        onDoubleTap: tab.disabled
-            ? null
-            : () => (widget.onTabEditAddress ?? widget.onEdit)?.call(tab.id),
         onLongPress: tab.disabled ? null : () => _showTabActions(context, tab),
         child: body,
       ),
