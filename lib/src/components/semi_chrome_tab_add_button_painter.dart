@@ -15,16 +15,16 @@ class SemiChromeTabAddButtonPainter extends CustomPainter {
     if (hovered) {
       canvas.drawCircle(
         center,
-        size.shortestSide / 2,
+        size.shortestSide / 3,
         Paint()..color = const Color(0x14000000),
       );
     }
     final stroke = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.8
+      ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round;
-    final half = size.shortestSide * 0.25;
+    final half = size.shortestSide * 0.15;
     canvas.drawLine(
       Offset(center.dx - half, center.dy),
       Offset(center.dx + half, center.dy),
