@@ -73,6 +73,10 @@ void main() {
     );
     expect(find.text('首页'), findsOneWidget);
     expect(find.text('订单中心'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('semi-chrome-tab-layout-animation')),
+      findsOneWidget,
+    );
     expect(find.byType(SemiChromeTab), findsNWidgets(4));
   });
 
@@ -100,6 +104,26 @@ void main() {
     await tester.pump();
     expect(find.text('订单中心'), findsNothing);
     expect(find.text('tab-close → orders'), findsWidgets);
+  });
+
+  testWidgets('layout mode can switch between Chromium and immediate', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1200, 1600));
+    addTearDown(() async => tester.pumpWidget(const SizedBox.shrink()));
+    await tester.pumpWidget(_host());
+    await tester.pumpAndSettle();
+
+    final chromium = find.text('Chromium bounds');
+    final immediate = find.text('Immediate');
+    expect(chromium, findsOneWidget);
+    expect(immediate, findsOneWidget);
+    await tester.tap(immediate);
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    await tester.tap(chromium);
+    await tester.pump();
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('theme preset and editor update the preview', (tester) async {

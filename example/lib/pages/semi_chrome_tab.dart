@@ -16,6 +16,8 @@ class SemiChromeTabPage extends StatefulWidget {
 
 class _SemiChromeTabPageState extends State<SemiChromeTabPage> {
   SemiChromeTabLocale _locale = SemiChromeTabLocale.zh;
+  SemiChromeTabLayoutAnimation _layoutAnimation =
+      SemiChromeTabLayoutAnimation.chromium;
   SemiChromeTabThemeData _theme = _presets.first.data;
   String _selectedPreset = _presets.first.name;
   String _activeGroupId = 'work';
@@ -408,6 +410,7 @@ class _SemiChromeTabPageState extends State<SemiChromeTabPage> {
           groups: _groups,
           activeGroupId: _activeGroupId,
           locale: _locale,
+          layoutAnimation: _layoutAnimation,
           onTabActivate: _activate,
           onTabEditAddress: _editAddress,
           onTabClose: _closeTab,
@@ -474,6 +477,33 @@ class _SemiChromeTabPageState extends State<SemiChromeTabPage> {
     key: const ValueKey('semi-chrome-tab-theme-editor'),
     crossAxisAlignment: CrossAxisAlignment.start,
     children: <Widget>[
+      Wrap(
+        key: const ValueKey('semi-chrome-tab-layout-animation'),
+        spacing: 8,
+        children: <Widget>[
+          SemiButton(
+            'Chromium bounds',
+            size: SemiButtonSize.small,
+            type: _layoutAnimation == SemiChromeTabLayoutAnimation.chromium
+                ? SemiButtonType.primary
+                : SemiButtonType.tertiary,
+            onPressed: () => setState(
+              () => _layoutAnimation = SemiChromeTabLayoutAnimation.chromium,
+            ),
+          ),
+          SemiButton(
+            'Immediate',
+            size: SemiButtonSize.small,
+            type: _layoutAnimation == SemiChromeTabLayoutAnimation.immediate
+                ? SemiButtonType.primary
+                : SemiButtonType.tertiary,
+            onPressed: () => setState(
+              () => _layoutAnimation = SemiChromeTabLayoutAnimation.immediate,
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 8),
       _slider(
         '标签栏高度 ${(_theme.chromeTabsHeight ?? 38).round()}px',
         value: _theme.chromeTabsHeight ?? 38,
@@ -512,6 +542,20 @@ class _SemiChromeTabPageState extends State<SemiChromeTabPage> {
         step: 1,
         onChanged: (value) => setState(
           () => _theme = _theme.copyWith(chromeTabRadius: value as double),
+        ),
+      ),
+      _slider(
+        'Layout duration ${_theme.chromeTabLayoutDuration?.inMilliseconds ?? 200}ms',
+        value: _theme.chromeTabLayoutDuration?.inMilliseconds.toDouble() ?? 200,
+        min: 80,
+        max: 300,
+        step: 10,
+        onChanged: (value) => setState(
+          () => _theme = _theme.copyWith(
+            chromeTabLayoutDuration: Duration(
+              milliseconds: (value as double).round(),
+            ),
+          ),
         ),
       ),
       const SizedBox(height: 4),
@@ -572,6 +616,7 @@ class _SemiChromeTabPageState extends State<SemiChromeTabPage> {
             locale: _locale,
             hideGroupButton: true,
             hideScrollbar: true,
+            layoutAnimation: SemiChromeTabLayoutAnimation.immediate,
             onTabActivate: (id) => setState(() => _overflowActive = id),
             onTabAdd: () {
               setState(() {

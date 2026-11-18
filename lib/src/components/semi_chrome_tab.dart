@@ -24,6 +24,9 @@ enum SemiChromeTabTooltipMode { truncated, always, never }
 /// The side of a target tab where a dragged tab is inserted.
 enum SemiChromeTabReorderPosition { before, after }
 
+/// Controls how changes to the tab layout are applied.
+enum SemiChromeTabLayoutAnimation { immediate, chromium }
+
 /// A tab displayed by [SemiChromeTab].
 @immutable
 class SemiChromeTabItem {
@@ -111,6 +114,7 @@ class SemiChromeTab extends StatefulWidget {
     this.hideScrollbar = true,
     this.hideActiveTabBottomLine = false,
     this.tooltipMode = SemiChromeTabTooltipMode.truncated,
+    this.layoutAnimation = SemiChromeTabLayoutAnimation.chromium,
     this.onTabActivate,
     this.onTabEditAddress,
     this.onTabClose,
@@ -139,6 +143,7 @@ class SemiChromeTab extends StatefulWidget {
   /// Whether the thin bottom edge of the active tab is hidden.
   final bool hideActiveTabBottomLine;
   final SemiChromeTabTooltipMode tooltipMode;
+  final SemiChromeTabLayoutAnimation layoutAnimation;
 
   /// Click a tab.
   final ValueChanged<String>? onTabActivate;
@@ -822,53 +827,79 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
       );
     }
 
-    final row = Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: <Widget>[
-        for (var index = 0; index < tabs.length; index++)
-          SizedBox(
-            key: ValueKey<String>('semi-chrome-tab-${tabs[index].id}'),
-            width: widths[tabs[index].id]!,
+    final tabBounds = <String, Rect>{};
+    final tabChildren = <String, Widget>{};
+    var tabLeft = 0.0;
+    for (var index = 0; index < tabs.length; index++) {
+      final tab = tabs[index];
+      final width = widths[tab.id]!;
+      tabBounds[tab.id] = Rect.fromLTWH(
+        tabLeft,
+        0,
+        width,
+        theme.chromeTabHeight,
+      );
+      tabChildren[tab.id] = SizedBox(
+        key: ValueKey<String>('semi-chrome-tab-${tab.id}'),
+        width: width,
+        height: theme.chromeTabHeight,
+        child: _buildTab(context, theme, tab, index, width),
+      );
+      tabLeft += width;
+    }
+
+    final trailingWidth = addVisible ? extraWidth : 0.0;
+    final trailing = addVisible
+        ? SizedBox(
+            width: trailingWidth,
             height: theme.chromeTabHeight,
-            child: _buildTab(
-              context,
-              theme,
-              tabs[index],
-              index,
-              widths[tabs[index].id]!,
-            ),
-          ),
-        if (addVisible) ...<Widget>[
-          if (tabs.isNotEmpty)
-            SizedBox(
-              width: _dividerWidth,
-              height: theme.chromeTabHeight,
-              child: Center(
-                child: Opacity(
-                  opacity: _newTabDividerVisible ? 1 : 0,
-                  child: _dividerPill(theme),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                if (tabs.isNotEmpty)
+                  SizedBox(
+                    width: _dividerWidth,
+                    height: theme.chromeTabHeight,
+                    child: Center(
+                      child: Opacity(
+                        opacity: _newTabDividerVisible ? 1 : 0,
+                        child: _dividerPill(theme),
+                      ),
+                    ),
+                  ),
+                SizedBox(
+                  width: _addSlotWidth,
+                  height: theme.chromeTabHeight,
+                  child: Center(
+                    child: _AddButton(
+                      key: _addButtonKey,
+                      theme: theme,
+                      messages: _messages(context),
+                      onPointerDown: _handleAddPointerDown,
+                      onTap: () {
+                        _closeAllMenus();
+                        widget.onTabAdd?.call();
+                      },
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-          SizedBox(
-            width: _addSlotWidth,
-            height: theme.chromeTabHeight,
-            child: Center(
-              child: _AddButton(
-                key: _addButtonKey,
-                theme: theme,
-                messages: _messages(context),
-                onPointerDown: _handleAddPointerDown,
-                onTap: () {
-                  _closeAllMenus();
-                  widget.onTabAdd?.call();
-                },
-              ),
-            ),
-          ),
-        ],
-      ],
+          )
+        : null;
+    final contentWidth = tabLeft + trailingWidth;
+
+    final layout = _ChromeTabBoundsLayout(
+      bounds: tabBounds,
+      children: tabChildren,
+      contentWidth: contentWidth,
+      height: theme.chromeTabHeight,
+      trailing: trailing,
+      trailingLeft: tabLeft,
+      trailingWidth: trailingWidth,
+      animation: widget.layoutAnimation,
+      duration: theme.chromeTabLayoutDuration,
     );
 
     return Listener(
@@ -885,7 +916,7 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
                 controller: _scroll,
                 scrollDirection: Axis.horizontal,
                 physics: const ClampingScrollPhysics(),
-                child: row,
+                child: layout,
               ),
             ),
           ),
@@ -1345,8 +1376,186 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
 }
 
 // -----------------------------------------------------------------------------
-// Popup plumbing
+// Tab layout animation
 // -----------------------------------------------------------------------------
+
+/// Positions tab children using their real outer bounds rather than a flex row.
+///
+/// Keeping this layer stateful lets a changed tab list use the previous frame's
+/// rectangles as its animation origin. A tab that is removed is dropped from the
+/// child list immediately, while the remaining tabs animate from their sampled
+/// positions; entering/closing opacity and scale remain owned by the tab itself.
+class _ChromeTabBoundsLayout extends StatefulWidget {
+  const _ChromeTabBoundsLayout({
+    required this.bounds,
+    required this.children,
+    required this.contentWidth,
+    required this.height,
+    required this.trailing,
+    required this.trailingLeft,
+    required this.trailingWidth,
+    required this.animation,
+    required this.duration,
+  });
+
+  final Map<String, Rect> bounds;
+  final Map<String, Widget> children;
+  final double contentWidth;
+  final double height;
+  final Widget? trailing;
+  final double trailingLeft;
+  final double trailingWidth;
+  final SemiChromeTabLayoutAnimation animation;
+  final Duration duration;
+
+  @override
+  State<_ChromeTabBoundsLayout> createState() => _ChromeTabBoundsLayoutState();
+}
+
+class _ChromeTabBoundsLayoutState extends State<_ChromeTabBoundsLayout>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late Map<String, Rect> _fromBounds;
+  late Map<String, Rect> _toBounds;
+  Rect? _fromTrailing;
+  Rect? _toTrailing;
+  SemiChromeTabLayoutAnimation? _lastAnimation;
+
+  Rect? get _targetTrailing => widget.trailing == null
+      ? null
+      : Rect.fromLTWH(
+          widget.trailingLeft,
+          0,
+          widget.trailingWidth,
+          widget.height,
+        );
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: widget.duration,
+      value: 1,
+    )..addListener(_handleTick);
+    _fromBounds = Map<String, Rect>.from(widget.bounds);
+    _toBounds = Map<String, Rect>.from(widget.bounds);
+    _fromTrailing = _targetTrailing;
+    _toTrailing = _targetTrailing;
+    _lastAnimation = widget.animation;
+  }
+
+  @override
+  void didUpdateWidget(covariant _ChromeTabBoundsLayout oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_controller.duration != widget.duration) {
+      _controller.duration = widget.duration;
+    }
+
+    final targetTrailing = _targetTrailing;
+    final targetChanged =
+        !_sameBounds(_toBounds, widget.bounds) ||
+        !_sameRect(_toTrailing, targetTrailing);
+    final modeChanged = _lastAnimation != widget.animation;
+    _lastAnimation = widget.animation;
+    if (!targetChanged && !modeChanged) return;
+
+    if (widget.animation == SemiChromeTabLayoutAnimation.immediate) {
+      _controller.stop(canceled: false);
+      _fromBounds = Map<String, Rect>.from(widget.bounds);
+      _toBounds = Map<String, Rect>.from(widget.bounds);
+      _fromTrailing = targetTrailing;
+      _toTrailing = targetTrailing;
+      return;
+    }
+
+    final currentBounds = _currentBounds;
+    final currentTrailing = _currentTrailing;
+    _fromBounds = <String, Rect>{
+      for (final entry in widget.bounds.entries)
+        entry.key: currentBounds[entry.key] ?? entry.value,
+    };
+    _toBounds = Map<String, Rect>.from(widget.bounds);
+    _fromTrailing = targetTrailing == null
+        ? null
+        : currentTrailing ?? targetTrailing;
+    _toTrailing = targetTrailing;
+
+    if (_sameBounds(_fromBounds, _toBounds) &&
+        _sameRect(_fromTrailing, _toTrailing)) {
+      _controller.value = 1;
+    } else {
+      _controller.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller
+      ..removeListener(_handleTick)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _handleTick() {
+    if (mounted) setState(() {});
+  }
+
+  Map<String, Rect> get _currentBounds {
+    if (widget.animation == SemiChromeTabLayoutAnimation.immediate) {
+      return Map<String, Rect>.from(_toBounds);
+    }
+    final value = Curves.easeOut.transform(_controller.value);
+    return <String, Rect>{
+      for (final entry in _toBounds.entries)
+        entry.key: Rect.lerp(
+          _fromBounds[entry.key] ?? entry.value,
+          entry.value,
+          value,
+        )!,
+    };
+  }
+
+  Rect? get _currentTrailing {
+    if (_toTrailing == null) return null;
+    if (widget.animation == SemiChromeTabLayoutAnimation.immediate ||
+        _fromTrailing == null) {
+      return _toTrailing;
+    }
+    final value = Curves.easeOut.transform(_controller.value);
+    return Rect.lerp(_fromTrailing, _toTrailing, value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bounds = _currentBounds;
+    final children = <Widget>[
+      for (final entry in widget.children.entries)
+        if (bounds[entry.key] case final rect?)
+          Positioned.fromRect(rect: rect, child: entry.value),
+    ];
+    final trailing = widget.trailing;
+    final trailingRect = _currentTrailing;
+    if (trailing != null && trailingRect != null) {
+      children.add(Positioned.fromRect(rect: trailingRect, child: trailing));
+    }
+    return SizedBox(
+      width: widget.contentWidth,
+      height: widget.height,
+      child: Stack(clipBehavior: Clip.none, children: children),
+    );
+  }
+
+  static bool _sameBounds(Map<String, Rect> a, Map<String, Rect> b) {
+    if (a.length != b.length) return false;
+    for (final entry in a.entries) {
+      if (b[entry.key] != entry.value) return false;
+    }
+    return true;
+  }
+
+  static bool _sameRect(Rect? a, Rect? b) => a == b;
+}
 
 enum _PopupKind { tooltip, overflowLeft, overflowRight, contextMenu, groupMenu }
 

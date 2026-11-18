@@ -41,6 +41,7 @@ class SemiChromeTabThemeData {
     this.chromeTabsTooltipShadow,
     this.chromeTabEnterDuration,
     this.chromeTabCloseDuration,
+    this.chromeTabLayoutDuration,
     this.chromeTabTooltipMoveDuration,
   });
 
@@ -123,6 +124,9 @@ class SemiChromeTabThemeData {
   /// `chrome-tab-close` animation duration (`140ms ease-in` upstream).
   final Duration? chromeTabCloseDuration;
 
+  /// Tab layout transition duration (`200ms` upstream Chromium behavior).
+  final Duration? chromeTabLayoutDuration;
+
   /// `left 140ms ease-out` when a tooltip moves between two tabs.
   final Duration? chromeTabTooltipMoveDuration;
 
@@ -153,6 +157,7 @@ class SemiChromeTabThemeData {
     SemiShadows? chromeTabsTooltipShadow,
     Duration? chromeTabEnterDuration,
     Duration? chromeTabCloseDuration,
+    Duration? chromeTabLayoutDuration,
     Duration? chromeTabTooltipMoveDuration,
   }) => SemiChromeTabThemeData(
     chromeTabsHeight: chromeTabsHeight ?? this.chromeTabsHeight,
@@ -197,6 +202,8 @@ class SemiChromeTabThemeData {
         chromeTabEnterDuration ?? this.chromeTabEnterDuration,
     chromeTabCloseDuration:
         chromeTabCloseDuration ?? this.chromeTabCloseDuration,
+    chromeTabLayoutDuration:
+        chromeTabLayoutDuration ?? this.chromeTabLayoutDuration,
     chromeTabTooltipMoveDuration:
         chromeTabTooltipMoveDuration ?? this.chromeTabTooltipMoveDuration,
   );
@@ -230,6 +237,7 @@ class SemiChromeTabThemeData {
           chromeTabsTooltipShadow: other.chromeTabsTooltipShadow,
           chromeTabEnterDuration: other.chromeTabEnterDuration,
           chromeTabCloseDuration: other.chromeTabCloseDuration,
+          chromeTabLayoutDuration: other.chromeTabLayoutDuration,
           chromeTabTooltipMoveDuration: other.chromeTabTooltipMoveDuration,
         );
 
@@ -284,6 +292,8 @@ class SemiChromeTabThemeData {
           chromeTabEnterDuration ?? const Duration(milliseconds: 160),
       chromeTabCloseDuration:
           chromeTabCloseDuration ?? const Duration(milliseconds: 140),
+      chromeTabLayoutDuration:
+          chromeTabLayoutDuration ?? const Duration(milliseconds: 200),
       chromeTabTooltipMoveDuration:
           chromeTabTooltipMoveDuration ?? const Duration(milliseconds: 140),
     );
@@ -321,6 +331,7 @@ class SemiChromeTabThemeData {
           chromeTabsTooltipShadow == other.chromeTabsTooltipShadow &&
           chromeTabEnterDuration == other.chromeTabEnterDuration &&
           chromeTabCloseDuration == other.chromeTabCloseDuration &&
+          chromeTabLayoutDuration == other.chromeTabLayoutDuration &&
           chromeTabTooltipMoveDuration == other.chromeTabTooltipMoveDuration;
 
   @override
@@ -351,6 +362,7 @@ class SemiChromeTabThemeData {
     chromeTabsTooltipShadow,
     chromeTabEnterDuration,
     chromeTabCloseDuration,
+    chromeTabLayoutDuration,
     chromeTabTooltipMoveDuration,
   ]);
 }
@@ -386,6 +398,7 @@ class SemiResolvedChromeTabThemeData {
     required this.chromeTabsTooltipShadow,
     required this.chromeTabEnterDuration,
     required this.chromeTabCloseDuration,
+    required this.chromeTabLayoutDuration,
     required this.chromeTabTooltipMoveDuration,
   });
 
@@ -418,5 +431,6 @@ class SemiResolvedChromeTabThemeData {
   final SemiShadows chromeTabsTooltipShadow;
   final Duration chromeTabEnterDuration;
   final Duration chromeTabCloseDuration;
+  final Duration chromeTabLayoutDuration;
   final Duration chromeTabTooltipMoveDuration;
 }

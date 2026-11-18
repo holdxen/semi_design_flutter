@@ -55,6 +55,7 @@ class SemiChromeTabReorderInfo {
 | `hideAddButton` | `bool` | `false` | 隐藏 `+` |
 | `hideGroupButton` | `bool` | `false` | 隐藏分组菜单触发器 |
 | `hideScrollbar` | `bool` | `true` | 隐藏横向滚动条；设为 `false` 时使用当前平台的滚动条样式 |
+| `layoutAnimation` | `SemiChromeTabLayoutAnimation` | `chromium` | `chromium` 使用 200ms ease-out bounds 过渡；`immediate` 立即重排 |
 | `tooltipMode` | `SemiChromeTabTooltipMode` | `truncated` | `truncated` / `always` / `never` |
 | `renderTabIcon` | `Widget? Function(item)` | `null` | 自定义图标 |
 | `renderTabTooltip` | `Widget? Function(item)` | `null` | 自定义 tooltip 内容 |
@@ -72,9 +73,10 @@ class SemiChromeTabReorderInfo {
 ## 行为细节
 
 - **宽度收缩**：标签宽度 = `clamp((视口宽 - 加号槽 - 分隔线) / 标签数, minWidth, maxWidth)`，等价于 CSS `flex: 0 1 120px; min-width: 52px`；放不下时整排横向滚动。
+- `immediate`：直接使用目标布局；`chromium`：tab bounds 按 ID 同步插值 left/width/height，默认 200ms `easeOut`。这是 Flutter 对 Chromium TabContainer bounds 动画的实现，不是 qn Web Component 自带的 CSS transition。
 - **活动页签几何**：顶部圆角 `radius + 2`，底部两侧用二次曲线绘制外扩的凹圆角（Chrome 缺口）。
-- **关闭动画**：点击关闭后标签 `scaleX 1→0.88`、透明度 `1→0`，宽度立即冻结；若关闭的是最后一个标签，其宽度平均分给左侧标签。鼠标离开标签栏后解冻（与上游 `pointerleave` 一致）。
-- **进入动画**：新增标签 `scaleX 0.88→1`、透明度 `0→1`，160ms。
+- **关闭动画**：标签内容 `scaleX 1→0.88`、透明度 `1→0`；默认 `layoutAnimation: chromium` 时，关闭标签后剩余标签的宽度和位置同时以 200ms `easeOut` bounds 动画重排。设置为 `immediate` 可恢复立即重排。`onTabClose` 仍在关闭动画结束后触发（140ms）。
+- **进入动画**：新标签的 bounds 在默认 Chromium 模式下从旧位置过渡到目标位置（200ms `easeOut`），内容另以 `scaleX 0.88→1`、透明度 `0→1` 进入（160ms）。
 - **拖拽**：拖起时源标签 45% 透明；目标标签按指针位于其左/右半区显示 2px accent 指示线，松手发 `onTabReorder`。
 - **右键菜单**：close / closeRight / closeOthers / closeLeft，点击后关闭菜单并回调。第一次点击菜单外只关闭菜单。
 - **分组菜单**：触发器 30×30；下拉 210px、右对齐、顶部偏移 34px；行悬停时右侧出现重命名/删除按钮；当前分组 accent + 600。
@@ -116,6 +118,7 @@ CSS 变量一一对应 `SemiChromeTabThemeData`。默认值是 qn-chrome-tabs �
 | `--chrome-tabs-tooltip-shadow` | `chromeTabsTooltipShadow` | `0 2px 4px rgba(60,64,67,.067)` |
 | `@keyframes chrome-tab-enter` | `chromeTabEnterDuration` | `160ms` |
 | `@keyframes chrome-tab-close` | `chromeTabCloseDuration` | `140ms` |
+| Chromium tab bounds transition | `chromeTabLayoutDuration` | `200ms easeOut`（Flutter bounds 动画增强，并非上游 Web CSS 变量） |
 | tooltip `transition: left` | `chromeTabTooltipMoveDuration` | `140ms`（字段保留，移动过渡未移植） |
 
 `chromeTabHeight` 不单独暴露：按上游 `max(--chrome-tabs-height, 28px)` 由 `resolve` 派生。

@@ -76,6 +76,8 @@ SemiChromeTab _tabs({
   bool hideAddButton = false,
   bool hideGroupButton = false,
   SemiChromeTabTooltipMode tooltipMode = SemiChromeTabTooltipMode.truncated,
+  SemiChromeTabLayoutAnimation layoutAnimation =
+      SemiChromeTabLayoutAnimation.chromium,
   ValueChanged<String>? onTabActivate,
   ValueChanged<String>? onTabEditAddress,
   ValueChanged<String>? onTabClose,
@@ -99,6 +101,7 @@ SemiChromeTab _tabs({
   hideAddButton: hideAddButton,
   hideGroupButton: hideGroupButton,
   tooltipMode: tooltipMode,
+  layoutAnimation: layoutAnimation,
   onTabActivate: onTabActivate,
   onTabEditAddress: onTabEditAddress,
   onTabClose: onTabClose,
@@ -162,17 +165,107 @@ void main() {
     expect(tall.chromeTabHeight, 46);
   });
 
+  test('layout animation duration defaults to Chromium bounds timing', () {
+    final resolved = const SemiChromeTabThemeData().resolve(
+      const SemiThemeData.light(),
+    );
+    expect(resolved.chromeTabLayoutDuration, const Duration(milliseconds: 200));
+  });
+
+  testWidgets('immediate layout mode updates widths without animation', (
+    tester,
+  ) async {
+    await pumpHost(
+      tester,
+      _tabs(
+        tabs: manyTabs(3),
+        activeTabId: 't0',
+        layoutAnimation: SemiChromeTabLayoutAnimation.immediate,
+      ),
+    );
+    expect(tabWidth(tester, 't0'), 120);
+
+    await update(
+      tester,
+      _tabs(
+        tabs: manyTabs(10),
+        activeTabId: 't0',
+        layoutAnimation: SemiChromeTabLayoutAnimation.immediate,
+      ),
+    );
+    expect(tabWidth(tester, 't0'), closeTo(56.2, 0.01));
+  });
+
+  testWidgets('Chromium layout mode animates tab width bounds', (tester) async {
+    await pumpHost(
+      tester,
+      _tabs(
+        tabs: manyTabs(3),
+        activeTabId: 't0',
+        layoutAnimation: SemiChromeTabLayoutAnimation.chromium,
+      ),
+    );
+    final startWidth = tabWidth(tester, 't0');
+
+    await update(
+      tester,
+      _tabs(
+        tabs: manyTabs(10),
+        activeTabId: 't0',
+        layoutAnimation: SemiChromeTabLayoutAnimation.chromium,
+      ),
+    );
+    final firstFrameWidth = tabWidth(tester, 't0');
+    expect(firstFrameWidth, startWidth);
+
+    await tester.pump(const Duration(milliseconds: 100));
+    final middleWidth = tabWidth(tester, 't0');
+    expect(middleWidth, lessThan(startWidth));
+    expect(middleWidth, greaterThan(56.2));
+
+    await tester.pump(const Duration(milliseconds: 120));
+    expect(tabWidth(tester, 't0'), closeTo(56.2, 0.01));
+  });
+
   testWidgets('tabs shrink from max to min width before overflowing', (
     tester,
   ) async {
-    await pumpHost(tester, _tabs(tabs: manyTabs(3), activeTabId: 't0'));
+    await pumpHost(
+      tester,
+      _tabs(
+        tabs: manyTabs(3),
+        activeTabId: 't0',
+        layoutAnimation: SemiChromeTabLayoutAnimation.immediate,
+      ),
+    );
+    await pumpHost(
+      tester,
+      _tabs(
+        tabs: manyTabs(3),
+        activeTabId: 't0',
+        layoutAnimation: SemiChromeTabLayoutAnimation.immediate,
+      ),
+    );
     expect(tabWidth(tester, 't0'), 120);
 
-    await update(tester, _tabs(tabs: manyTabs(10), activeTabId: 't0'));
+    await update(
+      tester,
+      _tabs(
+        tabs: manyTabs(10),
+        activeTabId: 't0',
+        layoutAnimation: SemiChromeTabLayoutAnimation.immediate,
+      ),
+    );
     expect(tabWidth(tester, 't0'), closeTo(56.2, 0.01));
 
-    await update(tester, _tabs(tabs: manyTabs(12), activeTabId: 't0'));
-    await tester.pump();
+    await update(
+      tester,
+      _tabs(
+        tabs: manyTabs(12),
+        activeTabId: 't0',
+        layoutAnimation: SemiChromeTabLayoutAnimation.immediate,
+      ),
+    );
     expect(tabWidth(tester, 't0'), 52);
     expect(_scrollPosition(tester).maxScrollExtent, greaterThan(0));
   });
@@ -478,6 +571,7 @@ void main() {
         ],
         activeTabId: 'short',
         tooltipMode: SemiChromeTabTooltipMode.always,
+        layoutAnimation: SemiChromeTabLayoutAnimation.immediate,
         renderTabTooltip: (_) => const Text('ALWAYS'),
       ),
     );
