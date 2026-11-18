@@ -22,6 +22,7 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 
+import '../localization/semi_localizations.dart';
 import '../overlay/tooltip_positioning.dart';
 import '../theme/semi_icon_theme.dart';
 import '../theme/semi_spin_theme.dart';
@@ -670,7 +671,8 @@ class _SemiUploadState extends State<SemiUpload> {
       prepared = prepared.copyWith(
         status: SemiUploadFileStatus.validateFail,
         validateMessage:
-            prepared.validateMessage ?? _UploadMetrics.localeIllegalSize,
+            prepared.validateMessage ??
+            SemiLocalizations.of(context).uploadIllegalSize,
       );
       widget.onSizeError?.call(prepared, List.of(_effective));
     }
@@ -697,7 +699,7 @@ class _SemiUploadState extends State<SemiUpload> {
 
   bool _sizeInvalid(SemiUploadFile file) =>
       file.status == SemiUploadFileStatus.validateFail &&
-      identical(file.validateMessage, _UploadMetrics.localeIllegalSize);
+      file.validateMessage == SemiLocalizations.of(context).uploadIllegalSize;
 
   SemiUploadFile _toListItem(SemiUploadFile file) => file.copyWith(
     status: file.status == SemiUploadFileStatus.validateFail
@@ -855,7 +857,7 @@ class _SemiUploadState extends State<SemiUpload> {
       file,
       (current) => current.copyWith(
         status: SemiUploadFileStatus.uploadFail,
-        validateMessage: message ?? _UploadMetrics.localeFail,
+        validateMessage: message ?? SemiLocalizations.of(context).uploadFailure,
       ),
     );
     widget.onError?.call(error, file, List.of(_effective));
@@ -1122,16 +1124,13 @@ class _SemiUploadState extends State<SemiUpload> {
     SemiThemeData global,
     List<SemiUploadFile> fileList,
   ) {
+    final strings = SemiLocalizations.of(context);
     final showTitle = widget.limit != 1 && fileList.isNotEmpty;
     final titleBuilder = widget.fileListTitle;
     Widget titleContent;
     if (titleBuilder
         is Widget Function(List<SemiUploadFile>, VoidCallback, String)) {
-      titleContent = titleBuilder(
-        fileList,
-        () => _clear(),
-        _UploadMetrics.localeClear,
-      );
+      titleContent = titleBuilder(fileList, () => _clear(), strings.clear);
     } else {
       titleContent = Row(
         mainAxisSize: MainAxisSize.min,
@@ -1140,7 +1139,7 @@ class _SemiUploadState extends State<SemiUpload> {
             padding: EdgeInsetsDirectional.only(
               end: t.spacingUploadTitleChoosenMarginRight,
             ),
-            child: _content(titleBuilder ?? _UploadMetrics.localeSelectedFiles),
+            child: _content(titleBuilder ?? strings.uploadSelectedFiles),
           ),
           if (widget.showClear && !widget.disabled)
             MouseRegion(
@@ -1150,7 +1149,7 @@ class _SemiUploadState extends State<SemiUpload> {
                 onTap: () => _clear(),
                 child: DefaultTextStyle.merge(
                   style: TextStyle(color: t.colorUploadClearText),
-                  child: const Text(_UploadMetrics.localeClear),
+                  child: Text(strings.clear),
                 ),
               ),
             ),
@@ -1273,6 +1272,7 @@ class _UploadDragAreaState extends State<_UploadDragArea> {
         ? t.colorUploadDragAreaBgHover
         : t.colorUploadDragAreaBg;
 
+    final strings = SemiLocalizations.of(context);
     final Widget content =
         widget.child ??
         Column(
@@ -1297,7 +1297,7 @@ class _UploadDragAreaState extends State<_UploadDragArea> {
               t: t,
               disabled: disabled,
               main: true,
-              text: widget.mainText ?? _UploadMetrics.localeMainText,
+              text: widget.mainText ?? strings.uploadMainText,
             ),
             _DragAreaText(
               t: t,
@@ -1312,8 +1312,7 @@ class _UploadDragAreaState extends State<_UploadDragArea> {
                   fontWeight: t.fontUploadDragAreaTipsFontWeight,
                   color: t.colorUploadDragAreaTipsText,
                 ),
-                // `-tips-legal` 颜色（dragAreaStatus: legal 驱动）。
-                child: const Text(_UploadMetrics.localeLegalTips),
+                child: Text(strings.uploadLegalTips),
               ),
             if (illegal)
               DefaultTextStyle.merge(
@@ -1321,7 +1320,7 @@ class _UploadDragAreaState extends State<_UploadDragArea> {
                   fontSize: _UploadMetrics.fontSizeSmall,
                   fontWeight: t.fontUploadDragAreaTipsFontWeight,
                 ),
-                child: const Text(_UploadMetrics.localeIllegalTips),
+                child: Text(strings.uploadIllegalTips),
               ),
           ],
         );

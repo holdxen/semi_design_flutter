@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../localization/semi_localizations.dart';
 import '../overlay/dialog_engine/helper/navigator_observer.dart';
 import '../theme/semi_theme.dart';
 import '../theme/semi_theme_data.dart';
@@ -27,7 +28,7 @@ class SemiApp extends StatelessWidget {
     this.pageRouteBuilder,
     this.locale,
     this.localizationsDelegates,
-    this.supportedLocales = const <Locale>[Locale('en', 'US')],
+    this.supportedLocales = SemiLocalizations.supportedLocales,
     this.debugShowCheckedModeBanner = true,
   });
 
@@ -102,7 +103,10 @@ class SemiApp extends StatelessWidget {
       title: title,
       color: color ?? (theme ?? const SemiThemeData.light()).colors.colorBg0,
       locale: locale,
-      localizationsDelegates: localizationsDelegates,
+      localizationsDelegates: <LocalizationsDelegate<dynamic>>[
+        SemiLocalizations.delegate,
+        ...?localizationsDelegates,
+      ],
       supportedLocales: supportedLocales,
       debugShowCheckedModeBanner: debugShowCheckedModeBanner,
       builder: (context, child) {

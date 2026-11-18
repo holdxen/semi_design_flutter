@@ -16,6 +16,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../overlay/tooltip_positioning.dart';
+import '../localization/semi_localizations.dart';
 import '../theme/semi_pagination_theme.dart';
 import '../theme/semi_pagination_theme_data.dart';
 import 'icon/semi_icon.dart';
@@ -408,7 +409,9 @@ class _SemiPaginationState extends State<SemiPagination> {
       _currentPage,
       totalPages,
     );
-    final totalPagesText = '总页数：$totalPages';
+    final strings = SemiLocalizations.of(context);
+    // zh_CN.ts:10 `total: '总页数：${total}'` (resolved by [strings]).
+    final totalPagesText = strings.totalPages(totalPages);
     return KeyedSubtree(
       key: SemiPagination.rootKey,
       child: Row(
@@ -500,6 +503,7 @@ class _SemiPaginationState extends State<SemiPagination> {
   }
 
   Widget _buildPrev(SemiResolvedPaginationThemeData t, bool rtl) {
+    final strings = SemiLocalizations.of(context);
     // foundation.ts:55-71 `_updateDisabled`：currentPage===1 → prev 禁用。
     final disabled = _currentPage == 1 || widget.disabled;
     final content = _prevNextContent(
@@ -515,14 +519,15 @@ class _SemiPaginationState extends State<SemiPagination> {
       itemDisabled: disabled,
       allDisabled: widget.disabled,
       prevOrNext: true,
-      // index.tsx:259 `aria-label="Previous"`（Semantics 近似）。
-      semanticsLabel: 'Previous',
+      // Upstream anchor: index.tsx:259 `aria-label="Previous"`.
+      semanticsLabel: strings.previousPage,
       onTap: disabled ? null : _goPrev,
       child: content,
     );
   }
 
   Widget _buildNext(SemiResolvedPaginationThemeData t, bool rtl) {
+    final strings = SemiLocalizations.of(context);
     final disabled = (widget.disabled
         ? true
         : _nextDisabledFor(_currentPage, _totalPages));
@@ -539,8 +544,8 @@ class _SemiPaginationState extends State<SemiPagination> {
       itemDisabled: disabled,
       allDisabled: widget.disabled,
       prevOrNext: true,
-      // index.tsx:282 `aria-label="Next"`。
-      semanticsLabel: 'Next',
+      // Upstream anchor: index.tsx:282 `aria-label="Next"`.
+      semanticsLabel: strings.nextPage,
       onTap: disabled ? null : _goNext,
       child: content,
     );
@@ -573,6 +578,7 @@ class _SemiPaginationState extends State<SemiPagination> {
     List<int> restLeft,
     List<int> restRight,
   ) {
+    final strings = SemiLocalizations.of(context);
     final isRest = page == '...';
     final selected = !isRest && page == _currentPage;
     final item = _PageItem(
@@ -582,9 +588,9 @@ class _SemiPaginationState extends State<SemiPagination> {
       itemDisabled: false,
       allDisabled: widget.disabled,
       prevOrNext: false,
-      // `aria-label={page === '...' ? 'More' : undefined}` + `Page ${page}`
-      // （index.tsx:384/:390；button 语义近似）。
-      semanticsLabel: isRest ? 'More' : 'Page $page',
+      // Upstream anchors: `aria-label={page === '...' ? 'More' : undefined}`
+      // and `Page ${page}` (index.tsx:384/:390).
+      semanticsLabel: isRest ? strings.morePages : 'Page $page',
       onTap: widget.disabled || isRest ? null : () => _goPage(page),
       child: Text('$page'),
     );
@@ -660,11 +666,13 @@ class _SemiPaginationState extends State<SemiPagination> {
   /// 每页条数切换器（index.tsx:289-328）：`li.-switch` 下 [SemiSelect]，选项标签
   /// 走 locale `pageSize` 模板。
   Widget _buildSizeChanger(SemiResolvedPaginationThemeData t, bool rtl) {
+    final strings = SemiLocalizations.of(context);
     final options = _pageSizeInOpts()
         .map(
           (size) => SemiSelectOption(
             value: size,
-            label: _PaginationMetrics.pageSizeLabel(size),
+            // zh_CN.ts:9 `pageSize: '每页条数：${pageSize}'` (resolved by [strings]).
+            label: strings.pageSize(size),
           ),
         )
         .toList(growable: false);
@@ -704,6 +712,8 @@ class _SemiPaginationState extends State<SemiPagination> {
 
   /// 快速跳转（index.tsx:330-359）：`跳至 [n] 页`；总页数 1 或整体禁用时全禁用。
   Widget _buildQuickJump(SemiResolvedPaginationThemeData t, int totalPages) {
+    final strings = SemiLocalizations.of(context);
+    // zh_CN.ts:11-12 `jumpTo: '跳至'` / `page: '页'` (resolved by [strings]).
     final isDisabled = totalPages == 1 || widget.disabled;
     return Padding(
       // pagination.scss:150-153 `&-quickjump`：左距 24 + regular 字号 + 居中。
@@ -734,8 +744,7 @@ class _SemiPaginationState extends State<SemiPagination> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // zh_CN.ts:11-12 `jumpTo: '跳至'` / `page: '页'`。
-              const Text(_PaginationMetrics.localeJumpTo),
+              Text(strings.jumpTo),
               Padding(
                 padding: EdgeInsetsDirectional.only(
                   start: t.spacingPaginationQuickjumpInputMarginLeft,
@@ -758,7 +767,7 @@ class _SemiPaginationState extends State<SemiPagination> {
                   ),
                 ),
               ),
-              const Text(_PaginationMetrics.localePage),
+              Text(strings.page),
             ],
           ),
         ),
@@ -1066,13 +1075,16 @@ abstract final class _PaginationMetrics {
   /// popover/constants.ts `SPACING: 4`（Popover 与触发器的间距）。
   static const double popoverSpacing = 4;
 
-  /// zh_CN.ts:9 `pageSize: '每页条数：${pageSize}'`（locale 模板逐字留档；
-  /// `pageSizeLabel` 按键替换 `${pageSize}`）。
+  /// zh_CN.ts:9 `pageSize: '每页条数：${pageSize}'` is resolved by
+  /// [SemiLocalizations.pageSize].
+  // ignore: unused_field
   static String pageSizeLabel(int size) => '每页条数：$size';
 
-  /// zh_CN.ts:11 `jumpTo: '跳至'`。
+  /// zh_CN.ts:11 `jumpTo: '跳至'` is resolved by [SemiLocalizations.jumpTo].
+  // ignore: unused_field
   static const String localeJumpTo = '跳至';
 
-  /// zh_CN.ts:12 `page: '页'`。
+  /// zh_CN.ts:12 `page: '页'` is resolved by [SemiLocalizations.page].
+  // ignore: unused_field
   static const String localePage = '页';
 }

@@ -30,7 +30,7 @@ SemiApp(
 )
 ```
 
-有路由时，用户 builder 必须把 child 放入返回的子树才能保留 Navigator；无路由时 child 为 null。WidgetsApp 提供 Directionality、WidgetsLocalizations、焦点及导航基础设施。默认 supportedLocales 仅声明 en_US；可传入 locale、localizationsDelegates、supportedLocales 扩展实际本地化能力。默认 WidgetsLocalizations 本身支持基础文字方向，不等于提供组件翻译，更不包含 Material/Cupertino localizations。
+有路由时，用户 builder 必须把 child 放入返回的子树才能保留 Navigator；无路由时 child 为 null。WidgetsApp 提供 Directionality、WidgetsLocalizations、焦点及导航基础设施。SemiApp 默认注册 SemiLocalizations，并支持 `zh_CN` 与 `en_US`；未传 `locale` 时跟随系统语言，不支持的语言回退简体中文。可通过 `locale` 显式切换语言，也可通过 `localizationsDelegates` 追加宿主自己的 delegate；Semi delegate 会自动保留。组件显式文案参数（如 `okText`、`placeholder`）优先于本地化默认值。默认 WidgetsLocalizations 本身支持基础文字方向，不等于提供 Material/Cupertino localizations。宿主也可以直接在组件树中通过 `SemiLocalizations.of(context)` 读取当前资源。
 
 此入口不提供 SemiScaffold、Material/Cupertino 组件服务、Router 2 或 restoration 配置。页面布局和滚动由宿主使用 SafeArea、SingleChildScrollView 等 widgets 构建。
 

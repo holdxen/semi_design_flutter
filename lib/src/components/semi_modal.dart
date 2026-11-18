@@ -25,6 +25,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import '../localization/semi_localizations.dart';
 import '../overlay/dialog_engine/flutter_smart_dialog.dart';
 import '../theme/semi_modal_theme.dart';
 import '../theme/semi_modal_theme_data.dart';
@@ -1194,7 +1195,7 @@ class _ModalContent extends StatelessWidget {
       type: SemiButtonType.tertiary,
       variant: SemiButtonVariant.borderless,
       size: SemiButtonSize.small,
-      semanticsLabel: '关闭',
+      semanticsLabel: SemiLocalizations.of(context).close,
       onPressed: onClose,
     );
 
@@ -1237,7 +1238,7 @@ class _ModalContent extends StatelessWidget {
       ),
       child: _slot(config.content),
     );
-    final footer = _buildFooter(t, rtl);
+    final footer = _buildFooter(context, t, rtl);
     // 自定义 header 整体替换标题行（上游 `'header' in props` 分支）；
     // [SemiModalEmptySlot] = `header={null}` 显式空（无 header 行、body 直通、
     // 无 closer——上游 renderBody `hasHeader` quirk）。
@@ -1381,9 +1382,14 @@ class _ModalContent extends StatelessWidget {
     };
   }
 
-  Widget? _buildFooter(SemiResolvedModalThemeData t, bool rtl) {
+  Widget? _buildFooter(
+    BuildContext context,
+    SemiResolvedModalThemeData t,
+    bool rtl,
+  ) {
     // [SemiModalEmptySlot] = `footer={null}` 显式空（无 footer 节点——上游
     // `'footer' in props ? footer : renderFooter()` 覆盖缺省按钮行）。
+    final strings = SemiLocalizations.of(context);
     if (config.footer is SemiModalEmptySlot) return null;
     if (config.footer case final Widget customFooter) {
       return Container(
@@ -1402,7 +1408,7 @@ class _ModalContent extends StatelessWidget {
     final buttons = <Widget>[
       if (showCancel)
         SemiButton(
-          config.cancelText ?? '取消',
+          config.cancelText ?? strings.cancel,
           type: SemiButtonType.tertiary,
           loading: cancelLoading,
           block: config.footerFill,
@@ -1412,7 +1418,7 @@ class _ModalContent extends StatelessWidget {
         // footer 按钮 `margin-left: 12`（RTL 翻为 margin-right）。
         SizedBox(width: t.spacingModalFooterButtonMarginLeft),
       SemiButton(
-        config.okText ?? '确定',
+        config.okText ?? strings.modalOk,
         type: okType,
         loading: confirmLoading,
         block: config.footerFill,

@@ -25,6 +25,7 @@
 // 生成器 HARDCODES 锚点断言这些片段出现在本文件。
 import 'package:flutter/widgets.dart';
 
+import '../localization/semi_localizations.dart';
 import '../overlay/tooltip_positioning.dart';
 import '../theme/semi_button_theme.dart';
 import '../theme/semi_button_theme_data.dart';
@@ -555,22 +556,23 @@ class _SemiUserGuideState extends State<SemiUserGuide>
     final isFirst = index == 0;
     final isLast = index == widget.steps.length - 1;
     final isPrimary = _isPrimary(step);
+    final strings = SemiLocalizations.of(context);
     final rootColor = isPrimary
         ? t.colorUserGuidePopupTextPrimary
         : t.colorUserGuidePopupTextDefault;
     // ★文案走 String：SemiButton 仅对 String child 套按钮文字色/字号（Widget
     // child 原样透传——上游按钮 CSS `color` 对 children 为继承语义，此处以
     // String 通道承担；`*.child` 传 Widget 自带样式）。
-    final Object skipLabel = widget.skipText ?? _UserGuideMetrics.skipLabel;
+    final Object skipLabel = widget.skipText ?? strings.guideSkip;
     final Object prevLabel =
         widget.prevButtonProps?.child ??
         widget.prevText ??
-        _UserGuideMetrics.prevLabel;
+        strings.guidePrevious;
     final Object nextLabel = isLast
-        ? (widget.finishText ?? _UserGuideMetrics.finishLabel)
+        ? (widget.finishText ?? strings.guideFinish)
         : (widget.nextButtonProps?.child ??
               widget.nextText ??
-              _UserGuideMetrics.nextLabel);
+              strings.guideNext);
     return DefaultTextStyle.merge(
       style: TextStyle(color: rootColor),
       child: DecoratedBox(
@@ -762,19 +764,20 @@ class _SemiUserGuideState extends State<SemiUserGuide>
     final index = _current;
     final isFirst = index == 0;
     final isLast = index == widget.steps.length - 1;
+    final strings = SemiLocalizations.of(context);
     // ★文案走 String：SemiButton 仅对 String child 套按钮文字色/字号（Widget
     // child 原样透传——上游按钮 CSS `color` 对 children 为继承语义，此处以
     // String 通道承担；`*.child` 传 Widget 自带样式）。
-    final Object skipLabel = widget.skipText ?? _UserGuideMetrics.skipLabel;
+    final Object skipLabel = widget.skipText ?? strings.guideSkip;
     final Object prevLabel =
         widget.prevButtonProps?.child ??
         widget.prevText ??
-        _UserGuideMetrics.prevLabel;
+        strings.guidePrevious;
     final Object nextLabel = isLast
-        ? (widget.finishText ?? _UserGuideMetrics.finishLabel)
+        ? (widget.finishText ?? strings.guideFinish)
         : (widget.nextButtonProps?.child ??
               widget.nextText ??
-              _UserGuideMetrics.nextLabel);
+              strings.guideNext);
     return SemiModal(
       visible: true,
       // 上游 `header={null}` / `footer={null}`（'x' in props 显式空——无 header

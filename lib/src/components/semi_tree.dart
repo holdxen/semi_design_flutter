@@ -15,6 +15,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
+import '../localization/semi_localizations.dart';
+
 import '../theme/semi_icon_theme.dart';
 import '../theme/semi_spin_theme.dart';
 import '../theme/semi_spin_theme_data.dart';
@@ -127,6 +129,24 @@ typedef SemiTreeLabelBuilder = Widget Function(
   String searchWord,
 );
 
+/// Imperative handle for tree search. After detaching, calls are ignored.
+class SemiTreeController {
+  _SemiTreeState? _state;
+
+  /// Sets the filter text without invoking [SemiTree.onSearch].
+  void search(String value) {
+    _state?._controllerSearch(value);
+  }
+
+  void _attach(_SemiTreeState state) {
+    _state = state;
+  }
+
+  void _detach(_SemiTreeState state) {
+    if (identical(_state, state)) _state = null;
+  }
+}
+
 /// 树形控件。
 ///
 /// 数据归一（treeUtil.ts：`convertDataToEntities` + `flattenTreeData`）：
@@ -180,6 +200,8 @@ class SemiTree extends StatefulWidget {
     this.loadData,
     this.loadedKeys,
     this.onLoad,
+    this.controller,
+    this.showSearch = true,
     this.virtualize,
     this.emptyContent,
     this.onChange,
@@ -295,6 +317,12 @@ class SemiTree extends StatefulWidget {
 
   /// 加载完成回调（上游 onLoad(loadedKeys, node)）。
   final void Function(Set<String> loadedKeys, SemiTreeNodeData data)? onLoad;
+
+  /// Imperative search handle.
+  final SemiTreeController? controller;
+
+  /// Whether to render Tree's own search input.
+  final bool showSearch;
 
   /// 虚拟化参数（非 null 走 `ListView.builder`；运动不播）。
   final SemiTreeVirtualize? virtualize;
@@ -431,11 +459,16 @@ class _SemiTreeState extends State<SemiTree> {
     _initialExpanded();
     _syncSelectionFromValue(initial: true);
     _refreshFlatten();
+    widget.controller?._attach(this);
   }
 
   @override
   void didUpdateWidget(SemiTree oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller?._detach(this);
+      widget.controller?._attach(this);
+    }
     var dataChanged = false;
     if (!identical(widget.treeData, _lastTreeData)) {
       _lastTreeData = widget.treeData;
@@ -472,6 +505,35 @@ class _SemiTreeState extends State<SemiTree> {
     } else if (dataChanged || _searching) {
       _refreshFlatten();
     }
+  }
+
+  @override
+  void dispose() {
+    widget.controller?._detach(this);
+    super.dispose();
+  }
+
+  void _controllerSearch(String value) {
+    if (!_filterable) {
+      return;
+    }
+    setState(() {
+      _inputValue = value;
+      if (value.isEmpty) {
+        if (!_expandControlled) {
+          _expanded = {
+            ..._expanded,
+            ..._findAncestorKeys(_selectedKeys, self: true),
+          };
+        }
+        _filteredKeys = <String>{};
+        _filteredExpanded = <String>{};
+        _filteredShownKeys = <String>{};
+        _flattenNodes = _flatten(_expanded);
+      } else {
+        _applyFilter();
+      }
+    });
   }
 
   // -- data ------------------------------------------------------------------
@@ -1183,7 +1245,7 @@ class _SemiTreeState extends State<SemiTree> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (_filterable) _buildSearch(t),
+          if (_filterable && widget.showSearch) _buildSearch(t),
           Expanded(child: list),
         ],
       ),
@@ -1191,8 +1253,8 @@ class _SemiTreeState extends State<SemiTree> {
   }
 
   Widget _buildSearch(SemiResolvedTreeThemeData t) {
-    final placeholder =
-        widget.searchPlaceholder ?? _TreeMetrics.localeSearchPlaceholder;
+    final strings = SemiLocalizations.of(context);
+    final placeholder = widget.searchPlaceholder ?? strings.search;
     final Widget input =
         widget.searchRender?.call(
           SemiTreeSearchProps(
@@ -1209,8 +1271,7 @@ class _SemiTreeState extends State<SemiTree> {
           prefix: const SemiIcon(SemiIcons.search, size: SemiIconSize.small),
           showClear: widget.showClear,
           placeholder: placeholder,
-          // index.tsx:648 `aria-label='Filter Tree'`（Semantics 近似）。
-          semanticsLabel: 'Filter Tree',
+          semanticsLabel: strings.filterTree,
           onChanged: _handleSearch,
         );
     return Padding(
@@ -1312,7 +1373,7 @@ class _SemiTreeState extends State<SemiTree> {
     bool rtl,
   ) {
     final emptyText = Text(
-      _TreeMetrics.localeEmptyText,
+      SemiLocalizations.of(context).noData,
       style: TextStyle(
         fontSize: _TreeMetrics.fontSizeRegular,
         color: t.colorTreeOptionDisabledTextDefault,

@@ -50,6 +50,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import '../localization/semi_localizations.dart';
 import '../overlay/tooltip_positioning.dart';
 import '../theme/semi_tabs_theme.dart';
 import '../theme/semi_tabs_theme_data.dart';
@@ -645,6 +646,7 @@ class _SemiTabsState extends State<SemiTabs> {
     SemiResolvedTabsThemeData t,
     SemiThemeData global,
   ) {
+    final strings = SemiLocalizations.of(context);
     final custom = widget.renderMoreTrigger;
     final trigger = custom != null
         ? custom()
@@ -652,7 +654,7 @@ class _SemiTabsState extends State<SemiTabs> {
             t: t,
             global: global,
             type: widget.type,
-            text: _TabsStrings.more,
+            text: strings.tabsMore,
           );
     // tabs.scss:235 `overflow-y: auto` + :32 `max-height: 300px`。
     final menu = ConstrainedBox(
@@ -1196,6 +1198,7 @@ class _TabItemState extends State<_TabItem> {
         ? t.fontTabsTabActiveFontWeight
         : t.fontTabsTabFontWeight;
     final label = _label(widget.data.tab);
+    final strings = SemiLocalizations.of(context);
 
     Widget core = AnimatedContainer(
       duration: _transitionDuration,
@@ -1246,7 +1249,7 @@ class _TabItemState extends State<_TabItem> {
                 onTap: widget.onClose,
                 child: Semantics(
                   button: true,
-                  label: _TabsStrings.close,
+                  label: strings.close,
                   child: SemiIcon(
                     SemiIcons.close,
                     customSize: 14,
@@ -2022,6 +2025,8 @@ class _TabsPaneMotionState extends State<_TabsPaneMotion>
 }
 
 /// Locale `Tabs.more` / `Tabs.close`（zh_CN: '更多' / '关闭'）。
+///
+/// Defaults are resolved from [SemiLocalizations] at build time.
 abstract final class _TabsStrings {
   static const String more = '更多';
   static const String close = '关闭';

@@ -43,6 +43,7 @@ import 'semi_steps_theme_data.dart';
 import 'semi_upload_theme_data.dart';
 import 'semi_skeleton_theme_data.dart';
 import 'semi_tabs_theme_data.dart';
+import 'chrome_tab_theme_data.dart';
 import 'semi_carousel_theme_data.dart';
 import 'semi_modal_theme_data.dart';
 import 'semi_popover_theme_data.dart';
@@ -106,6 +107,7 @@ class SemiComponentThemes {
     this.upload = const SemiUploadThemeData(),
     this.skeleton = const SemiSkeletonThemeData(),
     this.tabs = const SemiTabsThemeData(),
+    this.chromeTab = const ChromeTabThemeData(),
     this.carousel = const SemiCarouselThemeData(),
     this.modal = const SemiModalThemeData(),
     this.popover = const SemiPopoverThemeData(),
@@ -169,6 +171,7 @@ class SemiComponentThemes {
   final SemiUploadThemeData upload;
   final SemiSkeletonThemeData skeleton;
   final SemiTabsThemeData tabs;
+  final ChromeTabThemeData chromeTab;
   final SemiCarouselThemeData carousel;
   final SemiModalThemeData modal;
   final SemiPopoverThemeData popover;
@@ -229,6 +232,7 @@ class SemiComponentThemes {
     SemiUploadThemeData? upload,
     SemiSkeletonThemeData? skeleton,
     SemiTabsThemeData? tabs,
+    ChromeTabThemeData? chromeTab,
     SemiCarouselThemeData? carousel,
     SemiModalThemeData? modal,
     SemiPopoverThemeData? popover,
@@ -289,6 +293,7 @@ class SemiComponentThemes {
     upload: upload ?? this.upload,
     skeleton: skeleton ?? this.skeleton,
     tabs: tabs ?? this.tabs,
+    chromeTab: chromeTab ?? this.chromeTab,
     carousel: carousel ?? this.carousel,
     modal: modal ?? this.modal,
     popover: popover ?? this.popover,
@@ -353,6 +358,7 @@ class SemiComponentThemes {
           upload == other.upload &&
           skeleton == other.skeleton &&
           tabs == other.tabs &&
+          chromeTab == other.chromeTab &&
           carousel == other.carousel &&
           modal == other.modal &&
           popover == other.popover &&
@@ -414,6 +420,7 @@ class SemiComponentThemes {
     upload,
     skeleton,
     tabs,
+    chromeTab,
     carousel,
     modal,
     popover,

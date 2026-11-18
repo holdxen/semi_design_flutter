@@ -8,7 +8,11 @@
 //
 // HARDCODES（另列）上游片段以注释逐字留档在 `_TimePickerMetrics` / 调用点，
 // 生成器 HARDCODES 锚点断言这些片段出现在本文件。
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
+
+import '../localization/semi_localizations.dart';
 
 import '../overlay/tooltip_positioning.dart';
 import '../theme/semi_theme.dart';
@@ -100,6 +104,7 @@ class SemiTimePicker extends StatefulWidget {
     this.defaultValue,
     this.format,
     this.use12Hours = false,
+    this.infinite = true,
     this.hourStep,
     this.minuteStep,
     this.secondStep,
@@ -130,7 +135,9 @@ class SemiTimePicker extends StatefulWidget {
     this.motion = true,
     this.controller,
     this.child,
-  });
+  }) : assert(hourStep == null || hourStep > 0, 'hourStep must be > 0'),
+       assert(minuteStep == null || minuteStep > 0, 'minuteStep must be > 0'),
+       assert(secondStep == null || secondStep > 0, 'secondStep must be > 0');
 
   static const Key panelKey = Key('SemiTimePicker.panel');
   static const Key hourListKey = Key('SemiTimePicker.hourList');
@@ -155,6 +162,9 @@ class SemiTimePicker extends StatefulWidget {
 
   /// 12 小时制：出 AM/PM 列，小时列 `[12, 1..11]`。
   final bool use12Hours;
+
+  /// 小时、分钟和秒列是否循环滚动。默认开启；设为 false 可保留有限普通列表行为。
+  final bool infinite;
 
   /// 小时/分钟/秒步进（`generateOptions` 的 `step`），缺省 1。
   final int? hourStep;
@@ -338,15 +348,13 @@ class _SemiTimePickerState extends State<SemiTimePicker> {
   String get _placeholder {
     final placeholder = widget.placeholder;
     if (placeholder != null) return placeholder;
-    return _isRange
-        ? _TimePickerMetrics.chooseTimeRangeLabel
-        : _TimePickerMetrics.chooseTimeLabel;
+    final strings = SemiLocalizations.of(context);
+    return _isRange ? strings.chooseTimeRange : strings.chooseTime;
   }
 
   // -- value plumbing -------------------------------------------------------
 
   /// `getInitialState`（foundation.ts:135-189）+ `parseToDate`
-  /// （utils/index.ts:14-35）：DateTime 原样、num→毫秒时间戳（★`0` 合法）、
   /// String 按 format 解析（基准今天）、null/''→空。返回 (slots, 解析失败)。
   (List<DateTime?>, bool) _normalizeValue(Object? raw) {
     if (raw == null) return (const [], false);
@@ -368,9 +376,20 @@ class _SemiTimePickerState extends State<SemiTimePicker> {
 
   /// `formatValue`（foundation.ts:429-452）：空槽 → `''`，端点 join
   /// [SemiTimePicker.rangeSeparator]。
-  String _formatValue(List<DateTime?> dates) => dates
-      .map((d) => d == null ? '' : _tpFormat(d, _formatToken))
-      .join(widget.rangeSeparator);
+  String _formatValue(List<DateTime?> dates) {
+    final strings = SemiLocalizations.of(context);
+    return dates
+        .map(
+          (d) => d == null
+              ? ''
+              : _tpFormat(d, _formatToken, am: strings.am, pm: strings.pm),
+        )
+        .join(
+          widget.rangeSeparator == _TimePickerMetrics.defaultRangeSeparator
+              ? strings.timeRangeSeparator
+              : widget.rangeSeparator,
+        );
+  }
 
   /// `createDateDefault`（ComboxFoundation.ts:147-150）：面板兜底 = 今天
   /// 00:00:00。
@@ -408,7 +427,14 @@ class _SemiTimePickerState extends State<SemiTimePicker> {
   /// `List<DateTime?>` + `List<String>`（input 按 rangeSeparator 切分）。
   void _notifyChange(List<DateTime?> value, String inputValue) {
     if (_isRange) {
-      widget.onChanged?.call(value, inputValue.split(widget.rangeSeparator));
+      widget.onChanged?.call(
+        value,
+        inputValue.split(
+          widget.rangeSeparator == _TimePickerMetrics.defaultRangeSeparator
+              ? SemiLocalizations.of(context).timeRangeSeparator
+              : widget.rangeSeparator,
+        ),
+      );
     } else {
       widget.onChanged?.call(value.isEmpty ? null : value.first, inputValue);
     }
@@ -965,9 +991,8 @@ class _SemiTimePickerState extends State<SemiTimePicker> {
   Widget? _panelHeader(int index) {
     if (widget.panelHeader != null) return widget.panelHeader;
     if (!_isRange) return null;
-    return Text(
-      index == 1 ? _TimePickerMetrics.endLabel : _TimePickerMetrics.beginLabel,
-    );
+    final strings = SemiLocalizations.of(context);
+    return Text(index == 1 ? strings.endTime : strings.beginTime);
   }
 
   /// 列序固定 ampm,hour,minute,second（Combobox.tsx renderAMPMSelect→hour→
@@ -1056,6 +1081,7 @@ class _SemiTimePickerState extends State<SemiTimePicker> {
       selected = date.hour;
     }
     final rawIndex = optionsAdj.indexOf(selected);
+    final strings = SemiLocalizations.of(context);
     return _buildColumn(
       key: SemiTimePicker.hourListKey,
       width: t.widthTimePickerPanelListHour,
@@ -1065,13 +1091,14 @@ class _SemiTimePickerState extends State<SemiTimePicker> {
         optionsAdj,
         disabledOptions,
         _displaySelectedIndex(optionsAdj, disabledOptions, rawIndex),
-        _TimePickerMetrics.hourSuffix,
+        strings.hour,
       ),
       selectedIndex: _displaySelectedIndex(
         optionsAdj,
         disabledOptions,
         rawIndex,
       ),
+      infinite: widget.infinite,
       onSelect: (v) => _handleSelect(index, _ColumnType.hour, v),
     );
   }
@@ -1087,6 +1114,7 @@ class _SemiTimePickerState extends State<SemiTimePicker> {
       widget.minuteStep ?? 1,
     );
     final rawIndex = options.indexOf(date.minute);
+    final strings = SemiLocalizations.of(context);
     return _buildColumn(
       key: SemiTimePicker.minuteListKey,
       width: t.widthTimePickerPanelListMinute,
@@ -1096,9 +1124,10 @@ class _SemiTimePickerState extends State<SemiTimePicker> {
         options,
         disabledOptions,
         _displaySelectedIndex(options, disabledOptions, rawIndex),
-        _TimePickerMetrics.minuteSuffix,
+        strings.minute,
       ),
       selectedIndex: _displaySelectedIndex(options, disabledOptions, rawIndex),
+      infinite: widget.infinite,
       onSelect: (v) => _handleSelect(index, _ColumnType.minute, v),
     );
   }
@@ -1114,6 +1143,7 @@ class _SemiTimePickerState extends State<SemiTimePicker> {
       widget.secondStep ?? 1,
     );
     final rawIndex = options.indexOf(date.second);
+    final strings = SemiLocalizations.of(context);
     return _buildColumn(
       key: SemiTimePicker.secondListKey,
       width: t.widthTimePickerPanelListSecond,
@@ -1123,9 +1153,10 @@ class _SemiTimePickerState extends State<SemiTimePicker> {
         options,
         disabledOptions,
         _displaySelectedIndex(options, disabledOptions, rawIndex),
-        _TimePickerMetrics.secondSuffix,
+        strings.second,
       ),
       selectedIndex: _displaySelectedIndex(options, disabledOptions, rawIndex),
+      infinite: widget.infinite,
       onSelect: (v) => _handleSelect(index, _ColumnType.second, v),
     );
   }
@@ -1134,7 +1165,8 @@ class _SemiTimePickerState extends State<SemiTimePicker> {
   /// 'PM', text: 下午}]`，无补零无后缀。
   Widget _buildAmpmColumn(SemiResolvedTimePickerThemeData t, int index) {
     final isAM = _isAMAt(index);
-    const texts = [_TimePickerMetrics.amLabel, _TimePickerMetrics.pmLabel];
+    final strings = SemiLocalizations.of(context);
+    final texts = [strings.am, strings.pm];
     final items = <({int value, String label, bool selected, bool disabled})>[
       for (var i = 0; i < 2; i++)
         (
@@ -1183,6 +1215,7 @@ class _SemiTimePickerState extends State<SemiTimePicker> {
     required List<({int value, String label, bool selected, bool disabled})>
     items,
     required int selectedIndex,
+    bool infinite = false,
     required ValueChanged<int> onSelect,
   }) {
     return _TimePickerColumn(
@@ -1192,6 +1225,7 @@ class _SemiTimePickerState extends State<SemiTimePicker> {
       itemHeight: itemHeight,
       items: items,
       selectedIndex: selectedIndex,
+      infinite: infinite,
       onSelect: onSelect,
     );
   }
@@ -1207,6 +1241,7 @@ class _TimePickerColumn extends StatefulWidget {
     required this.itemHeight,
     required this.items,
     required this.selectedIndex,
+    this.infinite = false,
     required this.onSelect,
   });
 
@@ -1215,6 +1250,7 @@ class _TimePickerColumn extends StatefulWidget {
   final double itemHeight;
   final List<({int value, String label, bool selected, bool disabled})> items;
   final int selectedIndex;
+  final bool infinite;
   final ValueChanged<int> onSelect;
 
   @override
@@ -1222,104 +1258,268 @@ class _TimePickerColumn extends StatefulWidget {
 }
 
 class _TimePickerColumnState extends State<_TimePickerColumn> {
+  static const int _loopBlocks = 1001;
+  static const Duration _settleDelay = Duration(milliseconds: 33);
+  static const Duration _scrollDuration = Duration(milliseconds: 120);
+
   final ScrollController _controller = ScrollController();
+  Timer? _settleTimer;
+  int? _settledVirtual;
+  int? _lastNotifiedIndex;
+  bool _rebasing = false;
+
+  bool get _cycled => widget.infinite && widget.items.isNotEmpty;
+  int get _dataCount => widget.items.length;
+  int get _virtualCount => _cycled ? _dataCount * _loopBlocks : _dataCount;
+  int get _middleStart => _cycled ? _dataCount * (_loopBlocks ~/ 2) : 0;
+
+  int _dataOf(int virtual) {
+    if (_dataCount == 0) return 0;
+    final remainder = virtual % _dataCount;
+    return remainder < 0 ? remainder + _dataCount : remainder;
+  }
 
   @override
   void initState() {
     super.initState();
-    _scheduleCenter();
+    _scheduleCenter(initial: true);
   }
 
   @override
   void didUpdateWidget(_TimePickerColumn oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.selectedIndex != widget.selectedIndex) {
-      _scheduleCenter();
+    if (oldWidget.selectedIndex != widget.selectedIndex ||
+        oldWidget.infinite != widget.infinite ||
+        !_sameItems(oldWidget.items, widget.items)) {
+      _scheduleCenter(initial: false);
     }
   }
 
   @override
   void dispose() {
+    _settleTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
 
-  /// 打开面板时滚动定位选中项居中（scrollItem.scrollToNode 语义
-  /// `targetTop = node.offsetTop - (wrapperHeight - itemHeight) / 2`——上游 `ul`
-  /// 自带 108px `:before` 留白，`node.offsetTop = 108 + index*36`，居中目标净
-  /// 得 `index * 36`，即 brief 的 `jumpTo(index*36 - 108)` 里 `index*36` 为含
-  /// 留白的 offsetTop；★上游 120ms `animatedScrollTo`（scrollList/constants.ts:14
-  /// `DEFAULT_SCROLL_DURATION: 120`）→ 本移植 `jumpTo`，差异注明）。
-  void _scheduleCenter() {
+  bool _sameItems(
+    List<({int value, String label, bool selected, bool disabled})> a,
+    List<({int value, String label, bool selected, bool disabled})> b,
+  ) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].value != b[i].value ||
+          a[i].label != b[i].label ||
+          a[i].disabled != b[i].disabled) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  int _initialIndex() {
+    if (_dataCount == 0) return 0;
+    if (widget.selectedIndex >= 0 && widget.selectedIndex < _dataCount) {
+      return widget.selectedIndex;
+    }
+    for (var i = 0; i < _dataCount; i++) {
+      if (!widget.items[i].disabled) return i;
+    }
+    return 0;
+  }
+
+  /// 打开面板时把选中项放到中间块，并保持原有的首尾留白定位。
+  void _scheduleCenter({required bool initial}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_controller.hasClients) return;
-      final target = widget.itemHeight * widget.selectedIndex;
-      final max = _controller.position.maxScrollExtent;
-      _controller.jumpTo(target.clamp(0.0, max));
+      final index = _initialIndex();
+      final virtual = _cycled ? _middleStart + index : index;
+      _settledVirtual = virtual;
+      _lastNotifiedIndex = index;
+      final target = _targetOffset(virtual);
+      _controller.jumpTo(target);
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // 列 = normal 模式普通滚动列表（非滚轮）。行高
-    // `$height-scrollList_item: 36px`、body 高 `$height-timePicker_panel_body:
-    // 252px`、上下留白 = ($height-timePicker_panel_body - $height-scrollList_item) * 0.5
-    // （timePicker.scss:16/:33 的 `:before` height 与 `padding-bottom`）——
-    // 108，正好把单行垫到 252 视口中央。
+  double _rowOffset(int virtual) {
     final inset = (widget.height - widget.itemHeight) * 0.5;
-    // 上游隐藏滚动条（timePicker.scss:23-45：
-    // `-ms-overflow-style: none; /* Internet Explorer 10+ */`、
-    // `scrollbar-width: none; /* Firefox */`、`&::-webkit-scrollbar {` 的
-    // `display: none; width: 0; height: 0;`）——Flutter 的 SingleChildScrollView
-    // 不套 `Scrollbar` 就不画滚动条，此处无为而治。
-    return SizedBox(
-      width: widget.width,
-      height: widget.height,
-      child: SingleChildScrollView(
-        controller: _controller,
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: inset),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final item in widget.items)
-                GestureDetector(
-                  onTap: item.disabled
-                      ? null
-                      : () => widget.onSelect(item.value),
-                  child: MouseRegion(
-                    cursor: item.disabled
-                        ? SystemMouseCursors.forbidden
-                        : SystemMouseCursors.click,
-                    child: Container(
-                      height: widget.itemHeight,
-                      width: widget.width,
-                      alignment: Alignment.center,
-                      // 选中高亮/禁用置灰（scrollList.scss:88-114 语义：selected
-                      // 用 `colors.colorPrimaryLightDefault` 一族背景，禁用灰用
-                      // colorDisabledText——datePicker `colorDatepickerDateDisabledTextDefault`
-                      // 同族 token 选择逻辑）。
-                      color: item.selected
-                          ? _timePickerSelectedColor(context)
-                          : null,
-                      child: Text(
-                        item.label,
-                        style: TextStyle(
-                          // `@include font-size-regular` → `$font-size-regular: 14px`。
-                          fontSize: _TimePickerMetrics.fontSizeRegular,
-                          color: item.disabled
-                              ? _timePickerDisabledColor(context)
-                              : _timePickerTextColor(context),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
+    return inset + virtual * widget.itemHeight;
+  }
+
+  double _targetOffset(int virtual) {
+    final viewport = _controller.position.viewportDimension;
+    final target = _rowOffset(virtual) - (viewport - widget.itemHeight) * 0.5;
+    return target.clamp(0.0, _controller.position.maxScrollExtent);
+  }
+
+  void _scheduleSettle() {
+    _settleTimer?.cancel();
+    _settleTimer = Timer(_settleDelay, _settle);
+  }
+
+  void _onScroll(ScrollNotification notification) {
+    if (!_cycled || _rebasing) return;
+    if (notification is ScrollUpdateNotification ||
+        notification is ScrollEndNotification) {
+      _scheduleSettle();
+      _rebaseIfNeeded();
+    }
+  }
+
+  int _nearestEnabled() {
+    if (!_controller.hasClients || _dataCount == 0) return -1;
+    final inset = (widget.height - widget.itemHeight) * 0.5;
+    final center =
+        _controller.offset + _controller.position.viewportDimension * 0.5;
+    final anchor =
+        ((center - inset - widget.itemHeight * 0.5) / widget.itemHeight)
+            .round();
+    var best = -1;
+    var bestDistance = double.infinity;
+    final start = _cycled ? anchor - _dataCount : 0;
+    final end = _cycled ? anchor + _dataCount : _dataCount - 1;
+    for (var virtual = start; virtual <= end; virtual++) {
+      if (virtual < 0 || virtual >= _virtualCount) continue;
+      final item = widget.items[_dataOf(virtual)];
+      if (item.disabled) continue;
+      final distance = (_rowOffset(virtual) + widget.itemHeight * 0.5 - center)
+          .abs();
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        best = virtual;
+      }
+    }
+    return best;
+  }
+
+  void _settle() {
+    if (!mounted || !_controller.hasClients || _dataCount == 0 || _rebasing) {
+      return;
+    }
+    final virtual = _nearestEnabled();
+    if (virtual < 0) return;
+    _settledVirtual = virtual;
+    final target = _targetOffset(virtual);
+    if ((_controller.offset - target).abs() > 0.5) {
+      _controller.animateTo(
+        target,
+        duration: _scrollDuration,
+        curve: Curves.easeOut,
+      );
+    }
+    final dataIndex = _dataOf(virtual);
+    if (_lastNotifiedIndex != dataIndex) {
+      _lastNotifiedIndex = dataIndex;
+      widget.onSelect(widget.items[dataIndex].value);
+    }
+  }
+
+  void _rebaseIfNeeded() {
+    if (!_cycled || !_controller.hasClients || _dataCount == 0 || _rebasing) {
+      return;
+    }
+    final blockHeight = _dataCount * widget.itemHeight;
+    final offset = _controller.offset;
+    final max = _controller.position.maxScrollExtent;
+    final threshold = blockHeight * 2;
+    if (offset <= threshold || offset >= max - threshold) {
+      final middleOffset = _middleStart * widget.itemHeight;
+      final delta = middleOffset - (offset - (offset % blockHeight));
+      final next = (offset + delta).clamp(0.0, max);
+      _rebasing = true;
+      _controller.jumpTo(next);
+      if (_settledVirtual != null) {
+        final currentData = _dataOf(_settledVirtual!);
+        _settledVirtual = _middleStart + currentData;
+      }
+      _rebasing = false;
+    }
+  }
+
+  Widget _buildItem(BuildContext context, int virtual, int dataIndex) {
+    final item = widget.items[dataIndex];
+    final selected = widget.infinite
+        ? virtual == _settledVirtual
+        : item.selected;
+    return GestureDetector(
+      onTap: item.disabled
+          ? null
+          : () {
+              if (widget.infinite) {
+                _settledVirtual = virtual;
+                _lastNotifiedIndex = dataIndex;
+                final target = _targetOffset(virtual);
+                _controller.animateTo(
+                  target,
+                  duration: _scrollDuration,
+                  curve: Curves.easeOut,
+                );
+              }
+              widget.onSelect(item.value);
+            },
+      child: MouseRegion(
+        cursor: item.disabled
+            ? SystemMouseCursors.forbidden
+            : SystemMouseCursors.click,
+        child: Container(
+          height: widget.itemHeight,
+          width: widget.width,
+          alignment: Alignment.center,
+          color: selected ? _timePickerSelectedColor(context) : null,
+          child: Text(
+            item.label,
+            style: TextStyle(
+              fontSize: _TimePickerMetrics.fontSizeRegular,
+              color: item.disabled
+                  ? _timePickerDisabledColor(context)
+                  : _timePickerTextColor(context),
+            ),
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildFinite(BuildContext context, double inset) {
+    return SingleChildScrollView(
+      controller: _controller,
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: inset),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < widget.items.length; i++)
+              _buildItem(context, i, i),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfinite(BuildContext context, double inset) {
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        _onScroll(notification);
+        return false;
+      },
+      child: ListView.builder(
+        controller: _controller,
+        padding: EdgeInsets.symmetric(vertical: inset),
+        itemExtent: widget.itemHeight,
+        itemCount: _virtualCount,
+        itemBuilder: (context, virtual) =>
+            _buildItem(context, virtual, _dataOf(virtual)),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final inset = (widget.height - widget.itemHeight) * 0.5;
+    final child = _cycled
+        ? _buildInfinite(context, inset)
+        : _buildFinite(context, inset);
+    return SizedBox(width: widget.width, height: widget.height, child: child);
   }
 
   Color _timePickerTextColor(BuildContext context) =>
@@ -1412,7 +1612,7 @@ abstract final class _TimePickerMetrics {
 /// `format(date, token)` for the `HH`/`H`/`hh`/`h`/`mm`/`ss`/`a`/`A` subset.
 /// ★`A` 当 `a`（Combobox.tsx:171 `format.replace(/(\s+)A/g, '$1a')` 的语义——
 /// date-fns 只支持小写 `a`）；`a`/`A` 输出 zh 上午/下午。
-String _tpFormat(DateTime d, String fmt) {
+String _tpFormat(DateTime d, String fmt, {String am = 'AM', String pm = 'PM'}) {
   final buffer = StringBuffer();
   var i = 0;
   while (i < fmt.length) {
@@ -1443,9 +1643,7 @@ String _tpFormat(DateTime d, String fmt) {
       rep = '${d.second}';
       len = 1;
     } else if (fmt.startsWith('a', i) || fmt.startsWith('A', i)) {
-      rep = d.hour < 12
-          ? _TimePickerMetrics.amLabel
-          : _TimePickerMetrics.pmLabel;
+      rep = d.hour < 12 ? am : pm;
       len = 1;
     } else {
       buffer.write(fmt[i]);

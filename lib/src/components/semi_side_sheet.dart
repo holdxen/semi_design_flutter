@@ -28,6 +28,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import '../localization/semi_localizations.dart';
 import '../overlay/dialog_engine/flutter_smart_dialog.dart';
 import '../theme/semi_side_sheet_theme.dart';
 import '../theme/semi_side_sheet_theme_data.dart';
@@ -349,7 +350,7 @@ class _SideSheetContent extends StatelessWidget {
       type: SemiButtonType.tertiary,
       variant: SemiButtonVariant.borderless,
       size: SemiButtonSize.small,
-      semanticsLabel: '关闭',
+      semanticsLabel: SemiLocalizations.of(context).close,
       onPressed: onClose,
     );
 

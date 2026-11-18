@@ -17,6 +17,7 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 
+import '../localization/semi_localizations.dart';
 import '../theme/semi_popconfirm_theme.dart';
 import '../theme/semi_popconfirm_theme_data.dart';
 import '../theme/semi_theme.dart';
@@ -494,7 +495,7 @@ class _PopconfirmCard extends StatelessWidget {
               type: cancelType,
               variant: SemiButtonVariant.borderless,
               size: SemiButtonSize.small,
-              semanticsLabel: '关闭',
+              semanticsLabel: SemiLocalizations.of(context).close,
               onPressed: onCancel,
             ),
           ),
@@ -529,14 +530,15 @@ class _PopconfirmCard extends StatelessWidget {
             ),
           );
 
+    final strings = SemiLocalizations.of(context);
     final cancelBtn = SemiButton(
-      cancelText ?? '取消',
+      cancelText ?? strings.cancel,
       type: cancelType,
       loading: cancelLoading,
       onPressed: onCancel,
     );
     final okBtn = SemiButton(
-      okText ?? '确认',
+      okText ?? strings.popconfirmConfirm,
       type: okType,
       variant: SemiButtonVariant.solid,
       loading: okLoading,

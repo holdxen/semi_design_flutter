@@ -14,6 +14,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import '../localization/semi_localizations.dart';
+
 import '../theme/semi_date_picker_theme.dart';
 import '../theme/semi_date_picker_theme_data.dart';
 import '../overlay/tooltip_positioning.dart';
@@ -2012,6 +2014,7 @@ class _SemiDatePickerState extends State<SemiDatePicker> {
     DateTime month, {
     required bool hideInner,
   }) {
+    final strings = SemiLocalizations.of(context);
     Widget button(
       Key key,
       String label,
@@ -2054,14 +2057,14 @@ class _SemiDatePickerState extends State<SemiDatePicker> {
       children: [
         button(
           SemiDatePicker.navPrevYearKey,
-          _DatePickerMetrics.prevYearLabel,
+          strings.previousYear,
           _NavIcon.doubleLeft,
           () => _handleSwitch(_YMChange.prevYear, side),
           hidden: hideLeftButtons,
         ),
         button(
           SemiDatePicker.navPrevMonthKey,
-          _DatePickerMetrics.prevMonthLabel,
+          strings.previousMonth,
           _NavIcon.chevronLeft,
           () => _handleSwitch(_YMChange.prevMonth, side),
           hidden: hideLeftButtons,
@@ -2089,8 +2092,7 @@ class _SemiDatePickerState extends State<SemiDatePicker> {
                 height: _DatePickerMetrics.navButtonMinWidth,
                 alignment: Alignment.center,
                 child: Text(
-                  // zh-CN `monthText` template `${year}年 ${month}`.
-                  '${month.year}年 ${month.month}月',
+                  strings.monthTitle(month.year, month.month),
                   style: TextStyle(
                     fontSize: _DatePickerMetrics.fontSizeHeader6,
                     fontWeight: FontWeight.w600,
@@ -2103,14 +2105,14 @@ class _SemiDatePickerState extends State<SemiDatePicker> {
         ),
         button(
           SemiDatePicker.navNextMonthKey,
-          _DatePickerMetrics.nextMonthLabel,
+          strings.nextMonth,
           _NavIcon.chevronRight,
           () => _handleSwitch(_YMChange.nextMonth, side),
           hidden: hideRightButtons,
         ),
         button(
           SemiDatePicker.navNextYearKey,
-          _DatePickerMetrics.nextYearLabel,
+          strings.nextYear,
           _NavIcon.doubleRight,
           () => _handleSwitch(_YMChange.nextYear, side),
           hidden: hideRightButtons,
@@ -2144,7 +2146,7 @@ class _SemiDatePickerState extends State<SemiDatePicker> {
     DateTime month,
   ) {
     final weeks = _dpGetWeeks(month, widget.weekStartsOn);
-    final labels = _DatePickerMetrics.weekdayLabels;
+    final labels = SemiLocalizations.of(context).weekdays;
     final start = widget.weekStartsOn;
     final rotated = [for (var i = 0; i < 7; i++) labels[(start + i) % 7]];
     return Semantics(
@@ -2802,7 +2804,7 @@ class _YamColumn extends StatelessWidget {
       for (var m = 1; m <= 12; m++)
         (
           value: m,
-          label: '$m月',
+          label: SemiLocalizations.of(context).monthLabel(m),
           selected: m == selectedMonth,
           disabled:
               (minMonth != null && m < minMonth!) ||

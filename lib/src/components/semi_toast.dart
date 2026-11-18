@@ -83,6 +83,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
 
+import '../localization/semi_localizations.dart';
 import '../overlay/dialog_engine/helper/dialog_proxy.dart';
 import '../theme/semi_theme.dart';
 import '../theme/semi_theme_data.dart';
@@ -956,7 +957,7 @@ class _ToastItemViewState extends State<_ToastItemView>
                 type: SemiButtonType.tertiary,
                 variant: SemiButtonVariant.borderless,
                 size: SemiButtonSize.small,
-                semanticsLabel: '关闭',
+                semanticsLabel: SemiLocalizations.of(context).close,
                 onPressed: () => _ToastList.instance.close(item.id),
               ),
             ),

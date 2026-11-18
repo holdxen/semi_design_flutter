@@ -61,9 +61,8 @@ class SemiTransferGroup {
   final List<SemiTransferItem> children;
 }
 
-/// 面板形态：平铺列表 / 分组列表（上游 `Type = 'list' | 'groupList'` 子集；
-/// `treeList` 延期——Tree 未移植）。
-enum SemiTransferType { list, groupList }
+/// 面板形态：平铺列表 / 分组列表 / 树形列表。
+enum SemiTransferType { list, groupList, treeList }
 
 /// `onChanged(values, items)`：values 走 value 轨（缺 value 的条目出 `null`），
 /// items 为选中条目（groupList 时无内部 `_parent` 字段——本移植模型天然不含）。
@@ -150,6 +149,12 @@ class SemiTransferSourcePanelProps {
 
   /// 内部选中集（key → item，插入序 = 选中序）。
   final Map<Object, SemiTransferItem> selectedItems;
+
+  /// treeList 的原始数据源。
+  final List<Object>? propsDataSource;
+
+  /// treeList 批量选择回调。
+  final ValueChanged<List<Object>>? onSelect;
 }
 
 /// `renderSelectedPanel` 入参（上游 `SelectedPanelProps`；`onSortEnd` 随
@@ -222,6 +227,8 @@ class SemiTransfer extends StatefulWidget {
     this.renderSourcePanel,
     this.renderSelectedPanel,
     this.controller,
+    this.treeProps,
+    this.showPath = false,
   });
 
   static const Key rootKey = Key('SemiTransfer.root');
@@ -302,8 +309,29 @@ class SemiTransfer extends StatefulWidget {
 
   final SemiTransferController? controller;
 
+  /// treeList 配置。
+  final SemiTransferTreeProps? treeProps;
+
+  /// 是否在右侧显示树路径。
+  final bool showPath;
+
   @override
   State<SemiTransfer> createState() => _SemiTransferState();
+}
+
+class _TransferTreeEntity {
+  _TransferTreeEntity({
+    required this.item,
+    required this.parent,
+    required this.path,
+    required this.internalKey,
+  });
+
+  final SemiTransferItem item;
+  final _TransferTreeEntity? parent;
+  final List<SemiTransferItem> path;
+  final String internalKey;
+  final List<_TransferTreeEntity> children = <_TransferTreeEntity>[];
 }
 
 class _FlatEntry {
@@ -319,13 +347,19 @@ class _FlatEntry {
 class _SemiTransferState extends State<SemiTransfer> {
   late List<_FlatEntry> _entries;
   late Map<Object, SemiTransferItem> _selected;
+  late List<SemiTransferItem> _treeItems;
+  late Map<Object, _TransferTreeEntity> _treeEntities;
+  late List<SemiTreeNodeData> _treeNodes;
+  final SemiTreeController _treeController = SemiTreeController();
   String _inputValue = '';
   Set<Object> _searchResult = <Object>{};
   late final TextEditingController _inputController = TextEditingController();
 
   bool get _isControlled => widget.value != null;
 
-  List<SemiTransferItem> get _data => [
+  bool get _isTree => widget.type == SemiTransferType.treeList;
+
+  List<SemiTransferItem> get _data => _isTree ? _treeItems : [
     for (final entry in _entries) entry.item,
   ];
 
@@ -346,6 +380,7 @@ class _SemiTransferState extends State<SemiTransfer> {
   void initState() {
     super.initState();
     _entries = _flatten();
+    _rebuildTree();
     // 上游 constructor：`defaultValue` 建初始选中；gDSFP 在首帧前用 `value`
     // 覆盖（受控优先）。
     _selected = _generateSelectedItems(
@@ -364,6 +399,7 @@ class _SemiTransferState extends State<SemiTransfer> {
     }
     final oldEntries = _entries;
     _entries = _flatten();
+    _rebuildTree();
     // 上游 getDerivedStateFromProps：受控（value 非空）时每次渲染重derive选中
     //（数据变化时未匹配项被静默丢弃）；非受控保留内部状态（defaultValue 引用
     // 变化不重置——SemiTransferItem 列表字面量 churn 回归）。
@@ -384,6 +420,11 @@ class _SemiTransferState extends State<SemiTransfer> {
   }
 
   List<_FlatEntry> _flatten() {
+    if (_isTree) {
+      return [
+        for (final item in _flattenTreeItems(_treeSource())) _FlatEntry(item),
+      ];
+    }
     if (widget.type == SemiTransferType.groupList) {
       final entries = <_FlatEntry>[];
       for (final object in widget.dataSource) {

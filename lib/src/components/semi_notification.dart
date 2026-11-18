@@ -54,6 +54,7 @@ import 'dart:math';
 
 import 'package:flutter/widgets.dart';
 
+import '../localization/semi_localizations.dart';
 import '../overlay/dialog_engine/flutter_smart_dialog.dart';
 import '../theme/semi_notification_theme.dart';
 import '../theme/semi_notification_theme_data.dart';
@@ -426,7 +427,9 @@ class _SemiNotificationNoticeState extends State<SemiNotificationNotice> {
               type: SemiButtonType.tertiary,
               variant: SemiButtonVariant.borderless,
               size: SemiButtonSize.small,
-              semanticsLabel: widget.closeSemanticsLabel ?? '关闭',
+              semanticsLabel:
+                  widget.closeSemanticsLabel ??
+                  SemiLocalizations.of(context).close,
               onPressed: _close,
             ),
           ),

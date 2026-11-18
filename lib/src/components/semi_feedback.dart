@@ -53,6 +53,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import '../localization/semi_localizations.dart';
 import '../overlay/dialog_engine/flutter_smart_dialog.dart';
 import '../theme/semi_checkbox_theme.dart';
 import '../theme/semi_checkbox_theme_data.dart';
@@ -431,8 +432,9 @@ class _SemiFeedbackState extends State<SemiFeedback> {
   /// textNode：TextArea（locale `placeholder`，textAreaProps 透传）。
   Widget _textArea() {
     final p = widget.textAreaProps;
+    final strings = SemiLocalizations.of(context);
     return SemiTextArea(
-      placeholder: p?.placeholder ?? '请提供更多反馈',
+      placeholder: p?.placeholder ?? strings.feedbackPlaceholder,
       rows: p?.rows ?? 4,
       autosize: p?.autosize,
       maxCount: p?.maxCount,
@@ -448,8 +450,9 @@ class _SemiFeedbackState extends State<SemiFeedback> {
   /// emoji 追问 TextArea（`emoji === Emoji.bad && <TextArea`）。
   Widget _emojiReasonArea() {
     final p = widget.textAreaProps;
+    final strings = SemiLocalizations.of(context);
     return SemiTextArea(
-      placeholder: p?.placeholder ?? '请提供更多反馈（选填）',
+      placeholder: p?.placeholder ?? strings.feedbackOptionalPlaceholder,
       rows: p?.rows ?? 4,
       autosize: p?.autosize,
       maxCount: p?.maxCount,
@@ -602,18 +605,19 @@ class _SemiFeedbackState extends State<SemiFeedback> {
   /// `disabled={this.disableSubmitButton()}`。
   Widget _popupFooter() {
     final t = SemiFeedbackTheme.resolve(context);
+    final strings = SemiLocalizations.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         SemiButton(
-          widget.cancelText ?? '取消',
+          widget.cancelText ?? strings.cancel,
           type: SemiButtonType.primary,
           loading: widget.cancelLoading ?? _cancelPending,
           onPressed: _handleCancel,
         ),
         SizedBox(width: t.spacingFeedbackFooterColumnGap),
         SemiButton(
-          widget.okText ?? '提交',
+          widget.okText ?? strings.feedbackSubmit,
           type: SemiButtonType.primary,
           variant: SemiButtonVariant.solid,
           disabled: widget.okDisabled ?? _submitDisabled,
@@ -629,11 +633,12 @@ class _SemiFeedbackState extends State<SemiFeedback> {
   /// → disabled/loading 槽）。
   Widget _modalFooter() {
     final m = SemiModalTheme.resolve(context);
+    final strings = SemiLocalizations.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         SemiButton(
-          widget.cancelText ?? '取消',
+          widget.cancelText ?? strings.cancel,
           type: SemiButtonType.tertiary,
           loading: widget.cancelLoading ?? _cancelPending,
           onPressed: _handleCancel,
@@ -641,7 +646,7 @@ class _SemiFeedbackState extends State<SemiFeedback> {
         // Modal footer 按钮 `margin-left: 12`。
         SizedBox(width: m.spacingModalFooterButtonMarginLeft),
         SemiButton(
-          widget.okText ?? '提交',
+          widget.okText ?? strings.feedbackSubmit,
           type: SemiButtonType.primary,
           variant: SemiButtonVariant.solid,
           disabled: widget.okDisabled ?? _submitDisabled,
@@ -869,7 +874,7 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
       type: SemiButtonType.tertiary,
       variant: SemiButtonVariant.borderless,
       size: SemiButtonSize.small,
-      semanticsLabel: '关闭',
+      semanticsLabel: SemiLocalizations.of(context).close,
       onPressed: widget.onCancel,
     );
 

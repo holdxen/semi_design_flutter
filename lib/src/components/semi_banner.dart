@@ -31,6 +31,7 @@
 //   `margin-right: $spacing-banner_closeBtn-marginLeft`，icon 右边距镜像
 import 'package:flutter/widgets.dart';
 
+import '../localization/semi_localizations.dart';
 import '../theme/semi_banner_theme.dart';
 import 'icon/semi_icon.dart';
 import 'icon/semi_icon_data.dart';
@@ -244,7 +245,9 @@ class _SemiBannerState extends State<SemiBanner> {
                 type: SemiButtonType.tertiary,
                 variant: SemiButtonVariant.borderless,
                 size: SemiButtonSize.small,
-                semanticsLabel: widget.closeSemanticsLabel ?? '关闭',
+                semanticsLabel:
+                    widget.closeSemanticsLabel ??
+                    SemiLocalizations.of(context).close,
                 onPressed: _close,
               ),
             ),

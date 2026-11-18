@@ -16,6 +16,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import '../localization/semi_localizations.dart';
 import '../overlay/tooltip_positioning.dart';
 import '../theme/semi_navigation_theme.dart';
 import '../theme/semi_navigation_theme_data.dart';
@@ -533,6 +534,7 @@ class _SemiNavigationState extends State<SemiNavigation> {
     // border-right → border-left（rtl.scss:8-9）。
     final rtl = Directionality.of(context) == TextDirection.rtl;
     final collapsed = _isCollapsed && !_isHorizontal;
+    final strings = SemiLocalizations.of(context);
 
     final Widget inner;
     if (_isHorizontal) {
@@ -561,6 +563,7 @@ class _SemiNavigationState extends State<SemiNavigation> {
     // 解析，见 _NavigationMetrics.parseMotion*）。
     return Semantics(
       container: true,
+      label: strings.sideNavigation,
       child: AnimatedContainer(
         key: SemiNavigation.rootKey,
         width: _isHorizontal
@@ -1070,9 +1073,11 @@ class _SemiNavigationState extends State<SemiNavigation> {
   /// 收起按钮（CollapseButton.tsx + nav:562-587）。
   Widget _buildCollapseButton(SemiResolvedNavigationThemeData t) {
     final collapsed = _isCollapsed;
+    final strings = SemiLocalizations.of(context);
     // zh_CN.ts:100-103 locale：'收起侧边栏' / '展开侧边栏'（缺省文案）。
     final label =
-        widget.footer!.collapseText ?? (collapsed ? '展开侧边栏' : '收起侧边栏');
+        widget.footer!.collapseText ??
+        (collapsed ? strings.expandSidebar : strings.collapseSidebar);
     // ★CollapseButton.tsx:39-43：isCollapsed 渲染 **icon-only** Button +
     // 右侧 Tooltip（无文字子节点——标题只活在 tooltip 内容里）；展开态
     // `Button icon + {text}`（:22-27/:35）。此前两态共用「图标+间距+渐隐
