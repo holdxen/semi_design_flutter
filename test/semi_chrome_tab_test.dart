@@ -387,6 +387,84 @@ void main() {
     expect(tabWidth(tester, 't0'), greaterThan(56));
   });
 
+  testWidgets('adding fewer than five tabs does not require an anchor', (
+    tester,
+  ) async {
+    var added = false;
+    await pumpHost(
+      tester,
+      _tabs(tabs: manyTabs(2), activeTabId: 't0', onTabAdd: () => added = true),
+    );
+    await tester.tap(byLabel('Add tab'));
+    await tester.pump();
+    expect(added, isTrue);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'adding a tab keeps the add button anchored during bounds motion',
+    (tester) async {
+      final mouse = await startMouse(tester);
+      var tabs = manyTabs(10);
+      await pumpHost(
+        tester,
+        StatefulBuilder(
+          builder: (context, setState) => _tabs(
+            tabs: tabs,
+            activeTabId: 't0',
+            onTabAdd: () => setState(() {
+              tabs = <SemiChromeTabItem>[
+                ...tabs,
+                const SemiChromeTabItem(id: 't10', title: 'T10'),
+              ];
+            }),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final addButton = find.byWidgetPredicate(
+        (widget) => widget is Semantics && widget.properties.label == 'Add tab',
+      );
+      final initialAddLeft = tester.getRect(addButton).left;
+      final lastTab = find.byKey(const ValueKey('semi-chrome-tab-t9'));
+      final initialLastWidth = tester.getSize(lastTab).width;
+      expect(initialLastWidth, closeTo(56.2, 0.01));
+
+      await mouse.moveTo(tester.getCenter(addButton));
+      await tester.pump();
+      await tester.tap(addButton, warnIfMissed: false);
+      await tester.pump();
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      expect(tester.getRect(addButton).left, closeTo(initialAddLeft, 0.5));
+
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(tester.takeException(), isNull);
+      expect(tester.getRect(addButton).left, closeTo(initialAddLeft, 0.5));
+      expect(tester.getSize(lastTab).width, lessThan(initialLastWidth));
+
+      await tester.pump(const Duration(milliseconds: 120));
+      expect(tester.takeException(), isNull);
+      expect(tester.getRect(addButton).left, closeTo(initialAddLeft, 0.5));
+      expect(tester.getSize(lastTab).width, 52);
+    },
+  );
+
+  testWidgets('adding below the anchor threshold still calls onTabAdd', (
+    tester,
+  ) async {
+    var added = false;
+    await pumpHost(
+      tester,
+      _tabs(tabs: manyTabs(4), activeTabId: 't0', onTabAdd: () => added = true),
+    );
+    await tester.tap(byLabel('Add tab'));
+    await tester.pump();
+    expect(added, isTrue);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('a new tab enters with a scale/opacity animation', (
     tester,
   ) async {

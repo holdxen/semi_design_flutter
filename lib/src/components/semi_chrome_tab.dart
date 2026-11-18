@@ -900,6 +900,7 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
       trailingWidth: trailingWidth,
       animation: widget.layoutAnimation,
       duration: theme.chromeTabLayoutDuration,
+      keepTrailingAnchored: _pendingAddAnchorX != null,
     );
 
     return Listener(
@@ -1370,11 +1371,9 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
 
   void _handleAddPointerDown() {
     if (widget.tabs.length < 5) return;
-    final lastTab = widget.tabs.last;
-    final box =
-        _tabKeys[lastTab.id]?.currentContext?.findRenderObject() as RenderBox?;
+    final box = _addButtonKey.currentContext?.findRenderObject() as RenderBox?;
     if (box == null) return;
-    _pendingAddAnchorX = box.localToGlobal(Offset.zero).dx + box.size.width;
+    _pendingAddAnchorX = box.localToGlobal(Offset.zero).dx;
   }
 }
 
@@ -1399,6 +1398,7 @@ class _ChromeTabBoundsLayout extends StatefulWidget {
     required this.trailingWidth,
     required this.animation,
     required this.duration,
+    required this.keepTrailingAnchored,
   });
 
   final Map<String, Rect> bounds;
@@ -1410,6 +1410,7 @@ class _ChromeTabBoundsLayout extends StatefulWidget {
   final double trailingWidth;
   final SemiChromeTabLayoutAnimation animation;
   final Duration duration;
+  final bool keepTrailingAnchored;
 
   @override
   State<_ChromeTabBoundsLayout> createState() => _ChromeTabBoundsLayoutState();
@@ -1455,13 +1456,19 @@ class _ChromeTabBoundsLayoutState extends State<_ChromeTabBoundsLayout>
       _controller.duration = widget.duration;
     }
 
+    final targetChanged = !_sameBounds(_toBounds, widget.bounds);
     final targetTrailing = _targetTrailing;
-    final targetChanged =
-        !_sameBounds(_toBounds, widget.bounds) ||
-        !_sameRect(_toTrailing, targetTrailing);
+    final trailingChanged = !_sameRect(_toTrailing, targetTrailing);
     final modeChanged = _lastAnimation != widget.animation;
+    final trailingAnchorChanged =
+        oldWidget.keepTrailingAnchored != widget.keepTrailingAnchored;
     _lastAnimation = widget.animation;
-    if (!targetChanged && !modeChanged) return;
+    if (!targetChanged &&
+        !trailingChanged &&
+        !modeChanged &&
+        !trailingAnchorChanged) {
+      return;
+    }
 
     if (widget.animation == SemiChromeTabLayoutAnimation.immediate) {
       _controller.stop(canceled: false);
@@ -1481,6 +1488,8 @@ class _ChromeTabBoundsLayoutState extends State<_ChromeTabBoundsLayout>
     _toBounds = Map<String, Rect>.from(widget.bounds);
     _fromTrailing = targetTrailing == null
         ? null
+        : widget.keepTrailingAnchored
+        ? targetTrailing
         : currentTrailing ?? targetTrailing;
     _toTrailing = targetTrailing;
 
