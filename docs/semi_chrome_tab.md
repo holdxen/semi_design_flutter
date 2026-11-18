@@ -54,6 +54,7 @@ class SemiChromeTabReorderInfo {
 | `locale` | `SemiChromeTabLocale?` | 跟随 `Localizations` | `zh` / `en` / `ko` |
 | `hideAddButton` | `bool` | `false` | 隐藏 `+` |
 | `hideGroupButton` | `bool` | `false` | 隐藏分组菜单触发器 |
+| `hideScrollbar` | `bool` | `true` | 隐藏横向滚动条；设为 `false` 时使用当前平台的滚动条样式 |
 | `tooltipMode` | `SemiChromeTabTooltipMode` | `truncated` | `truncated` / `always` / `never` |
 | `renderTabIcon` | `Widget? Function(item)` | `null` | 自定义图标 |
 | `renderTabTooltip` | `Widget? Function(item)` | `null` | 自定义 tooltip 内容 |

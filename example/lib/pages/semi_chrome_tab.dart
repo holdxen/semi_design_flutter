@@ -571,6 +571,7 @@ class _SemiChromeTabPageState extends State<SemiChromeTabPage> {
             activeTabId: _overflowActive,
             locale: _locale,
             hideGroupButton: true,
+            hideScrollbar: true,
             onTabActivate: (id) => setState(() => _overflowActive = id),
             onTabAdd: () {
               setState(() {

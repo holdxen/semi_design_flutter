@@ -107,6 +107,7 @@ class SemiChromeTab extends StatefulWidget {
     this.locale,
     this.hideAddButton = false,
     this.hideGroupButton = false,
+    this.hideScrollbar = true,
     this.tooltipMode = SemiChromeTabTooltipMode.truncated,
     this.onTabActivate,
     this.onTabEditAddress,
@@ -131,6 +132,9 @@ class SemiChromeTab extends StatefulWidget {
   final SemiChromeTabLocale? locale;
   final bool hideAddButton;
   final bool hideGroupButton;
+
+  /// Whether the horizontal scroll indicator is hidden.
+  final bool hideScrollbar;
   final SemiChromeTabTooltipMode tooltipMode;
 
   /// Click a tab.
@@ -870,12 +874,16 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
         clipBehavior: Clip.none,
         children: <Widget>[
           Positioned.fill(
-            child: SingleChildScrollView(
-              key: _viewportKey,
-              controller: _scroll,
-              scrollDirection: Axis.horizontal,
-              physics: const ClampingScrollPhysics(),
-              child: row,
+            child: ScrollConfiguration(
+              behavior: ScrollConfiguration.of(context)
+                  .copyWith(scrollbars: !widget.hideScrollbar),
+              child: SingleChildScrollView(
+                key: _viewportKey,
+                controller: _scroll,
+                scrollDirection: Axis.horizontal,
+                physics: const ClampingScrollPhysics(),
+                child: row,
+              ),
             ),
           ),
           if (_canScrollLeft)
