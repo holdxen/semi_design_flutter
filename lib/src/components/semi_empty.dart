@@ -120,31 +120,45 @@ class SemiEmpty extends StatelessWidget {
       ],
     );
 
-    final body = vertical
-        ? Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              if (img != null) _imageArea(img),
-              SizedBox(height: theme.spacingEmptyContentVerticalMarginTop),
-              content,
-            ],
-          )
-        : Row(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (img != null) _imageArea(img),
-              Flexible(
-                child: Padding(
-                  padding: EdgeInsetsDirectional.only(
-                    start: theme.spacingEmptyContentHorizontalMarginLeft,
+    final body = LayoutBuilder(
+      builder: (context, constraints) {
+        // With a bounded main axis, the illustration shares the space left
+        // over by the text block so an adaptive image (`size: null`) shrinks
+        // instead of overflowing the component.
+        final slottedImage = img == null ? null : _imageArea(img);
+        final sharesMainAxis = vertical
+            ? constraints.hasBoundedHeight
+            : constraints.hasBoundedWidth;
+        final imageSlot = slottedImage == null || !sharesMainAxis
+            ? slottedImage
+            : Flexible(fit: FlexFit.loose, child: slottedImage);
+        return vertical
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  ?imageSlot,
+                  SizedBox(height: theme.spacingEmptyContentVerticalMarginTop),
+                  content,
+                ],
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ?imageSlot,
+                  Flexible(
+                    child: Padding(
+                      padding: EdgeInsetsDirectional.only(
+                        start: theme.spacingEmptyContentHorizontalMarginLeft,
+                      ),
+                      child: content,
+                    ),
                   ),
-                  child: content,
-                ),
-              ),
-            ],
-          );
+                ],
+              );
+      },
+    );
     return Semantics(
       container: semanticsLabel != null,
       label: semanticsLabel,

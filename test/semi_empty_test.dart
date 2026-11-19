@@ -585,6 +585,53 @@ void main() {
     expect(gaps, [24, 16, 24]);
     await tester.pumpWidget(host(const SizedBox()));
   });
+  testWidgets('adaptive illustration fits a bounded component', (tester) async {
+    Future<Size> pump({
+      required double width,
+      required double height,
+      SemiEmptyLayout layout = SemiEmptyLayout.vertical,
+    }) async {
+      await tester.pumpWidget(
+        host(
+          SizedBox(
+            width: width,
+            height: height,
+            child: SemiEmpty(
+              layout: layout,
+              image: const SemiIllustration(
+                SemiIllustrations.noContent,
+                size: null,
+              ),
+              title: '暂无内容',
+              description: '换个关键词试试',
+            ),
+          ),
+        ),
+      );
+      expect(tester.takeException(), isNull);
+      final size = tester.getSize(find.byType(SemiIllustration));
+      expect(size.width, size.height);
+      expect(size.width, lessThanOrEqualTo(width));
+      expect(size.height, lessThanOrEqualTo(height));
+      return size;
+    }
+
+    // Height-bound: shrink below the available width to leave room for text.
+    final short = await pump(width: 300, height: 200);
+    expect(short.width, lessThan(300));
+    expect(short.width, greaterThan(0));
+    // Room to grow: the width is the limiting side.
+    expect(await pump(width: 300, height: 600), const Size(300, 300));
+    // Horizontal layout shares the bounded width instead of overflowing.
+    final horizontal = await pump(
+      width: 300,
+      height: 400,
+      layout: SemiEmptyLayout.horizontal,
+    );
+    expect(horizontal.width, lessThan(300));
+    expect(horizontal.width, greaterThan(0));
+    await tester.pumpWidget(host(const SizedBox()));
+  });
   testWidgets('image semantics hidden and text kept without Material', (
     tester,
   ) async {

@@ -35,7 +35,7 @@ Directionality(
 
 间距精确复刻 empty.scss，均取主题 resolved 值：vertical 为 Column 交叉轴居中，image 与 content 之间 24（`spacingEmptyContentVerticalMarginTop`）；horizontal 为 Row，content 位于 image 的逻辑 start 侧并以 `EdgeInsetsDirectional` 保持 32（`spacingEmptyContentHorizontalMarginLeft`）的逻辑边距，RTL 自动镜像。description 仅当 title 存在时才有 16（`spacingEmptyTitleMarginTop`）顶部间距（上游相邻兄弟语义）；footer 恒有 24（`spacingEmptyFooterMarginTop`）顶部间距。与上游一致，image/content 间距无条件生效（image 容器在上游 DOM 中恒存在，即使为空）；String 的 title/description 在 vertical 居中对齐，horizontal 靠 start。
 
-image 区域 `ExcludeSemantics`（上游 aria-hidden）并禁止拖选（`SelectionContainer.disabled`，对应 `user-select: none`/`-webkit-user-drag`）；title/description/footer 保留自身语义（SemiTitle 仍带 header 语义）。支持系统文字缩放：文本随缩放，间距不变；插图尺寸不随文字缩放。极窄宽度与无界约束按 mainAxisSize.min 收缩，不猜测可用宽度。
+image 区域 `ExcludeSemantics`（上游 aria-hidden）并禁止拖选（`SelectionContainer.disabled`，对应 `user-select: none`/`-webkit-user-drag`）；title/description/footer 保留自身语义（SemiTitle 仍带 header 语义）。支持系统文字缩放：文本随缩放，间距不变；插图尺寸不随文字缩放。`SemiIllustration` 默认固定 200x200；传 `size: null` 时按父级约束自适应（见“插图用法”）。当主轴有界时（vertical 的高度、horizontal 的宽度），image 以 `Flexible` 与文字块共享剩余空间，所以自适应插图会收缩而不是撑破组件；无界约束仍按 mainAxisSize.min 收缩。
 
 `darkModeImage` 由 `SemiTheme.of(context).dark` 驱动：暗色优先 `darkModeImage`、为空回退 `image`；亮色只看 `image`（与上游一致）。
 
@@ -74,6 +74,22 @@ SemiIllustration(
 
 ```dart
 const SemiIllustration(SemiIllustrations.noContentDark)
+```
+
+自适应尺寸：`size: null` 时尽量放大但不溢出，并保持插图比例——以可用空间中有界约束的较小边作为正方形边长（父级给紧约束时即在该盒子内 `BoxFit.contain` 居中）。在 `SemiEmpty` 里，主轴有界时插图会与文字块共享剩余空间：vertical 受限高度、horizontal 受限宽度，因此不会撑破组件；双轴都无界时回退原生 200：
+
+```dart
+SizedBox(
+  width: 120,
+  child: SemiEmpty(
+    image: SemiIllustration(
+      SemiIllustrations.noContent,
+      dark: SemiIllustrations.noContentDark,
+      size: null,
+    ),
+    title: '暂无内容',
+  ),
+)
 ```
 
 descriptor 是 const，可交给自定义 wrapper（`SvgPicture.asset(descriptor.asset, package: descriptor.package)`）。插图默认 `ExcludeSemantics`（上游 aria-hidden）。

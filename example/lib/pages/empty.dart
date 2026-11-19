@@ -38,6 +38,28 @@ class EmptyPage extends StatelessWidget {
             ),
           ]),
           const SizedBox(height: 40),
+          _section('自适应尺寸', [
+            const SemiText(
+              'size: null 时插图尽量放大、保持比例且不溢出；这里放在 240×240 的容器里。',
+              type: SemiTextType.secondary,
+            ),
+            const SizedBox(height: 12),
+            const SizedBox(
+              width: 240,
+              height: 240,
+              child: SemiEmpty(
+                key: ValueKey('adaptive-empty'),
+                image: SemiIllustration(
+                  SemiIllustrations.noContent,
+                  dark: SemiIllustrations.noContentDark,
+                  size: null,
+                ),
+                title: '暂无内容',
+                description: '插图随容器缩放',
+              ),
+            ),
+          ]),
+          const SizedBox(height: 40),
           _section('布局方向', [
             const SemiEmpty(
               key: ValueKey('horizontal-empty'),

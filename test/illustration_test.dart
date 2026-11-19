@@ -162,6 +162,86 @@ void main() {
     );
     await tester.pumpWidget(host(const SizedBox()));
   });
+  testWidgets('adaptive size follows constraints when size is null', (
+    tester,
+  ) async {
+    Size pictureSize() => tester.getSize(find.byType(SvgPicture));
+
+    // Fully bounded box: fill it and keep the aspect ratio.
+    await tester.pumpWidget(
+      host(
+        const SizedBox(
+          width: 120,
+          height: 80,
+          child: SemiIllustration(SemiIllustrations.success, size: null),
+        ),
+      ),
+    );
+    expect(pictureSize(), const Size(120, 80));
+    expect(tester.takeException(), isNull);
+
+    // Only a bounded width (vertical flow): square on that axis.
+    await tester.pumpWidget(
+      host(
+        const SizedBox(
+          width: 90,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [SemiIllustration(SemiIllustrations.success, size: null)],
+          ),
+        ),
+      ),
+    );
+    expect(pictureSize(), const Size(90, 90));
+
+    // Only a bounded height (horizontal flow): square on that axis.
+    await tester.pumpWidget(
+      host(
+        const SizedBox(
+          height: 70,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [SemiIllustration(SemiIllustrations.success, size: null)],
+          ),
+        ),
+      ),
+    );
+    expect(pictureSize(), const Size(70, 70));
+
+    // Both axes unbounded: native 200x200.
+    await tester.pumpWidget(
+      host(
+        const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SemiIllustration(SemiIllustrations.success, size: null),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+    expect(pictureSize(), const Size(200, 200));
+
+    await tester.pumpWidget(
+      host(
+        const SizedBox(
+          width: 50,
+          child: SemiIllustration(SemiIllustrations.success, size: null),
+        ),
+      ),
+    );
+    expect(pictureSize(), const Size(50, 50));
+
+    expect(
+      () => SemiIllustration(SemiIllustrations.success, size: -1),
+      throwsAssertionError,
+    );
+    await tester.pumpWidget(host(const SizedBox()));
+  });
   testWidgets('decorative semantics excluded', (tester) async {
     final handle = tester.ensureSemantics();
     await tester.pumpWidget(
