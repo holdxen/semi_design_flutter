@@ -348,6 +348,45 @@ void main() {
     expect(tabWidth(tester, 't1'), 120);
   });
 
+  testWidgets('closing the active tab collapses it and hands off activation', (
+    tester,
+  ) async {
+    final closed = <String>[];
+    var tabs = manyTabs(3);
+    var active = 't1';
+    await pumpHost(
+      tester,
+      StatefulBuilder(
+        builder: (context, setState) => _tabs(
+          tabs: tabs,
+          activeTabId: active,
+          onTabClose: (id) {
+            closed.add(id);
+            setState(() {
+              tabs = tabs.where((tab) => tab.id != id).toList();
+              if (active == id) active = tabs.first.id;
+            });
+          },
+        ),
+      ),
+    );
+    final mouse = await startMouse(tester);
+    await mouse.moveTo(
+      tester.getCenter(find.byKey(const ValueKey('semi-chrome-tab-t1'))),
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('semi-chrome-tab-close-t1')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(tester.takeException(), isNull);
+    expect(tabWidth(tester, 't1'), greaterThan(0));
+    expect(tabWidth(tester, 't1'), lessThan(120));
+    await tester.pump(const Duration(milliseconds: 120));
+    expect(closed, <String>['t1']);
+    expect(find.byKey(const ValueKey('semi-chrome-tab-t1')), findsNothing);
+    expect(active, 't0');
+  });
+
   testWidgets('immediate layout mode closes without an animation', (
     tester,
   ) async {

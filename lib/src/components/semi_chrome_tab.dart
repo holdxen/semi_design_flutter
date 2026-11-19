@@ -1883,6 +1883,23 @@ class _ActiveTabBackgroundPainter extends CustomPainter {
     final bottom = size.height;
     final r = radius;
     final bottomY = hideBottomLine ? bottom - 1 : bottom;
+    final paint = Paint()..color = color;
+
+    // Once the tab is narrower than its outer flares, the notch path inverts
+    // and paints a bow-tie sliver at the collapse point. Use a plain narrow
+    // fill for that last stretch (and paint nothing at zero width).
+    if (size.width < 2 * r + 4) {
+      if (size.width < 1) return;
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(0, top, size.width, bottomY - top),
+          Radius.circular(math.min(r, size.width / 2)),
+        ),
+        paint,
+      );
+      return;
+    }
+
     final path = Path()
       ..moveTo(left - r, bottomY)
       ..quadraticBezierTo(left, bottomY, left, bottomY - r)
@@ -1893,7 +1910,7 @@ class _ActiveTabBackgroundPainter extends CustomPainter {
       ..lineTo(right, bottomY - r)
       ..quadraticBezierTo(right, bottomY, right + r, bottomY)
       ..close();
-    canvas.drawPath(path, Paint()..color = color);
+    canvas.drawPath(path, paint);
   }
 
   @override
