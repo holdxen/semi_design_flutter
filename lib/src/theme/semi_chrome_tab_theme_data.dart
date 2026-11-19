@@ -124,7 +124,10 @@ class SemiChromeTabThemeData {
   /// the tab in over 160ms instead.
   final Duration? chromeTabEnterDuration;
 
-  /// `chrome-tab-close` animation duration (`140ms ease-in` upstream).
+  /// Duration of the Chromium-style close animation (the closing tab collapses
+  /// to the insertion point while the remaining tabs reflow). Chromium uses
+  /// 200ms in `TabContainer::StartRemoveTabAnimation`; the upstream web
+  /// component fades the tab out over 140ms instead.
   final Duration? chromeTabCloseDuration;
 
   /// Tab layout transition duration (`200ms` upstream Chromium behavior).
@@ -297,7 +300,7 @@ class SemiChromeTabThemeData {
       chromeTabEnterDuration:
           chromeTabEnterDuration ?? const Duration(milliseconds: 200),
       chromeTabCloseDuration:
-          chromeTabCloseDuration ?? const Duration(milliseconds: 140),
+          chromeTabCloseDuration ?? const Duration(milliseconds: 200),
       chromeTabLayoutDuration:
           chromeTabLayoutDuration ?? const Duration(milliseconds: 200),
       chromeTabTooltipMoveDuration:

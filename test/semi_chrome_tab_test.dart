@@ -149,7 +149,7 @@ void main() {
     expect(resolved.chromeTabsMenuIconBackground, const Color(0x9effffff));
     expect(resolved.chromeTabsMenuTextColor, resolved.chromeTabTextColor);
     expect(resolved.chromeTabEnterDuration, const Duration(milliseconds: 200));
-    expect(resolved.chromeTabCloseDuration, const Duration(milliseconds: 140));
+    expect(resolved.chromeTabCloseDuration, const Duration(milliseconds: 200));
     expect(
       resolved.chromeTabTooltipMoveDuration,
       const Duration(milliseconds: 140),
@@ -301,7 +301,7 @@ void main() {
     expect(edited, <String>['t1']);
   });
 
-  testWidgets('close animates then emits once and relayouts immediately', (
+  testWidgets('close collapses the tab and emits after the bounds animation', (
     tester,
   ) async {
     final closed = <String>[];
@@ -330,15 +330,55 @@ void main() {
     );
     await tester.pump();
     expect(activated, isEmpty);
-    // Closing starts a fresh layout immediately, while the item fades out.
+    // Chromium keeps the tab in the layout and collapses it toward its left
+    // neighbor; the remaining tabs are already at their new bounds.
+    expect(tabWidth(tester, 't2'), 120);
     expect(tabWidth(tester, 't0'), 120);
-    await tester.pump(const Duration(milliseconds: 80));
+    await tester.pump(const Duration(milliseconds: 100));
     expect(closed, isEmpty);
-    await tester.pump(const Duration(milliseconds: 80));
+    expect(tabWidth(tester, 't2'), greaterThan(0));
+    expect(tabWidth(tester, 't2'), lessThan(120));
+    await tester.pump(const Duration(milliseconds: 120));
     expect(closed, <String>['t2']);
 
+    // The remaining tabs were laid out as if t2 were already gone, so the
+    // removal does not start a second reflow.
     await update(tester, _tabs(tabs: manyTabs(2), activeTabId: 't0'));
     expect(tabWidth(tester, 't0'), 120);
+    expect(tabWidth(tester, 't1'), 120);
+  });
+
+  testWidgets('immediate layout mode closes without an animation', (
+    tester,
+  ) async {
+    final closed = <String>[];
+    var tabs = manyTabs(3);
+    await pumpHost(
+      tester,
+      StatefulBuilder(
+        builder: (context, setState) => _tabs(
+          tabs: tabs,
+          activeTabId: 't0',
+          layoutAnimation: SemiChromeTabLayoutAnimation.immediate,
+          onTabClose: (id) {
+            closed.add(id);
+            setState(() {
+              tabs = tabs.where((tab) => tab.id != id).toList();
+            });
+          },
+        ),
+      ),
+    );
+    final mouse = await startMouse(tester);
+    await mouse.moveTo(
+      tester.getCenter(find.byKey(const ValueKey('semi-chrome-tab-t2'))),
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('semi-chrome-tab-close-t2')));
+    await tester.pump(const Duration(milliseconds: 1));
+    await tester.pump();
+    expect(closed, <String>['t2']);
+    expect(find.byKey(const ValueKey('semi-chrome-tab-t2')), findsNothing);
   });
 
   testWidgets('closing a tab while remaining tabs widen does not overflow', (

@@ -475,8 +475,10 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
     if (_closingIds.contains(item.id)) return;
     final theme = SemiChromeTabTheme.resolve(context);
     final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
-    final duration = reduceMotion
-        ? const Duration(milliseconds: 1)
+    final duration =
+        reduceMotion ||
+            widget.layoutAnimation == SemiChromeTabLayoutAnimation.immediate
+        ? Duration.zero
         : theme.chromeTabCloseDuration;
     setState(() => _closingIds.add(item.id));
     _closeTimers[item.id]?.cancel();
@@ -769,14 +771,21 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
     double viewportWidth,
   ) {
     final tabs = widget.tabs;
+    final visibleTabs = _closingIds.isEmpty
+        ? tabs
+        : <SemiChromeTabItem>[
+            for (final tab in tabs)
+              if (!_closingIds.contains(tab.id)) tab,
+          ];
     final addVisible = !widget.hideAddButton;
     final extraWidth = addVisible
-        ? _addSlotWidth + (tabs.isEmpty ? 0 : _dividerWidth)
+        ? _addSlotWidth + (visibleTabs.isEmpty ? 0 : _dividerWidth)
         : 0.0;
     final available = math.max(0.0, viewportWidth - extraWidth);
-    final naturalWidth = tabs.isEmpty
+    final layoutCount = visibleTabs.isEmpty ? tabs.length : visibleTabs.length;
+    final naturalWidth = layoutCount == 0
         ? 0.0
-        : (available / tabs.length)
+        : (available / layoutCount)
               .clamp(theme.chromeTabMinWidth, theme.chromeTabMaxWidth)
               .toDouble();
     final widths = <String, double>{
@@ -792,25 +801,40 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
       );
     }
 
+    // Closing tabs stay in the tree while they collapse, but the remaining
+    // tabs lay out as if those tabs were already gone. Chromium animates the
+    // collapse and the reflow in the same `StartRemoveTabAnimation` pass.
+    final visibleBounds = <String, Rect>{};
+    var tabLeft = 0.0;
+    for (final tab in visibleTabs) {
+      visibleBounds[tab.id] = Rect.fromLTWH(
+        tabLeft,
+        0,
+        naturalWidth,
+        theme.chromeTabHeight,
+      );
+      tabLeft += naturalWidth;
+    }
+
     final tabBounds = <String, Rect>{};
     final tabChildren = <String, Widget>{};
-    var tabLeft = 0.0;
     for (var index = 0; index < tabs.length; index++) {
       final tab = tabs[index];
       final width = widths[tab.id]!;
-      tabBounds[tab.id] = Rect.fromLTWH(
-        tabLeft,
-        0,
-        width,
-        theme.chromeTabHeight,
-      );
+      tabBounds[tab.id] =
+          visibleBounds[tab.id] ??
+          Rect.fromLTWH(
+            _closeCollapseX(tabs, index, visibleBounds),
+            0,
+            0,
+            theme.chromeTabHeight,
+          );
       tabChildren[tab.id] = SizedBox(
         key: ValueKey<String>('semi-chrome-tab-${tab.id}'),
         width: width,
         height: theme.chromeTabHeight,
         child: _buildTab(context, theme, tab, index, width),
       );
-      tabLeft += width;
     }
 
     final trailingWidth = addVisible ? extraWidth : 0.0;
@@ -822,7 +846,7 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                if (tabs.isNotEmpty)
+                if (visibleTabs.isNotEmpty)
                   SizedBox(
                     width: _dividerWidth,
                     height: theme.chromeTabHeight,
@@ -854,6 +878,7 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
     final contentWidth = tabLeft + trailingWidth;
     final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     const reducedDuration = Duration(milliseconds: 1);
+    final closing = _closingIds.isNotEmpty;
 
     final layout = _ChromeTabBoundsLayout(
       bounds: tabBounds,
@@ -864,7 +889,11 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
       trailingLeft: tabLeft,
       trailingWidth: trailingWidth,
       animation: widget.layoutAnimation,
-      duration: reduceMotion ? reducedDuration : theme.chromeTabLayoutDuration,
+      duration: reduceMotion
+          ? reducedDuration
+          : closing
+          ? theme.chromeTabCloseDuration
+          : theme.chromeTabLayoutDuration,
       insertDuration: reduceMotion
           ? reducedDuration
           : theme.chromeTabEnterDuration,
@@ -1000,9 +1029,8 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
     double width,
   ) {
     final active = tab.id == widget.activeTabId;
-    final hovered = tab.id == _hoveredTabId;
     final closing = _closingIds.contains(tab.id);
-    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final hovered = tab.id == _hoveredTabId && !closing;
     final textColor = active
         ? theme.chromeTabActiveTextColor
         : theme.chromeTabTextColor;
@@ -1144,22 +1172,7 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
       },
     );
 
-    Widget tabContent = surface;
-    if (closing) {
-      tabContent = TweenAnimationBuilder<double>(
-        tween: Tween<double>(begin: 1, end: 0),
-        duration: reduceMotion
-            ? const Duration(milliseconds: 1)
-            : theme.chromeTabCloseDuration,
-        curve: Curves.easeIn,
-        child: tabContent,
-        builder: (context, value, child) => Opacity(
-          key: ValueKey<String>('semi-chrome-tab-closing-${tab.id}'),
-          opacity: value,
-          child: Transform.scale(scaleX: 0.88 + 0.12 * value, child: child),
-        ),
-      );
-    }
+    final tabContent = surface;
 
     Widget interactive = MouseRegion(
       cursor: SystemMouseCursors.basic,
@@ -1222,11 +1235,32 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
     );
   }
 
+  /// Mirrors Chromium's `GetTargetBoundsForClosingTab`: the closing tab
+  /// collapses to the right edge of the closest remaining tab before it, or to
+  /// the left edge of the closest remaining tab after it when it was leading.
+  double _closeCollapseX(
+    List<SemiChromeTabItem> tabs,
+    int index,
+    Map<String, Rect> visibleBounds,
+  ) {
+    for (var i = index - 1; i >= 0; i--) {
+      final rect = visibleBounds[tabs[i].id];
+      if (rect != null) return rect.right;
+    }
+    for (var i = index + 1; i < tabs.length; i++) {
+      final rect = visibleBounds[tabs[i].id];
+      if (rect != null) return rect.left;
+    }
+    return 0;
+  }
+
   bool _dividerVisible(int index) {
     final tabs = widget.tabs;
     final id = tabs[index].id;
+    if (_closingIds.contains(id)) return false;
     if (id == widget.activeTabId || id == _hoveredTabId) return false;
     final next = index + 1 < tabs.length ? tabs[index + 1] : null;
+    if (next != null && _closingIds.contains(next.id)) return false;
     if (next != null &&
         (next.id == widget.activeTabId || next.id == _hoveredTabId)) {
       return false;
@@ -1336,9 +1370,10 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
 /// Positions tab children using their real outer bounds rather than a flex row.
 ///
 /// Keeping this layer stateful lets a changed tab list use the previous frame's
-/// rectangles as its animation origin. A tab that is removed is dropped from the
-/// child list immediately, while the remaining tabs animate from their sampled
-/// positions; entering/closing opacity and scale remain owned by the tab itself.
+/// rectangles as its animation origin. New tabs start at a zero-width insert
+/// origin and closing tabs collapse to their insertion point, matching
+/// Chromium's `StartInsertTabAnimation` / `StartRemoveTabAnimation`; all slots,
+/// the content width and the trailing add button share one ease-out pass.
 class _ChromeTabBoundsLayout extends StatefulWidget {
   const _ChromeTabBoundsLayout({
     required this.bounds,
@@ -1375,6 +1410,8 @@ class _ChromeTabBoundsLayoutState extends State<_ChromeTabBoundsLayout>
   late Map<String, Rect> _toBounds;
   Rect? _fromTrailing;
   Rect? _toTrailing;
+  late double _fromContentWidth;
+  late double _toContentWidth;
   SemiChromeTabLayoutAnimation? _lastAnimation;
 
   Rect? get _targetTrailing => widget.trailing == null
@@ -1398,6 +1435,8 @@ class _ChromeTabBoundsLayoutState extends State<_ChromeTabBoundsLayout>
     _toBounds = Map<String, Rect>.from(widget.bounds);
     _fromTrailing = _targetTrailing;
     _toTrailing = _targetTrailing;
+    _fromContentWidth = widget.contentWidth;
+    _toContentWidth = widget.contentWidth;
     _lastAnimation = widget.animation;
   }
 
@@ -1419,9 +1458,10 @@ class _ChromeTabBoundsLayoutState extends State<_ChromeTabBoundsLayout>
     final targetChanged = !_sameBounds(_toBounds, widget.bounds);
     final targetTrailing = _targetTrailing;
     final trailingChanged = !_sameRect(_toTrailing, targetTrailing);
+    final widthChanged = _toContentWidth != widget.contentWidth;
     final modeChanged = _lastAnimation != widget.animation;
     _lastAnimation = widget.animation;
-    if (!targetChanged && !trailingChanged && !modeChanged) {
+    if (!targetChanged && !trailingChanged && !widthChanged && !modeChanged) {
       return;
     }
 
@@ -1431,20 +1471,26 @@ class _ChromeTabBoundsLayoutState extends State<_ChromeTabBoundsLayout>
       _toBounds = Map<String, Rect>.from(widget.bounds);
       _fromTrailing = targetTrailing;
       _toTrailing = targetTrailing;
+      _fromContentWidth = widget.contentWidth;
+      _toContentWidth = widget.contentWidth;
       return;
     }
 
     final currentBounds = _currentBounds;
     final currentTrailing = _currentTrailing;
+    final currentContentWidth = _currentContentWidth;
     _fromBounds = _boundsWithInsertOrigins(widget.bounds, currentBounds);
     _toBounds = Map<String, Rect>.from(widget.bounds);
     _fromTrailing = targetTrailing == null
         ? null
         : currentTrailing ?? targetTrailing;
     _toTrailing = targetTrailing;
+    _fromContentWidth = currentContentWidth;
+    _toContentWidth = widget.contentWidth;
 
     if (_sameBounds(_fromBounds, _toBounds) &&
-        _sameRect(_fromTrailing, _toTrailing)) {
+        _sameRect(_fromTrailing, _toTrailing) &&
+        _fromContentWidth == _toContentWidth) {
       _controller.value = 1;
     } else {
       _controller.forward(from: 0);
@@ -1526,6 +1572,14 @@ class _ChromeTabBoundsLayoutState extends State<_ChromeTabBoundsLayout>
     return Rect.lerp(_fromTrailing, _toTrailing, value);
   }
 
+  double get _currentContentWidth {
+    if (widget.animation == SemiChromeTabLayoutAnimation.immediate) {
+      return _toContentWidth;
+    }
+    final value = Curves.easeOut.transform(_controller.value);
+    return _fromContentWidth + (_toContentWidth - _fromContentWidth) * value;
+  }
+
   @override
   Widget build(BuildContext context) {
     final bounds = _currentBounds;
@@ -1540,7 +1594,7 @@ class _ChromeTabBoundsLayoutState extends State<_ChromeTabBoundsLayout>
       children.add(Positioned.fromRect(rect: trailingRect, child: trailing));
     }
     return SizedBox(
-      width: widget.contentWidth,
+      width: _currentContentWidth,
       height: widget.height,
       child: Stack(clipBehavior: Clip.none, children: children),
     );
