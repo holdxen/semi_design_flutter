@@ -13,9 +13,10 @@ class SemiChromeTabAddButtonPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = size.center(Offset.zero);
     if (hovered) {
+      // Match Chromium's 28px circular ink-drop highlight.
       canvas.drawCircle(
         center,
-        size.shortestSide / 3,
+        size.shortestSide / 2,
         Paint()..color = const Color(0x14000000),
       );
     }
@@ -24,7 +25,8 @@ class SemiChromeTabAddButtonPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round;
-    final half = size.shortestSide * 0.15;
+    // Chromium's add.icon spans 4.56..11.44 in a 16px canvas.
+    const half = 3.44;
     canvas.drawLine(
       Offset(center.dx - half, center.dy),
       Offset(center.dx + half, center.dy),
