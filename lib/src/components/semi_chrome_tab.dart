@@ -1949,16 +1949,16 @@ class _CloseButtonState extends State<_CloseButton> {
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
         onTap: widget.onTap,
-        child: Container(
+        child: SizedBox(
           width: _SemiChromeTabState._closeButtonSize,
           height: _SemiChromeTabState._closeButtonSize,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: _hovered
-                ? widget.theme.chromeTabCloseHoverBackground
-                : const Color(0x00000000),
+          child: CustomPaint(
+            painter: _CloseGlyphPainter(
+              color: widget.color,
+              hoverColor: widget.theme.chromeTabCloseHoverBackground,
+              hovered: _hovered,
+            ),
           ),
-          child: CustomPaint(painter: _CloseGlyphPainter(color: widget.color)),
         ),
       ),
     );
@@ -1966,16 +1966,27 @@ class _CloseButtonState extends State<_CloseButton> {
 }
 
 class _CloseGlyphPainter extends CustomPainter {
-  const _CloseGlyphPainter({required this.color});
+  const _CloseGlyphPainter({
+    required this.color,
+    required this.hoverColor,
+    required this.hovered,
+  });
 
   final Color color;
+  final Color hoverColor;
+  final bool hovered;
 
   @override
   void paint(Canvas canvas, Size size) {
+    final center = size.center(Offset.zero);
+    if (hovered) {
+      // Chromium's TabCloseButton is a 28px hit target, but its LabelButton
+      // contents bounds (and ink-drop highlight) are the 16px icon area.
+      canvas.drawCircle(center, 8, Paint()..color = hoverColor);
+    }
     final paint = Paint()
       ..color = color
       ..strokeWidth = 1.5;
-    final center = size.center(Offset.zero);
     // The Chromium 16px close icon draws its X from (4,4) to (12,12); a line
     // rotated 45 degrees needs half = 4 * sqrt(2) for the same 8px extent.
     final half = 4 * math.sqrt2;
@@ -1994,7 +2005,9 @@ class _CloseGlyphPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_CloseGlyphPainter oldDelegate) =>
-      color != oldDelegate.color;
+      color != oldDelegate.color ||
+      hoverColor != oldDelegate.hoverColor ||
+      hovered != oldDelegate.hovered;
 }
 
 class _ScrollButton extends StatefulWidget {
