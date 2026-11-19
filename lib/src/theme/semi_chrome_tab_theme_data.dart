@@ -118,12 +118,10 @@ class SemiChromeTabThemeData {
   /// `--chrome-tabs-tooltip-shadow: 0 2px 4px rgba(60, 64, 67, 0.067)`.
   final SemiShadows? chromeTabsTooltipShadow;
 
-  /// `chrome-tab-enter` animation duration.
-  ///
-  /// Defaults to 480ms so that a new tab's entrance (content fade and the
-  /// insert-time strip reflow, both run for this duration) reads noticeably
-  /// slower than the close sequence (140ms content exit plus the 200ms bounds
-  /// reflow). Upstream CSS uses 160ms.
+  /// Duration of the Chromium-style insertion animation (the new tab's bounds
+  /// expansion and the strip reflow). Chromium uses 200ms ease-out in
+  /// `TabContainer::StartInsertTabAnimation`; the upstream web component fades
+  /// the tab in over 160ms instead.
   final Duration? chromeTabEnterDuration;
 
   /// `chrome-tab-close` animation duration (`140ms ease-in` upstream).
@@ -131,8 +129,8 @@ class SemiChromeTabThemeData {
 
   /// Tab layout transition duration (`200ms` upstream Chromium behavior).
   ///
-  /// Inserting a tab uses [chromeTabEnterDuration] instead when that is
-  /// longer, so the strip reflow ends together with the enter animation.
+  /// Inserting a tab uses [chromeTabEnterDuration] for that update instead,
+  /// so the new tab and the strip reflow share one duration.
   final Duration? chromeTabLayoutDuration;
 
   /// `left 140ms ease-out` when a tooltip moves between two tabs.
@@ -297,7 +295,7 @@ class SemiChromeTabThemeData {
             SemiShadowLayer(false, 0, 2, 4, 0, Color(0x113c4043)),
           ]),
       chromeTabEnterDuration:
-          chromeTabEnterDuration ?? const Duration(milliseconds: 480),
+          chromeTabEnterDuration ?? const Duration(milliseconds: 200),
       chromeTabCloseDuration:
           chromeTabCloseDuration ?? const Duration(milliseconds: 140),
       chromeTabLayoutDuration:

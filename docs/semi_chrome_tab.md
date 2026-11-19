@@ -77,15 +77,15 @@ class SemiChromeTabReorderInfo {
 - **活动页签几何**：顶部圆角 `radius + 2`，底部两侧用二次曲线绘制外扩的凹圆角（Chrome 缺口）。
 - **标题尾部渐隐**：标题溢出可用空间时，仅对 title glyph 使用 Chromium 风格 alpha shader；LTR 淡出右尾，RTL 淡出左尾。渐隐宽度按当前字体约 3 字宽并限制在 title 区域内；极窄时淡出端保留最多约 20% alpha。它不是覆盖关闭按钮的背景渐变，也不插入省略号；hover 时 title region 会为 close button 预留空间。
 - **关闭动画**：标签内容 `scaleX 1→0.88`、透明度 `1→0`；默认 `layoutAnimation: chromium` 时，关闭标签后剩余标签的宽度和位置同时以 200ms `easeOut` bounds 动画重排。设置为 `immediate` 可恢复立即重排。`onTabClose` 仍在关闭动画结束后触发（140ms）。
-- **进入动画**：新标签的内容以 `scaleX 0.88→1`、透明度 `0→1` 进入（默认 480ms `easeInOut`）；新增期间的 tab bounds 重排也使用同一时长，因此整个新增过程比关闭序列（140ms 内容退场 + 200ms 布局重排）更慢、更明显。非新增触发的布局变化仍使用 200ms。
+- **进入/插入动画**：按 Chromium `TabContainer::StartInsertTabAnimation` 实现。新标签从插入点（前一个标签的当前右边缘）以 0 宽度出现，与后续标签和加号槽一起在 200ms `easeOut` 内过渡到目标 bounds；不做整 tab 的透明度/scale 淡入。本移植的标签相邻、没有 tab overlap，因此起始宽度为 0；Chromium 用 overlap（约 18px）作为起始宽度。极窄时图标和关闭按钮按可用宽度隐藏，对应 Chromium 在宽度为 0 时隐藏 title 并裁剪内容。
 - **拖拽**：拖起时源标签 45% 透明；目标标签按指针位于其左/右半区显示 2px accent 指示线，松手发 `onTabReorder`。
 - **右键菜单**：close / closeRight / closeOthers / closeLeft，点击后关闭菜单并回调。第一次点击菜单外只关闭菜单。
 - **分组菜单**：触发器 30×30；下拉 210px、右对齐、顶部偏移 34px；行悬停时右侧出现重命名/删除按钮；当前分组 accent + 600。
 - **溢出**：滚动按钮 overlay 在左右两端（36px）；悬停列出该侧被裁掉的标签，点击即激活；滚轮在标签栏上转为横向滚动。
 - **活动标签可见**：`activeTabId` 变化或标签集变化后，按“最近边缘”滚动到可见区，并预留圆角和控制按钮宽度。
-- **加号锚定**：当标签数至少为 5 时，按下 `+` 会记录按钮本身的屏幕位置。新增标签时，`+` 槽固定在目标布局位置，滚动偏移同步校正，让按钮在 bounds 动画期间留在原屏幕位置，tab 在其左侧展开；滚动范围不足时按边界限位。少于 5 个标签时不启用锚定。
+- **加号随动**：新增时 `+` 槽与标签 bounds 使用同一动画，从旧位置平滑移动到新位置，不再通过滚动锚定把按钮固定在屏幕上。
 - **Tooltip**：`truncated` 用 `TextPainter` 判断标题是否超出可用宽度；`always` 始终显示；`never` 关闭。hover 离开 120ms 后关闭。
-- **减少动效**：`MediaQuery.disableAnimations` 为真时进入/关闭动画缩到 1ms（对应上游 `prefers-reduced-motion`）。
+- **减少动效**：`MediaQuery.disableAnimations` 为真时关闭淡出和 bounds 布局过渡都缩到 1ms（对应上游 `prefers-reduced-motion` 和 Chromium 的 `RichAnimationDuration`）。
 
 ## 主题
 
@@ -117,9 +117,9 @@ CSS 变量一一对应 `SemiChromeTabThemeData`。默认值是 qn-chrome-tabs �
 | `--chrome-tabs-tooltip-border-color` | `chromeTabsTooltipBorderColor` | `#dadce0` |
 | `--chrome-tabs-tooltip-text-color` | `chromeTabsTooltipTextColor` | 回退 `chromeTabTextColor` |
 | `--chrome-tabs-tooltip-shadow` | `chromeTabsTooltipShadow` | `0 2px 4px rgba(60,64,67,.067)` |
-| `@keyframes chrome-tab-enter` | `chromeTabEnterDuration` | `480ms`（上游 160ms；比关闭序列更慢） |
+| Chromium tab insert | `chromeTabEnterDuration` | `200ms`（Chromium `StartInsertTabAnimation` + `EASE_OUT`；上游 `@keyframes chrome-tab-enter` 的 160ms 淡入已不采用） |
 | `@keyframes chrome-tab-close` | `chromeTabCloseDuration` | `140ms` |
-| Chromium tab bounds transition | `chromeTabLayoutDuration` | `200ms easeOut`；新增标签时为 `chromeTabEnterDuration`（`480ms`），并非上游 Web CSS 变量 |
+| Chromium tab bounds transition | `chromeTabLayoutDuration` | `200ms easeOut`；新增标签时改用 `chromeTabEnterDuration`（`200ms`），并非上游 Web CSS 变量 |
 | tooltip `transition: left` | `chromeTabTooltipMoveDuration` | `140ms`（字段保留，移动过渡未移植） |
 
 `chromeTabHeight` 不单独暴露：按上游 `max(--chrome-tabs-height, 28px)` 由 `resolve` 派生。
@@ -171,7 +171,7 @@ SemiChromeTabTheme(
 - Arial 未随包提供，`chromeTabsFontSize` 只控制字号。
 - `+` 按钮的 `title`（“添加标签页后，可再次打开同一个模块”）暴露为
   `Semantics.tooltip`，没有额外绘制一个视觉气泡。
-- 加号锚定用滚动偏移实现，且仅在标签数 ≥ 5 时启用；上游用 `transform`，可越过滚动边界。
+- 新增插入按 Chromium 从插入点展开；Chromium 用 tab overlap（约 18px）作为起始宽度，本移植标签相邻，故起始宽度为 0，并在极窄时隐藏图标/关闭按钮。
 - 无键盘导航（上游 Web Component 也没有方向键/焦点管理）；`Semantics` 提供 role/label/selected。
 - zh / en / ko 三套内置文案；默认跟随 `Localizations`，显式 `locale` 优先。
 - 活动标签自动可见、滚轮横向滚动、溢出按钮和隐藏列表均已移植。

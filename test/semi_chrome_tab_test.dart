@@ -148,7 +148,7 @@ void main() {
     expect(resolved.chromeTabsAccentColor, const Color(0xff1a73e8));
     expect(resolved.chromeTabsMenuIconBackground, const Color(0x9effffff));
     expect(resolved.chromeTabsMenuTextColor, resolved.chromeTabTextColor);
-    expect(resolved.chromeTabEnterDuration, const Duration(milliseconds: 480));
+    expect(resolved.chromeTabEnterDuration, const Duration(milliseconds: 200));
     expect(resolved.chromeTabCloseDuration, const Duration(milliseconds: 140));
     expect(
       resolved.chromeTabTooltipMoveDuration,
@@ -223,7 +223,7 @@ void main() {
     expect(middleWidth, lessThan(startWidth));
     expect(middleWidth, greaterThan(56.2));
 
-    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 120));
     expect(tabWidth(tester, 't0'), closeTo(56.2, 0.01));
   });
 
@@ -387,9 +387,7 @@ void main() {
     expect(tabWidth(tester, 't0'), greaterThan(56));
   });
 
-  testWidgets('adding fewer than five tabs does not require an anchor', (
-    tester,
-  ) async {
+  testWidgets('the add button reports onTabAdd', (tester) async {
     var added = false;
     await pumpHost(
       tester,
@@ -401,94 +399,94 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets(
-    'adding a tab keeps the add button anchored during bounds motion',
-    (tester) async {
-      final mouse = await startMouse(tester);
-      var tabs = manyTabs(10);
-      await pumpHost(
-        tester,
-        StatefulBuilder(
-          builder: (context, setState) => _tabs(
-            tabs: tabs,
-            activeTabId: 't0',
-            onTabAdd: () => setState(() {
-              tabs = <SemiChromeTabItem>[
-                ...tabs,
-                const SemiChromeTabItem(id: 't10', title: 'T10'),
-              ];
-            }),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      final addButton = find.byWidgetPredicate(
-        (widget) => widget is Semantics && widget.properties.label == 'Add tab',
-      );
-      final initialAddLeft = tester.getRect(addButton).left;
-      final lastTab = find.byKey(const ValueKey('semi-chrome-tab-t9'));
-      final initialLastWidth = tester.getSize(lastTab).width;
-      expect(initialLastWidth, closeTo(56.2, 0.01));
-
-      await mouse.moveTo(tester.getCenter(addButton));
-      await tester.pump();
-      await tester.tap(addButton, warnIfMissed: false);
-      await tester.pump();
-      await tester.pump();
-      expect(tester.takeException(), isNull);
-      expect(tester.getRect(addButton).left, closeTo(initialAddLeft, 0.5));
-
-      await tester.pump(const Duration(milliseconds: 100));
-      expect(tester.takeException(), isNull);
-      expect(tester.getRect(addButton).left, closeTo(initialAddLeft, 0.5));
-      expect(tester.getSize(lastTab).width, lessThan(initialLastWidth));
-
-      await tester.pump(const Duration(milliseconds: 120));
-      expect(tester.takeException(), isNull);
-      expect(tester.getRect(addButton).left, closeTo(initialAddLeft, 0.5));
-      // The insert reflow now spans the enter duration, so it is still moving
-      // past the old 200ms layout window.
-      expect(tester.getSize(lastTab).width, greaterThan(52));
-
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(tester.takeException(), isNull);
-      expect(tester.getRect(addButton).left, closeTo(initialAddLeft, 0.5));
-      expect(tester.getSize(lastTab).width, 52);
-    },
-  );
-
-  testWidgets('adding below the anchor threshold still calls onTabAdd', (
-    tester,
-  ) async {
-    var added = false;
-    await pumpHost(
-      tester,
-      _tabs(tabs: manyTabs(4), activeTabId: 't0', onTabAdd: () => added = true),
-    );
-    await tester.tap(byLabel('Add tab'));
-    await tester.pump();
-    expect(added, isTrue);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('a new tab enters with a scale/opacity animation', (
+  testWidgets('a new tab expands from the insertion point like Chromium', (
     tester,
   ) async {
     await pumpHost(tester, _tabs(tabs: manyTabs(2), activeTabId: 't0'));
+    final addButton = byLabel('Add tab');
+    final initialAddLeft = tester.getRect(addButton).left;
+
     await update(tester, _tabs(tabs: manyTabs(3), activeTabId: 't0'));
-    final animation = find.byKey(const ValueKey('semi-chrome-tab-entering-t2'));
-    expect(tester.widget<Opacity>(animation).opacity, 0);
-    await tester.pump(const Duration(milliseconds: 80));
-    final mid = tester.widget<Opacity>(animation).opacity;
-    expect(mid, greaterThan(0));
-    expect(mid, lessThan(1));
-    // The entrance lasts 480ms, longer than the close sequence
-    // (140 + 200ms), so it is still running well past the old 160ms point.
-    await tester.pump(const Duration(milliseconds: 200));
-    expect(animation, findsOneWidget);
-    await tester.pump(const Duration(milliseconds: 240));
-    expect(animation, findsNothing);
+    final newTab = find.byKey(const ValueKey('semi-chrome-tab-t2'));
+
+    // Chromium starts the inserted tab as a zero-width sliver joined to the
+    // previous tab's current right edge (the overlap width is zero here
+    // because our tabs are adjacent), then expands it to its ideal bounds.
+    expect(tester.getTopLeft(newTab).dx, 240);
+    expect(tester.getSize(newTab).width, 0);
+    expect(tester.getRect(addButton).left, initialAddLeft);
+    expect(
+      find.byKey(const ValueKey('semi-chrome-tab-entering-t2')),
+      findsNothing,
+    );
+
+    await tester.pump(const Duration(milliseconds: 100));
+    final midWidth = tester.getSize(newTab).width;
+    expect(midWidth, greaterThan(0));
+    expect(midWidth, lessThan(120));
+    // The add slot moves with the strip instead of jumping into place.
+    expect(tester.getRect(addButton).left, greaterThan(initialAddLeft));
+
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(tester.getSize(newTab).width, 120);
+    expect(tester.getTopLeft(newTab).dx, 240);
+    expect(tester.getRect(addButton).left, closeTo(initialAddLeft + 120, 0.5));
+  });
+
+  testWidgets('inserts at the front and back expand from their gaps', (
+    tester,
+  ) async {
+    await pumpHost(tester, _tabs(tabs: manyTabs(3), activeTabId: 't1'));
+    await update(
+      tester,
+      _tabs(
+        tabs: <SemiChromeTabItem>[
+          const SemiChromeTabItem(id: 'lead', title: 'Lead'),
+          ...manyTabs(3),
+          const SemiChromeTabItem(id: 'tail', title: 'Tail'),
+        ],
+        activeTabId: 't1',
+      ),
+    );
+    final lead = find.byKey(const ValueKey('semi-chrome-tab-lead'));
+    final tail = find.byKey(const ValueKey('semi-chrome-tab-tail'));
+    expect(tester.getSize(lead).width, 0);
+    expect(tester.getTopLeft(lead).dx, 0);
+    expect(tester.getSize(tail).width, 0);
+    // The trailing insert starts at the old last tab's right edge.
+    expect(tester.getTopLeft(tail).dx, 360);
+
+    for (var i = 0; i < 8; i++) {
+      await tester.pump(const Duration(milliseconds: 30));
+      expect(tester.takeException(), isNull);
+    }
+    expect(tester.getSize(lead).width, closeTo(112.4, 0.01));
+    expect(tester.getSize(tail).width, closeTo(112.4, 0.01));
+  });
+
+  testWidgets('a new tab with an icon does not overflow while expanding', (
+    tester,
+  ) async {
+    await pumpHost(tester, _tabs(tabs: manyTabs(2), activeTabId: 't0'));
+    await update(
+      tester,
+      _tabs(
+        tabs: <SemiChromeTabItem>[
+          ...manyTabs(2),
+          const SemiChromeTabItem(
+            id: 't2',
+            title: 'New tab',
+            icon: SizedBox(width: 16, height: 16),
+          ),
+        ],
+        activeTabId: 't0',
+      ),
+    );
+    for (var i = 0; i < 9; i++) {
+      expect(tester.takeException(), isNull);
+      await tester.pump(const Duration(milliseconds: 30));
+    }
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('drag and drop reports before/after against the target', (

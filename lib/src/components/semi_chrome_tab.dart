@@ -192,7 +192,6 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
 
   final ScrollController _scroll = ScrollController();
   final GlobalKey _viewportKey = GlobalKey(debugLabel: 'semi-chrome-tabs');
-  final GlobalKey _addButtonKey = GlobalKey(debugLabel: 'semi-chrome-tab-add');
   final GlobalKey _groupButtonKey = GlobalKey(
     debugLabel: 'semi-chrome-tab-group',
   );
@@ -213,7 +212,6 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
   bool _canScrollRight = false;
   String? _hoveredTabId;
   bool _groupHovered = false;
-  final Set<String> _enteringIds = <String>{};
   final Set<String> _closingIds = <String>{};
   final Map<String, Timer> _closeTimers = <String, Timer>{};
   final Map<String, bool> _truncated = <String, bool>{};
@@ -223,8 +221,6 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
 
   Timer? _doubleTapTimer;
   String? _pendingTapTabId;
-
-  double? _pendingAddAnchorX;
 
   OverlayEntry? _popupEntry;
   _PopupKind? _popupKind;
@@ -247,16 +243,8 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
     super.didUpdateWidget(oldWidget);
     _syncTabKeys();
 
-    final oldIds = oldWidget.tabs.map((tab) => tab.id).toSet();
     final newIds = widget.tabs.map((tab) => tab.id).toSet();
-    for (final id in newIds.difference(oldIds)) {
-      _enteringIds.add(id);
-    }
-    _enteringIds.removeWhere((id) => !newIds.contains(id));
     _closingIds.removeWhere((id) => !newIds.contains(id));
-    if (widget.tabs.length < oldWidget.tabs.length) {
-      _pendingAddAnchorX = null;
-    }
     if ((_popupKind == _PopupKind.groupMenu &&
             (!_listEquals(widget.groups, oldWidget.groups) ||
                 widget.activeGroupId != oldWidget.activeGroupId)) ||
@@ -271,12 +259,6 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         _ensureActiveVisible();
-      });
-    }
-    if (_pendingAddAnchorX != null &&
-        widget.tabs.length > oldWidget.tabs.length) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _settleAddAnchor();
       });
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -390,24 +372,6 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
     if (target == null) return;
     _scroll.jumpTo(
       target
-          .clamp(position.minScrollExtent, position.maxScrollExtent)
-          .toDouble(),
-    );
-  }
-
-  void _settleAddAnchor() {
-    final anchor = _pendingAddAnchorX;
-    _pendingAddAnchorX = null;
-    if (anchor == null || !_scroll.hasClients) return;
-    final addBox =
-        _addButtonKey.currentContext?.findRenderObject() as RenderBox?;
-    if (addBox == null) return;
-    final current = addBox.localToGlobal(Offset.zero).dx;
-    final delta = current - anchor;
-    if (delta.abs() < 0.5) return;
-    final position = _scroll.position;
-    _scroll.jumpTo(
-      (position.pixels + delta)
           .clamp(position.minScrollExtent, position.maxScrollExtent)
           .toDouble(),
     );
@@ -874,10 +838,8 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
                   height: theme.chromeTabHeight,
                   child: Center(
                     child: _AddButton(
-                      key: _addButtonKey,
                       theme: theme,
                       messages: _messages(context),
-                      onPointerDown: _handleAddPointerDown,
                       onTap: () {
                         _closeAllMenus();
                         widget.onTabAdd?.call();
@@ -890,15 +852,8 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
           )
         : null;
     final contentWidth = tabLeft + trailingWidth;
-
-    // While a tab is entering, keep the strip reflow on screen for as long as
-    // the entrance. Otherwise the bounds motion would finish well before the
-    // fade and the insert would read as faster than a close.
-    final layoutDuration =
-        _enteringIds.isEmpty ||
-            theme.chromeTabEnterDuration <= theme.chromeTabLayoutDuration
-        ? theme.chromeTabLayoutDuration
-        : theme.chromeTabEnterDuration;
+    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    const reducedDuration = Duration(milliseconds: 1);
 
     final layout = _ChromeTabBoundsLayout(
       bounds: tabBounds,
@@ -909,9 +864,10 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
       trailingLeft: tabLeft,
       trailingWidth: trailingWidth,
       animation: widget.layoutAnimation,
-      duration: layoutDuration,
-      curve: _enteringIds.isEmpty ? Curves.easeOut : Curves.easeInOut,
-      keepTrailingAnchored: _pendingAddAnchorX != null,
+      duration: reduceMotion ? reducedDuration : theme.chromeTabLayoutDuration,
+      insertDuration: reduceMotion
+          ? reducedDuration
+          : theme.chromeTabEnterDuration,
     );
 
     return Listener(
@@ -1046,7 +1002,6 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
     final active = tab.id == widget.activeTabId;
     final hovered = tab.id == _hoveredTabId;
     final closing = _closingIds.contains(tab.id);
-    final entering = _enteringIds.contains(tab.id);
     final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     final textColor = active
         ? theme.chromeTabActiveTextColor
@@ -1055,127 +1010,138 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
         tab.backgroundColor ?? theme.chromeTabActiveBackground;
     final icon = widget.renderTabIcon?.call(tab) ?? tab.icon;
 
-    final surface = Stack(
-      clipBehavior: Clip.none,
-      children: <Widget>[
-        if (active)
-          Positioned.fill(
-            child: CustomPaint(
-              painter: _ActiveTabBackgroundPainter(
-                color: activeBackground,
-                radius: theme.chromeTabRadius + 2,
-                hideBottomLine: widget.hideActiveTabBottomLine,
+    final surface = LayoutBuilder(
+      builder: (context, constraints) {
+        final currentWidth = constraints.maxWidth;
+        final contentWidth = math.max(0.0, currentWidth - 20);
+        // Chromium hides content that no longer fits while the tab is
+        // expanding from its insert sliver.
+        final showIcon = icon != null && contentWidth >= _iconSize + _iconGap;
+        final showClose = hovered && currentWidth >= _closeButtonSize + 8;
+        return Stack(
+          clipBehavior: Clip.none,
+          children: <Widget>[
+            if (active)
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: _ActiveTabBackgroundPainter(
+                    color: activeBackground,
+                    radius: theme.chromeTabRadius + 2,
+                    hideBottomLine: widget.hideActiveTabBottomLine,
+                  ),
+                ),
+              ),
+            if (!active && hovered && currentWidth > 6)
+              Positioned(
+                left: 3,
+                right: 3,
+                top: 5,
+                bottom: 5,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: theme.chromeTabHoverBackground,
+                    borderRadius: BorderRadius.circular(theme.chromeTabRadius),
+                  ),
+                ),
+              ),
+            if (currentWidth > _dividerWidth && _dividerVisible(index))
+              Positioned(
+                right: 0,
+                top: (theme.chromeTabHeight - _dividerHeight) / 2,
+                width: _dividerWidth,
+                height: _dividerHeight,
+                child: _dividerPill(theme),
+              ),
+            Positioned.fill(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Row(
+                  children: <Widget>[
+                    if (showIcon) ...<Widget>[
+                      SizedBox(
+                        width: _iconSize,
+                        height: _iconSize,
+                        child: IconTheme(
+                          data: IconThemeData(
+                            color: textColor,
+                            size: _iconSize,
+                          ),
+                          child: icon,
+                        ),
+                      ),
+                      const SizedBox(width: _iconGap),
+                    ],
+                    Expanded(
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final closeReserve = showClose
+                              ? math.min(_closeButtonSize, constraints.maxWidth)
+                              : 0.0;
+                          return Padding(
+                            padding: EdgeInsetsDirectional.only(
+                              end: closeReserve,
+                            ),
+                            child: _ChromiumFadeText(
+                              key: ValueKey<String>(
+                                'semi-chrome-tab-title-${tab.id}',
+                              ),
+                              title: tab.title,
+                              style: TextStyle(
+                                fontSize: theme.chromeTabsFontSize,
+                                color: textColor,
+                              ),
+                              textDirection: Directionality.of(context),
+                              enabled: true,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        if (!active && hovered)
-          Positioned(
-            left: 3,
-            right: 3,
-            top: 5,
-            bottom: 5,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: theme.chromeTabHoverBackground,
-                borderRadius: BorderRadius.circular(theme.chromeTabRadius),
-              ),
-            ),
-          ),
-        if (_dividerVisible(index))
-          Positioned(
-            right: 0,
-            top: (theme.chromeTabHeight - _dividerHeight) / 2,
-            width: _dividerWidth,
-            height: _dividerHeight,
-            child: _dividerPill(theme),
-          ),
-        Positioned(
-          left: 4,
-          right: 4,
-          top: 0,
-          bottom: 0,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: Row(
-              children: <Widget>[
-                if (icon != null) ...<Widget>[
-                  SizedBox(
-                    width: _iconSize,
-                    height: _iconSize,
-                    child: IconTheme(
-                      data: IconThemeData(color: textColor, size: _iconSize),
-                      child: icon,
+            Positioned(
+              right: 4,
+              top: (theme.chromeTabHeight - _closeButtonSize) / 2,
+              child: IgnorePointer(
+                ignoring: !showClose,
+                child: Opacity(
+                  opacity: showClose ? 1 : 0,
+                  child: Semantics(
+                    button: true,
+                    label: '${_messages(context).close} ${tab.title}',
+                    child: _CloseButton(
+                      key: ValueKey<String>('semi-chrome-tab-close-${tab.id}'),
+                      theme: theme,
+                      color: theme.chromeTabTextColor,
+                      onTap: () => _requestClose(tab),
                     ),
                   ),
-                  const SizedBox(width: _iconGap),
-                ],
-                Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final closeReserve = hovered
-                          ? math.min(_closeButtonSize, constraints.maxWidth)
-                          : 0.0;
-                      return Padding(
-                        padding: EdgeInsetsDirectional.only(end: closeReserve),
-                        child: _ChromiumFadeText(
-                          key: ValueKey<String>(
-                            'semi-chrome-tab-title-${tab.id}',
-                          ),
-                          title: tab.title,
-                          style: TextStyle(
-                            fontSize: theme.chromeTabsFontSize,
-                            color: textColor,
-                          ),
-                          textDirection: Directionality.of(context),
-                          enabled: true,
-                        ),
-                      );
-                    },
+                ),
+              ),
+            ),
+            if (_dropTargetId == tab.id)
+              Positioned(
+                left: _dropPosition == SemiChromeTabReorderPosition.before
+                    ? 0
+                    : null,
+                right: _dropPosition == SemiChromeTabReorderPosition.after
+                    ? 0
+                    : null,
+                top: 5,
+                bottom: 5,
+                width: 2,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: theme.chromeTabsAccentColor,
+                    borderRadius: BorderRadius.circular(1),
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
-        Positioned(
-          right: 4,
-          top: (theme.chromeTabHeight - _closeButtonSize) / 2,
-          child: IgnorePointer(
-            ignoring: !hovered,
-            child: Opacity(
-              opacity: hovered ? 1 : 0,
-              child: Semantics(
-                button: true,
-                label: '${_messages(context).close} ${tab.title}',
-                child: _CloseButton(
-                  key: ValueKey<String>('semi-chrome-tab-close-${tab.id}'),
-                  theme: theme,
-                  color: theme.chromeTabTextColor,
-                  onTap: () => _requestClose(tab),
-                ),
               ),
-            ),
-          ),
-        ),
-        if (_dropTargetId == tab.id)
-          Positioned(
-            left: _dropPosition == SemiChromeTabReorderPosition.before
-                ? 0
-                : null,
-            right: _dropPosition == SemiChromeTabReorderPosition.after
-                ? 0
-                : null,
-            top: 5,
-            bottom: 5,
-            width: 2,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: theme.chromeTabsAccentColor,
-                borderRadius: BorderRadius.circular(1),
-              ),
-            ),
-          ),
-      ],
+          ],
+        );
+      },
     );
 
     Widget tabContent = surface;
@@ -1189,24 +1155,6 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
         child: tabContent,
         builder: (context, value, child) => Opacity(
           key: ValueKey<String>('semi-chrome-tab-closing-${tab.id}'),
-          opacity: value,
-          child: Transform.scale(scaleX: 0.88 + 0.12 * value, child: child),
-        ),
-      );
-    } else if (entering) {
-      tabContent = TweenAnimationBuilder<double>(
-        tween: Tween<double>(begin: 0, end: 1),
-        duration: reduceMotion
-            ? const Duration(milliseconds: 1)
-            : theme.chromeTabEnterDuration,
-        curve: Curves.easeInOut,
-        onEnd: () {
-          if (!mounted) return;
-          if (_enteringIds.remove(tab.id)) setState(() {});
-        },
-        child: tabContent,
-        builder: (context, value, child) => Opacity(
-          key: ValueKey<String>('semi-chrome-tab-entering-${tab.id}'),
           opacity: value,
           child: Transform.scale(scaleX: 0.88 + 0.12 * value, child: child),
         ),
@@ -1379,13 +1327,6 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
       ),
     );
   }
-
-  void _handleAddPointerDown() {
-    if (widget.tabs.length < 5) return;
-    final box = _addButtonKey.currentContext?.findRenderObject() as RenderBox?;
-    if (box == null) return;
-    _pendingAddAnchorX = box.localToGlobal(Offset.zero).dx;
-  }
 }
 
 // -----------------------------------------------------------------------------
@@ -1409,8 +1350,7 @@ class _ChromeTabBoundsLayout extends StatefulWidget {
     required this.trailingWidth,
     required this.animation,
     required this.duration,
-    required this.curve,
-    required this.keepTrailingAnchored,
+    required this.insertDuration,
   });
 
   final Map<String, Rect> bounds;
@@ -1422,8 +1362,7 @@ class _ChromeTabBoundsLayout extends StatefulWidget {
   final double trailingWidth;
   final SemiChromeTabLayoutAnimation animation;
   final Duration duration;
-  final Curve curve;
-  final bool keepTrailingAnchored;
+  final Duration insertDuration;
 
   @override
   State<_ChromeTabBoundsLayout> createState() => _ChromeTabBoundsLayoutState();
@@ -1465,21 +1404,24 @@ class _ChromeTabBoundsLayoutState extends State<_ChromeTabBoundsLayout>
   @override
   void didUpdateWidget(covariant _ChromeTabBoundsLayout oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (_controller.duration != widget.duration) {
-      _controller.duration = widget.duration;
+
+    // Chromium starts an inserted tab at the width of the tab overlap and
+    // animates it together with the strip; use the enter duration for that
+    // first pass and the regular layout duration afterwards.
+    final inserting = widget.bounds.keys.any(
+      (id) => !_toBounds.containsKey(id),
+    );
+    final duration = inserting ? widget.insertDuration : widget.duration;
+    if (_controller.duration != duration) {
+      _controller.duration = duration;
     }
 
     final targetChanged = !_sameBounds(_toBounds, widget.bounds);
     final targetTrailing = _targetTrailing;
     final trailingChanged = !_sameRect(_toTrailing, targetTrailing);
     final modeChanged = _lastAnimation != widget.animation;
-    final trailingAnchorChanged =
-        oldWidget.keepTrailingAnchored != widget.keepTrailingAnchored;
     _lastAnimation = widget.animation;
-    if (!targetChanged &&
-        !trailingChanged &&
-        !modeChanged &&
-        !trailingAnchorChanged) {
+    if (!targetChanged && !trailingChanged && !modeChanged) {
       return;
     }
 
@@ -1494,15 +1436,10 @@ class _ChromeTabBoundsLayoutState extends State<_ChromeTabBoundsLayout>
 
     final currentBounds = _currentBounds;
     final currentTrailing = _currentTrailing;
-    _fromBounds = <String, Rect>{
-      for (final entry in widget.bounds.entries)
-        entry.key: currentBounds[entry.key] ?? entry.value,
-    };
+    _fromBounds = _boundsWithInsertOrigins(widget.bounds, currentBounds);
     _toBounds = Map<String, Rect>.from(widget.bounds);
     _fromTrailing = targetTrailing == null
         ? null
-        : widget.keepTrailingAnchored
-        ? targetTrailing
         : currentTrailing ?? targetTrailing;
     _toTrailing = targetTrailing;
 
@@ -1526,11 +1463,49 @@ class _ChromeTabBoundsLayoutState extends State<_ChromeTabBoundsLayout>
     if (mounted) setState(() {});
   }
 
+  /// Mirrors Chromium's `TabContainer::StartInsertTabAnimation`: a new tab
+  /// starts as a zero-width sliver joined to the previous tab's current right
+  /// edge (or the next tab's left edge for a leading insert), so it expands in
+  /// lockstep with its neighbors and the add slot instead of fading in.
+  static Map<String, Rect> _boundsWithInsertOrigins(
+    Map<String, Rect> targets,
+    Map<String, Rect> current,
+  ) {
+    final ids = targets.keys.toList(growable: false);
+    final origins = <String, Rect>{};
+    Rect? previous;
+    for (var i = 0; i < ids.length; i++) {
+      final id = ids[i];
+      final target = targets[id]!;
+      final existing = current[id];
+      final Rect origin;
+      if (existing != null) {
+        origin = existing;
+      } else {
+        double startX;
+        if (previous != null) {
+          startX = previous.right;
+        } else {
+          Rect? next;
+          for (var j = i + 1; j < ids.length; j++) {
+            next = current[ids[j]];
+            if (next != null) break;
+          }
+          startX = next?.left ?? target.left;
+        }
+        origin = Rect.fromLTWH(startX, target.top, 0, target.height);
+      }
+      origins[id] = origin;
+      previous = origin;
+    }
+    return origins;
+  }
+
   Map<String, Rect> get _currentBounds {
     if (widget.animation == SemiChromeTabLayoutAnimation.immediate) {
       return Map<String, Rect>.from(_toBounds);
     }
-    final value = widget.curve.transform(_controller.value);
+    final value = Curves.easeOut.transform(_controller.value);
     return <String, Rect>{
       for (final entry in _toBounds.entries)
         entry.key: Rect.lerp(
@@ -1547,7 +1522,7 @@ class _ChromeTabBoundsLayoutState extends State<_ChromeTabBoundsLayout>
         _fromTrailing == null) {
       return _toTrailing;
     }
-    final value = widget.curve.transform(_controller.value);
+    final value = Curves.easeOut.transform(_controller.value);
     return Rect.lerp(_fromTrailing, _toTrailing, value);
   }
 
@@ -2039,16 +2014,13 @@ class _ScrollButtonState extends State<_ScrollButton> {
 
 class _AddButton extends StatefulWidget {
   const _AddButton({
-    super.key,
     required this.theme,
     required this.messages,
-    required this.onPointerDown,
     required this.onTap,
   });
 
   final SemiResolvedChromeTabThemeData theme;
   final _ChromeTabMessages messages;
-  final VoidCallback onPointerDown;
   final VoidCallback onTap;
 
   @override
@@ -2068,18 +2040,15 @@ class _AddButtonState extends State<_AddButton> {
         cursor: SystemMouseCursors.click,
         onEnter: (_) => setState(() => _hovered = true),
         onExit: (_) => setState(() => _hovered = false),
-        child: Listener(
-          onPointerDown: (_) => widget.onPointerDown(),
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            excludeFromSemantics: true,
-            onTap: widget.onTap,
-            child: CustomPaint(
-              size: const Size.square(_SemiChromeTabState._addButtonSize),
-              painter: SemiChromeTabAddButtonPainter(
-                color: widget.theme.chromeTabTextColor,
-                hovered: _hovered,
-              ),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          excludeFromSemantics: true,
+          onTap: widget.onTap,
+          child: CustomPaint(
+            size: const Size.square(_SemiChromeTabState._addButtonSize),
+            painter: SemiChromeTabAddButtonPainter(
+              color: widget.theme.chromeTabTextColor,
+              hovered: _hovered,
             ),
           ),
         ),
