@@ -12,6 +12,7 @@ import 'semi_tooltip_theme_data.dart';
 import 'semi_collapse_theme_data.dart';
 import 'semi_collapsible_theme_data.dart';
 import 'semi_dropdown_theme_data.dart';
+import 'semi_context_menu_theme_data.dart';
 import 'semi_button_theme_data.dart';
 import 'semi_card_theme_data.dart';
 import 'semi_typography_theme_data.dart';
@@ -77,6 +78,7 @@ class SemiComponentThemes {
     this.collapse = const SemiCollapseThemeData(),
     this.collapsible = const SemiCollapsibleThemeData(),
     this.dropdown = const SemiDropdownThemeData(),
+    this.contextMenu = const SemiContextMenuThemeData(),
     this.button = const SemiButtonThemeData(),
     this.card = const SemiCardThemeData(),
     this.checkbox = const SemiCheckboxThemeData(),
@@ -138,6 +140,7 @@ class SemiComponentThemes {
   final SemiCollapseThemeData collapse;
   final SemiCollapsibleThemeData collapsible;
   final SemiDropdownThemeData dropdown;
+  final SemiContextMenuThemeData contextMenu;
   final SemiButtonThemeData button;
   final SemiCardThemeData card;
   final SemiCheckboxThemeData checkbox;
@@ -202,6 +205,7 @@ class SemiComponentThemes {
     SemiCollapseThemeData? collapse,
     SemiCollapsibleThemeData? collapsible,
     SemiDropdownThemeData? dropdown,
+    SemiContextMenuThemeData? contextMenu,
     SemiButtonThemeData? button,
     SemiCardThemeData? card,
     SemiCheckboxThemeData? checkbox,
@@ -263,6 +267,7 @@ class SemiComponentThemes {
     collapse: collapse ?? this.collapse,
     collapsible: collapsible ?? this.collapsible,
     dropdown: dropdown ?? this.dropdown,
+    contextMenu: contextMenu ?? this.contextMenu,
     button: button ?? this.button,
     card: card ?? this.card,
     checkbox: checkbox ?? this.checkbox,
@@ -328,6 +333,7 @@ class SemiComponentThemes {
           collapse == other.collapse &&
           collapsible == other.collapsible &&
           dropdown == other.dropdown &&
+          contextMenu == other.contextMenu &&
           button == other.button &&
           card == other.card &&
           checkbox == other.checkbox &&
@@ -390,6 +396,7 @@ class SemiComponentThemes {
     collapse,
     collapsible,
     dropdown,
+    contextMenu,
     button,
     card,
     checkbox,

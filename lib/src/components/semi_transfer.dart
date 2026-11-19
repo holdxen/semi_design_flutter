@@ -5,9 +5,11 @@
 // packages/semi-ui/transfer/index.tsx、locale/source/zh_CN.ts:161-171。主题对账
 // 50 = 47 FIELDS + 3 MOTION + 0 INTERNAL（tool/generate_transfer.py）——2 条死
 // FIELDS（上游未消费）本文件不得出现其字段名（test_generate_transfer.py 断言）；
-// 2 条拖拽字段「本移植未消费（draggable 延期）」；3 条 MOTION 是活字段（★与
-// timePicker 死 animation.scss 相反——transfer.scss:1 `@import "./animation.scss"`
-// + :81 消费，0ms/ease-in/0ms 视觉无动画）。
+// 拖拽 FIELDS：`$spacing-transfer_right_item_drag_handler-marginRight` 已消费
+//（handler 右外边距）、`$z-transfer_right_item_drag_item_move` 留档不消费（CSS
+// z-order 无 Flutter 对应——克隆层为根 Stack 尾位子天然置顶）；3 条 MOTION 是
+// 活字段（★与 timePicker 死 animation.scss 相反——transfer.scss:1
+// `@import "./animation.scss"` + :81 消费，0ms/ease-in/0ms 视觉无动画）。
 //
 // HARDCODES（另列）上游片段以注释逐字留档在 `_TransferMetrics` / 调用点，
 // 生成器 HARDCODES 锚点断言这些片段出现在本文件。
@@ -154,6 +156,15 @@ typedef SemiTransferChanged = void Function(
   List<SemiTransferItem> items,
 );
 
+/// 拖拽手柄包装（上游 `_sortable` 的 `sortableHandle`）：把 [child]（手柄图标）
+/// 包上拖拽监听；拖拽克隆层里为恒等包装（DragOverlay 的
+/// `sortableHandle: (WrapperComponent) => WrapperComponent`，_sortable/index.tsx:172）。
+typedef SemiTransferSortableHandle = Widget Function(Widget child);
+
+/// 拖拽排序回调（上游 `OnSortEnd = ({oldIndex, newIndex}) => void`，_sortable/
+/// index.tsx:38-42）：两个索引都是**原序**下标。
+typedef SemiTransferSortEnd = void Function(int oldIndex, int newIndex);
+
 /// `renderSourceHeader` 入参（上游 `SourceHeaderProps` 的 list/groupList 子集；
 /// `leafOnlyNum` 为 treeList 专用随 treeList 延期）。
 class SemiTransferHeaderProps {
@@ -180,8 +191,7 @@ class SemiTransferHeaderProps {
   final VoidCallback onAllClick;
 }
 
-/// `renderSelectedHeader` 入参（上游 `SelectedHeaderProps`；`onSortEnd` 随
-/// draggable 延期）。
+/// `renderSelectedHeader` 入参（上游 `SelectedHeaderProps`）。
 class SemiTransferSelectedHeaderProps {
   const SemiTransferSelectedHeaderProps({
     required this.num,
@@ -246,20 +256,27 @@ class SemiTransferSourcePanelProps {
   final ValueChanged<List<Object>>? onSelect;
 }
 
-/// `renderSelectedPanel` 入参（上游 `SelectedPanelProps`；`onSortEnd` 随
-/// draggable 延期）。
+/// `renderSelectedPanel` 入参（上游 `SelectedPanelProps`）。
 class SemiTransferSelectedPanelProps {
   const SemiTransferSelectedPanelProps({
     required this.length,
     required this.selectedData,
     required this.onClear,
     required this.onRemove,
+    required this.onSortEnd,
   });
 
   final int length;
   final List<SemiTransferItem> selectedData;
   final VoidCallback onClear;
   final ValueChanged<SemiTransferItem> onRemove;
+
+  /// 重排回调（上游 `onSortEnd`，index.tsx:828 `onSortEnd: props =>
+  /// this.onSortEnd(props)`）：走 foundation.ts:256-266 `handleSortEnd` 的
+  /// arrayMove + `_notifyChange` 恰一次。★此路径**无** `activeIndex !==
+  /// overIndex` 门（门在 `_sortable.onDragEnd`）——自定义面板原位调用也照发；
+  /// 越界 `oldIndex` no-op（上游 JS 会插 `undefined` 崩溃，加护栏）。
+  final SemiTransferSortEnd onSortEnd;
 }
 
 /// Imperative handle（上游 ref 方法 `search`；semi_date_picker.dart:84-117
@@ -306,6 +323,7 @@ class SemiTransfer extends StatefulWidget {
     this.onChanged,
     this.disabled = false,
     this.loading = false,
+    this.draggable = false,
     this.emptyLeft,
     this.emptyRight,
     this.emptySearch,
@@ -333,6 +351,13 @@ class SemiTransfer extends StatefulWidget {
 
   /// 条目行 key（左右栏同 key，不同 parent 不冲突）。
   static Key itemKey(Object key) => Key('SemiTransfer.item.$key');
+
+  /// 右栏拖拽手柄 key（[draggable] 时每个选中条目一个，含自定义
+  /// [renderSelectedItem] 里的 `sortableHandle` 包装）。
+  static Key dragHandleKey(Object key) => Key('SemiTransfer.handle.$key');
+
+  /// 拖拽克隆行 key（[draggable] 拖拽中跟随指针的行克隆，DragOverlay 语义）。
+  static Key overlayItemKey(Object key) => Key('SemiTransfer.overlay.$key');
 
   /// [SemiTransferType.list] 时 `List<SemiTransferItem>`、
   /// [SemiTransferType.groupList] 时 `List<SemiTransferGroup>`。
@@ -365,6 +390,12 @@ class SemiTransfer extends StatefulWidget {
   final bool disabled;
   final bool loading;
 
+  /// 右栏拖拽排序（上游 `draggable`）：每行行首显示拖拽手柄（IconHandle），
+  /// 手柄拖起重排选中序并在落点发一次 [onChanged]（foundation.ts:256-266
+  /// `handleSortEnd`）。★上游 [disabled] **不**拦截拖拽（handleSortEnd 无
+  /// disabled 门、手柄照显——差异清单 quirk 照搬）。
+  final bool draggable;
+
   /// 空态文案（缺省 zh 硬编码）：左栏空 / 右栏空 / 搜索无结果。
   final Widget? emptyLeft;
   final Widget? emptyRight;
@@ -379,11 +410,15 @@ class SemiTransfer extends StatefulWidget {
   )?
   renderSourceItem;
 
-  /// 右栏条目渲染槽（整行替换）。
+  /// 右栏条目渲染槽（整行替换；上游 `renderSelectedItem(RenderSelectedItemProps)`）。
+  /// 第 4 参 [SemiTransferSortableHandle] 对应上游 `sortableHandle`：[draggable]
+  /// 时非空，把手柄 child 包上拖拽监听后放进自定义行（缺省行为 = 行首手柄）；
+  /// 非 [draggable] 时为 null。
   final Widget Function(
     BuildContext context,
     SemiTransferItem item,
     VoidCallback onRemove,
+    SemiTransferSortableHandle? sortableHandle,
   )?
   renderSelectedItem;
 
@@ -449,6 +484,15 @@ class _SemiTransferState extends State<SemiTransfer> {
   Set<Object> _searchResult = <Object>{};
   int _leftCurrentPage = 1;
   late final TextEditingController _inputController = TextEditingController();
+
+  // -- drag sort 状态（上游 _sortable Sortable 的 activeId / overId / overlay）--
+  // 索引均为 `_selected` 原序下标（upstream items 数组序——拖拽过程不改 items）。
+  final Map<Object, GlobalKey> _rowKeys = <Object, GlobalKey>{};
+  final GlobalKey _stackKey = GlobalKey();
+  int? _dragIndex;
+  int _dropIndex = -1;
+  Offset _grabDelta = Offset.zero;
+  Offset? _overlayOffset;
 
   bool get _isControlled => widget.value != null;
 
@@ -877,6 +921,138 @@ class _SemiTransferState extends State<SemiTransfer> {
     ], next.values.toList());
   }
 
+  // -- drag sort（upstream _sortable Sortable / foundation handleSortEnd）------
+
+  /// 拖拽手柄包装（上游 `sortableHandle` 的 span+listeners，_sortable/index.tsx:204-221）：
+  /// 只包指针监听——`cursor: move`/margin 在缺省手柄图标上（transfer.scss:181-183，
+  /// 类在 IconHandle 上），自定义行自己决定手柄长相。
+  SemiTransferSortableHandle _sortableHandle(SemiTransferItem item, int index) {
+    return (child) => Listener(
+      key: SemiTransfer.dragHandleKey(item.key),
+      behavior: HitTestBehavior.opaque,
+      onPointerDown: (e) => _startDrag(index, e.position),
+      onPointerMove: (e) {
+        if (e.down) _moveDrag(e.position);
+      },
+      onPointerUp: (_) => _endDrag(),
+      onPointerCancel: (_) => _cancelDrag(),
+      child: child,
+    );
+  }
+
+  void _startDrag(int index, Offset globalPos) {
+    // ★上游 handleSortEnd 无 disabled 门（foundation.ts:256）——disabled 仍可拖排。
+    if (!widget.draggable) return;
+    final keys = _selected.keys.toList();
+    if (index < 0 || index >= keys.length) return;
+    final box =
+        _rowKeys[keys[index]]?.currentContext?.findRenderObject() as RenderBox?;
+    _grabDelta = box != null && box.attached
+        ? box.globalToLocal(globalPos)
+        : Offset.zero;
+    setState(() {
+      _dragIndex = index;
+      _dropIndex = index;
+      _updateOverlay(globalPos);
+    });
+  }
+
+  void _moveDrag(Offset globalPos) {
+    if (_dragIndex == null) return;
+    setState(() {
+      _updateOverlay(globalPos);
+      final keys = _selected.keys.toList();
+      final dragKey = keys[_dragIndex!];
+      final dragBox =
+          _rowKeys[dragKey]?.currentContext?.findRenderObject() as RenderBox?;
+      if (dragBox != null && dragBox.attached) {
+        final dragRect = dragBox.localToGlobal(Offset.zero) & dragBox.size;
+        // ★指针在拖拽源行（= 洞位）上：落点不变——原位拖拽不发 onChanged
+        //（上游 over === active 语义），且实时重排下洞随指针不回跳振荡。
+        if (dragRect.inflate(_TransferMetrics.dropSlop).contains(globalPos)) {
+          return;
+        }
+      }
+      // 落点按行矩形就近计算（tagInput 先例）；拖拽源行不参与候选。
+      Object? bestKey;
+      var bestDist = double.infinity;
+      for (final entry in _rowKeys.entries) {
+        if (entry.key == dragKey) continue;
+        final box =
+            entry.value.currentContext?.findRenderObject() as RenderBox?;
+        if (box == null || !box.attached) continue;
+        final rect = box.localToGlobal(Offset.zero) & box.size;
+        if (rect.inflate(_TransferMetrics.dropSlop).contains(globalPos)) {
+          bestKey = entry.key;
+          break;
+        }
+        final dist = (rect.center - globalPos).distance;
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestKey = entry.key;
+        }
+      }
+      if (bestKey != null) {
+        final to = keys.indexOf(bestKey);
+        if (to >= 0) _dropIndex = to;
+      }
+    });
+  }
+
+  void _updateOverlay(Offset globalPos) {
+    final stackBox = _stackKey.currentContext?.findRenderObject() as RenderBox?;
+    if (stackBox == null || !stackBox.attached) return;
+    _overlayOffset = stackBox.globalToLocal(globalPos) - _grabDelta;
+  }
+
+  void _endDrag() {
+    final from = _dragIndex;
+    final to = _dropIndex;
+    Map<Object, SemiTransferItem>? next;
+    // ★上游 `_sortable.onDragEnd`（index.tsx:122-130）：仅 `activeIndex !==
+    // overIndex` 时发 onSortEnd——落点恰一次 onChanged(reordered)，原位放下不发
+    //（无 onSort、不涉 onSelect/onDeselect）。
+    if (from != null && to >= 0 && to != from) {
+      next = _reordered(from, to);
+    }
+    setState(() {
+      _dragIndex = null;
+      _dropIndex = -1;
+      _overlayOffset = null;
+    });
+    if (next != null) _commit(next);
+  }
+
+  void _cancelDrag() {
+    setState(() {
+      _dragIndex = null;
+      _dropIndex = -1;
+      _overlayOffset = null;
+    });
+  }
+
+  /// foundation.ts:256-266 `handleSortEnd`：arrayMove 重排选中 Map（保插入序）
+  /// + `_notifyChange` 恰一次。供拖拽落点与 [SemiTransferSelectedPanelProps.
+  /// onSortEnd] 共用（index.tsx:385-387 `onSortEnd → foundation.handleSortEnd`）。
+  void _handleSortEnd(int oldIndex, int newIndex) {
+    if (oldIndex < 0 || oldIndex >= _selected.length) return;
+    _commit(_reordered(oldIndex, newIndex));
+  }
+
+  Map<Object, SemiTransferItem> _reordered(int from, int to) {
+    final moved = _arrayMove(_selected.entries.toList(), from, to);
+    return {for (final entry in moved) entry.key: entry.value};
+  }
+
+  /// 上游 utils/arrayMove（@dnd-kit/utilities）：从 `from` 摘出、插入到**缩短后**
+  /// 数组的 `to` 位（tagInput 先例 semi_tag_input.dart:688-693 同款）。
+  static List<T> _arrayMove<T>(List<T> array, int from, int to) {
+    final copy = [...array];
+    final insertAt = to < 0 ? copy.length + to : to;
+    copy.insert(insertAt.clamp(0, copy.length), copy.removeAt(from));
+    return copy;
+  }
+
   // -- build ----------------------------------------------------------------
 
   @override
@@ -919,9 +1095,26 @@ class _SemiTransferState extends State<SemiTransfer> {
             ),
       child: body,
     );
+    final stackChildren = <Widget>[
+      body,
+      if (_dragIndex != null && _overlayOffset != null)
+        // `-right-item-drag-item-move`（transfer.scss:186-188）——`z-index:
+        // $z-transfer_right_item_drag_item_move` 的 CSS z-order 无 Flutter 对应：
+        // 克隆层为根 Stack 尾位子（天然置顶），字段留档不消费（tagInput 先例）。
+        // DragOverlay 语义 = 1:1 跟随指针的行克隆（_sortable/index.tsx:160-178）。
+        Positioned(
+          left: _overlayOffset!.dx,
+          top: _overlayOffset!.dy,
+          child: IgnorePointer(child: _buildDragOverlay(t)),
+        ),
+    ];
     return KeyedSubtree(
       key: SemiTransfer.rootKey,
-      child: Semantics(container: true, enabled: !widget.disabled, child: body),
+      child: Semantics(
+        container: true,
+        enabled: !widget.disabled,
+        child: Stack(key: _stackKey, children: stackChildren),
+      ),
     );
   }
 
@@ -1324,6 +1517,7 @@ class _SemiTransferState extends State<SemiTransfer> {
     final displayData = [
       for (final item in selectedData) _withPathLabel(_withFullPath(item)),
     ];
+    final order = _displayOrder(selectedData.length);
     final hasValidSelected = selectedData.any((item) => !item.disabled);
     final header = _buildHeader(
       t,
@@ -1337,7 +1531,7 @@ class _SemiTransferState extends State<SemiTransfer> {
     );
     final children = <Widget>[header];
     if (selectedData.isNotEmpty) {
-      children.add(Expanded(child: _buildRightList(t, displayData)));
+      children.add(Expanded(child: _buildRightList(t, displayData, order)));
     }
     return KeyedSubtree(
       key: SemiTransfer.rightPanelKey,
@@ -1393,39 +1587,113 @@ class _SemiTransferState extends State<SemiTransfer> {
     );
   }
 
+  /// 拖拽中的显示序 = `arrayMove` 后的原序下标（拖拽源行落洞位、`opacity: 0`
+  /// 占位）——上游 active 原位隐形 + dnd-kit transform 平移其余行的视觉等价
+  ///（洞随指针，_sortable/index.tsx:231-240 `wrapperStyle`）。
+  List<int> _displayOrder(int length) {
+    final from = _dragIndex;
+    final to = _dropIndex;
+    if (from == null || to < 0 || from == to) {
+      return [for (var i = 0; i < length; i++) i];
+    }
+    return _arrayMove([for (var i = 0; i < length; i++) i], from, to);
+  }
+
   Widget _buildRightList(
     SemiResolvedTransferThemeData t,
     List<SemiTransferItem> selectedData,
+    List<int> order,
   ) {
     return ListView.builder(
       key: SemiTransfer.rightListKey,
       padding: EdgeInsets.zero,
-      itemCount: selectedData.length,
-      itemBuilder: (context, index) =>
-          _buildSelectedRow(t, selectedData[index]),
+      itemCount: order.length,
+      // 拖拽实时重排寻位（scroll_delegate.dart `findChildIndexCallback` 契约）：
+      // GlobalKey → 当前显示序下标，行元素跨槽移动不重建（否则指针路由断链）。
+      findChildIndexCallback: (key) {
+        for (final entry in _rowKeys.entries) {
+          if (entry.value == key) {
+            final origIndex = _selected.keys.toList().indexOf(entry.key);
+            return origIndex == -1 ? null : order.indexOf(origIndex);
+          }
+        }
+        return null;
+      },
+      itemBuilder: (context, index) {
+        final origIndex = order[index];
+        return _buildSelectedRow(t, selectedData[origIndex], origIndex);
+      },
+    );
+  }
+
+  /// 拖拽克隆层（DragOverlay 的 `renderItem({id, sortableHandle: identity})`，
+  /// _sortable/index.tsx:169-174）：整行克隆跟随指针，手柄为无监听的恒等包装。
+  /// 宽度取拖拽源行宽（行内 `Expanded` 需有界约束——Positioned 裸放无界）。
+  Widget _buildDragOverlay(SemiResolvedTransferThemeData t) {
+    final selectedData = _selected.values.toList();
+    final index = _dragIndex!;
+    if (index < 0 || index >= selectedData.length) {
+      return const SizedBox.shrink();
+    }
+    final item = _withPathLabel(_withFullPath(selectedData[index]));
+    final box =
+        _rowKeys[item.key]?.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.attached) return const SizedBox.shrink();
+    return SizedBox(
+      width: box.size.width,
+      child: _buildSelectedRow(t, item, index, overlay: true),
     );
   }
 
   Widget _buildSelectedRow(
     SemiResolvedTransferThemeData t,
     SemiTransferItem item,
-  ) {
+    int index, {
+    bool overlay = false,
+  }) {
+    // 上游 `sortableHandle` 只在 sortable 列表（draggable）里出现；克隆层为
+    // 恒等包装（_sortable/index.tsx:172 `WrapperComponent => WrapperComponent`）。
+    final SemiTransferSortableHandle? handle;
+    if (!widget.draggable) {
+      handle = null;
+    } else if (overlay) {
+      handle = (child) => child;
+    } else {
+      handle = _sortableHandle(item, index);
+    }
+    final key = overlay
+        ? SemiTransfer.overlayItemKey(item.key)
+        : SemiTransfer.itemKey(item.key);
+    Widget row;
     if (widget.renderSelectedItem != null) {
-      return KeyedSubtree(
-        key: SemiTransfer.itemKey(item.key),
+      row = KeyedSubtree(
+        key: key,
         child: widget.renderSelectedItem!(
           context,
           _withFullPath(item),
           () => _toggle(item),
+          handle,
         ),
       );
+    } else {
+      row = _TransferSelectedRow(
+        key: key,
+        item: item,
+        disabled: widget.disabled || item.disabled,
+        theme: t,
+        onRemove: () => _toggle(item),
+        sortableHandle: handle,
+        dragging: !overlay && _dragIndex == index,
+      );
     }
-    return _TransferSelectedRow(
-      key: SemiTransfer.itemKey(item.key),
-      item: item,
-      disabled: widget.disabled || item.disabled,
-      theme: t,
-      onRemove: () => _toggle(item),
+    // `-sortable-item-active`（transfer.scss:193 `opacity: 0;`）——拖拽源行隐形
+    // 占位，其槽即落点洞（克隆层承接视觉）。★恒包 Opacity（1/0 切换）保持子树
+    // 结构稳定——拖拽起止不重建行 State（否则指针路由断链）。
+    row = Opacity(opacity: !overlay && _dragIndex == index ? 0 : 1, child: row);
+    if (overlay) return row;
+    return KeyedSubtree(
+      key: _rowKeys.putIfAbsent(item.key, () => GlobalKey()),
+      child: row,
     );
   }
 
@@ -1516,6 +1784,7 @@ class _SemiTransferState extends State<SemiTransfer> {
         selectedData: _selected.values.toList(),
         onClear: _handleClear,
         onRemove: _toggle,
+        onSortEnd: _handleSortEnd,
       );
 }
 
@@ -1646,7 +1915,7 @@ class _TransferSourceRowState extends State<_TransferSourceRow> {
 /// 右栏条目行（`&-item &-right-item`，transfer.scss:160-196）：文字
 /// `$color-transfer_selected_item-text` + `word-break: break-all`、`cursor: auto`、
 /// hover 显 close 图标（`visibility: hidden` → `visibility: visible`，disabled
-/// 永隐）。
+/// 永隐）；[sortableHandle] 非空时行首渲染拖拽手柄（index.tsx:697-704）。
 class _TransferSelectedRow extends StatefulWidget {
   const _TransferSelectedRow({
     super.key,
@@ -1654,12 +1923,20 @@ class _TransferSelectedRow extends StatefulWidget {
     required this.disabled,
     required this.theme,
     required this.onRemove,
+    this.sortableHandle,
+    this.dragging = false,
   });
 
   final SemiTransferItem item;
   final bool disabled;
   final SemiResolvedTransferThemeData theme;
   final VoidCallback onRemove;
+
+  /// 上游 `sortableHandle`（draggable 时非空）；克隆层为恒等包装。
+  final SemiTransferSortableHandle? sortableHandle;
+
+  /// 拖拽源行（手柄 `cursor: grabbing` 近似——上游无对应）。
+  final bool dragging;
 
   @override
   State<_TransferSelectedRow> createState() => _TransferSelectedRowState();
@@ -1734,6 +2011,7 @@ class _TransferSelectedRowState extends State<_TransferSelectedRow> {
     Widget row = Row(
       // `justify-content: space-between; flex-wrap: nowrap`（:77-78）。
       children: [
+        if (widget.sortableHandle != null) _buildHandle(t, disabled),
         // `&-right-item-text { flex: 1 }`（:174-177）。
         Expanded(child: label),
         close,
@@ -1767,6 +2045,44 @@ class _TransferSelectedRowState extends State<_TransferSelectedRow> {
       child: row,
     );
     return Semantics(container: true, enabled: !disabled, child: row);
+  }
+
+  /// 拖拽手柄（上游 index.tsx:697-704 `DragHandle` = `sortableHandle(() =>
+  /// <IconHandle className="-right-item-drag-handler"/>)`）：`margin-right:
+  /// $spacing-transfer_right_item_drag_handler-marginRight` + `flex-shrink: 0`
+  /// （transfer.scss:181-182）+ `cursor: move`（:183，类在 IconHandle 上——
+  /// 自定义行用 `sortableHandle` 时自带光标）。IconHandle `width: 1em`（:698）→
+  /// 行字号 `@include font-size-regular` 14；span `lineHeight: 0`
+  /// （_sortable/index.tsx:210）无 Flutter 对应（Row 子无行盒）。aria
+  /// `role="button" aria-label="Drag and sort"` → `Semantics(button, reorder)`
+  /// （tagInput 手柄先例）。
+  Widget _buildHandle(SemiResolvedTransferThemeData t, bool disabled) {
+    return Padding(
+      // ★rtl.scss 无 handler 翻边规则——物理 margin-right 照搬（RTL 不翻转）。
+      padding: EdgeInsets.only(
+        right: t.spacingTransferRightItemDragHandlerMarginRight,
+      ),
+      child: MouseRegion(
+        cursor: widget.dragging
+            ? SystemMouseCursors.grabbing
+            : SystemMouseCursors.move,
+        child: widget.sortableHandle!(
+          Semantics(
+            button: true,
+            label: SemiLocalizations.of(context).reorder,
+            child: ExcludeSemantics(
+              child: SemiIcon(
+                SemiIcons.handle,
+                customSize: _TransferMetrics.fontSizeRegular,
+                color: disabled
+                    ? t.colorTransferDisabledText
+                    : t.colorTransferSelectedItemText,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -1821,6 +2137,9 @@ abstract final class _TransferMetrics {
   /// 的默认每页条数）。
   static const int defaultPageSize = 10;
 
+  /// 落点命中判定的行矩形贴近余量（tagInput 先例；非上游 token）。
+  static const double dropSlop = 2;
+
   // -- HARDCODES（另列）上游片段逐字留档（生成器 assertIn 锚点）--------------
   //
   // transfer.scss:22/26 `cursor: not-allowed`（整机/header/item disabled 光标）
@@ -1846,9 +2165,12 @@ abstract final class _TransferMetrics {
   // transfer.scss:81 `transition: background-color` 三字段消费见
   // `_TransferSourceRow`/`_TransferSelectedRow` 的 AnimatedContainer。
   //
-  // 拖拽延期 note-only：transfer.scss:182 `flex-shrink: 0;` / :183 `cursor: move`
-  // （拖拽 handler）、:193 `opacity: 0;`（sortable-item-active）、:8
-  // `// max-height: 412px`（根注释）——本移植未消费（draggable 延期）。
+  // 拖拽（draggable 已移植）：transfer.scss:182 `flex-shrink: 0;` / :183
+  // `cursor: move`（拖拽 handler——margin 消费
+  // `$spacing-transfer_right_item_drag_handler-marginRight`，见
+  // `_TransferSelectedRow._buildHandle`）、:193 `opacity: 0;`
+  // （sortable-item-active——拖拽源行隐形占位，见 `_buildSelectedRow`）。
+  // note-only：:8 `// max-height: 412px`（根注释——未消费留档）。
   //
   // `>.#{$prefix}-spin {`（transfer.scss:134-137 `width: 100%; flex-grow: 1`
   // 覆写——loading Spin 覆盖左栏）。

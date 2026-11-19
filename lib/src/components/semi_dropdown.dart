@@ -10,76 +10,13 @@ import '../theme/semi_icon_theme.dart';
 import '../theme/semi_theme.dart';
 import 'icon/semi_icon.dart';
 import 'icon/semi_icons.dart';
+import 'semi_menu_surface.dart';
 import 'semi_tooltip.dart';
 import 'typography/semi_text.dart';
 
-/// Upstream `strings.ITEM_TYPE` (`packages/semi-foundation/dropdown/constants.ts`).
-/// There is no default tier upstream: a null [SemiDropdownItemData.type] uses
-/// `colorDropdownItemTextDefault` (see docs/semi_dropdown.md).
-enum SemiDropdownItemType { primary, secondary, tertiary, warning, danger }
+import 'semi_menu_nodes.dart';
 
-/// One entry of a [SemiDropdown.menu] (upstream `DropDownMenuItem`).
-sealed class SemiDropdownNode {
-  const SemiDropdownNode();
-}
-
-/// A menu row (upstream `Dropdown.Item`/`dropdownItem.tsx`).
-class SemiDropdownItemData extends SemiDropdownNode {
-  const SemiDropdownItemData({
-    this.name,
-    this.icon,
-    this.active = false,
-    this.disabled = false,
-    this.type,
-    this.onTap,
-    this.showTick,
-  }) : assert(
-         name == null || name is String || name is Widget,
-         'name must be a String or a Widget',
-       );
-
-  /// Label: [String] (rendered as [SemiText]) or [Widget] placed as-is.
-  final Object? name;
-
-  /// Leading icon content; laid out at `sizeDropdownIconWidth`×
-  /// `sizeDropdownIconHeight` with `spacingDropdownIconMarginRight` gap.
-  final Widget? icon;
-
-  /// Bold checked row (upstream `active`): weight
-  /// `fontDropdownItemActiveFontWeight`; only `active` rows render the tick
-  /// and skip the hover/pressed fills (upstream `:not(.item-active)` rules).
-  final bool active;
-
-  /// No interaction, disabled colors (upstream `disabled`).
-  final bool disabled;
-
-  /// Text color tier; null keeps `colorDropdownItemTextDefault`.
-  final SemiDropdownItemType? type;
-
-  /// Row activation (upstream `onClick`).
-  final VoidCallback? onTap;
-
-  /// Per-item tick override; the group-level [SemiDropdown.showTick] wins when
-  /// non-null (upstream `contextShowTick ?? showTick`).
-  final bool? showTick;
-}
-
-/// A group heading (upstream `Dropdown.Title`/`dropdownTitle.tsx`).
-class SemiDropdownTitleData extends SemiDropdownNode {
-  const SemiDropdownTitleData(this.name)
-    : assert(
-        name == null || name is String || name is Widget,
-        'name must be a String or a Widget',
-      );
-
-  /// Heading label: [String] (rendered as [SemiText]) or [Widget] as-is.
-  final Object? name;
-}
-
-/// A 1px separator (upstream `Dropdown.Divider`/`dropdownDivider.tsx`).
-class SemiDropdownDividerData extends SemiDropdownNode {
-  const SemiDropdownDividerData();
-}
+export 'semi_menu_nodes.dart';
 
 /// A dropdown menu built on [SemiTooltip] (upstream `Dropdown`/index.tsx).
 ///
@@ -271,8 +208,8 @@ class _DropdownWrapperSurface extends StatelessWidget {
         color: theme.colorDropdownBgDefault,
         borderRadius: BorderRadius.circular(theme.radiusDropdown),
         boxShadow: const [
-          _DropdownMetrics.shadowElevatedBlur,
-          _DropdownMetrics.shadowElevatedDrop,
+          SemiMenuSurface.shadowElevatedBlur,
+          SemiMenuSurface.shadowElevatedDrop,
         ],
       ),
       child: child,
@@ -370,12 +307,7 @@ class _SemiDropdownMenuState extends State<_SemiDropdownMenu> {
   }
 
   String? _firstCharOf(SemiDropdownItemData item) {
-    final String? text = switch (item.name) {
-      String s => s,
-      Text t => t.data,
-      SemiText t => t.data,
-      _ => null,
-    };
+    final text = semiMenuRowText(item.name);
     if (text == null) return null;
     final trimmed = text.trim();
     return trimmed.isEmpty ? null : trimmed[0].toLowerCase();
@@ -469,305 +401,138 @@ class _SemiDropdownMenuState extends State<_SemiDropdownMenu> {
     final scope = _DropdownScope.maybeOf(context);
     final children = <Widget>[
       for (final (index, node) in widget.nodes.indexed)
-        switch (node) {
-          SemiDropdownItemData() => _buildItem(index, node),
-          SemiDropdownTitleData(:final name) => _buildTitle(
-            theme,
-            scope?.showTick ?? false,
-            name,
-          ),
-          SemiDropdownDividerData() => _buildDivider(theme),
+        ...switch (node) {
+          SemiDropdownItemData() => [_buildItem(theme, index, node)],
+          SemiDropdownTitleData(:final name) => [
+            SemiMenuTitleRow(
+              theme: theme,
+              name: name,
+              showTickColumn: scope?.showTick ?? false,
+            ),
+          ],
+          SemiDropdownDividerData() => [SemiMenuDivider(theme: theme)],
+          SemiDropdownCheckboxItemData() => [
+            _buildCheckboxItem(theme, node),
+          ],
+          SemiDropdownRadioGroupData() => [
+            for (final radio in node.children)
+              _buildRadioItem(theme, node, radio),
+          ],
+          SemiDropdownSubmenuItemData() => [_buildSubmenuItem(theme, node)],
         },
     ];
-    // Upstream `&-menu`: `padding: $spacing-dropdown_menu-paddingY $spacing-dropdown_menu-paddingX`.
-    final menu = Padding(
-      padding: EdgeInsets.symmetric(
-        vertical: theme.spacingDropdownMenuPaddingY,
-        horizontal: theme.spacingDropdownMenuPaddingX,
-      ),
-      child: IntrinsicWidth(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: children,
-        ),
-      ),
-    );
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: theme.colorDropdownBgDefault,
-        borderRadius: BorderRadius.circular(theme.radiusDropdown),
-        boxShadow: const [
-          _DropdownMetrics.shadowElevatedBlur,
-          _DropdownMetrics.shadowElevatedDrop,
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(theme.radiusDropdown),
-        // `overflow-y: auto` on the upstream wrapper.
-        child: SingleChildScrollView(
-          child: Focus(
-            focusNode: _menuFocus,
-            onKeyEvent: _handleKey,
-            child: Semantics(
-              container: true,
-              explicitChildNodes: true,
-              // `role="menu"` cannot be empty (Flutter semantics validation).
-              role: widget.nodes.isEmpty ? null : SemanticsRole.menu,
-              child: menu,
-            ),
-          ),
-        ),
+    return Focus(
+      focusNode: _menuFocus,
+      onKeyEvent: _handleKey,
+      child: Semantics(
+        container: true,
+        explicitChildNodes: true,
+        // `role="menu"` cannot be empty (Flutter semantics validation).
+        role: widget.nodes.isEmpty ? null : SemanticsRole.menu,
+        child: SemiMenuSurface(theme: theme, children: children),
       ),
     );
   }
 
-  Widget _buildItem(int index, SemiDropdownItemData item) {
+  Widget _buildItem(
+    SemiResolvedDropdownThemeData theme,
+    int index,
+    SemiDropdownItemData item,
+  ) {
     // Upstream `contextShowTick ?? showTick`: the group flag wins.
     final showTick =
         (_DropdownScope.maybeOf(context)?.showTick ?? item.showTick) ?? false;
     return KeyedSubtree(
       key: _itemKeys.putIfAbsent(index, () => GlobalKey()),
-      child: _DropdownItemView(
-        item: item,
-        showTick: showTick,
+      child: SemiMenuRow(
+        theme: theme,
+        name: item.name,
+        icon: item.icon,
+        showTickColumn: showTick,
+        active: item.active,
+        disabled: item.disabled,
+        type: item.type,
+        role: SemanticsRole.menuItem,
         highlighted: _keyboardUsed && _highlight == index,
         onTap: item.disabled ? null : item.onTap,
       ),
     );
   }
 
-  Widget _buildTitle(
+  Widget _buildCheckboxItem(
     SemiResolvedDropdownThemeData theme,
-    bool showTick,
-    Object? name,
+    SemiDropdownCheckboxItemData item,
   ) {
-    // Upstream `dropdownTitle.tsx` reads only the context `showTick`.
-    final fontSize = SemiTheme.of(context).typography.fontSizeSmall;
-    final Widget label = switch (name) {
-      String s => SemiText(
-        s,
-        style: TextStyle(
-          color: theme.colorDropdownTitleTextDefault,
-          fontSize: fontSize,
-        ),
-      ),
-      Widget w => w,
-      _ => const SizedBox.shrink(),
-    };
-    return Padding(
-      padding: EdgeInsetsDirectional.only(
-        top: theme.spacingDropdownTitlePaddingTop,
-        bottom: theme.spacingDropdownTitlePaddingBottom,
-        start: showTick
-            ? theme.spacingDropdownTitleWithTickPaddingLeft
-            : theme.spacingDropdownTitlePaddingLeft,
-        end: theme.spacingDropdownTitlePaddingRight,
-      ),
-      child: label,
+    // Checkable rows always own the tick column (their indicator lives there).
+    return SemiMenuRow(
+      theme: theme,
+      name: item.name,
+      icon: item.icon,
+      showTickColumn: true,
+      indicator: item.indeterminate
+          ? SemiMenuIndicator.indeterminate
+          : item.checked
+          ? SemiMenuIndicator.tick
+          : SemiMenuIndicator.none,
+      disabled: item.disabled,
+      type: item.type,
+      role: SemanticsRole.menuItemCheckbox,
+      checked: item.indeterminate ? null : item.checked,
+      mixed: item.indeterminate ? true : null,
+      onTap: item.disabled
+          ? null
+          : () => item.onCheckedChange?.call(
+              item.indeterminate ? true : !item.checked,
+            ),
     );
   }
 
-  Widget _buildDivider(SemiResolvedDropdownThemeData theme) {
-    return Padding(
-      padding: EdgeInsetsDirectional.only(
-        top: theme.spacingDropdownSeperatorMarginY,
-        bottom: theme.spacingDropdownSeperatorMarginY,
-        start: theme.spacingDropdownSeperatorMarginX,
-        end: theme.spacingDropdownSeperatorMarginX,
-      ),
-      child: SizedBox(
-        height: theme.heightDropdownSeperator,
-        child: ColoredBox(color: theme.colorDropdownSeperatorBgDefault),
-      ),
-    );
-  }
-}
-
-/// One menu row: tick column, optional icon and the label (upstream
-/// `dropdownItem.tsx` + the `&-item` rules of dropdown.scss).
-class _DropdownItemView extends StatefulWidget {
-  const _DropdownItemView({
-    required this.item,
-    required this.showTick,
-    required this.highlighted,
-    required this.onTap,
-  });
-
-  final SemiDropdownItemData item;
-
-  /// Resolved tick flag: the group-level `showTick` wins over the item's own
-  /// (upstream `contextShowTick ?? showTick`).
-  final bool showTick;
-
-  final bool highlighted;
-
-  /// Null when disabled (upstream drops all events on disabled rows).
-  final VoidCallback? onTap;
-
-  @override
-  State<_DropdownItemView> createState() => _DropdownItemViewState();
-}
-
-class _DropdownItemViewState extends State<_DropdownItemView> {
-  bool _hovering = false;
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = SemiDropdownTheme.resolve(context);
-    final item = widget.item;
-    final fontSize = SemiTheme.of(context).typography.fontSizeRegular;
-    final Color color = switch (item.type) {
-      SemiDropdownItemType.primary => theme.colorDropdownItemPrimaryTextDefault,
-      SemiDropdownItemType.secondary =>
-        theme.colorDropdownItemSecondaryTextDefault,
-      SemiDropdownItemType.tertiary =>
-        theme.colorDropdownItemTertiaryTextDefault,
-      SemiDropdownItemType.warning => theme.colorDropdownItemWarningTextDefault,
-      SemiDropdownItemType.danger => theme.colorDropdownItemDangerTextDefault,
-      null => theme.colorDropdownItemTextDefault,
-    };
-    final textColor = item.disabled
-        ? theme.colorDropdownItemDisabledTextDefault
-        : color;
-    // Upstream `:not(.item-active):hover/:active` — active rows skip the
-    // hover/pressed fills; the keyboard highlight (`:focus-visible`) does not.
-    final Color bg;
-    if (item.disabled) {
-      bg = theme.colorDropdownItemDisabledBgDefault;
-    } else if (_pressed && !item.active) {
-      bg = theme.colorDropdownItemBgActive;
-    } else if (_hovering || widget.highlighted) {
-      bg = theme.colorDropdownItemBgHover;
-    } else {
-      bg = const Color(0x00000000);
-    }
-
-    final Widget label = switch (item.name) {
-      String s => SemiText(
-        s,
-        weight: item.active ? theme.fontDropdownItemActiveFontWeight : null,
-        style: TextStyle(color: textColor, fontSize: fontSize),
-      ),
-      Widget w => w,
-      _ => const SizedBox.shrink(),
-    };
-    Widget box = Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        if (widget.showTick)
-          _iconSlot(
-            theme,
-            SemiIconTheme(
-              data: SemiIconThemeData(
-                color: item.active ? textColor : const Color(0x00000000),
-                customSize: theme.sizeDropdownIconWidth,
-              ),
-              child: const ExcludeSemantics(
-                child: SemiIcon(SemiIcons.tick, excludeFromSemantics: true),
-              ),
-            ),
-          ),
-        if (item.icon != null)
-          _iconSlot(
-            theme,
-            SemiIconTheme(
-              data: SemiIconThemeData(
-                color: textColor,
-                customSize: theme.sizeDropdownIconWidth,
-              ),
-              child: item.icon!,
-            ),
-          ),
-        Flexible(
-          child: DefaultTextStyle.merge(
-            style: TextStyle(
-              color: textColor,
-              fontSize: fontSize,
-              fontWeight: item.active
-                  ? theme.fontDropdownItemActiveFontWeight
-                  : null,
-            ),
-            child: label,
-          ),
-        ),
-      ],
-    );
-    box = Padding(
-      padding: EdgeInsetsDirectional.only(
-        top: theme.spacingDropdownItemPaddingY,
-        bottom: theme.spacingDropdownItemPaddingY,
-        start: widget.showTick
-            ? theme.spacingDropdownItemWithTickPaddingLeft
-            : theme.spacingDropdownItemPaddingX,
-        end: theme.spacingDropdownItemPaddingX,
-      ),
-      child: box,
-    );
-    // The item background transition trio. `animationDelay` (upstream's 0ms
-    // literal) has no AnimatedContainer counterpart and stays documentation.
-    box = AnimatedContainer(
-      duration: theme.animationDuration,
-      curve: theme.animationCurve,
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(theme.radiusDropdownItem),
-      ),
-      child: box,
-    );
-    box = ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: theme.widthDropdown),
-      child: box,
-    );
-    if (widget.onTap != null) {
-      box = GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: widget.onTap,
-        child: box,
-      );
-    }
-    box = MouseRegion(
-      cursor: widget.onTap != null
-          ? SystemMouseCursors.click
-          : MouseCursor.defer,
-      onEnter: (_) => setState(() => _hovering = true),
-      onExit: (_) => setState(() => _hovering = false),
-      child: box,
-    );
-    box = Listener(
-      behavior: HitTestBehavior.opaque,
-      onPointerDown: widget.onTap == null
+  Widget _buildRadioItem(
+    SemiResolvedDropdownThemeData theme,
+    SemiDropdownRadioGroupData group,
+    SemiDropdownRadioItemData radio,
+  ) {
+    final checked = radio.value == group.value;
+    return SemiMenuRow(
+      theme: theme,
+      name: radio.name,
+      icon: radio.icon,
+      showTickColumn: true,
+      indicator: checked ? SemiMenuIndicator.tick : SemiMenuIndicator.none,
+      disabled: radio.disabled,
+      type: radio.type,
+      role: SemanticsRole.menuItemRadio,
+      checked: checked,
+      onTap: radio.disabled
           ? null
-          : (_) => setState(() => _pressed = true),
-      onPointerUp: widget.onTap == null
-          ? null
-          : (_) => setState(() => _pressed = false),
-      onPointerCancel: widget.onTap == null
-          ? null
-          : (_) => setState(() => _pressed = false),
-      child: box,
-    );
-    return Semantics(
-      container: true,
-      role: SemanticsRole.menuItem,
-      enabled: !item.disabled,
-      child: box,
+          : () => group.onValueChange?.call(radio.value),
     );
   }
 
-  /// 12×12 icon slot with the shared right gap (RTL-safe), sized by
-  /// `sizeDropdownIconWidth/Height` and `spacingDropdownIconMarginRight`.
-  Widget _iconSlot(SemiResolvedDropdownThemeData theme, Widget child) {
-    return Padding(
-      padding: EdgeInsetsDirectional.only(
-        end: theme.spacingDropdownIconMarginRight,
-      ),
-      child: SizedBox(
-        width: theme.sizeDropdownIconWidth,
-        height: theme.sizeDropdownIconHeight,
-        child: child,
+  /// Submenu rows open a nested [SemiDropdown] beside the row (composition of
+  /// the existing nested-dropdown machinery; the full keyboard model lives in
+  /// `SemiContextMenu`).
+  Widget _buildSubmenuItem(
+    SemiResolvedDropdownThemeData theme,
+    SemiDropdownSubmenuItemData item,
+  ) {
+    final scope = _DropdownScope.maybeOf(context);
+    final showTick = (scope?.showTick ?? item.showTick) ?? false;
+    final rtl = Directionality.maybeOf(context) == TextDirection.rtl;
+    return SemiDropdown(
+      trigger: SemiTooltipTrigger.hover,
+      position: rtl ? SemiTooltipPosition.leftTop : SemiTooltipPosition.rightTop,
+      showTick: scope?.showTick,
+      menu: item.children,
+      child: SemiMenuRow(
+        theme: theme,
+        name: item.name,
+        icon: item.icon,
+        showTickColumn: showTick,
+        disabled: item.disabled,
+        type: item.type,
+        role: SemanticsRole.menuItem,
+        trailingIcon: rtl ? SemiIcons.chevronLeft : SemiIcons.chevronRight,
       ),
     );
   }
@@ -798,19 +563,14 @@ abstract final class _DropdownMetrics {
   /// `0 0 1px rgba(0, 0, 0, .3)` — first box-shadow layer of the
   /// `@include shadow-elevated` mixin
   /// (packages/semi-theme-default/scss/global.scss). Hardcoded to the light
-  /// token values (see docs/semi_dropdown.md).
-  static const BoxShadow shadowElevatedBlur = BoxShadow(
-    color: Color.fromRGBO(0, 0, 0, 0.3),
-    blurRadius: 1,
-  );
+  /// token values (see docs/semi_dropdown.md). Lives in [SemiMenuSurface] as
+  /// the shared menu surface constant.
+  static const BoxShadow shadowElevatedBlur = SemiMenuSurface.shadowElevatedBlur;
 
   /// `0 4px 14px rgba(0, 0, 0, .1)` — second box-shadow layer of the same
-  /// `@include shadow-elevated` mixin.
-  static const BoxShadow shadowElevatedDrop = BoxShadow(
-    color: Color.fromRGBO(0, 0, 0, 0.1),
-    offset: Offset(0, 4),
-    blurRadius: 14,
-  );
+  /// `@include shadow-elevated` mixin (see [SemiMenuSurface]).
+  static const BoxShadow shadowElevatedDrop =
+      SemiMenuSurface.shadowElevatedDrop;
 
   /// `z-index: $z-dropdown` in packages/semi-foundation/dropdown/dropdown.scss,
   /// with `$z-dropdown: 1050` in packages/semi-theme-default/scss/variables.scss.

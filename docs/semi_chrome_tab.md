@@ -84,7 +84,7 @@ class SemiChromeTabReorderInfo {
 - **溢出**：滚动按钮 overlay 在左右两端（36px）；悬停列出该侧被裁掉的标签，点击即激活；滚轮在标签栏上转为横向滚动。
 - **活动标签可见**：`activeTabId` 变化或标签集变化后，按“最近边缘”滚动到可见区，并预留圆角和控制按钮宽度。
 - **加号随动**：新增时 `+` 槽与标签 bounds 使用同一动画，从旧位置平滑移动到新位置，不再通过滚动锚定把按钮固定在屏幕上。
-- **Tooltip**：`truncated` 用 `TextPainter` 判断标题是否超出可用宽度；`always` 始终显示；`never` 关闭。hover 离开 120ms 后关闭。
+- **Tooltip**：`truncated` 用 `TextPainter` 判断标题是否超出可用宽度；`always` 始终显示；`never` 关闭。hover 离开 120ms 后关闭。浮层由 `SemiTooltip` 承载（`popupBare` 裸弹层 + `_TooltipBubble` 自绘气泡），出现在标签下方 6px、左对齐，气泡外观与原 chrome-tabs tooltip 一致。
 - **减少动效**：`MediaQuery.disableAnimations` 为真时关闭/插入/布局的 bounds 过渡都缩到 1ms（对应上游 `prefers-reduced-motion` 和 Chromium 的 `RichAnimationDuration`）。
 
 ## 主题
@@ -167,6 +167,7 @@ SemiChromeTabTheme(
 - 右键菜单使用 Flutter Overlay，并加了一层点击外部关闭的屏障；第一次点击外部只关闭菜单。
 - 触控端没有 hover，长按标签等同右键（打开批量关闭菜单）；这是移动端降级，上游 Web Component 只有 `contextmenu`。
 - tooltip 在标签间移动时的 `left 140ms` 过渡未移植（字段仍保留）；位置会直接跳转。
+- tooltip 浮层由 `SemiTooltip` 承载（`popupBare` 裸弹层，气泡仍用 `chromeTabsTooltip*` 主题自绘，无箭头、无出入场动效）；展示时机（进入即显、120ms 关闭延迟、气泡悬停续显）与外观保持不变。
 - 分组菜单与右键菜单使用组件外层 `DefaultTextStyle`，上游这两处继承页面字体而非 `--chrome-tabs-font`。
 - Arial 未随包提供，`chromeTabsFontSize` 只控制字号。
 - `+` 按钮的 `title`（“添加标签页后，可再次打开同一个模块”）暴露为

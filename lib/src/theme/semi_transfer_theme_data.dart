@@ -189,7 +189,7 @@ class SemiTransferThemeData {
 
   /// `$spacing-transfer_right_item_drag_handler-marginRight: 4px` in packages/semi-foundation/transfer/variables.scss.
   ///
-  /// 本移植未消费（draggable 延期）——上游 transfer.scss:181 拖拽 handler 消费。
+  /// 拖拽 handler 消费（transfer.scss:181 `margin-right`；★rtl.scss 无 handler 翻边规则——物理边距照搬）。
   final double? spacingTransferRightItemDragHandlerMarginRight;
 
   /// `$spacing-transfer_filter-marginTop: 12px` in packages/semi-foundation/transfer/variables.scss.
@@ -215,7 +215,7 @@ class SemiTransferThemeData {
 
   /// `$z-transfer_right_item_drag_item_move: 2000 !default` in packages/semi-foundation/transfer/variables.scss.
   ///
-  /// 本移植未消费（draggable 延期）——上游 transfer.scss:187 拖拽层消费；provenance 保留 `!default` 原文。
+  /// CSS z-index 无 Flutter 对应——拖拽克隆层以根 Stack 尾位子置顶，字段留档不消费（transfer.scss:187 拖拽层消费；provenance 保留 `!default` 原文）。
   final double? zTransferRightItemDragItemMove;
 
   /// `$transition_duration_transfer_item-bg: var(--semi-transition_duration-none)` in packages/semi-foundation/transfer/animation.scss.
@@ -844,7 +844,7 @@ class SemiResolvedTransferThemeData {
 
   /// `$spacing-transfer_right_item_drag_handler-marginRight: 4px` in packages/semi-foundation/transfer/variables.scss.
   ///
-  /// 本移植未消费（draggable 延期）——上游 transfer.scss:181 拖拽 handler 消费。
+  /// 拖拽 handler 消费（transfer.scss:181 `margin-right`；★rtl.scss 无 handler 翻边规则——物理边距照搬）。
   final double spacingTransferRightItemDragHandlerMarginRight;
 
   /// `$spacing-transfer_filter-marginTop: 12px` in packages/semi-foundation/transfer/variables.scss.
@@ -870,7 +870,7 @@ class SemiResolvedTransferThemeData {
 
   /// `$z-transfer_right_item_drag_item_move: 2000 !default` in packages/semi-foundation/transfer/variables.scss.
   ///
-  /// 本移植未消费（draggable 延期）——上游 transfer.scss:187 拖拽层消费；provenance 保留 `!default` 原文。
+  /// CSS z-index 无 Flutter 对应——拖拽克隆层以根 Stack 尾位子置顶，字段留档不消费（transfer.scss:187 拖拽层消费；provenance 保留 `!default` 原文）。
   final double zTransferRightItemDragItemMove;
 
   /// `$transition_duration_transfer_item-bg: var(--semi-transition_duration-none)` in packages/semi-foundation/transfer/animation.scss.

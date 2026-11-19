@@ -853,7 +853,8 @@ void main() {
     await mouse.moveTo(
       tester.getCenter(find.byKey(const ValueKey('semi-chrome-tab-long'))),
     );
-    await tester.pump();
+    // SemiTooltip defers its overlay by a frame or two while it positions.
+    await tester.pumpAndSettle();
     expect(find.text('TIP long'), findsOneWidget);
 
     await mouse.moveTo(
@@ -880,7 +881,7 @@ void main() {
     await mouse.moveTo(
       tester.getCenter(find.byKey(const ValueKey('semi-chrome-tab-short'))),
     );
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(find.text('ALWAYS'), findsOneWidget);
 
     await update(

@@ -4,12 +4,14 @@ import 'dart:math' as math;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
+import '../overlay/tooltip_positioning.dart';
 import '../theme/semi_chrome_tab_theme.dart';
 import '../theme/semi_chrome_tab_theme_data.dart';
 import 'icon/semi_icon.dart';
 import 'icon/semi_icon_data.dart';
 import 'icon/semi_icons.dart';
 import 'semi_chrome_tab_add_button_painter.dart';
+import 'semi_tooltip.dart';
 
 /// Language used by [SemiChromeTab]'s built-in labels.
 ///
@@ -99,8 +101,9 @@ class SemiChromeTabReorderInfo {
 /// callbacks. It never removes, reorders, or changes the supplied data itself,
 /// mirroring the controlled `<qn-chrome-tabs>` web component.
 ///
-/// An [Overlay] ancestor is required for the group menu, context menu, tooltips,
-/// and the overflow tab list (normally supplied by `Navigator`).
+/// An [Overlay] ancestor is required for the group menu, context menu, the
+/// tab tooltips (shown through [SemiTooltip]), and the overflow tab list
+/// (normally supplied by `Navigator`).
 class SemiChromeTab extends StatefulWidget {
   const SemiChromeTab({
     super.key,
@@ -230,6 +233,11 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
   _PopupKind? _popupKind;
   Timer? _popupCloseTimer;
 
+  /// The tab whose [SemiTooltip] is currently mounted, with the content built
+  /// by [SemiChromeTab.renderTabTooltip] at show time.
+  String? _tooltipTabId;
+  Widget? _tooltipContent;
+
   @override
   void initState() {
     super.initState();
@@ -249,11 +257,14 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
 
     final newIds = widget.tabs.map((tab) => tab.id).toSet();
     _closingIds.removeWhere((id) => !newIds.contains(id));
+    if (_tooltipTabId != null && !newIds.contains(_tooltipTabId)) {
+      _hideTooltip(refresh: false);
+    }
     if ((_popupKind == _PopupKind.groupMenu &&
             (!_listEquals(widget.groups, oldWidget.groups) ||
                 widget.activeGroupId != oldWidget.activeGroupId)) ||
         (widget.tooltipMode == SemiChromeTabTooltipMode.never &&
-            _popupKind == _PopupKind.tooltip)) {
+            _tooltipTabId != null)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _closePopup();
       });
@@ -418,14 +429,14 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
   void _maybeShowTooltip(SemiChromeTabItem item) {
     final mode = widget.tooltipMode;
     if (mode == SemiChromeTabTooltipMode.never) {
-      if (_popupKind == _PopupKind.tooltip) _closePopup();
+      _hideTooltip();
       return;
     }
     final shouldShow =
         mode == SemiChromeTabTooltipMode.always ||
         (_truncated[item.id] ?? false);
     if (!shouldShow) {
-      if (_popupKind == _PopupKind.tooltip) _closePopup();
+      _hideTooltip();
       return;
     }
     Widget? content;
@@ -445,18 +456,21 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
         ),
       );
     }
-    final theme = SemiChromeTabTheme.resolve(context);
-    _showPopup(
-      kind: _PopupKind.tooltip,
-      anchorKey: _tabKeys[item.id],
-      link: _tabLinks[item.id],
-      content: _TooltipBubble(
-        theme: theme,
-        onEnter: _cancelPopupClose,
-        onExit: _schedulePopupClose,
-        child: content,
-      ),
-    );
+    // The tooltip replaces any open menu popup and any stale tooltip, keeping
+    // the old "one popup at a time" behaviour. The [SemiTooltip] that renders
+    // it is mounted on the hovered tab in [_buildTab].
+    _closePopup();
+    setState(() {
+      _tooltipContent = content;
+      _tooltipTabId = item.id;
+    });
+  }
+
+  void _hideTooltip({bool refresh = true}) {
+    if (_tooltipTabId == null && _tooltipContent == null) return;
+    _tooltipTabId = null;
+    _tooltipContent = null;
+    if (refresh && mounted) setState(() {});
   }
 
   void _handleTabTap(SemiChromeTabItem item) {
@@ -546,6 +560,9 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
     double spacing = 6,
     double? topOffset,
   }) {
+    // Menus replace any visible tooltip, mirroring the old shared overlay
+    // entry (only one popup at a time).
+    _hideTooltip(refresh: false);
     _removePopupEntry();
     final revision = _popupRevision;
     _popupKind = kind;
@@ -587,6 +604,7 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
     _cancelPopupClose();
     _removePopupEntry();
     _popupKind = null;
+    _hideTooltip(refresh: false);
     if (refresh && mounted) setState(() {});
   }
 
@@ -1237,12 +1255,38 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
     );
 
     if (closing) interactive = IgnorePointer(child: interactive);
-    return SizedBox(
+    Widget tabWidget = SizedBox(
       key: _tabKeys[tab.id],
       width: width,
       height: theme.chromeTabHeight,
       child: interactive,
     );
+    final tooltipContent = _tooltipContent;
+    if (_tooltipTabId == tab.id && tooltipContent != null) {
+      // The tooltip rides on [SemiTooltip] (show/hide timing, placement,
+      // outside dismissal) with a bare popup: the content paints the
+      // chrome-tabs bubble itself so the look stays unchanged.
+      tabWidget = SemiTooltip(
+        visible: true,
+        trigger: SemiTooltipTrigger.custom,
+        onVisibleChange: (visible) {
+          if (!visible) _hideTooltip();
+        },
+        position: SemiTooltipPosition.bottomLeft,
+        spacing: 6,
+        showArrow: false,
+        popupBare: true,
+        motion: false,
+        content: _TooltipBubble(
+          theme: theme,
+          onEnter: _cancelPopupClose,
+          onExit: _schedulePopupClose,
+          child: tooltipContent,
+        ),
+        child: tabWidget,
+      );
+    }
+    return tabWidget;
   }
 
   /// Mirrors Chromium's `GetTargetBoundsForClosingTab`: the closing tab
@@ -1621,7 +1665,7 @@ class _ChromeTabBoundsLayoutState extends State<_ChromeTabBoundsLayout>
   static bool _sameRect(Rect? a, Rect? b) => a == b;
 }
 
-enum _PopupKind { tooltip, overflowLeft, overflowRight, contextMenu, groupMenu }
+enum _PopupKind { overflowLeft, overflowRight, contextMenu, groupMenu }
 
 class _AnchoredPopup extends StatefulWidget {
   const _AnchoredPopup({

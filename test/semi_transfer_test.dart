@@ -1,8 +1,8 @@
 // Behavior matrix for SemiTransfer plus coverage for the 50 Sass declarations
 // (47 FIELDS + 3 MOTION + 0 INTERNAL) — the 26 HARDCODES provenance anchors
 // live in the widget's `_TransferMetrics` / call sites, the 2 dead FIELDS
-// (上游未消费) must NOT appear in the widget, and the 2 drag-deferred FIELDS
-// carry 「本移植未消费（draggable 延期）」 in the docs.
+// (上游未消费) must NOT appear in the widget, and the 2 drag FIELDS are checked
+// as consumed (handler margin-right) / 留档不消费 (z-index).
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -161,12 +161,18 @@ Widget transfer({
   SemiTransferChanged? onChanged,
   bool disabled = false,
   bool loading = false,
+  bool draggable = false,
   Widget? emptyLeft,
   Widget? emptyRight,
   Widget? emptySearch,
   Widget Function(BuildContext, SemiTransferItem, bool, VoidCallback)?
   renderSourceItem,
-  Widget Function(BuildContext, SemiTransferItem, VoidCallback)?
+  Widget Function(
+    BuildContext,
+    SemiTransferItem,
+    VoidCallback,
+    SemiTransferSortableHandle?,
+  )?
   renderSelectedItem,
   Widget Function(BuildContext, SemiTransferHeaderProps)? renderSourceHeader,
   Widget Function(BuildContext, SemiTransferSelectedHeaderProps)?
@@ -192,6 +198,7 @@ Widget transfer({
   onChanged: onChanged,
   disabled: disabled,
   loading: loading,
+  draggable: draggable,
   emptyLeft: emptyLeft,
   emptyRight: emptyRight,
   emptySearch: emptySearch,
@@ -696,24 +703,31 @@ void main() {
       }
     });
 
-    test('drag-deferred FIELDS are marked 本移植未消费（draggable 延期）', () {
-      const drag = [
-        'spacing-transfer_right_item_drag_handler-marginRight',
-        'z-transfer_right_item_drag_item_move',
-      ];
+    test('drag FIELDS: handler margin-right consumed, z-index 留档不消费', () {
+      final widgetSource = File('lib/src/components/semi_transfer.dart')
+          .readAsStringSync();
+      expect(
+        widgetSource,
+        contains('spacingTransferRightItemDragHandlerMarginRight'),
+      );
+      expect(widgetSource, isNot(contains('zTransferRightItemDragItemMove')));
       final docs = File('docs/semi_transfer.md').readAsStringSync();
-      for (final name in drag) {
+      const markers = {
+        'spacing-transfer_right_item_drag_handler-marginRight': '拖拽 handler 消费',
+        'z-transfer_right_item_drag_item_move': '留档不消费',
+      };
+      markers.forEach((name, marker) {
         final rows = docs
             .split('\n')
             .where((line) => line.contains('\$$name:'))
             .toList();
         expect(rows, isNotEmpty, reason: name);
         expect(
-          rows.any((row) => row.contains('本移植未消费（draggable 延期）')),
+          rows.any((row) => row.contains(marker)),
           isTrue,
-          reason: name,
+          reason: '$name is not marked $marker',
         );
-      }
+      });
     });
 
     test('SemiComponentThemes wiring', () {
@@ -1262,7 +1276,7 @@ void main() {
           dataSource: tree,
           defaultValue: ['leaf'],
           showPath: true,
-          renderSelectedItem: (context, item, onRemove) {
+          renderSelectedItem: (context, item, onRemove, sortableHandle) {
             rendered = item;
             return Text(item.label?.toString() ?? '');
           },
@@ -1495,6 +1509,260 @@ void main() {
     });
   });
 
+  group('draggable', () {
+    testWidgets('手柄仅在 draggable 时渲染（★disabled 照显——quirk 照搬）', (tester) async {
+      await pumpHost(
+        tester,
+        transfer(dataSource: items(), defaultValue: ['A', 'B']),
+      );
+      expect(find.byKey(SemiTransfer.dragHandleKey('a')), findsNothing);
+      await pumpHost(
+        tester,
+        transfer(
+          dataSource: items(),
+          defaultValue: ['A', 'B'],
+          draggable: true,
+        ),
+      );
+      expect(find.byKey(SemiTransfer.dragHandleKey('a')), findsOneWidget);
+      expect(find.byKey(SemiTransfer.dragHandleKey('b')), findsOneWidget);
+      await pumpHost(
+        tester,
+        transfer(
+          dataSource: items(),
+          defaultValue: ['A', 'B'],
+          draggable: true,
+          disabled: true,
+        ),
+      );
+      expect(find.byKey(SemiTransfer.dragHandleKey('a')), findsOneWidget);
+    });
+
+    testWidgets('拖拽重排落点恰发一次 onChanged（arrayMove）+ 实时挪位/克隆层', (tester) async {
+      final changes = <List<Object?>>[];
+      await pumpHost(
+        tester,
+        transfer(
+          dataSource: items(),
+          defaultValue: ['A', 'B', 'C'],
+          draggable: true,
+          onChanged: (values, _) => changes.add(values),
+        ),
+      );
+      final from = tester.getCenter(
+        find.byKey(SemiTransfer.dragHandleKey('a')),
+      );
+      final to = tester.getCenter(find.byKey(SemiTransfer.dragHandleKey('c')));
+      final gesture = await tester.startGesture(from);
+      await tester.pump();
+      await gesture.moveTo(to);
+      await tester.pump();
+      // 拖拽中：显示序实时挪位（arrayMove 洞随指针），拖拽源行 opacity 0 占位、
+      // 克隆层在根 Stack 跟随指针（overlayItemKey）。
+      expect(rightLabels(tester), ['Beta', 'Gamma', 'Alpha']);
+      expect(find.byKey(SemiTransfer.overlayItemKey('a')), findsOneWidget);
+      await gesture.up();
+      await tester.pump();
+      // ★ exactly one onChanged at drop with the reordered values
+      // (arrayMove(['A','B','C'], 0, 2) = ['B','C','A']).
+      expect(changes, [
+        ['B', 'C', 'A'],
+      ]);
+      expect(rightLabels(tester), ['Beta', 'Gamma', 'Alpha']);
+    });
+
+    testWidgets('原位放下不发 onChanged（上游 onSortEnd 门）', (tester) async {
+      final changes = <List<Object?>>[];
+      await pumpHost(
+        tester,
+        transfer(
+          dataSource: items(),
+          defaultValue: ['A', 'B'],
+          draggable: true,
+          onChanged: (values, _) => changes.add(values),
+        ),
+      );
+      final handle = find.byKey(SemiTransfer.dragHandleKey('a'));
+      final gesture = await tester.startGesture(tester.getCenter(handle));
+      await tester.pump();
+      await gesture.moveTo(tester.getCenter(handle) + const Offset(2, 0));
+      await tester.pump();
+      await gesture.up();
+      await tester.pump();
+      expect(changes, isEmpty);
+      expect(rightLabels(tester), ['Alpha', 'Beta']);
+    });
+
+    testWidgets('自定义 renderSelectedItem 经 sortableHandle 起拖', (tester) async {
+      final changes = <List<Object?>>[];
+      await pumpHost(
+        tester,
+        transfer(
+          dataSource: items(),
+          defaultValue: ['A', 'B', 'C'],
+          draggable: true,
+          onChanged: (values, _) => changes.add(values),
+          renderSelectedItem: (context, item, onRemove, sortableHandle) => Row(
+            children: [
+              if (sortableHandle != null) sortableHandle(const Text('grip')),
+              Text('sel-${item.key}'),
+            ],
+          ),
+        ),
+      );
+      expect(find.text('grip'), findsNWidgets(3));
+      final from = tester.getCenter(
+        find.byKey(SemiTransfer.dragHandleKey('a')),
+      );
+      final to = tester.getCenter(find.byKey(SemiTransfer.dragHandleKey('c')));
+      final gesture = await tester.startGesture(from);
+      await tester.pump();
+      await gesture.moveTo(to);
+      await tester.pump();
+      await gesture.up();
+      await tester.pump();
+      expect(changes, [
+        ['B', 'C', 'A'],
+      ]);
+    });
+
+    testWidgets('非 draggable 时 sortableHandle 为 null', (tester) async {
+      await pumpHost(
+        tester,
+        transfer(
+          dataSource: items(),
+          defaultValue: ['A'],
+          renderSelectedItem: (context, item, onRemove, sortableHandle) =>
+              Text('sel-${item.key}-${sortableHandle == null}'),
+        ),
+      );
+      expect(find.text('sel-a-true'), findsOneWidget);
+    });
+
+    testWidgets('renderSelectedPanel.onSortEnd 重排 + 恰一次 onChanged', (
+      tester,
+    ) async {
+      final changes = <List<Object?>>[];
+      await pumpHost(
+        tester,
+        transfer(
+          dataSource: items(),
+          defaultValue: ['A', 'B'],
+          onChanged: (values, _) => changes.add(values),
+          renderSelectedPanel: (context, props) => Column(
+            children: [
+              GestureDetector(
+                onTap: () => props.onSortEnd(0, 1),
+                child: const Text('sort'),
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.tap(find.text('sort'));
+      await tester.pumpAndSettle();
+      // foundation.handleSortEnd：arrayMove + 恰一次 onChanged。
+      expect(changes, [
+        ['B', 'A'],
+      ]);
+    });
+
+    testWidgets('onSortEnd 同位也发 onChanged（★此路径无 activeIndex 门）', (
+      tester,
+    ) async {
+      final changes = <List<Object?>>[];
+      await pumpHost(
+        tester,
+        transfer(
+          dataSource: items(),
+          defaultValue: ['A', 'B'],
+          onChanged: (values, _) => changes.add(values),
+          renderSelectedPanel: (context, props) => Column(
+            children: [
+              GestureDetector(
+                onTap: () => props.onSortEnd(1, 1),
+                child: const Text('sort'),
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.tap(find.text('sort'));
+      await tester.pumpAndSettle();
+      expect(changes, [
+        ['A', 'B'],
+      ]);
+    });
+
+    testWidgets('受控拖拽只通知、渲染跟随 value', (tester) async {
+      final changes = <List<Object?>>[];
+      late StateSetter setter;
+      var value = <Object?>['A', 'B'];
+      await pumpHost(
+        tester,
+        StatefulBuilder(
+          builder: (context, setState) {
+            setter = setState;
+            return transfer(
+              dataSource: items(),
+              value: value,
+              draggable: true,
+              onChanged: (values, _) => changes.add(values),
+            );
+          },
+        ),
+      );
+      final from = tester.getCenter(
+        find.byKey(SemiTransfer.dragHandleKey('a')),
+      );
+      final to = tester.getCenter(find.byKey(SemiTransfer.dragHandleKey('b')));
+      final gesture = await tester.startGesture(from);
+      await tester.pump();
+      await gesture.moveTo(to);
+      await tester.pump();
+      await gesture.up();
+      await tester.pump();
+      expect(changes, [
+        ['B', 'A'],
+      ]);
+      // 不落状态：渲染仍随 value。
+      expect(rightLabels(tester), ['Alpha', 'Beta']);
+      setter(() => value = ['B', 'A']);
+      await tester.pumpAndSettle();
+      expect(rightLabels(tester), ['Beta', 'Alpha']);
+    });
+
+    testWidgets('★disabled 不拦截拖拽排序（handleSortEnd 无 disabled 门）', (
+      tester,
+    ) async {
+      final changes = <List<Object?>>[];
+      await pumpHost(
+        tester,
+        transfer(
+          dataSource: items(),
+          defaultValue: ['A', 'B', 'C'],
+          draggable: true,
+          disabled: true,
+          onChanged: (values, _) => changes.add(values),
+        ),
+      );
+      final from = tester.getCenter(
+        find.byKey(SemiTransfer.dragHandleKey('a')),
+      );
+      final to = tester.getCenter(find.byKey(SemiTransfer.dragHandleKey('c')));
+      final gesture = await tester.startGesture(from);
+      await tester.pump();
+      await gesture.moveTo(to);
+      await tester.pump();
+      await gesture.up();
+      await tester.pump();
+      expect(changes, [
+        ['B', 'C', 'A'],
+      ]);
+      expect(rightLabels(tester), ['Beta', 'Gamma', 'Alpha']);
+    });
+  });
+
   group('emptyContent', () {
     testWidgets('缺省 zh 文案三槽', (tester) async {
       await pumpHost(tester, transfer(dataSource: const []));
@@ -1548,7 +1816,7 @@ void main() {
         transfer(
           dataSource: items(),
           defaultValue: ['A'],
-          renderSelectedItem: (context, item, onRemove) =>
+          renderSelectedItem: (context, item, onRemove, sortableHandle) =>
               Text('sel-${item.key}'),
         ),
       );
