@@ -1,4 +1,5 @@
 import 'package:flutter/gestures.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:semi_design_flutter/semi_design_flutter.dart';
@@ -128,6 +129,40 @@ ScrollPosition _scrollPosition(WidgetTester tester) => tester
           .first,
     )
     .position;
+
+/// The on-screen "A RenderFlex overflowed" banner paints whenever a flex lays
+/// its children out past its own bounds, but the layout assert is silent — it
+/// never reaches [FlutterError.onError] or fails a test. Scan the render tree
+/// so layout regressions surface as expectation failures instead.
+List<String> _flexOverflows(WidgetTester tester) {
+  final out = <String>[];
+  final root = tester.renderObject(find.byType(SemiChromeTab));
+  void walk(RenderObject node) {
+    if (node is RenderFlex) {
+      var childExtent = 0.0;
+      RenderBox? child = node.firstChild;
+      while (child != null) {
+        childExtent += node.direction == Axis.horizontal
+            ? child.size.width
+            : child.size.height;
+        child = node.childAfter(child);
+      }
+      final selfExtent = node.direction == Axis.horizontal
+          ? node.size.width
+          : node.size.height;
+      if (childExtent > selfExtent + 0.01) {
+        out.add(
+          '${node.direction} overflows '
+          '${(childExtent - selfExtent).toStringAsFixed(1)}px',
+        );
+      }
+    }
+    node.visitChildren(walk);
+  }
+
+  walk(root);
+  return out;
+}
 
 void main() {
   test('resolved chrome defaults match the upstream stylesheet', () {
@@ -922,6 +957,23 @@ void main() {
     );
     await tester.pump();
     expect(find.text('NEVER'), findsNothing);
+  });
+
+  testWidgets('adding the first tab animates without layout overflow', (
+    tester,
+  ) async {
+    await pumpHost(tester, _tabs(tabs: const <SemiChromeTabItem>[]));
+    await tester.pumpAndSettle();
+    await update(tester, _tabs(tabs: manyTabs(1), activeTabId: 't0'));
+    for (final ms in <int>[0, 16, 50, 100, 150, 250]) {
+      if (ms > 0) await tester.pump(Duration(milliseconds: ms));
+      // The trailing slot (tab divider + add button) used to be squeezed by
+      // its own width animation here, flashing a RenderFlex overflow banner
+      // for the whole insert animation.
+      expect(_flexOverflows(tester), isEmpty, reason: 'overflow at +${ms}ms');
+    }
+    await tester.pumpAndSettle();
+    expect(_flexOverflows(tester), isEmpty);
   });
 
   testWidgets('locale switches built-in accessibility labels', (tester) async {

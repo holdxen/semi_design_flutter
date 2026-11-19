@@ -1645,7 +1645,21 @@ class _ChromeTabBoundsLayoutState extends State<_ChromeTabBoundsLayout>
     final trailing = widget.trailing;
     final trailingRect = _currentTrailing;
     if (trailing != null && trailingRect != null) {
-      children.add(Positioned.fromRect(rect: trailingRect, child: trailing));
+      // Only the trailing slot's position animates. Its content (tab divider
+      // + add slot) switches as a whole when the strip goes empty/non-empty,
+      // so animating the box width along with it would squeeze the row on
+      // 0 -> 1 inserts and flash a RenderFlex overflow banner mid-animation.
+      children.add(
+        Positioned.fromRect(
+          rect: Rect.fromLTWH(
+            trailingRect.left,
+            trailingRect.top,
+            widget.trailingWidth,
+            trailingRect.height,
+          ),
+          child: trailing,
+        ),
+      );
     }
     return SizedBox(
       width: _currentContentWidth,
