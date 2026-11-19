@@ -176,14 +176,16 @@ class SemiChromeTab extends StatefulWidget {
 class _SemiChromeTabState extends State<SemiChromeTab> {
   static const double _scrollButtonWidth = 36;
   static const double _addSlotWidth = 38;
-  static const double _addButtonSize = 30;
+  // Chromium `TabStripControlButton::kButtonSize`.
+  static const double _addButtonSize = 28;
   static const double _groupButtonSize = 30;
   static const double _groupContentPaddingRight = 8;
   static const double _dividerWidth = 2;
   static const double _dividerHeight = 18;
   static const double _iconSize = 16;
   static const double _iconGap = 6;
-  static const double _closeButtonSize = 18;
+  // Chromium `kTabCloseButtonSize` (16px icon) + the 12px button padding.
+  static const double _closeButtonSize = 28;
   static const double _groupMenuWidth = 210;
   static const double _contextMenuWidth = 172;
   static const double _menuRadius = 8;
@@ -1130,7 +1132,7 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
               ),
             ),
             Positioned(
-              right: 4,
+              right: 8,
               top: (theme.chromeTabHeight - _closeButtonSize) / 2,
               child: IgnorePointer(
                 ignoring: !showClose,
@@ -1948,8 +1950,8 @@ class _CloseButtonState extends State<_CloseButton> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: Container(
-          width: 18,
-          height: 18,
+          width: _SemiChromeTabState._closeButtonSize,
+          height: _SemiChromeTabState._closeButtonSize,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: _hovered
@@ -1974,17 +1976,19 @@ class _CloseGlyphPainter extends CustomPainter {
       ..color = color
       ..strokeWidth = 1.5;
     final center = size.center(Offset.zero);
-    const half = 4.5;
+    // The Chromium 16px close icon draws its X from (4,4) to (12,12); a line
+    // rotated 45 degrees needs half = 4 * sqrt(2) for the same 8px extent.
+    final half = 4 * math.sqrt2;
     canvas
       ..save()
       ..translate(center.dx, center.dy)
       ..rotate(math.pi / 4)
-      ..drawLine(const Offset(-half, 0), const Offset(half, 0), paint)
+      ..drawLine(Offset(-half, 0), Offset(half, 0), paint)
       ..restore()
       ..save()
       ..translate(center.dx, center.dy)
       ..rotate(-math.pi / 4)
-      ..drawLine(const Offset(-half, 0), const Offset(half, 0), paint)
+      ..drawLine(Offset(-half, 0), Offset(half, 0), paint)
       ..restore();
   }
 

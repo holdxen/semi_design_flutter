@@ -95,7 +95,7 @@ CSS 变量一一对应 `SemiChromeTabThemeData`。默认值是 qn-chrome-tabs �
 | --- | --- | --- |
 | `--chrome-tabs-height` | `chromeTabsHeight` | `38` |
 | `--chrome-tabs-background` | `chromeTabsBackground` | `#dee1e6` |
-| `--chrome-tabs-font` | `chromeTabsFontSize` | `12`（仅字号；Arial 未随包提供） |
+| `--chrome-tabs-font` | `chromeTabsFontSize` | `12`（仅字号；和 Chromium 的 `kLabelFontSizeDelta` 一致；Arial 未随包提供） |
 | `--chrome-tab-min-width` | `chromeTabMinWidth` | `52` |
 | `--chrome-tab-max-width` | `chromeTabMaxWidth` | `120` |
 | `--chrome-tab-radius` | `chromeTabRadius` | `8` |
@@ -147,14 +147,14 @@ SemiChromeTabTheme(
 | --- | --- | --- |
 | `tab-height = max(strip-height, 28px)` | `styles.css` `--chrome-tab-height` | 标签最小高度 |
 | `36px` | `.tab-scroll-button { width }` | 滚动按钮 |
-| `30px / margin 0 4px` | `.new-tab-button` | 加号按钮与槽宽 38 |
+| `28px` | Chromium `TabStripControlButton::kButtonSize` | 加号按钮（槽宽仍为 38） |
 | `30px / radius 9` | `.group-menu summary` | 分组触发器 |
 | `34px / 210px` | `.group-dropdown { top; width }` | 分组下拉位置与宽度 |
 | `6px / 8px` | `.group-dropdown`, `.tab-context-menu` | 菜单内边距、圆角 |
 | `172px` | `.tab-context-menu { width }` | 右键菜单宽度 |
 | `2 × 18px` | 分隔线 | tab divider / new-tab divider |
 | `16px + 6px` | 图标 | 图标尺寸与间距 |
-| `18px` | `.chrome-tab-close` | 关闭按钮 |
+| `28px` | Chromium `kTabCloseButtonSize` 16 + 12 padding | 关闭按钮（X 8px，对应 16px 图标的 4..12 路径） |
 | `#e8eaed` | 菜单第一条/新建分组分隔线 | 菜单内部分隔线 |
 | `120ms` | `schedulePopoverClose` | tooltip / 溢出列表关闭延迟 |
 | `300ms` | 浏览器双击间隔 | 本移植用于识别 `edit-address` |

@@ -136,6 +136,7 @@ void main() {
     );
     expect(resolved.chromeTabsHeight, 38);
     expect(resolved.chromeTabHeight, 38);
+    expect(resolved.chromeTabsFontSize, 12);
     expect(resolved.chromeTabMinWidth, 52);
     expect(resolved.chromeTabMaxWidth, 120);
     expect(resolved.chromeTabRadius, 8);
