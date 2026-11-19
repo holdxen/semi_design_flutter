@@ -6,13 +6,10 @@ import 'package:flutter/widgets.dart';
 import '../overlay/tooltip_positioning.dart';
 import '../theme/semi_dropdown_theme.dart';
 import '../theme/semi_dropdown_theme_data.dart';
-import '../theme/semi_icon_theme.dart';
 import '../theme/semi_theme.dart';
-import 'icon/semi_icon.dart';
 import 'icon/semi_icons.dart';
 import 'semi_menu_surface.dart';
 import 'semi_tooltip.dart';
-import 'typography/semi_text.dart';
 
 import 'semi_menu_nodes.dart';
 
@@ -565,10 +562,12 @@ abstract final class _DropdownMetrics {
   /// (packages/semi-theme-default/scss/global.scss). Hardcoded to the light
   /// token values (see docs/semi_dropdown.md). Lives in [SemiMenuSurface] as
   /// the shared menu surface constant.
+  // ignore: unused_field
   static const BoxShadow shadowElevatedBlur = SemiMenuSurface.shadowElevatedBlur;
 
   /// `0 4px 14px rgba(0, 0, 0, .1)` — second box-shadow layer of the same
   /// `@include shadow-elevated` mixin (see [SemiMenuSurface]).
+  // ignore: unused_field
   static const BoxShadow shadowElevatedDrop =
       SemiMenuSurface.shadowElevatedDrop;
 

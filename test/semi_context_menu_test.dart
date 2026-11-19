@@ -58,7 +58,6 @@ SemiContextMenu _menu({
   VoidCallback? onEscKeyDown,
 }) => SemiContextMenu(
   nodes: nodes,
-  child: child,
   motion: false,
   closeOnEsc: closeOnEsc,
   enabled: enabled,
@@ -66,6 +65,7 @@ SemiContextMenu _menu({
   onVisibleChange: onVisibleChange,
   onClickOutSide: onClickOutSide,
   onEscKeyDown: onEscKeyDown,
+  child: child,
 );
 
 List<SemiDropdownNode> _basicNodes(List<String> hits) => [
@@ -268,7 +268,9 @@ void main() {
       visible.value = false;
       await _settle(tester);
       expect(find.byType(SemiMenuSurface), findsNothing);
-      expect(changes, [true, false]);
+      // Parent-driven flips do not echo through onVisibleChange (events only
+      // notify, like SemiDropdown).
+      expect(changes, [true]);
     });
 
     testWidgets('renders without any Material dependency', (tester) async {

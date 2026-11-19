@@ -15,6 +15,7 @@ import 'package:example/pages/checkbox.dart';
 import 'package:example/pages/collapse.dart';
 import 'package:example/pages/collapsible.dart';
 import 'package:example/pages/color_picker.dart';
+import 'package:example/pages/context_menu.dart';
 import 'package:example/pages/cropper.dart';
 import 'package:example/pages/date_picker.dart';
 import 'package:example/pages/descriptions.dart';
@@ -238,6 +239,12 @@ const List<DemoGroup> demoGroups = [
       DescriptionsPage(),
     ),
     DemoSpec('dropdown', 'Dropdown 下拉框', 'doc-dropdown.svg', DropdownPage()),
+    DemoSpec(
+      'contextMenu',
+      'ContextMenu 右键菜单',
+      'doc-dropdown.svg',
+      ContextMenuPage(),
+    ),
     DemoSpec('empty', 'Empty 空状态', 'doc-empty.svg', EmptyPage()),
     DemoSpec(
       'highlight',

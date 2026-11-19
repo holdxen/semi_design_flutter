@@ -57,6 +57,8 @@ SemiDropdown(
 | `SemiDropdownTitleData` | `name` | `Object?` 分组标题（String→`SemiText` 或 Widget）；withTick 左距 31 仅看**组级** `showTick` |
 | `SemiDropdownDividerData` | - | 1px 分隔线（`heightDropdownSeperator` × `colorDropdownSeperatorBgDefault`，上下 margin 4） |
 
+节点模型与 `SemiContextMenu` 共享（`lib/src/components/semi_menu_nodes.dart`）：`SemiDropdownCheckboxItemData`（勾选/半选行）、`SemiDropdownRadioGroupData`+`SemiDropdownRadioItemData`（单选组）、`SemiDropdownSubmenuItemData`（子菜单行，嵌套 `SemiDropdown` 承载）在 dropdown 中同样渲染并回调，但**不进 dropdown 的键盘导航**（上游 Semi 单层键盘语义不变；完整键盘流见 docs/semi_context_menu.md）。
+
 ## 菜单渲染
 
 弹层表面（上游 `-wrapper`，弹层自绘，不套 Tooltip 气泡）：
