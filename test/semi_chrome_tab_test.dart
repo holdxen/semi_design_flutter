@@ -478,51 +478,17 @@ void main() {
     await pumpHost(tester, _tabs(tabs: manyTabs(2), activeTabId: 't0'));
     await update(tester, _tabs(tabs: manyTabs(3), activeTabId: 't0'));
     final animation = find.byKey(const ValueKey('semi-chrome-tab-entering-t2'));
-    final newTab = find.byKey(const ValueKey('semi-chrome-tab-t2'));
     expect(tester.widget<Opacity>(animation).opacity, 0);
-    // The new tab also expands from a narrow sliver, so the insert has a
-    // visible width motion instead of only the low-contrast fade.
-    expect(tester.getSize(newTab).width, 44);
     await tester.pump(const Duration(milliseconds: 80));
     final mid = tester.widget<Opacity>(animation).opacity;
     expect(mid, greaterThan(0));
     expect(mid, lessThan(1));
-    final midWidth = tester.getSize(newTab).width;
-    expect(midWidth, greaterThan(44));
-    expect(midWidth, lessThan(120));
     // The entrance lasts 480ms, longer than the close sequence
     // (140 + 200ms), so it is still running well past the old 160ms point.
     await tester.pump(const Duration(milliseconds: 200));
     expect(animation, findsOneWidget);
-    expect(tester.getSize(newTab).width, lessThan(120));
     await tester.pump(const Duration(milliseconds: 240));
-    expect(tester.getSize(newTab).width, 120);
     expect(animation, findsNothing);
-  });
-
-  testWidgets('a new tab with an icon does not overflow while expanding', (
-    tester,
-  ) async {
-    await pumpHost(tester, _tabs(tabs: manyTabs(2), activeTabId: 't0'));
-    await update(
-      tester,
-      _tabs(
-        tabs: <SemiChromeTabItem>[
-          ...manyTabs(2),
-          const SemiChromeTabItem(
-            id: 't2',
-            title: 'New tab',
-            icon: SizedBox(width: 16, height: 16),
-          ),
-        ],
-        activeTabId: 't0',
-      ),
-    );
-    for (var i = 0; i < 9; i++) {
-      expect(tester.takeException(), isNull);
-      await tester.pump(const Duration(milliseconds: 60));
-    }
-    expect(tester.takeException(), isNull);
   });
 
   testWidgets('drag and drop reports before/after against the target', (

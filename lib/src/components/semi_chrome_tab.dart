@@ -1431,8 +1431,6 @@ class _ChromeTabBoundsLayout extends StatefulWidget {
 
 class _ChromeTabBoundsLayoutState extends State<_ChromeTabBoundsLayout>
     with SingleTickerProviderStateMixin {
-  static const double _insertStartWidth = 44;
-
   late final AnimationController _controller;
   late Map<String, Rect> _fromBounds;
   late Map<String, Rect> _toBounds;
@@ -1498,7 +1496,7 @@ class _ChromeTabBoundsLayoutState extends State<_ChromeTabBoundsLayout>
     final currentTrailing = _currentTrailing;
     _fromBounds = <String, Rect>{
       for (final entry in widget.bounds.entries)
-        entry.key: currentBounds[entry.key] ?? _insertStartRect(entry.value),
+        entry.key: currentBounds[entry.key] ?? entry.value,
     };
     _toBounds = Map<String, Rect>.from(widget.bounds);
     _fromTrailing = targetTrailing == null
@@ -1526,18 +1524,6 @@ class _ChromeTabBoundsLayoutState extends State<_ChromeTabBoundsLayout>
 
   void _handleTick() {
     if (mounted) setState(() {});
-  }
-
-  /// New tabs grow from a narrow sliver at their right edge, so the insert has
-  /// a visible width expansion instead of only a low-contrast fade.
-  static Rect _insertStartRect(Rect target) {
-    final width = math.min(target.width, _insertStartWidth);
-    return Rect.fromLTWH(
-      target.right - width,
-      target.top,
-      width,
-      target.height,
-    );
   }
 
   Map<String, Rect> get _currentBounds {

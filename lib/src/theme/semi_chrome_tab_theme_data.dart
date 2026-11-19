@@ -120,10 +120,10 @@ class SemiChromeTabThemeData {
 
   /// `chrome-tab-enter` animation duration.
   ///
-  /// Defaults to 480ms so that a new tab's entrance (width expansion, content
-  /// fade and the insert-time strip reflow, all run for this duration) reads
-  /// noticeably slower than the close sequence (140ms content exit plus the
-  /// 200ms bounds reflow). Upstream CSS uses 160ms.
+  /// Defaults to 480ms so that a new tab's entrance (content fade and the
+  /// insert-time strip reflow, both run for this duration) reads noticeably
+  /// slower than the close sequence (140ms content exit plus the 200ms bounds
+  /// reflow). Upstream CSS uses 160ms.
   final Duration? chromeTabEnterDuration;
 
   /// `chrome-tab-close` animation duration (`140ms ease-in` upstream).
