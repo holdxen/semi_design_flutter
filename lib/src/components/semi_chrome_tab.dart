@@ -186,6 +186,8 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
   static const double _iconGap = 6;
   // Chromium `kTabCloseButtonSize` (16px icon) + the 12px button padding.
   static const double _closeButtonSize = 28;
+  // Distance from the title's content edge to the visible close icon.
+  static const double _closeButtonTitleReserve = 20;
   static const double _groupMenuWidth = 210;
   static const double _contextMenuWidth = 172;
   static const double _menuRadius = 8;
@@ -1020,7 +1022,7 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
         8 -
         12 -
         (hasIcon ? _iconSize + _iconGap : 0) -
-        (reserveClose ? _closeButtonSize : 0),
+        (reserveClose ? _closeButtonTitleReserve : 0),
   );
 
   Widget _buildTab(
@@ -1105,7 +1107,10 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
                       child: LayoutBuilder(
                         builder: (context, constraints) {
                           final closeReserve = showClose
-                              ? math.min(_closeButtonSize, constraints.maxWidth)
+                              ? math.min(
+                                  _closeButtonTitleReserve,
+                                  constraints.maxWidth,
+                                )
                               : 0.0;
                           return Padding(
                             padding: EdgeInsetsDirectional.only(
@@ -1132,7 +1137,10 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
               ),
             ),
             Positioned(
-              right: 8,
+              // The 28px hit target is flush with the tab edge; the 16px
+              // visible hover area centered inside it ends 6px before the edge,
+              // matching Chromium's close button against the tab boundary.
+              right: 0,
               top: (theme.chromeTabHeight - _closeButtonSize) / 2,
               child: IgnorePointer(
                 ignoring: !showClose,

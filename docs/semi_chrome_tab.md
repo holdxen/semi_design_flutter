@@ -154,7 +154,7 @@ SemiChromeTabTheme(
 | `172px` | `.tab-context-menu { width }` | 右键菜单宽度 |
 | `2 × 18px` | 分隔线 | tab divider / new-tab divider |
 | `16px + 6px` | 图标 | 图标尺寸与间距 |
-| `28px` | Chromium `kTabCloseButtonSize` 16 + 12 padding | 关闭按钮（X 8px，对应 16px 图标的 4..12 路径） |
+| `28px` | Chromium `kTabCloseButtonSize` 16 + 12 padding | 关闭按钮命中区（可见 hover 为 16px 图标区域，X 8px） |
 | `#e8eaed` | 菜单第一条/新建分组分隔线 | 菜单内部分隔线 |
 | `120ms` | `schedulePopoverClose` | tooltip / 溢出列表关闭延迟 |
 | `300ms` | 浏览器双击间隔 | 本移植用于识别 `edit-address` |
