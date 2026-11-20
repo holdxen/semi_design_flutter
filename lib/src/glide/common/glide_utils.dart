@@ -73,3 +73,36 @@ double clampDouble(double value, double min, double max) =>
 
 int clampInt(int value, int min, int max) =>
     value < min ? min : (value > max ? max : value);
+
+/// `isEditableGridCell` (`data-grid-types.ts:221-232`).
+bool glideIsEditableGridCell(GlideGridCell cell) => switch (cell.kind) {
+  GlideCellKind.loading ||
+  GlideCellKind.bubble ||
+  GlideCellKind.rowID ||
+  GlideCellKind.protected ||
+  GlideCellKind.drilldown => false,
+  _ => true,
+};
+
+/// `isInnerOnlyCell` (`data-grid-types.ts:256-258`): marker and new-row
+/// cells exist only inside the grid.
+bool glideIsInnerOnlyCell(GlideGridCell cell) =>
+    cell.kind == GlideCellKind.marker || cell.kind == GlideCellKind.newRow;
+
+/// `isReadWriteCell` (`data-grid-types.ts:261-275`).
+bool glideIsReadWriteCell(GlideGridCell cell) {
+  if (!glideIsEditableGridCell(cell) || cell.kind == GlideCellKind.image) {
+    return false;
+  }
+  return switch (cell.kind) {
+    GlideCellKind.text ||
+    GlideCellKind.number ||
+    GlideCellKind.markdown ||
+    GlideCellKind.uri ||
+    GlideCellKind.custom ||
+    GlideCellKind.boolean => !cell.isReadonly,
+    // Every remaining kind was filtered out above; upstream reaches
+    // `assertNever` here.
+    _ => false,
+  };
+}

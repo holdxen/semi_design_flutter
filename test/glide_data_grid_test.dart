@@ -8,6 +8,28 @@ import 'package:semi_design_flutter/semi_design_flutter.dart';
 // Selection (`internal/data-grid/glide_selection.dart`)
 // ---------------------------------------------------------------------------
 
+class FakeClipboard extends GlideClipboard {
+  String? writtenPlain;
+  String? writtenHtml;
+  String? nextText;
+  String? nextHtml;
+
+  @override
+  Future<String?> readText() async => nextText;
+
+  @override
+  Future<String?> readHtml() async => nextHtml;
+
+  @override
+  Future<void> write({
+    required String textPlain,
+    required String textHtml,
+  }) async {
+    writtenPlain = textPlain;
+    writtenHtml = textHtml;
+  }
+}
+
 void main() {
   group('GlideCompactSelection', () {
     test('add merges overlapping slices', () {
@@ -714,6 +736,615 @@ void main() {
       select(state, headerClick(2));
       expect(state.selection.current, isNull);
       expect(state.selection.columns.toArray(), [2]);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Keyboard (`data-editor.tsx:2854-3482`)
+  // -------------------------------------------------------------------------
+
+  group('key handler', () {
+    late List<GlideEditListItem> edits;
+    late List<GlideScrollTarget> scrolls;
+
+    GlideKeyHandler handler({
+      GlideRangeSelect rangeSelect = GlideRangeSelect.multiRect,
+      int columnCount = 10,
+      int rows = 50,
+      GlideGridSelection? initial,
+      GlideGetCellsForSelection? getCellsForSelection,
+      GlideDeleteCallback? onDelete,
+      void Function(GlideItem location, String key)? onCellActivated,
+    }) {
+      edits = [];
+      scrolls = [];
+      return GlideKeyHandler(
+        keys: glideKeysWithDefaults(null),
+        selection: initial ??
+            const GlideGridSelection(
+              current: GlideGridSelectionCurrent(
+                cell: GlideItem(2, 3),
+                range: GlideRectangle(x: 2, y: 3, width: 1, height: 1),
+              ),
+            ),
+        setGridSelection: (newVal, expand) {},
+        columnCount: columnCount,
+        rows: rows,
+        rowMarkerOffset: 0,
+        overlayOpen: false,
+        columnSelect: GlideSelectMode.multi,
+        rowSelect: GlideSelectMode.multi,
+        rangeSelect: rangeSelect,
+        visibleRegion: const GlideRectangle(x: 0, y: 0, width: 8, height: 20),
+        getCellContent: (item) =>
+            GlideTextCell(data: 'v${item.col}-${item.row}', displayData: 'x'),
+        getCellRenderer: GlideDefaultRendererLookup().forCell,
+        getCellsForSelection: getCellsForSelection,
+        onCellsEdited: (items) => edits.addAll(items),
+        scrollTo: (target) => scrolls.add(target),
+        onCellActivated: onCellActivated,
+        onDelete: onDelete,
+      );
+    }
+
+    GlideGridKeyArgs key(
+      String key,
+      int keyCode, {
+      bool alt = false,
+      bool shift = false,
+      bool ctrl = false,
+      bool meta = false,
+      GlideRectangle? bounds,
+    }) => GlideGridKeyArgs(
+      bounds: bounds,
+      key: key,
+      keyCode: keyCode,
+      altKey: alt,
+      shiftKey: shift,
+      ctrlKey: ctrl,
+      metaKey: meta,
+      cancel: () {},
+      stopPropagation: () {},
+      preventDefault: () {},
+      location: null,
+    );
+
+    test('arrow keys move the current cell', () {
+      final h = handler();
+      expect(
+        h.handleFixedKeybindings(key('ArrowDown', 40)),
+        isTrue,
+      );
+      expect(h.selection.current!.cell, const GlideItem(2, 4));
+
+      h.handleFixedKeybindings(key('ArrowRight', 39));
+      expect(h.selection.current!.cell, const GlideItem(3, 4));
+
+      h.handleFixedKeybindings(key('ArrowUp', 38));
+      h.handleFixedKeybindings(key('ArrowLeft', 37));
+      expect(h.selection.current!.cell, const GlideItem(2, 3));
+    });
+
+    test('navigation clamps to the table bounds', () {
+      final h = handler(columnCount: 4, rows: 5, initial:
+          const GlideGridSelection(
+            current: GlideGridSelectionCurrent(
+              cell: GlideItem(3, 4),
+              range: GlideRectangle(x: 3, y: 4, width: 1, height: 1),
+            ),
+          ));
+      h.handleFixedKeybindings(key('ArrowDown', 40));
+      expect(h.selection.current!.cell, const GlideItem(3, 4));
+
+      h.handleFixedKeybindings(key('Home', 36));
+      expect(h.selection.current!.cell.col, 0);
+    });
+
+    test('shift+arrow grows the range instead of moving the cell', () {
+      final h = handler();
+      h.handleFixedKeybindings(key('ArrowDown', 40, shift: true));
+      final range = h.selection.current!.range;
+      expect(h.selection.current!.cell, const GlideItem(2, 3));
+      expect(range.height, 2);
+      expect(scrolls.last.axis, GlideScrollAxis.vertical);
+    });
+
+    test('escape clears the selection', () {
+      final h = handler();
+      expect(
+        h.handleFixedKeybindings(key('Escape', 27, ctrl: true)),
+        isTrue,
+      );
+      expect(h.selection.current, isNull);
+      expect(h.selection.columns.length, 0);
+    });
+
+    test('ctrl+a selects the whole table', () {
+      final h = handler(columnCount: 7, rows: 11);
+      expect(
+        h.handleFixedKeybindings(key('a', 65, ctrl: true)),
+        isTrue,
+      );
+      final range = h.selection.current!.range;
+      expect(range.x, 0);
+      expect(range.y, 0);
+      expect(range.width, 7);
+      expect(range.height, 11);
+      expect(h.selection.current!.cell, const GlideItem(2, 3));
+    });
+
+    test('page keys jump by the visible height minus four', () {
+      final h = handler();
+      h.handleFixedKeybindings(key('PageDown', 34));
+      expect(h.selection.current!.cell.row, 3 + 16);
+      h.handleFixedKeybindings(key('PageUp', 33));
+      expect(h.selection.current!.cell.row, 3);
+    });
+
+    test('alt+arrow moves without collapsing the selection', () {
+      final h = handler();
+      // Grow a range first so the old range lands on the stack.
+      h.handleFixedKeybindings(key('ArrowDown', 40, shift: true));
+      final stackSize = h.selection.current!.rangeStack.length;
+
+      h.handleFixedKeybindings(key('ArrowDown', 40, alt: true));
+      expect(h.selection.current!.cell.row, 4);
+      expect(h.selection.current!.range.height, 1);
+      expect(h.selection.current!.rangeStack.length, stackSize + 1);
+    });
+
+    test('ctrl+space selects a column (exclusive blending)', () {
+      final h = handler(columnCount: 10);
+      expect(
+        h.handleFixedKeybindings(key(' ', 32, ctrl: true)),
+        isTrue,
+      );
+      expect(h.selection.columns.toArray(), [2]);
+      // `columnBehavior: exclusive` drops `current`, and a missing current
+      // range short-circuits the handler — matching `data-editor.tsx:3272`.
+      expect(h.selection.current, isNull);
+      expect(
+        h.handleFixedKeybindings(key(' ', 32, ctrl: true)),
+        isFalse,
+      );
+      expect(h.selection.columns.toArray(), [2]);
+    });
+
+    test('delete walks the renderer onDelete over the range', () {
+      var called = 0;
+      final h = handler(
+        initial: const GlideGridSelection(
+          current: GlideGridSelectionCurrent(
+            cell: GlideItem(1, 1),
+            range: GlideRectangle(x: 1, y: 1, width: 2, height: 2),
+          ),
+        ),
+        onDelete: (selection) {
+          called++;
+          return true;
+        },
+      );
+      expect(
+        h.handleFixedKeybindings(key('Delete', 46)),
+        isTrue,
+      );
+      expect(called, 1);
+      expect(edits, hasLength(4));
+      expect(
+        edits.map((e) => e.location).toSet(),
+        {
+          const GlideItem(1, 1),
+          const GlideItem(2, 1),
+          const GlideItem(1, 2),
+          const GlideItem(2, 2),
+        },
+      );
+    });
+
+    test('delete can be aborted by the owner', () {
+      final h = handler(
+        onDelete: (_) => false,
+      );
+      expect(
+        h.handleFixedKeybindings(key('Delete', 46)),
+        isTrue,
+      );
+      expect(edits, isEmpty);
+    });
+
+    test('a printable key activates the editor', () {
+      String? activated;
+      final h = handler(
+        onCellActivated: (location, k) =>
+            activated = '$location:$k',
+      );
+      expect(
+        h.handleKeyDown(
+          key(
+            'x',
+            88,
+            bounds: const GlideRectangle(x: 2, y: 3, width: 1, height: 1),
+          ),
+          editOnType: true,
+        ),
+        isTrue,
+      );
+      expect(activated, '[2, 3]:x');
+    });
+
+    test('goToLastCell clamps into the table', () {
+      final h = handler(columnCount: 4, rows: 6);
+      h.handleFixedKeybindings(key('End', 35, ctrl: true));
+      expect(h.selection.current!.cell, const GlideItem(3, 5));
+    });
+
+    test('adjustSelection grows to the table edge', () {
+      final h = handler(columnCount: 6, rows: 9);
+      h.handleFixedKeybindings(key('ArrowDown', 68 + 0, shift: true));
+      h.handleFixedKeybindings(key('ArrowDown', 40, shift: true));
+      var range = h.selection.current!.range;
+      expect(range.height, 3);
+
+      // primary+shift+ArrowDown → selectToLastRow ([0, 2]).
+      h.handleFixedKeybindings(key('ArrowDown', 40, shift: true, ctrl: true));
+      range = h.selection.current!.range;
+      expect(range.y, 3);
+      expect(range.height, 9 - 3);
+    });
+
+    test('expandSelection grows the range across spans', () {
+      final spanning = const GlideTextCell(
+        data: 'wide',
+        displayData: 'wide',
+        span: (start: 0, end: 3),
+      );
+      final selection = const GlideGridSelection(
+        current: GlideGridSelectionCurrent(
+          cell: GlideItem(1, 0),
+          range: GlideRectangle(x: 1, y: 0, width: 1, height: 1),
+        ),
+      );
+      final expanded = glideExpandSelection(
+        newVal: selection,
+        getCellsForSelection: (region) => [
+          [
+            if (region.x.toInt() <= 1 && 1 < region.x + region.width)
+              spanning,
+          ],
+        ],
+        rowMarkerOffset: 0,
+        allowPartial: false,
+      );
+      expect(expanded.current!.range.x, 0);
+      expect(expanded.current!.range.width, 4);
+    });
+
+    test('shiftSelection moves columns for the public API', () {
+      const selection = GlideGridSelection(
+        current: GlideGridSelectionCurrent(
+          cell: GlideItem(2, 5),
+          range: GlideRectangle(x: 2, y: 5, width: 3, height: 1),
+        ),
+        columns: GlideCompactSelection.empty(),
+      );
+      final shifted = glideShiftSelection(selection, -1);
+      expect(shifted.current!.cell, const GlideItem(1, 5));
+      expect(shifted.current!.range.x, 1);
+    });
+
+    test('getSpanStops reports every spanned column', () {
+      final stops = glideGetSpanStops([
+        [
+          const GlideTextCell(
+            data: 'a',
+            displayData: 'a',
+            span: (start: 1, end: 3),
+          ),
+          const GlideTextCell(data: 'b', displayData: 'b'),
+        ],
+      ]);
+      expect(stops, [2, 3, 4]);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Clipboard (`data-editor.tsx:3583-3901`)
+  // -------------------------------------------------------------------------
+
+  group('clipboard', () {
+    List<List<GlideGridCell>> table() => [
+      for (var row = 0; row < 5; row++)
+        [
+          for (var col = 0; col < 4; col++)
+            GlideTextCell(
+              data: 'r$row c$col',
+              displayData: 'r$row c$col',
+            ),
+        ],
+    ];
+
+    GlideGetCellsForSelection reader(List<List<GlideGridCell>> cells) =>
+        (region) => [
+          for (var y = region.y.toInt();
+              y < region.y + region.height && y < cells.length;
+              y++)
+            [
+              for (var x = region.x.toInt();
+                  x < region.x + region.width && x < cells[y].length;
+                  x++)
+                cells[y][x],
+            ],
+        ];
+
+    test('copy writes the current range as TSV', () async {
+      final fake = FakeClipboard();
+      final cells = table();
+      await glideCopy(
+        focused: true,
+        copyEnabled: true,
+        selection: const GlideGridSelection(
+          current: GlideGridSelectionCurrent(
+            cell: GlideItem(1, 1),
+            range: GlideRectangle(x: 1, y: 1, width: 2, height: 2),
+          ),
+        ),
+        rows: 5,
+        rowMarkerOffset: 0,
+        columns: [
+          for (var i = 0; i < 4; i++)
+            GlideGridColumn(title: 'C$i', width: 100),
+        ],
+        getCellsForSelection: reader(cells),
+        clipboard: fake,
+      );
+      expect(
+        fake.writtenPlain,
+        'r1 c1\tr1 c2\nr2 c1\tr2 c2',
+      );
+      expect(fake.writtenHtml, contains('<table>'));
+    });
+
+    test('copy prepends headers when asked', () async {
+      final fake = FakeClipboard();
+      await glideCopy(
+        focused: true,
+        copyEnabled: true,
+        selection: const GlideGridSelection(
+          current: GlideGridSelectionCurrent(
+            cell: GlideItem(0, 0),
+            range: GlideRectangle(x: 0, y: 0, width: 1, height: 1),
+          ),
+        ),
+        rows: 5,
+        rowMarkerOffset: 0,
+        columns: [
+          for (var i = 0; i < 4; i++)
+            GlideGridColumn(title: 'C$i', width: 100),
+        ],
+        getCellsForSelection: reader(table()),
+        copyHeaders: true,
+        clipboard: fake,
+      );
+      expect(fake.writtenPlain, 'C0\nr0 c0');
+    });
+
+    test('copy of a column selection zips the columns together', () async {
+      final fake = FakeClipboard();
+      await glideCopy(
+        focused: true,
+        copyEnabled: true,
+        selection: const GlideGridSelection(
+          columns: GlideCompactSelection.empty(),
+        ).copyWith(
+          columns: GlideCompactSelection.fromArray([0, 2]),
+        ),
+        rows: 5,
+        rowMarkerOffset: 0,
+        columns: [
+          for (var i = 0; i < 4; i++)
+            GlideGridColumn(title: 'C$i', width: 100),
+        ],
+        getCellsForSelection: reader(table()),
+        clipboard: fake,
+      );
+      expect(
+        fake.writtenPlain,
+        'r0 c0\tr0 c2\n'
+        'r1 c0\tr1 c2\n'
+        'r2 c0\tr2 c2\n'
+        'r3 c0\tr3 c2\n'
+        'r4 c0\tr4 c2',
+      );
+    });
+
+    test('copy is a no-op when unfocused or disabled', () async {
+      final fake = FakeClipboard();
+      const selection = GlideGridSelection(
+        current: GlideGridSelectionCurrent(
+          cell: GlideItem(0, 0),
+          range: GlideRectangle(x: 0, y: 0, width: 1, height: 1),
+        ),
+      );
+      await glideCopy(
+        focused: false,
+        copyEnabled: true,
+        selection: selection,
+        rows: 5,
+        rowMarkerOffset: 0,
+        columns: [GlideGridColumn(title: 'C', width: 100)],
+        getCellsForSelection: reader(table()),
+        clipboard: fake,
+      );
+      await glideCopy(
+        focused: true,
+        copyEnabled: false,
+        selection: selection,
+        rows: 5,
+        rowMarkerOffset: 0,
+        columns: [GlideGridColumn(title: 'C', width: 100)],
+        getCellsForSelection: reader(table()),
+        clipboard: fake,
+      );
+      expect(fake.writtenPlain, isNull);
+    });
+
+    test('paste without onPaste writes a single cell', () async {
+      final edits = <GlideEditListItem>[];
+      final fake = FakeClipboard()..nextText = 'pasted value';
+      await glidePaste(
+        focused: true,
+        selection: const GlideGridSelection(
+          current: GlideGridSelectionCurrent(
+            cell: GlideItem(1, 2),
+            range: GlideRectangle(x: 1, y: 2, width: 1, height: 1),
+          ),
+        ),
+        rows: 5,
+        columnCount: 4,
+        rowMarkerOffset: 0,
+        getCellContent: (item) => GlideTextCell(
+          data: 'old ${item.col}-${item.row}',
+          displayData: 'old',
+        ),
+        getCellRenderer: GlideDefaultRendererLookup().forCell,
+        onCellsEdited: edits.addAll,
+        clipboard: fake,
+      );
+      expect(edits, hasLength(1));
+      expect(edits.single.location, const GlideItem(1, 2));
+      final pasted = edits.single.value as GlideTextCell;
+      expect(pasted.data, 'pasted value');
+      // Upstream's default paste path passes `formatted: undefined`, and
+      // `text-cell.tsx` then keeps the previous `displayData`.
+      expect(pasted.displayData, 'old');
+    });
+
+    test('paste with onPaste fills the target rectangle', () async {
+      final edits = <GlideEditListItem>[];
+      final fake = FakeClipboard()
+        ..nextText = 'a\tb\nc\td';
+      List<List<String>>? seen;
+      await glidePaste(
+        focused: true,
+        selection: const GlideGridSelection(
+          current: GlideGridSelectionCurrent(
+            cell: GlideItem(1, 1),
+            range: GlideRectangle(x: 1, y: 1, width: 1, height: 1),
+          ),
+        ),
+        rows: 5,
+        columnCount: 4,
+        rowMarkerOffset: 0,
+        getCellContent: (item) => GlideTextCell(
+          data: 'old',
+          displayData: 'old',
+        ),
+        getCellRenderer: GlideDefaultRendererLookup().forCell,
+        onCellsEdited: edits.addAll,
+        onPaste: (location, data) {
+          seen = data;
+          return true;
+        },
+        clipboard: fake,
+      );
+      expect(seen, [
+        ['a', 'b'],
+        ['c', 'd'],
+      ]);
+      expect(edits, hasLength(4));
+      expect(
+        edits.map((e) => e.location).toSet(),
+        {
+          const GlideItem(1, 1),
+          const GlideItem(2, 1),
+          const GlideItem(1, 2),
+          const GlideItem(2, 2),
+        },
+      );
+    });
+
+    test('onPaste returning false aborts the paste', () async {
+      final edits = <GlideEditListItem>[];
+      final fake = FakeClipboard()..nextText = 'a\tb';
+      await glidePaste(
+        focused: true,
+        selection: const GlideGridSelection(
+          current: GlideGridSelectionCurrent(
+            cell: GlideItem(0, 0),
+            range: GlideRectangle(x: 0, y: 0, width: 1, height: 1),
+          ),
+        ),
+        rows: 5,
+        columnCount: 4,
+        rowMarkerOffset: 0,
+        getCellContent: (_) => const GlideTextCell(
+          data: 'old',
+          displayData: 'old',
+        ),
+        getCellRenderer: GlideDefaultRendererLookup().forCell,
+        onCellsEdited: edits.addAll,
+        onPaste: (_, _) => false,
+        clipboard: fake,
+      );
+      expect(edits, isEmpty);
+    });
+
+    test('paste respects the table bounds', () async {
+      final edits = <GlideEditListItem>[];
+      final fake = FakeClipboard()
+        ..nextText = 'a\tb\tc\td\te\tf\tg\th\ti';
+      await glidePaste(
+        focused: true,
+        selection: const GlideGridSelection(
+          current: GlideGridSelectionCurrent(
+            cell: GlideItem(3, 4),
+            range: GlideRectangle(x: 3, y: 4, width: 1, height: 1),
+          ),
+        ),
+        rows: 5,
+        columnCount: 4,
+        rowMarkerOffset: 0,
+        getCellContent: (_) => const GlideTextCell(
+          data: 'old',
+          displayData: 'old',
+        ),
+        getCellRenderer: GlideDefaultRendererLookup().forCell,
+        onCellsEdited: edits.addAll,
+        clipboard: fake,
+      );
+      expect(edits, hasLength(1));
+      expect(edits.single.location, const GlideItem(3, 4));
+    });
+
+    test('pasteIntoCell coerces through the renderer', () {
+      final booleanCell = const GlideBooleanCell(
+        data: GlideBooleanValue.unchecked,
+      );
+      final edit = glidePasteToCell(
+        inner: booleanCell,
+        target: const GlideItem(2, 2),
+        rawValue: 'true',
+        getCellRenderer: GlideDefaultRendererLookup().forCell,
+      );
+      expect(edit, isNotNull);
+      expect(
+        (edit!.value as GlideBooleanCell).data,
+        GlideBooleanValue.checked,
+      );
+    });
+
+    test('pasteIntoCell leaves read-only cells alone', () {
+      final edit = glidePasteToCell(
+        inner: const GlideTextCell(
+          data: 'x',
+          displayData: 'x',
+          readonly: true,
+        ),
+        target: const GlideItem(0, 0),
+        rawValue: 'y',
+        getCellRenderer: GlideDefaultRendererLookup().forCell,
+      );
+      expect(edit, isNull);
     });
   });
 }

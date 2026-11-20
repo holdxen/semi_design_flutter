@@ -88,9 +88,22 @@ bool glideCheckKey(String? key, GlideGridKeyArgs args) {
   return key == args.key;
 }
 
+/// `HotkeyResultDetails` (`is-hotkey.ts:27-29`): set to true when [hotkey]
+/// matched, so a caller can chain several alternatives.
+class GlideHotkeyDetails {
+  bool didMatch = false;
+}
+
 /// `isHotkey` (`is-hotkey.ts:31-35`).
-bool glideIsHotkey(String hotkey, GlideGridKeyArgs args) =>
-    _isHotkeyInner(hotkey, args);
+bool glideIsHotkey(
+  String hotkey,
+  GlideGridKeyArgs args, [
+  GlideHotkeyDetails? details,
+]) {
+  final result = _isHotkeyInner(hotkey, args);
+  if (result && details != null) details.didMatch = true;
+  return result;
+}
 
 /// `isHotkeyInner` (`is-hotkey.ts:37-86`).
 bool _isHotkeyInner(String hotkey, GlideGridKeyArgs args) {
