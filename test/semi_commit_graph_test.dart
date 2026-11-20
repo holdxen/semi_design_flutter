@@ -81,6 +81,23 @@ void main() {
     expect(selected, findsWidgets);
   });
 
+  testWidgets('graph width follows actual lane count, not a fixed width', (
+    tester,
+  ) async {
+    await tester.pumpWidget(host(const SemiCommitGraph(commits: commits)));
+
+    // Default dot radius 4 -> column width 12. merges have 2 lanes (24px),
+    // the root has 1 lane (12px); content must start right after the lines.
+    final graphBoxes = find.byWidgetPredicate(
+      (w) => w is SizedBox && w.child is CustomPaint && (w.width ?? 0) < 100,
+    );
+    final widths = [
+      for (var i = 0; i < graphBoxes.evaluate().length; i++)
+        tester.getSize(graphBoxes.at(i)).width,
+    ];
+    expect(widths, [24, 24, 24, 12]);
+  });
+
   testWidgets('graphVisible false still renders the commit list', (
     tester,
   ) async {

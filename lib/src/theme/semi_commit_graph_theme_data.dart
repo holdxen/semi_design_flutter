@@ -116,7 +116,7 @@ class SemiCommitGraphThemeData {
       lineWidth: lineWidth ?? 2,
       dotRadius: dotRadius ?? 4,
       rowHeight: rowHeight,
-      horizontalPadding: horizontalPadding ?? 8,
+      horizontalPadding: horizontalPadding ?? 4,
     );
   }
 

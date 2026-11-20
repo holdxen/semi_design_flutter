@@ -79,7 +79,6 @@ class _SemiCommitGraphState extends State<SemiCommitGraph> {
     // Column width is derived from the dot radius the same way the C++ code
     // derives it from the font ascent (r = w/3).
     final columnWidth = theme.dotRadius * 3;
-    final graphWidth = columnWidth * 3; // graph never exceeds ~1/3 of a row.
 
     return ListView.builder(
       shrinkWrap: widget.shrinkWrap,
@@ -92,7 +91,6 @@ class _SemiCommitGraphState extends State<SemiCommitGraph> {
         graphVisible: widget.graphVisible,
         rowHeight: rowHeight,
         columnWidth: columnWidth,
-        graphWidth: graphWidth,
         onTap: () => _select(rows[index].node),
       ),
     );
@@ -107,7 +105,6 @@ class _CommitGraphRow extends StatelessWidget {
     required this.graphVisible,
     required this.rowHeight,
     required this.columnWidth,
-    required this.graphWidth,
     required this.onTap,
   });
 
@@ -117,13 +114,15 @@ class _CommitGraphRow extends StatelessWidget {
   final bool graphVisible;
   final double rowHeight;
   final double columnWidth;
-  final double graphWidth;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final node = row.node;
     final background = selected ? theme.selectionColor : theme.backgroundColor;
+    // Qt advances the text rect by exactly one column width per active lane
+    // (`rect.setX(x + w)`), so the content sits snug against the last line.
+    final graphWidth = columnWidth * row.columns.length;
 
     Widget content = Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -142,7 +141,8 @@ class _CommitGraphRow extends StatelessWidget {
         Expanded(
           child: Padding(
             padding: EdgeInsets.only(
-              left: theme.horizontalPadding,
+              // Qt: rect starts at +2, each lane advances by w, then +hMargin.
+              left: theme.horizontalPadding + 2,
               right: theme.horizontalPadding,
               top: 6,
               bottom: 6,
