@@ -10,6 +10,7 @@ import 'package:example/pages/button.dart';
 import 'package:example/pages/cascader.dart';
 import 'package:example/pages/card.dart';
 import 'package:example/pages/carousel.dart';
+import 'package:example/pages/commit_graph.dart';
 import 'package:example/pages/semi_chrome_tab.dart';
 import 'package:example/pages/checkbox.dart';
 import 'package:example/pages/collapse.dart';
@@ -273,6 +274,12 @@ const List<DemoGroup> demoGroups = [
       ScrollListPage(),
     ),
     DemoSpec('tag', 'Tag 标签', 'doc-tag.svg', TagPage()),
+    DemoSpec(
+      'commitGraph',
+      'CommitGraph 提交图',
+      'doc-timeline.svg',
+      CommitGraphPage(),
+    ),
     DemoSpec('timeline', 'Timeline 时间轴', 'doc-timeline.svg', TimelinePage()),
     DemoSpec('tooltip', 'Tooltip 工具提示', 'doc-tooltip.svg', TooltipPage()),
   ]),
