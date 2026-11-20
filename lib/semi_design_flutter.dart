@@ -214,6 +214,7 @@ export 'src/theme/semi_feedback_theme_data.dart';
 export 'src/components/semi_user_guide.dart';
 export 'src/theme/semi_user_guide_theme.dart';
 export 'src/theme/semi_user_guide_theme_data.dart';
+export 'src/glide/glide.dart';
 export 'src/components/commit_graph_layout.dart';
 export 'src/components/semi_commit_graph.dart';
 export 'src/theme/semi_commit_graph_theme.dart';
