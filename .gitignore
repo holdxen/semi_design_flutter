@@ -11,6 +11,7 @@
 migrate_working_dir/
 .zcode
 tool
+.workbuddy
 
 # IntelliJ related
 *.iml
