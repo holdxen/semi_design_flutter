@@ -2228,6 +2228,44 @@ void main() {
       // (`data-editor.tsx:1856`), so nothing is selected.
       expect(selectionLog, isEmpty);
     });
+
+    testWidgets('hover animation runs and then settles', (tester) async {
+      await tester.pumpWidget(
+        buildEditor(
+          content: (item) => GlideTextCell(
+            data: 'hover ${item.col}-${item.row}',
+            displayData: 'hover',
+            hoverEffect: true,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final gesture = await tester.startGesture(
+        const Offset(150, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.moveBy(const Offset(2, 0));
+      await tester.pump();
+
+      // The ramp is running, so `pumpAndSettle` would hang; step manually.
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 30));
+      }
+      expect(tester.takeException(), isNull);
+
+      await gesture.moveTo(const Offset(380, 280));
+      await gesture.up();
+      for (var i = 0; i < 20; i++) {
+        await tester.pump(const Duration(milliseconds: 30));
+      }
+
+      // The ticker must stop once everything has settled, otherwise this
+      // never returns.
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
+
   });
 
   group('column sizer', () {
@@ -2385,6 +2423,106 @@ void main() {
       expect(auto.advance(16), (0.0, 0.0));
     });
   });
+
+  group('animation manager', () {
+    test('ramps the hovered item in over 80ms', () {
+      final manager = GlideAnimationManager();
+      expect(manager.shouldStep, isFalse);
+
+      manager.setHovered(const GlideItem(1, 1));
+      expect(manager.shouldStep, isTrue);
+
+      var emitted = <GlideHoverValue>[];
+      manager.step(40, (values) => emitted = values);
+      expect(emitted.single.item, const GlideItem(1, 1));
+      expect(emitted.single.amount, closeTo(0.5, 0.001));
+
+      manager.step(40, (values) => emitted = values);
+      expect(emitted.single.amount, 1.0);
+      expect(manager.shouldStep, isFalse);
+    });
+
+    test('the previous item fades out with easeOutCubic', () {
+      final manager = GlideAnimationManager();
+      manager.setHovered(const GlideItem(1, 1));
+      manager.step(80, (_) {});
+      expect(manager.shouldStep, isFalse);
+
+      manager.setHovered(const GlideItem(2, 1));
+      expect(manager.shouldStep, isTrue);
+
+      var emitted = <GlideHoverValue>[];
+      manager.step(40, (values) => emitted = values);
+      expect(emitted, hasLength(2));
+      final leaving = emitted.firstWhere(
+        (v) => v.item == const GlideItem(1, 1),
+      );
+      final entering = emitted.firstWhere(
+        (v) => v.item == const GlideItem(2, 1),
+      );
+      expect(leaving.amount, closeTo(0.5, 0.001));
+      expect(entering.amount, closeTo(0.5, 0.001));
+
+      // With nothing hovered any more, leaving items are eased instead of
+      // raw (`animation-manager.ts:48-55`).
+      manager.setHovered(null);
+      manager.step(20, (values) => emitted = values);
+      expect(emitted, hasLength(2));
+      final eased = emitted.firstWhere(
+        (v) => v.item == const GlideItem(2, 1),
+      );
+      expect(eased.amount, closeTo(glideEaseOutCubic(0.25), 0.001));
+    });
+
+    test('re-hovering resumes from the leaving amount', () {
+      final manager = GlideAnimationManager();
+      manager.setHovered(const GlideItem(1, 1));
+      manager.step(80, (_) {});
+      manager.setHovered(const GlideItem(2, 1));
+      manager.step(40, (_) {}); // item 1 is now leaving at 0.5
+
+      manager.setHovered(const GlideItem(1, 1));
+      var emitted = <GlideHoverValue>[];
+      manager.step(1, (values) => emitted = values);
+      final resumed = emitted.firstWhere(
+        (v) => v.item == const GlideItem(1, 1),
+      );
+      expect(resumed.amount, greaterThan(0.5));
+    });
+
+    test('setting the same hovered item is a no-op', () {
+      final manager = GlideAnimationManager();
+      manager.setHovered(const GlideItem(1, 1));
+      manager.step(80, (_) {});
+      manager.setHovered(const GlideItem(1, 1));
+      expect(manager.shouldStep, isFalse);
+      // The current item stays in the list at full amount even when idle.
+      expect(manager.animatingItems, hasLength(1));
+      expect(manager.animatingItems.single.amount, 1.0);
+    });
+
+    test('clearing the hovered item fades it out', () {
+      final manager = GlideAnimationManager();
+      manager.setHovered(const GlideItem(1, 1));
+      manager.step(80, (_) {});
+      manager.setHovered(null);
+      expect(manager.shouldStep, isTrue);
+
+      var emitted = <GlideHoverValue>[];
+      for (var i = 0; i < 10; i++) {
+        manager.step(20, (values) => emitted = values);
+      }
+      expect(emitted, isEmpty);
+      expect(manager.shouldStep, isFalse);
+    });
+
+    test('easeOutCubic matches the upstream curve', () {
+      expect(glideEaseOutCubic(0), 0);
+      expect(glideEaseOutCubic(1), 1);
+      expect(glideEaseOutCubic(0.5), closeTo(0.875, 0.001));
+    });
+  });
+
 }
 
 

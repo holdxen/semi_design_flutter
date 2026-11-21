@@ -7,11 +7,13 @@
 // `getBoundingClientRect` scaling, HTML5 drag and drop, accessibility tree)
 // are dropped or deferred.
 import 'package:flutter/gestures.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../../cells/glide_cell_types.dart';
 import '../../common/glide_is_hotkey.dart';
+import 'glide_animation_manager.dart';
 import 'glide_event_args.dart';
 import 'render/glide_data_grid_painter.dart';
 import 'render/glide_draw_grid_arg.dart';
@@ -194,8 +196,15 @@ class GlideDataGrid extends StatefulWidget {
   State<GlideDataGrid> createState() => _GlideDataGridState();
 }
 
-class _GlideDataGridState extends State<GlideDataGrid> {
+class _GlideDataGridState extends State<GlideDataGrid>
+    with TickerProviderStateMixin {
   final FocusNode _focusNode = FocusNode(debugLabel: 'GlideDataGrid');
+
+  /// `AnimationManager` (`data-grid.tsx:415`, `:768-787`).
+  final GlideAnimationManager _hoverAnimation = GlideAnimationManager();
+  Map<GlideItem, double> _hoverValues = const {};
+  late final Ticker _hoverTicker;
+  Duration _lastHoverTick = Duration.zero;
   Offset? _pointer;
   bool _pointerInside = false;
   GlideGridMouseArgs? _hoveredArgs;
@@ -209,6 +218,7 @@ class _GlideDataGridState extends State<GlideDataGrid> {
   void initState() {
     super.initState();
     widget.controller?._state = this;
+    _hoverTicker = createTicker(_onHoverTick);
   }
 
   @override
@@ -223,8 +233,58 @@ class _GlideDataGridState extends State<GlideDataGrid> {
   @override
   void dispose() {
     widget.controller?._state = null;
+    _hoverTicker.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  /// `onAnimationFrame` (`data-grid.tsx:1266-1272`).
+  void _onHoverTick(Duration elapsed) {
+    if (_lastHoverTick == Duration.zero) {
+      _lastHoverTick = elapsed;
+      return;
+    }
+    final dtMs = (elapsed - _lastHoverTick).inMicroseconds / 1000.0;
+    _lastHoverTick = elapsed;
+
+    _hoverAnimation.step(dtMs, (values) {
+      _hoverValues = {for (final v in values) v.item: v.amount};
+      setState(() {});
+    });
+
+    if (!_hoverAnimation.shouldStep) {
+      _hoverTicker.stop();
+      _lastHoverTick = Duration.zero;
+    }
+  }
+
+  /// `useLayoutEffect` over `hoveredItem` (`data-grid.tsx:768-787`): only
+  /// renderers that opt into hover animate, headers always do.
+  void _updateHoveredItem(GlideGridMouseArgs? args) {
+    GlideItem? item;
+    if (args is GlideGridCellMouseArgs) {
+      item = args.location;
+    } else if (args is GlideGridHeaderMouseArgs) {
+      item = args.location;
+    } else if (args is GlideGridGroupHeaderMouseArgs) {
+      item = args.location;
+    }
+
+    if (item == null || item.row < 0) {
+      _hoverAnimation.setHovered(item);
+    } else {
+      final cell = widget.props.getCellContent(item, true);
+      final renderer = widget.props.getCellRenderer(cell);
+      final needsHover = renderer == null
+          ? cell.kind == GlideCellKind.custom
+          : renderer.needsHoverFor(cell);
+      _hoverAnimation.setHovered(needsHover ? item : null);
+    }
+
+    if (_hoverAnimation.shouldStep && !_hoverTicker.isActive) {
+      _lastHoverTick = Duration.zero;
+      _hoverTicker.start();
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -563,6 +623,7 @@ class _GlideDataGridState extends State<GlideDataGrid> {
     _pointer = event.localPosition;
     _pointerInside = true;
     _hoveredOnEdge = isEdge;
+    if (!same) _updateHoveredItem(args);
 
     if (!same || hoverInfo != null) {
       p.onItemHovered(args);
@@ -610,6 +671,7 @@ class _GlideDataGridState extends State<GlideDataGrid> {
   void _handlePointerExit(PointerExitEvent event) {
     _pointerInside = false;
     _hoveredArgs = null;
+    _updateHoveredItem(null);
     widget.props.onItemHovered(
       GlideGridOutOfBoundsMouseArgs(
         shiftKey: false,
@@ -741,7 +803,7 @@ class _GlideDataGridState extends State<GlideDataGrid> {
       metrics: p.metrics ?? GlideTextMetrics(),
       getRowThemeOverride: p.getRowThemeOverride,
       getGroupDetails: p.getGroupDetails,
-      hoverValues: const {},
+      hoverValues: _hoverValues,
       hoverInfo: _hoveredArgs is GlideGridCellMouseArgs
           ? (_hoveredArgs! as GlideGridCellMouseArgs).location
           : null,

@@ -21,6 +21,7 @@ export 'data_editor/glide_handle_select.dart';
 export 'data_editor/glide_key_handler.dart';
 export 'data_editor/glide_keybindings.dart';
 export 'common/glide_utils.dart';
+export 'internal/data_grid/glide_animation_manager.dart';
 export 'internal/data_grid/glide_data_grid.dart';
 export 'internal/data_grid/glide_event_args.dart';
 export 'internal/data_grid/glide_selection.dart';

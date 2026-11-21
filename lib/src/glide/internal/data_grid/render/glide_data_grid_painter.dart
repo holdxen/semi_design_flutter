@@ -528,42 +528,64 @@ class GlideDataGridPainter extends CustomPainter {
       translateY: 0,
       totalHeaderHeight: 0,
       cb: (c, drawX, _, clipX, _) {
-        final hovered = a.hoverInfo == GlideItem(c.sourceIndex, GlideItem.headerRow);
+        final headerItem = GlideItem(c.sourceIndex, GlideItem.headerRow);
         final selected = a.selection.columns.hasIndex(c.sourceIndex);
+        final hasSelectedCell =
+            a.selection.current?.cell.col == c.sourceIndex;
+        final noHover = a.dragAndDropState != null || a.isResizing;
+        final hover = noHover ? 0.0 : (a.hoverValues[headerItem] ?? 0);
 
-        var bg = theme.bgHeader;
-        if (a.isFocused && selected) {
-          bg = theme.bgHeaderHasFocus;
-        } else if (hovered) {
-          bg = theme.bgHeaderHovered;
-        }
-        if (selected) bg = Color.alphaBlend(theme.accentLight, bg);
-
+        // `data-grid-render.header.ts:86-109`: the fill starts one pixel in
+        // so the grid line of column 0 survives, and a selected column is
+        // painted with the accent color rather than blended.
+        final xOffset = c.sourceIndex == 0 ? 0.0 : 1.0;
         final rect = Rect.fromLTWH(
-          drawX,
+          drawX + xOffset,
           headerTop,
-          c.width,
+          c.width - xOffset,
           totalHeaderHeight - headerTop,
         );
-        canvas.drawRect(rect, Paint()..color = bg);
+
+        if (selected) {
+          canvas.drawRect(rect, Paint()..color = theme.accentColor);
+        } else if (hasSelectedCell || hover > 0) {
+          if (hasSelectedCell) {
+            canvas.drawRect(rect, Paint()..color = theme.bgHeaderHasFocus);
+          }
+          if (hover > 0) {
+            canvas.saveLayer(
+              rect,
+              Paint()..color = const Color(0xFFFFFFFF).withValues(alpha: hover),
+            );
+            canvas.drawRect(rect, Paint()..color = theme.bgHeaderHovered);
+            canvas.restore();
+          }
+        }
 
         // `drawHeaderInner`'s marker branch (`data-grid-render.header.ts:
         // 433-459`): the marker column shows a checkbox instead of a title.
         final ext = c.extension;
         if (ext?.rowMarker != null && ext!.headerRowMarkerDisabled != true) {
           final checked = ext.rowMarkerChecked ?? GlideBooleanValue.empty;
-          final noHover =
-              a.dragAndDropState != null ||
-              a.isResizing;
-          final hovered =
-              !noHover &&
-              a.hoverInfo == GlideItem(c.sourceIndex, GlideItem.headerRow);
           final alwaysVisible = ext.headerRowMarkerAlwaysVisible;
-          if (checked == GlideBooleanValue.checked ||
-              alwaysVisible ||
-              hovered) {
+          // `globalAlpha = hoverAmount` unless the marker is always visible
+          // (`data-grid-render.header.ts:435-457`).
+          final alpha = checked == GlideBooleanValue.checked || alwaysVisible
+              ? 1.0
+              : hover;
+          if (alpha > 0) {
             final markerTheme = ext.headerRowMarkerTheme?.applyTo(theme) ??
                 theme;
+            final markerRect = Rect.fromLTWH(
+              drawX,
+              headerTop,
+              c.width,
+              totalHeaderHeight - headerTop,
+            );
+            canvas.saveLayer(
+              markerRect,
+              Paint()..color = const Color(0xFFFFFFFF).withValues(alpha: alpha),
+            );
             drawCheckbox(
               canvas,
               markerTheme,
@@ -576,6 +598,7 @@ class GlideDataGridPainter extends CustomPainter {
               alignment: GlideContentAlign.center,
               style: ext.rowMarker!,
             );
+            canvas.restore();
           }
           return null;
         }
@@ -605,19 +628,6 @@ class GlideDataGridPainter extends CustomPainter {
           ),
         );
 
-        // Upstream draws a 2px accent underline on the focused/selected column
-        // header (`header.ts`).
-        if (selected) {
-          canvas.drawRect(
-            Rect.fromLTWH(
-              drawX,
-              totalHeaderHeight - 2,
-              c.width,
-              2,
-            ),
-            Paint()..color = theme.accentColor,
-          );
-        }
         return null;
       },
     );
