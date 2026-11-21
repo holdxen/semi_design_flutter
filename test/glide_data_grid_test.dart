@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:semi_design_flutter/semi_design_flutter.dart';
@@ -2944,6 +2945,47 @@ void main() {
 
       expect(renamed, ['Team A=Team B']);
       expect(find.byType(GlideGroupRename), findsNothing);
+    });
+
+    testWidgets('exposes an accessibility tree for the visible cells',
+        (tester) async {
+      final handle = tester.ensureSemantics();
+
+      await tester.pumpWidget(buildEditor(columnCount: 3));
+      await tester.pumpAndSettle();
+
+      // `data-grid.tsx:1769-1855`: a table of column headers plus one node
+      // per visible row and cell.
+      expect(find.bySemanticsLabel('Grid'), findsOneWidget);
+      expect(find.bySemanticsLabel('Column headers'), findsOneWidget);
+      expect(find.bySemanticsLabel('C0'), findsOneWidget);
+      expect(find.bySemanticsLabel('C2'), findsOneWidget);
+      expect(find.bySemanticsLabel('Row 1'), findsOneWidget);
+      expect(find.bySemanticsLabel('r0 c0'), findsOneWidget);
+
+      // The row-marker column is hidden when it is not accessible
+      // (`data-grid.tsx:1745-1748`); without markers nothing changes here.
+      final gesture = await tester.startGesture(
+        const Offset(50, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      final node = tester.getSemantics(find.bySemanticsLabel('r0 c0'));
+      expect(
+        // ignore: deprecated_member_use
+        node.getSemanticsData().hasFlag(SemanticsFlag.isSelected),
+        isTrue,
+      );
+      // Cells that cannot be edited are marked read-only.
+      final readonly = tester.getSemantics(find.bySemanticsLabel('r1 c1'));
+      expect(
+        // ignore: deprecated_member_use
+        readonly.getSemanticsData().hasFlag(SemanticsFlag.isReadOnly),
+        isFalse,
+      );
+      handle.dispose();
     });
   });
 

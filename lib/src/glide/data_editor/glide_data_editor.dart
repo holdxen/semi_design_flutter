@@ -830,6 +830,42 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     markerKind: _markerKind,
   );
 
+  /// `onCellFocused` (`data-editor.tsx:4124-4145`): the accessibility tree
+  /// reporting that a cell (or header) took focus — the editor turns that
+  /// into a selection.
+  void _onAccessibilityFocused(GlideItem cell) {
+    if (cell.row == GlideItem.headerRow) {
+      if (widget.props.columnSelect == GlideSelectMode.none) return;
+      _selectionState.createBehavior().setSelectedColumns(
+        newCols: GlideCompactSelection.fromSingleSelection(cell.col),
+        append: null,
+        allowMixed: false,
+      );
+      _setGridSelection(_selectionState.selection, false);
+      _gridController.focus();
+      return;
+    }
+
+    final current = _selection.current;
+    if (current != null && current.cell == cell) return;
+    _selectionState.createBehavior().setCurrent(
+      value: (
+        cell: cell,
+        range: GlideRectangle(
+          x: cell.col.toDouble(),
+          y: cell.row.toDouble(),
+          width: 1,
+          height: 1,
+        ),
+      ),
+      expand: true,
+      append: false,
+      trigger: GlideSelectionTrigger.keyboardNav,
+    );
+    _setGridSelection(_selectionState.selection, true);
+    _scrollTo(GlideScrollTarget(cell.col - _markerOffset, cell.row));
+  }
+
   /// `mangledGetGroupDetails` (`data-editor.tsx:1401-1423`): the user's
   /// callback plus the Rename action when `onGroupHeaderRenamed` is set.
   GlideGroupDetails _groupDetails(String group) {
@@ -2729,7 +2765,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
           onContextMenu: _onContextMenu,
           onCanvasFocused: () => setState(() => _focused = true),
           onCanvasBlur: () => setState(() => _focused = false),
-          onCellFocused: (_) {},
+          onCellFocused: _onAccessibilityFocused,
           onKeyDown: _handleKeyDown,
           onKeyUp: p.onKeyUp,
           selection: _selection,

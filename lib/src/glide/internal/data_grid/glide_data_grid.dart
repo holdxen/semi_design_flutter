@@ -15,6 +15,7 @@ import 'package:flutter/widgets.dart';
 
 import '../../cells/glide_cell_types.dart';
 import '../../common/glide_image_window_loader.dart';
+import '../../common/glide_utils.dart';
 import '../../common/glide_math.dart';
 import '../../common/glide_is_hotkey.dart';
 import 'glide_animation_manager.dart';
@@ -85,6 +86,8 @@ class GlideDataGridProps {
     this.onHeaderMenuClick,
     this.onHeaderIndicatorClick,
     this.imageLoader,
+    this.firstColAccessible = true,
+    this.disableAccessibilityTree = false,
   });
 
   final double width;
@@ -133,6 +136,13 @@ class GlideDataGridProps {
   /// `imageWindowLoader` (`data-grid.tsx`): when null the grid owns one and
   /// disposes it with itself.
   final GlideImageWindowLoader? imageLoader;
+
+  /// `firstColAccessible` (`data-grid.tsx:1745`): false hides the row-marker
+  /// column from the accessibility tree.
+  final bool firstColAccessible;
+
+  /// `experimental.disableAccessibilityTree` (`data-grid.tsx:1739`).
+  final bool disableAccessibilityTree;
 
   final GlideGridSelection selection;
   final List<GlideItem>? prelightCells;
@@ -643,6 +653,147 @@ class _GlideDataGridState extends State<GlideDataGrid>
   // Pointer wiring (`onPointerDown/Move/Up`, `data-grid.tsx:1076-1375`)
   // -------------------------------------------------------------------------
 
+  /// `getRowData` (`data-grid.tsx:330-336`).
+  String _accessibilityLabel(GlideGridCell cell) {
+    if (cell is GlideCustomCell) return cell.copyData ?? '';
+    return widget.props.getCellRenderer(cell)?.getAccessibilityString(cell) ??
+        '';
+  }
+
+  /// The `td`'s `onClick` (`data-grid.tsx:1818-1835`): focusing a cell from
+  /// the accessibility tree selects it first (the editor's `onCellFocused`,
+  /// `data-editor.tsx:4124-4145`) and then activates it with Enter.
+  void _accessibilityActivate(int col, int row) {
+    final p = widget.props;
+    final item = GlideItem(col, row);
+    p.onCellFocused(item);
+    p.onKeyDown(
+      GlideGridKeyArgs(
+        bounds: _getBoundsForItem(col, row),
+        key: 'Enter',
+        keyCode: 13,
+        altKey: false,
+        shiftKey: false,
+        ctrlKey: false,
+        metaKey: false,
+        cancel: () {},
+        stopPropagation: () {},
+        preventDefault: () {},
+        location: item,
+      ),
+    );
+  }
+
+  /// The `<table role="grid">` (`data-grid.tsx:1737-1856`), limited to the
+  /// visible columns and rows exactly like the upstream virtualized tree.
+  Widget _buildAccessibilityTree(
+    GlideDataGridProps p,
+    List<GlideMappedColumn> effectiveCols,
+  ) {
+    if (p.width < 50 || p.disableAccessibilityTree) {
+      return const SizedBox.shrink();
+    }
+
+    final cols = [...effectiveCols];
+    if (!p.firstColAccessible &&
+        cols.isNotEmpty &&
+        cols.first.sourceIndex == 0) {
+      cols.removeAt(0);
+    }
+
+    var endRow = p.cellYOffset;
+    var y = p.translateY;
+    while (endRow < p.rows && y <= p.height) {
+      y += p.rowHeight(endRow);
+      endRow++;
+    }
+
+    final range = p.selection.current?.range;
+    final focused = p.selection.current?.cell;
+
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: Semantics(
+          container: true,
+          explicitChildNodes: true,
+          label: 'Grid',
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Semantics(
+                container: true,
+                explicitChildNodes: true,
+                label: 'Column headers',
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (final c in cols)
+                      Semantics(
+                        container: true,
+                        button: true,
+                        label: c.title,
+                        selected: p.selection.columns.hasIndex(c.sourceIndex),
+                        focused:
+                            focused != null &&
+                            focused.col == c.sourceIndex &&
+                            focused.row < 0,
+                        onTap: () => _accessibilityActivate(
+                          c.sourceIndex,
+                          GlideItem.headerRow,
+                        ),
+                        child: const SizedBox(width: 1, height: 1),
+                      ),
+                  ],
+                ),
+              ),
+              for (var row = p.cellYOffset; row < endRow; row++)
+                Semantics(
+                  container: true,
+                  explicitChildNodes: true,
+                  label: 'Row ${row + 1}',
+                  selected: p.selection.rows.hasIndex(row),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final c in cols)
+                        _cellSemantics(p, c.sourceIndex, row, range, focused),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _cellSemantics(
+    GlideDataGridProps p,
+    int col,
+    int row,
+    GlideRectangle? range,
+    GlideItem? focused,
+  ) {
+    final cell = p.getCellContent(GlideItem(col, row), true);
+    final selected =
+        range != null &&
+        col >= range.x &&
+        col < range.x + range.width &&
+        row >= range.y &&
+        row < range.y + range.height;
+    return Semantics(
+      container: true,
+      button: true,
+      label: _accessibilityLabel(cell),
+      selected: selected,
+      readOnly: glideIsInnerOnlyCell(cell) || !glideIsReadWriteCell(cell),
+      focused: focused != null && focused.col == col && focused.row == row,
+      onTap: () => _accessibilityActivate(col, row),
+      child: const SizedBox(width: 1, height: 1),
+    );
+  }
+
   /// `groupHeaderActionForEvent` (`data-grid.tsx:1004-1020`).
   ///
   /// Upstream compares `localEventY + box.y`, which only ever lands inside the
@@ -948,10 +1099,16 @@ class _GlideDataGridState extends State<GlideDataGrid>
             child: SizedBox(
               width: p.width,
               height: p.height,
-              child: CustomPaint(
-                painter: GlideDataGridPainter(arg),
-                isComplex: true,
-                willChange: true,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  CustomPaint(
+                    painter: GlideDataGridPainter(arg),
+                    isComplex: true,
+                    willChange: true,
+                  ),
+                  _buildAccessibilityTree(p, mapped),
+                ],
               ),
             ),
           ),
