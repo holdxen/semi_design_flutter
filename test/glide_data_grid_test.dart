@@ -2829,6 +2829,106 @@ void main() {
       expect(find.text('Type to search'), findsNothing);
     });
 
+    testWidgets('the search bar slides out over 150ms before unmounting',
+        (tester) async {
+      await tester.pumpWidget(
+        buildEditor(
+          keybindingsOverride: const GlideKeybinds(search: true),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final cell = await tester.startGesture(
+        const Offset(150, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await cell.up();
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pumpAndSettle();
+
+      // `gdg-search-fadein` has run to `translateX(0)`
+      // (`data-grid-search-style.tsx:86-94`).
+      Offset offsetOf() {
+        final transform = tester.widget<Transform>(
+          find
+              .descendant(
+                of: find.byType(GlideSearchBar),
+                matching: find.byType(Transform),
+              )
+              .first,
+        );
+        final t = transform.transform.getTranslation();
+        return Offset(t.x, t.y);
+      }
+
+      expect(offsetOf(), Offset.zero);
+
+      // Escape starts `gdg-search-fadeout` (`:78-84`), but the bar is still
+      // mounted — `isAnimatingOut` holds it for the 150ms duration.
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pump();
+      expect(find.byType(GlideSearchBar), findsOneWidget);
+
+      await tester.pump(const Duration(milliseconds: 75));
+      final mid = offsetOf();
+      expect(mid.dx, greaterThan(0));
+      expect(mid.dx, lessThan(400));
+
+      // The owner's timer unmounts it once the outro is done.
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.byType(GlideSearchBar), findsNothing);
+    });
+
+    testWidgets('the bar is hidden from focus and semantics while it slides out',
+        (tester) async {
+      await tester.pumpWidget(
+        buildEditor(
+          keybindingsOverride: const GlideKeybinds(search: true),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final cell = await tester.startGesture(
+        const Offset(150, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await cell.up();
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ExcludeFocus, skipOffstage: false), findsWidgets);
+      final shown = tester.widget<ExcludeFocus>(
+        find
+            .descendant(
+              of: find.byType(GlideSearchBar),
+              matching: find.byType(ExcludeFocus),
+            )
+            .first,
+      );
+      expect(shown.excluding, isFalse);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pump();
+
+      final hidden = tester.widget<ExcludeFocus>(
+        find
+            .descendant(
+              of: find.byType(GlideSearchBar),
+              matching: find.byType(ExcludeFocus),
+            )
+            .first,
+      );
+      expect(hidden.excluding, isTrue);
+    });
+
     testWidgets('a tinted trailing row does not disturb appending',
         (tester) async {
       var appended = 0;

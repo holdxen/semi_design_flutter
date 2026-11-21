@@ -9,6 +9,7 @@
 // Not ported yet (all `data-editor` chrome layered on the grid):
 // row markers, the trailing blank row, column resizing, drag and drop, fill
 // handle dragging, autoscroll and `use-column-sizer`.
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
@@ -229,7 +230,10 @@ class GlideDataEditorProps {
   onFinishedEditing;
 
   /// `onVisibleRegionChanged` (`data-editor.ts:521`, `:2645`).
-  final void Function(GlideVisibleRegion region, GlideVisibleRegionExtras extras)?
+  final void Function(
+    GlideVisibleRegion region,
+    GlideVisibleRegionExtras extras,
+  )?
   onVisibleRegionChanged;
 
   /// `onCellFocused` (`data-grid.tsx:171`): upstream fires it from the
@@ -375,6 +379,12 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   late final TextEditingController _searchTextController;
   final FocusNode _searchFocusNode = FocusNode(debugLabel: 'GlideSearch');
 
+  /// `isAnimatingOut` (`data-grid-search.ts:374-390`): the bar stays
+  /// mounted for 150ms after `showSearch` goes false so `gdg-search-fadeout`
+  /// has somewhere to run, and is unmounted the moment it comes back on.
+  bool _searchAnimatingOut = false;
+  Timer? _searchFadeTimer;
+
   bool get _showSearch => widget.props.showSearch ?? _showSearchInner;
   String get _searchValue => widget.props.searchValue ?? _searchValueInner;
   List<GlideItem> get _searchResults =>
@@ -458,6 +468,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
 
   @override
   void dispose() {
+    _searchFadeTimer?.cancel();
     _searchRunner.cancel();
     _searchTextController.dispose();
     _searchFocusNode.dispose();
@@ -483,6 +494,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _searchFocusNode.requestFocus();
     });
+    _syncSearchFade();
   }
 
   void _closeSearch() {
@@ -498,6 +510,23 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     widget.props.onSearchClose?.call();
     widget.props.onSearchResultsChanged?.call(const [], -1);
     _gridController.focus();
+    _syncSearchFade();
+  }
+
+  /// The `useEffect` on `showSearch` (`data-grid-search.ts:377-384`): on,
+  /// mark the bar visible; off, give it 150ms to slide out before unmounting.
+  void _syncSearchFade() {
+    _searchFadeTimer?.cancel();
+    _searchFadeTimer = null;
+    if (_showSearch) {
+      if (!_searchAnimatingOut) setState(() => _searchAnimatingOut = true);
+      return;
+    }
+    if (!_searchAnimatingOut) return;
+    _searchFadeTimer = Timer(const Duration(milliseconds: 150), () {
+      if (!mounted) return;
+      setState(() => _searchAnimatingOut = false);
+    });
   }
 
   /// `onSearchChange` (`data-grid-search.ts:285-298`).
@@ -585,6 +614,12 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   @override
   void didUpdateWidget(GlideDataEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
+    // A controlled `showSearch` flips without going through
+    // `_openSearch`/`_closeSearch`, so the fade is synced here too.
+    if ((oldWidget.props.showSearch ?? _showSearchInner) !=
+        (widget.props.showSearch ?? _showSearchInner)) {
+      _syncSearchFade();
+    }
     if (oldWidget.props.columns != widget.props.columns ||
         oldWidget.props.rows != widget.props.rows ||
         oldWidget.props.rowMarkers != widget.props.rowMarkers ||
@@ -892,7 +927,8 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   /// `mangledGetGroupDetails` (`data-editor.tsx:1401-1423`): the user's
   /// callback plus the Rename action when `onGroupHeaderRenamed` is set.
   GlideGroupDetails _groupDetails(String group) {
-    final base = widget.props.getGroupDetails?.call(group) ??
+    final base =
+        widget.props.getGroupDetails?.call(group) ??
         GlideGroupDetails(name: group);
     final onRename = widget.props.onGroupHeaderRenamed;
     if (onRename == null) return base;
@@ -967,7 +1003,8 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   int? _customNewRowTargetColumn(int col) {
     final p = widget.props;
     if (col < 0 || col >= _mangledColumns.length) return null;
-    final custom = _mangledColumns[col].trailingRowOptions?.targetColumn ??
+    final custom =
+        _mangledColumns[col].trailingRowOptions?.targetColumn ??
         p.trailingRowOptions?.targetColumn;
     final offset = _markerOffset;
     if (custom is int) return custom + offset;
@@ -1196,9 +1233,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
         row >= _groupedRows) {
       final extras = _visibleExtras;
       final selected = extras?.selected;
-      if (selected != null &&
-          selected.col == outerCol &&
-          selected.row == row) {
+      if (selected != null && selected.col == outerCol && selected.row == row) {
         return false;
       }
       for (final rect in extras?.freezeRegions ?? const <GlideRectangle>[]) {
@@ -2885,8 +2920,9 @@ class _GlideDataEditorState extends State<GlideDataEditor>
                       onClose: () => setState(() => _renameGroup = null),
                       onFinish: _finishGroupRename,
                     ),
-                  if (_showSearch)
+                  if (_showSearch || _searchAnimatingOut)
                     GlideSearchBar(
+                      show: _showSearch,
                       value: _searchValue,
                       onChanged: _onSearchChanged,
                       status: _searchStatus,

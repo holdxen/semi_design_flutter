@@ -175,9 +175,15 @@ class GlideSearchRunner {
 }
 
 /// `SearchWrapper` (`data-grid-search-style.tsx:3-96`).
-class GlideSearchBar extends StatelessWidget {
+///
+/// The wrapper carries the `gdg-search-fadein`/`gdg-search-fadeout`
+/// keyframes (`:78-95`): 150ms of `translateX(400px) -> 0` on mount and
+/// `0 -> 400px` while `.out`. The owner keeps the bar mounted for the
+/// duration of the outro (`isAnimatingOut`, `data-grid-search.ts:374-390`).
+class GlideSearchBar extends StatefulWidget {
   const GlideSearchBar({
     super.key,
+    required this.show,
     required this.value,
     required this.onChanged,
     required this.status,
@@ -192,6 +198,10 @@ class GlideSearchBar extends StatelessWidget {
     required this.onClose,
     required this.onCancelPointer,
   });
+
+  /// False while the bar is sliding out (`className.endsWith(" out")`,
+  /// `data-grid-search.ts:412`).
+  final bool show;
 
   final String value;
   final ValueChanged<String> onChanged;
@@ -210,8 +220,14 @@ class GlideSearchBar extends StatelessWidget {
   /// (`data-grid-search.ts:412-416`).
   final VoidCallback onCancelPointer;
 
+  @override
+  State<GlideSearchBar> createState() => _GlideSearchBarState();
+}
+
+class _GlideSearchBarState extends State<GlideSearchBar>
+    with SingleTickerProviderStateMixin {
   String get _resultString {
-    final s = status;
+    final s = widget.status;
     if (s == null) return 'Type to search';
     var text = s.results >= 1000
         ? 'over 1000'
@@ -222,114 +238,174 @@ class GlideSearchBar extends StatelessWidget {
     return text;
   }
 
+  /// 1.0 = parked at `translateX(0)`, 0.0 = parked at `translateX(400px)`.
+  late final AnimationController _fade;
+
   @override
-  Widget build(BuildContext context) {
-    final s = status;
+  void initState() {
+    super.initState();
+    _fade = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+      value: widget.show ? 0 : 1,
+    );
+    // `animation: gdg-search-fadein 0.15s forwards` runs unconditionally on
+    // mount (`data-grid-search-style.tsx:15`).
+    if (widget.show) _fade.forward(from: 0);
+  }
+
+  @override
+  void didUpdateWidget(GlideSearchBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.show == widget.show) return;
+    if (widget.show) {
+      _fade.forward(from: 0);
+    } else {
+      // `gdg-search-fadeout` declares `from { translateX(0) }`, so the outro
+      // restarts from the parked position rather than continuing from
+      // wherever an interrupted intro had reached.
+      _fade.value = 1;
+      _fade.reverse();
+    }
+  }
+
+  @override
+  void dispose() {
+    _fade.dispose();
+    super.dispose();
+  }
+
+  Widget _bar(BuildContext context) {
+    final s = widget.status;
+    final rows = widget.rows;
+    final theme = widget.theme;
     final progress = rows > 0
         ? ((s?.rowsSearched ?? 0) / rows * 100).clamp(0, 100)
         : 0.0;
 
-    return Positioned(
-      top: 4,
-      right: 20,
-      child: Listener(
-        onPointerDown: (_) => onCancelPointer(),
-        onPointerUp: (_) => onCancelPointer(),
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: onCancelPointer,
-          onSecondaryTapDown: (_) => onCancelPointer(),
-          // A fixed width keeps the progress bar's `FractionallySizedBox`
-          // from receiving an infinite constraint (`data-grid-search-style.tsx`
-          // sizes the input at 220px and lets the bar size to it).
-          child: SizedBox(
-            width: 344,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: theme.bgCell,
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: theme.borderColor),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        width: 220,
-                        child: Focus(
-                          focusNode: focusNode,
-                          onKeyEvent: onKeyDown,
-                          child: TextField(
-                            autofocus: true,
-                            controller: textController,
-                            style: TextStyle(
-                              fontSize: theme.editorFontSize,
-                              color: theme.textDark,
+    // `tabIndex={showSearch ? undefined : -1}` plus `aria-hidden={!showSearch}`
+    // (`data-grid-search.ts:424-466`): while sliding out the controls are
+    // neither focusable nor announced, though they remain hit-testable.
+    return ExcludeFocus(
+      excluding: !widget.show,
+      child: ExcludeSemantics(
+        excluding: !widget.show,
+        child: Listener(
+          onPointerDown: (_) => widget.onCancelPointer(),
+          onPointerUp: (_) => widget.onCancelPointer(),
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: widget.onCancelPointer,
+            onSecondaryTapDown: (_) => widget.onCancelPointer(),
+            // A fixed width keeps the progress bar's `FractionallySizedBox`
+            // from receiving an infinite constraint (`data-grid-search-style.tsx`
+            // sizes the input at 220px and lets the bar size to it).
+            child: SizedBox(
+              width: 344,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: theme.bgCell,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: theme.borderColor),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 220,
+                          child: Focus(
+                            focusNode: widget.focusNode,
+                            onKeyEvent: widget.onKeyDown,
+                            child: TextField(
+                              autofocus: true,
+                              controller: widget.textController,
+                              style: TextStyle(
+                                fontSize: theme.editorFontSize,
+                                color: theme.textDark,
+                              ),
+                              decoration: const InputDecoration(
+                                isDense: true,
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                              onChanged: widget.onChanged,
                             ),
-                            decoration: const InputDecoration(
-                              isDense: true,
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                            onChanged: onChanged,
                           ),
                         ),
-                      ),
-                      _BarButton(
-                        icon: Icons.keyboard_arrow_up,
-                        label: 'Previous Result',
-                        enabled: (status?.results ?? 0) > 0,
-                        theme: theme,
-                        onTap: onPrev,
-                      ),
-                      _BarButton(
-                        icon: Icons.keyboard_arrow_down,
-                        label: 'Next Result',
-                        enabled: (status?.results ?? 0) > 0,
-                        theme: theme,
-                        onTap: onNext,
-                      ),
-                      if (showClose)
                         _BarButton(
-                          icon: Icons.close,
-                          label: 'Close Search',
-                          enabled: true,
+                          icon: Icons.keyboard_arrow_up,
+                          label: 'Previous Result',
+                          enabled: (widget.status?.results ?? 0) > 0,
                           theme: theme,
-                          onTap: onClose,
+                          onTap: widget.onPrev,
                         ),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      _resultString,
-                      style: TextStyle(fontSize: 11, color: theme.textDark),
+                        _BarButton(
+                          icon: Icons.keyboard_arrow_down,
+                          label: 'Next Result',
+                          enabled: (widget.status?.results ?? 0) > 0,
+                          theme: theme,
+                          onTap: widget.onNext,
+                        ),
+                        if (widget.showClose)
+                          _BarButton(
+                            icon: Icons.close,
+                            label: 'Close Search',
+                            enabled: true,
+                            theme: theme,
+                            onTap: widget.onClose,
+                          ),
+                      ],
                     ),
-                  ),
-                  if (s != null)
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
-                      child: SizedBox(
-                        height: 4,
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: FractionallySizedBox(
-                            widthFactor: progress / 100,
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(color: theme.textLight),
+                      child: Text(
+                        _resultString,
+                        style: TextStyle(fontSize: 11, color: theme.textDark),
+                      ),
+                    ),
+                    if (s != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: SizedBox(
+                          height: 4,
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: FractionallySizedBox(
+                              widthFactor: progress / 100,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: theme.textLight,
+                                ),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: 4,
+      right: 20,
+      child: AnimatedBuilder(
+        animation: _fade,
+        builder: (context, _) => Transform.translate(
+          offset: Offset(400 * (1 - _fade.value), 0),
+          child: _bar(context),
         ),
       ),
     );
