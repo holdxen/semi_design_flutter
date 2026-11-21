@@ -746,18 +746,49 @@ class GlideDataGridPainter extends CustomPainter {
       if (region.style == GlideHighlightStyle.noOutline) continue;
       final bounds = _boundsForRange(region.range);
       if (bounds.width == 0) continue;
-      canvas.drawRect(
-        Rect.fromLTWH(
-          bounds.x + 1,
-          bounds.y + 1,
-          bounds.width - 2,
-          bounds.height - 2,
-        ),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2
-          ..color = region.color,
+      final rect = Rect.fromLTWH(
+        bounds.x + 1,
+        bounds.y + 1,
+        bounds.width - 2,
+        bounds.height - 2,
       );
+      if (region.style == GlideHighlightStyle.dashedOutline) {
+        _strokeDashedRect(canvas, rect, region.color, 2);
+      } else {
+        canvas.drawRect(
+          rect,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2
+            ..color = region.color,
+        );
+      }
+    }
+  }
+
+  /// Canvas 2D has a `setLineDash` Flutter's `Paint` does not, so the dash is
+  /// cut out of the outline with `PathMetrics` — the same reason upstream's
+  /// `hugRectToTarget` exists (dashed outlines must stay cheap).
+  void _strokeDashedRect(
+    Canvas canvas,
+    Rect rect,
+    Color color,
+    double width, {
+    double dash = 6,
+    double gap = 4,
+  }) {
+    final path = Path()..addRect(rect);
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = width
+      ..color = color;
+    for (final metric in path.computeMetrics()) {
+      var distance = 0.0;
+      while (distance < metric.length) {
+        final end = math.min(distance + dash, metric.length);
+        canvas.drawPath(metric.extractPath(distance, end), paint);
+        distance = end + gap;
+      }
     }
   }
 

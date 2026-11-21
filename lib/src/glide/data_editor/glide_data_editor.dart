@@ -18,6 +18,7 @@ import 'package:flutter/widgets.dart';
 
 import '../cells/glide_cell_registry.dart';
 import '../cells/glide_cell_types.dart';
+import '../common/glide_math.dart';
 import '../common/glide_utils.dart';
 import '../internal/data_grid/glide_data_grid.dart';
 import '../internal/data_grid/glide_event_args.dart';
@@ -68,6 +69,7 @@ class GlideDataEditorProps {
     this.coercePasteValue,
     this.onPaste,
     this.onItemHovered,
+    this.onFillPattern,
     this.onGridSelectionChange,
     this.onSelectionCleared,
     this.onDelete,
@@ -78,6 +80,8 @@ class GlideDataEditorProps {
     this.getRowThemeOverride,
     this.getGroupDetails,
     this.highlightRegions,
+    this.fillHandle,
+    this.allowedFillDirections = GlideFillHandleDirection.orthogonal,
     this.overscrollY = 0,
     this.smoothScrollX = false,
     this.smoothScrollY = false,
@@ -147,6 +151,16 @@ class GlideDataEditorProps {
   final GlideGroupDetails Function(String group)? getGroupDetails;
   final List<GlideHighlight>? highlightRegions;
 
+  /// `fillHandle` (`data-editor.tsx:150`): null disables the handle.
+  final GlideFillHandleConfig? fillHandle;
+
+  /// `allowedFillDirections` (`data-editor.tsx:868`).
+  final GlideFillHandleDirection allowedFillDirections;
+
+  /// `onFillPattern` (`data-editor.tsx:2258`): called before the fill runs;
+  /// call `preventDefault()` to cancel it.
+  final void Function(GlideFillPatternArgs args)? onFillPattern;
+
   final double overscrollY;
   final bool smoothScrollX;
   final bool smoothScrollY;
@@ -196,6 +210,12 @@ class _GlideDataEditorState extends State<GlideDataEditor>
 
   /// `scrollDir` (`data-editor.tsx:2243`).
   (int, int)? _scrollDir;
+
+  /// `mouseState.fillHandle` (`data-editor.tsx:2120`).
+  bool _fillHandlePressed = false;
+
+  /// `fillHighlightRegion` (`data-editor.tsx:1227`).
+  GlideRectangle? _fillHighlightRegion;
 
   /// `visibleRegionRef` (`data-editor.tsx:2831`).
   GlideVisibleRegion? _visible;
@@ -506,6 +526,19 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       return;
     }
 
+    final onFillPattern = widget.props.onFillPattern;
+    if (onFillPattern != null) {
+      var canceled = false;
+      onFillPattern(
+        GlideFillPatternArgs(
+          patternSource: patternRange,
+          fillDestination: currentRange,
+          preventDefault: () => canceled = true,
+        ),
+      );
+      if (canceled) return;
+    }
+
     final pattern = getCells(patternRange);
     if (pattern == null || pattern.isEmpty) return;
 
@@ -623,6 +656,23 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     final dragging = mouseDown != null && mouseDown.button == 0;
 
     if (dragging &&
+        args.buttons != 0 &&
+        _fillHandlePressed &&
+        _previousSelection?.current != null) {
+      // `mouseState.fillHandle === true` (`data-editor.tsx:2765-2769`).
+      final prevRange = _previousSelection!.current!.range;
+      final hovered = _locationOf(args);
+      final row = math.min(hovered.row, widget.props.rows - 1);
+      final rect = getClosestRect(
+        prevRange,
+        hovered.col,
+        row,
+        widget.props.allowedFillDirections,
+      );
+      if (rect != _fillHighlightRegion) {
+        setState(() => _fillHighlightRegion = rect);
+      }
+    } else if (dragging &&
         args.buttons != 0 &&
         _selection.current != null &&
         (widget.props.rangeSelect == GlideRangeSelect.rect ||
@@ -830,6 +880,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
 
     _previousSelection = _selection;
     final isFillHandle = args is GlideGridCellMouseArgs && args.isFillHandle;
+    _fillHandlePressed = isFillHandle;
     if (!isFillHandle && args.kind != GlideGridCellKind.cell && args.isEdge) {
       return;
     }
@@ -962,6 +1013,29 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   void _onMouseUp(GlideGridMouseArgs args, bool isOutside) {
     if (isOutside) {
       _mouseDownData = null;
+      _fillHandlePressed = false;
+      return;
+    }
+
+    // Fill handle release (`data-editor.tsx:2342-2358`).
+    if (_fillHandlePressed) {
+      final previous = _previousSelection;
+      final highlight = _fillHighlightRegion;
+      _fillHandlePressed = false;
+      _fillHighlightRegion = null;
+      if (_selection.current != null &&
+          previous?.current != null &&
+          highlight != null) {
+        final newRange = _selection.copyWith(
+          current: _selection.current!.copyWith(
+            range: combineRects(previous!.current!.range, highlight),
+          ),
+        );
+        _fillPattern(previous, newRange);
+        _setGridSelection(newRange, true);
+        return;
+      }
+      setState(() {});
       return;
     }
 
@@ -1022,6 +1096,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     _lastMouseSelectLocation = null;
     _mouseDownData = null;
     _previousSelection = null;
+    _fillHighlightRegion = null;
     if (_scrollDir != null) {
       setState(() => _scrollDir = null);
       _setAutoscrollActive(false);
@@ -1045,7 +1120,8 @@ class _GlideDataEditorState extends State<GlideDataEditor>
 
     if ((p.highlightRegions == null || p.highlightRegions!.isEmpty) &&
         highlightRange == null &&
-        highlightFocus == null) {
+        highlightFocus == null &&
+        _fillHighlightRegion == null) {
       return null;
     }
 
@@ -1069,6 +1145,15 @@ class _GlideDataEditorState extends State<GlideDataEditor>
           );
         }
       }
+    }
+    if (_fillHighlightRegion != null) {
+      regions.add(
+        GlideHighlight(
+          color: accent.withValues(alpha: 0),
+          range: _fillHighlightRegion!,
+          style: GlideHighlightStyle.dashedOutline,
+        ),
+      );
     }
     if (highlightRange != null) {
       regions.add(
@@ -1316,6 +1401,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
           selection: _selection,
           isFocused: _focused,
           drawFocusRing: p.drawFocusRing,
+          fillHandle: p.fillHandle,
           highlightRegions: _highlightRegions(),
           getRowThemeOverride: p.getRowThemeOverride,
           getGroupDetails: p.getGroupDetails,

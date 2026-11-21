@@ -10,6 +10,7 @@ export 'cells/glide_misc_cells.dart';
 export 'cells/glide_number_cell.dart';
 export 'cells/glide_text_cell.dart';
 export 'common/glide_is_hotkey.dart';
+export 'common/glide_math.dart';
 export 'common/glide_theme.dart';
 export 'data_editor/glide_clipboard.dart';
 export 'data_editor/glide_copy_paste.dart';

@@ -1510,6 +1510,8 @@ void main() {
       GlideGridCell Function(GlideItem item)? content,
       bool editOnType = true,
       GlideKeybinds? keybindings,
+      GlideFillHandleConfig? fillHandle,
+      void Function(GlideFillPatternArgs args)? onFillPattern,
     }) {
       edits = [];
       selectionLog = [];
@@ -1540,6 +1542,8 @@ void main() {
         },
         editOnType: editOnType,
         keybindings: keybindings,
+        fillHandle: fillHandle,
+        onFillPattern: onFillPattern,
         getCellsForSelection: (region) => [
           for (var y = region.y.toInt();
               y < region.y + region.height && y < cells.length;
@@ -1870,6 +1874,132 @@ void main() {
 
       final after = selectionLog.last.current!.range.height;
       expect(after, greaterThan(before));
+    });
+
+    testWidgets('dragging the fill handle fills the range', (tester) async {
+      await tester.pumpWidget(buildEditor(fillHandle: defaultFillHandle));
+      await tester.pumpAndSettle();
+
+      final select = await tester.startGesture(
+        const Offset(50, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await select.up();
+      await tester.pumpAndSettle();
+      expect(selectionLog.last.current!.cell, const GlideItem(0, 0));
+
+      // The handle sits on the bottom-right corner of cell (0,0):
+      // x = 0 + 101 - 2, y = 32 + 33 - 2.
+      final handle = await tester.startGesture(
+        const Offset(99, 63),
+        kind: PointerDeviceKind.mouse,
+      );
+      await tester.pump();
+      // Pressing the handle must not move the selection.
+      expect(selectionLog.last.current!.cell, const GlideItem(0, 0));
+
+      await handle.moveTo(const Offset(99, 200));
+      await tester.pump();
+      await handle.up();
+      await tester.pumpAndSettle();
+
+      expect(edits, hasLength(5));
+      expect(edits.map((e) => e.location).toList(), [
+        const GlideItem(0, 1),
+        const GlideItem(0, 2),
+        const GlideItem(0, 3),
+        const GlideItem(0, 4),
+        const GlideItem(0, 5),
+      ]);
+      expect((edits.first.value as GlideTextCell).data, 'r0 c0');
+      // The selection grows to the filled range.
+      expect(selectionLog.last.current!.range.height, 6);
+    });
+
+    testWidgets('onFillPattern can cancel the fill', (tester) async {
+      var called = false;
+      await tester.pumpWidget(
+        buildEditor(
+          fillHandle: defaultFillHandle,
+          onFillPattern: (args) {
+            called = true;
+            args.preventDefault();
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final select = await tester.startGesture(
+        const Offset(50, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await select.up();
+      await tester.pumpAndSettle();
+
+      final handle = await tester.startGesture(
+        const Offset(99, 63),
+        kind: PointerDeviceKind.mouse,
+      );
+      await tester.pump();
+      await handle.moveTo(const Offset(99, 200));
+      await tester.pump();
+      await handle.up();
+      await tester.pumpAndSettle();
+
+      expect(called, isTrue);
+      expect(edits, isEmpty);
+    });
+  });
+
+  group('fill math', () {
+    test('combineRects takes the union', () {
+      final combined = combineRects(
+        const GlideRectangle(x: 0, y: 0, width: 1, height: 1),
+        const GlideRectangle(x: 0, y: 1, width: 1, height: 5),
+      );
+      expect(combined.x, 0);
+      expect(combined.y, 0);
+      expect(combined.width, 1);
+      expect(combined.height, 6);
+    });
+
+    test('getClosestRect grows toward the nearest edge', () {
+      const source = GlideRectangle(x: 0, y: 0, width: 1, height: 1);
+
+      final down = getClosestRect(
+        source,
+        0,
+        5,
+        GlideFillHandleDirection.orthogonal,
+      );
+      expect(down!.y, 1);
+      expect(down.height, 5);
+
+      final right = getClosestRect(
+        source,
+        5,
+        0,
+        GlideFillHandleDirection.orthogonal,
+      );
+      expect(right!.x, 1);
+      expect(right.width, 5);
+
+      // Inside the source → nothing to grow.
+      expect(
+        getClosestRect(source, 0, 0, GlideFillHandleDirection.orthogonal),
+        isNull,
+      );
+
+      // `vertical` pins the horizontal axis, so only rows change.
+      final onlyRows = getClosestRect(
+        source,
+        9,
+        4,
+        GlideFillHandleDirection.vertical,
+      );
+      expect(onlyRows!.x, 0);
+      expect(onlyRows.width, 1);
+      expect(onlyRows.height, 4);
     });
   });
 
