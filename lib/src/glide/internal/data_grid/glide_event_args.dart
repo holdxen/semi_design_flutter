@@ -233,6 +233,28 @@ GlideItem? _locationOf(GlideGridMouseArgs? args) => switch (args) {
   _ => null,
 };
 
+/// `CellActivatedEventArgs` (`event-args.ts:104-121`): how a cell was
+/// activated.
+sealed class GlideCellActivation {
+  const GlideCellActivation();
+}
+
+/// `KeyboardCellActivatedEvent` (`event-args.ts:107-111`).
+class GlideKeyboardCellActivation extends GlideCellActivation {
+  const GlideKeyboardCellActivation(this.key);
+
+  /// The key that started the edit, or `null` for Enter-driven activation.
+  final String? key;
+}
+
+/// `PointerCellActivatedEvent` (`event-args.ts:114-117`).
+class GlidePointerCellActivation extends GlideCellActivation {
+  const GlidePointerCellActivation(this.pointerActivation, {this.pointerType});
+
+  final GlideCellActivationBehavior pointerActivation;
+  final String? pointerType;
+}
+
 /// `GridKeyEventArgs` (`event-args.ts:70-83`). `rawEvent` is a Flutter
 /// `KeyEvent` instead of a DOM event.
 @immutable

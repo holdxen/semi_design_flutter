@@ -1,6 +1,6 @@
 import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:semi_design_flutter/semi_design_flutter.dart';
 
@@ -754,7 +754,8 @@ void main() {
       GlideGridSelection? initial,
       GlideGetCellsForSelection? getCellsForSelection,
       GlideDeleteCallback? onDelete,
-      void Function(GlideItem location, String key)? onCellActivated,
+      void Function(GlideItem location, GlideCellActivation activation)?
+      onCellActivated,
     }) {
       edits = [];
       scrolls = [];
@@ -955,8 +956,12 @@ void main() {
     test('a printable key activates the editor', () {
       String? activated;
       final h = handler(
-        onCellActivated: (location, k) =>
-            activated = '$location:$k',
+        onCellActivated: (location, activation) {
+          final key = activation is GlideKeyboardCellActivation
+              ? activation.key
+              : null;
+          activated = '$location:$key';
+        },
       );
       expect(
         h.handleKeyDown(
@@ -1345,6 +1350,354 @@ void main() {
         getCellRenderer: GlideDefaultRendererLookup().forCell,
       );
       expect(edit, isNull);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Overlay editor (`internal/data-grid-overlay-editor/`)
+  // -------------------------------------------------------------------------
+
+  group('overlay editor', () {
+    late GlideGridCell? finishedValue;
+    late GlideEditorMovement? finishedMovement;
+
+    Widget buildEditor({
+      bool forceEditMode = false,
+      String? initialValue,
+      Object? Function(GlideItem, GlideGridCell, GlideGridCell)? validateCell,
+      GlideGridCell? content,
+    }) {
+      finishedValue = null;
+      finishedMovement = null;
+      return MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 400,
+            height: 300,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                GlideDataGridOverlayEditor(
+                  target: const GlideRectangle(x: 10, y: 10, width: 120, height: 30),
+                  cell: const GlideItem(0, 0),
+                  content: content ??
+                      const GlideTextCell(
+                        data: 'hello',
+                        displayData: 'hello',
+                      ),
+                  theme: GlideTheme.light(),
+                  onFinishEditing: (cell, movement) {
+                    finishedValue = cell;
+                    finishedMovement = movement;
+                  },
+                  forceEditMode: forceEditMode,
+                  highlight: false,
+                  getCellRenderer: GlideDefaultRendererLookup().forCell,
+                  initialValue: initialValue,
+                  validateCell: validateCell,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    testWidgets('enter commits and moves down', (tester) async {
+      await tester.pumpWidget(buildEditor(forceEditMode: true));
+      await tester.pumpAndSettle();
+      expect(find.byType(TextField), findsOneWidget);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+
+      expect(finishedMovement, GlideEditorMovement.down);
+      expect((finishedValue as GlideTextCell).data, 'hello');
+    });
+
+    testWidgets('enter without forceEditMode moves without committing',
+        (tester) async {
+      // `tempValue` is undefined until the user types, so upstream finishes
+      // with `undefined` and `data-editor.tsx:3086` skips the write.
+      await tester.pumpWidget(buildEditor());
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+
+      expect(finishedValue, isNull);
+      expect(finishedMovement, GlideEditorMovement.down);
+    });
+
+    testWidgets('escape discards the edit', (tester) async {
+      await tester.pumpWidget(buildEditor());
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pump();
+
+      expect(finishedValue, isNull);
+      expect(finishedMovement, GlideEditorMovement.none);
+    });
+
+    testWidgets('tab commits and moves right', (tester) async {
+      await tester.pumpWidget(buildEditor(forceEditMode: true));
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+
+      expect(finishedMovement, GlideEditorMovement.right);
+      expect(finishedValue, isNotNull);
+    });
+
+    testWidgets('tapping outside commits the current value', (tester) async {
+      await tester.pumpWidget(buildEditor(forceEditMode: true));
+      await tester.pumpAndSettle();
+
+      await tester.tapAt(const Offset(350, 250));
+      await tester.pump();
+
+      expect(finishedValue, isNotNull);
+      expect(finishedMovement, GlideEditorMovement.none);
+    });
+
+    testWidgets('invalid cells finish with null', (tester) async {
+      await tester.pumpWidget(
+        buildEditor(
+          forceEditMode: true,
+          validateCell: (cell, newValue, prev) => false,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+
+      expect(finishedValue, isNull);
+      expect(finishedMovement, GlideEditorMovement.down);
+    });
+
+    testWidgets('forceEditMode opens with the cell value', (tester) async {
+      await tester.pumpWidget(buildEditor(forceEditMode: true));
+      await tester.pumpAndSettle();
+
+      expect(find.text('hello'), findsOneWidget);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Data editor (`data-editor/data-editor.tsx`)
+  // -------------------------------------------------------------------------
+
+  group('data editor', () {
+    late List<GlideEditListItem> edits;
+    late List<GlideGridSelection> selectionLog;
+    late List<String> activationLog;
+
+    List<List<GlideGridCell>> table() => [
+      for (var row = 0; row < 200; row++)
+        [
+          for (var col = 0; col < 6; col++)
+            GlideTextCell(
+              data: 'r$row c$col',
+              displayData: 'r$row c$col',
+            ),
+        ],
+    ];
+
+    Widget buildEditor({
+      GlideGridCell Function(GlideItem item)? content,
+      bool editOnType = true,
+    }) {
+      edits = [];
+      selectionLog = [];
+      activationLog = [];
+      final cells = table();
+      final p = GlideDataEditorProps(
+        columns: [
+          for (var i = 0; i < 6; i++)
+            GlideGridColumn(title: 'C$i', width: 100),
+        ],
+        rows: 200,
+        getCellContent: (item, [_]) =>
+            content?.call(item) ?? cells[item.row][item.col],
+        theme: GlideTheme.light(),
+        rowHeight: const GlideRowHeight.fixed(32),
+        headerHeight: 32,
+        onKeyDown: (_) {},
+        onCellsEdited: (items) {
+          edits.addAll(items);
+          return true;
+        },
+        onGridSelectionChange: selectionLog.add,
+        onCellActivated: (location, activation) {
+          final key = activation is GlideKeyboardCellActivation
+              ? activation.key
+              : 'pointer';
+          activationLog.add('$location:$key');
+        },
+        editOnType: editOnType,
+        getCellsForSelection: (region) => [
+          for (var y = region.y.toInt();
+              y < region.y + region.height && y < cells.length;
+              y++)
+            [
+              for (var x = region.x.toInt();
+                  x < region.x + region.width && x < cells[y].length;
+                  x++)
+                cells[y][x],
+            ],
+        ],
+      );
+      return MaterialApp(
+        home: Scaffold(
+          body: SizedBox(width: 400, height: 400, child: GlideDataEditor(props: p)),
+        ),
+      );
+    }
+
+    testWidgets('clicking a cell selects it', (tester) async {
+      await tester.pumpWidget(buildEditor());
+      await tester.pumpAndSettle();
+
+      final gesture = await tester.startGesture(
+        const Offset(150, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(selectionLog, isNotEmpty);
+      final current = selectionLog.last.current;
+      expect(current, isNotNull);
+      expect(current!.cell, const GlideItem(1, 0));
+    });
+
+    testWidgets('a second click on the selected cell opens the editor',
+        (tester) async {
+      await tester.pumpWidget(buildEditor());
+      await tester.pumpAndSettle();
+
+      for (var i = 0; i < 2; i++) {
+        final gesture = await tester.startGesture(
+        const Offset(150, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+        await gesture.up();
+        await tester.pumpAndSettle();
+      }
+
+      expect(find.byType(TextField), findsOneWidget);
+    });
+
+    testWidgets('arrow keys move the selection', (tester) async {
+      await tester.pumpWidget(buildEditor());
+      await tester.pumpAndSettle();
+
+      final gesture = await tester.startGesture(
+        const Offset(150, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      expect(selectionLog.last.current!.cell, const GlideItem(1, 1));
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pumpAndSettle();
+      expect(selectionLog.last.current!.cell, const GlideItem(2, 1));
+    });
+
+    testWidgets('ctrl+a selects the whole table', (tester) async {
+      await tester.pumpWidget(buildEditor());
+      await tester.pumpAndSettle();
+
+      final gesture = await tester.startGesture(
+        const Offset(150, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyA);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pumpAndSettle();
+
+      final range = selectionLog.last.current!.range;
+      expect(range.width, 6);
+      expect(range.height, 200);
+    });
+
+    testWidgets('escape clears the selection', (tester) async {
+      await tester.pumpWidget(buildEditor());
+      await tester.pumpAndSettle();
+
+      final gesture = await tester.startGesture(
+        const Offset(150, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pumpAndSettle();
+
+      expect(selectionLog.last.current, isNull);
+    });
+
+    testWidgets('typing a letter opens the editor with that letter',
+        (tester) async {
+      await tester.pumpWidget(buildEditor());
+      await tester.pumpAndSettle();
+
+      final gesture = await tester.startGesture(
+        const Offset(150, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyZ);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TextField), findsOneWidget);
+      expect(find.text('z'), findsOneWidget);
+      expect(activationLog, contains('[1, 0]:z'));
+    });
+
+    testWidgets('enter in the editor commits the cell', (tester) async {
+      await tester.pumpWidget(
+        buildEditor(
+          content: (item) => item == const GlideItem(1, 0)
+              ? const GlideTextCell(data: 'old', displayData: 'old')
+              : const GlideTextCell(data: 'x', displayData: 'x'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Open with forceEditMode via a typed character.
+      final gesture = await tester.startGesture(
+        const Offset(150, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyZ);
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TextField), findsNothing);
+      expect(edits, hasLength(1));
+      final value = edits.single.value as GlideTextCell;
+      expect(value.data, 'z');
     });
   });
 }

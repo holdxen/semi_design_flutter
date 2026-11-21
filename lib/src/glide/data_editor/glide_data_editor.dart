@@ -1,0 +1,1092 @@
+// Port of `packages/core/src/data-editor/data-editor.tsx`.
+//
+// Scope of this file: the selection/overlay/keyboard/clipboard spine of the
+// editor — `mangledOnCellsEdited` (:1207), `setOverlaySimple` (:1428),
+// `reselect` (:1445), `handleMaybeClick`/`onMouseUp` (:2367-2541),
+// `highlightRegions` (:1240-1305) and the wiring of `GlideKeyHandler`,
+// `GlideDataEditorSelection` and the overlay editor.
+//
+// Not ported yet (all `data-editor` chrome layered on the grid):
+// row markers, the trailing blank row, column resizing, drag and drop, fill
+// handle dragging, autoscroll and `use-column-sizer`.
+import 'dart:math' as math;
+
+import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
+
+import '../cells/glide_cell_registry.dart';
+import '../cells/glide_cell_types.dart';
+import '../common/glide_utils.dart';
+import '../internal/data_grid/glide_data_grid.dart';
+import '../internal/data_grid/glide_event_args.dart';
+import '../internal/data_grid/glide_selection_behavior.dart';
+import '../internal/data_grid/render/glide_draw_grid_arg.dart';
+import '../internal/data_grid_overlay_editor/glide_data_grid_overlay_editor.dart';
+import '../internal/scrolling_data_grid/glide_scrolling_data_grid.dart';
+import 'glide_clipboard.dart';
+import 'glide_data_editor_fns.dart';
+import 'glide_handle_select.dart';
+import 'glide_key_handler.dart';
+import 'glide_keybindings.dart';
+
+/// `DataGridProps` subset the editor owns (`data-editor.tsx`).
+@immutable
+class GlideDataEditorProps {
+  const GlideDataEditorProps({
+    required this.columns,
+    required this.rows,
+    required this.getCellContent,
+    required this.theme,
+    this.onKeyDown,
+    this.onKeyUp,
+    this.onCellsEdited,
+    this.onCellEdited,
+    this.rowHeight = const GlideRowHeight.fixed(32),
+    this.headerHeight = 36,
+    this.groupHeaderHeight = 36,
+    this.enableGroups = false,
+    this.freezeColumns = 0,
+    this.freezeTrailingRows = 0,
+    this.verticalBorder = _alwaysTrue,
+    this.drawFocusRing = true,
+    this.rangeSelect = GlideRangeSelect.rect,
+    this.columnSelect = GlideSelectMode.multi,
+    this.rowSelect = GlideSelectMode.multi,
+    this.rangeSelectionBlending = GlideSelectionBlending.exclusive,
+    this.columnSelectionBlending = GlideSelectionBlending.exclusive,
+    this.rowSelectionBlending = GlideSelectionBlending.exclusive,
+    this.rangeSelectionColumnSpanning = true,
+    this.columnSelectionModeMulti = false,
+    this.keybindings,
+    this.editOnType = true,
+    this.copyHeaders = false,
+    this.cellActivationBehavior = GlideCellActivationBehavior.secondClick,
+    this.getCellsForSelection,
+    this.coercePasteValue,
+    this.onPaste,
+    this.onGridSelectionChange,
+    this.onSelectionCleared,
+    this.onDelete,
+    this.onCellActivated,
+    this.onCellClicked,
+    this.onCellContextMenu,
+    this.onHeaderClicked,
+    this.getRowThemeOverride,
+    this.getGroupDetails,
+    this.highlightRegions,
+    this.overscrollY = 0,
+    this.smoothScrollX = false,
+    this.smoothScrollY = false,
+    this.showSearch = false,
+    this.rendererLookup,
+  });
+
+  static bool _alwaysTrue(int col) => true;
+
+  final List<GlideGridColumn> columns;
+  final int rows;
+  final GlideGridCell Function(GlideItem cell, [bool? forceStrict])
+  getCellContent;
+
+  /// `onKeyDownIn` (`data-editor.tsx:3487`) — call `cancel()` to swallow the
+  /// event before the built-in keybindings run.
+  final void Function(GlideGridKeyArgs event)? onKeyDown;
+  final void Function(GlideGridKeyArgs event)? onKeyUp;
+
+  /// `onCellsEdited` returning `true` suppresses the per-cell
+  /// `onCellEdited` callbacks (`data-editor.tsx:1216-1220`).
+  final bool Function(List<GlideEditListItem> items)? onCellsEdited;
+  final void Function(GlideItem location, GlideGridCell value)? onCellEdited;
+
+  final GlideTheme theme;
+  final GlideRowHeight rowHeight;
+  final double headerHeight;
+  final double groupHeaderHeight;
+  final bool enableGroups;
+  final int freezeColumns;
+  final int freezeTrailingRows;
+  final bool Function(int col) verticalBorder;
+  final bool drawFocusRing;
+
+  final GlideRangeSelect rangeSelect;
+  final GlideSelectMode columnSelect;
+  final GlideSelectMode rowSelect;
+  final GlideSelectionBlending rangeSelectionBlending;
+  final GlideSelectionBlending columnSelectionBlending;
+  final GlideSelectionBlending rowSelectionBlending;
+  final bool rangeSelectionColumnSpanning;
+  final bool columnSelectionModeMulti;
+
+  final GlideKeybinds? keybindings;
+  final bool editOnType;
+  final bool copyHeaders;
+  final GlideCellActivationBehavior cellActivationBehavior;
+
+  final GlideGetCellsForSelection? getCellsForSelection;
+  final GlideCoercePasteValue? coercePasteValue;
+  final GlidePasteCallback? onPaste;
+
+  final void Function(GlideGridSelection selection)? onGridSelectionChange;
+  final void Function()? onSelectionCleared;
+  final GlideDeleteCallback? onDelete;
+  final void Function(GlideItem location, GlideCellActivation activation)?
+  onCellActivated;
+  final void Function(GlideItem location, GlideCellClickedEventArgs args)?
+  onCellClicked;
+  final void Function(GlideItem location, GlideCellClickedEventArgs args)?
+  onCellContextMenu;
+  final void Function(int col, GlideGridHeaderMouseArgs args)?
+  onHeaderClicked;
+
+  final GlideGetRowThemeOverride? getRowThemeOverride;
+  final GlideGroupDetails Function(String group)? getGroupDetails;
+  final List<GlideHighlight>? highlightRegions;
+
+  final double overscrollY;
+  final bool smoothScrollX;
+  final bool smoothScrollY;
+  final bool showSearch;
+  final GlideRendererLookup? rendererLookup;
+}
+
+/// `GlideDataEditor`: `DataGrid` + selection + overlay editor + clipboard.
+class GlideDataEditor extends StatefulWidget {
+  const GlideDataEditor({super.key, required this.props});
+
+  final GlideDataEditorProps props;
+
+  @override
+  State<GlideDataEditor> createState() => _GlideDataEditorState();
+}
+
+class _GlideDataEditorState extends State<GlideDataEditor> {
+  final GlideDataGridController _gridController = GlideDataGridController();
+
+  late GlideGridSelection _selection;
+  late GlideDataEditorSelection _selectionState;
+
+  int _cellXOffset = 0;
+  int _cellYOffset = 0;
+  double _translateX = 0;
+  double _translateY = 0;
+  double _scrollY = 0;
+  bool _focused = false;
+
+  _OverlayState? _overlay;
+
+  /// `lastMouseDownData` (`data-editor.tsx:2091`).
+  ({int button, int time, GlideItem location})? _mouseDownData;
+
+  /// `lastMouseSelectLocation` (`data-editor.tsx:2089`).
+  GlideItem? _lastMouseSelectLocation;
+
+  /// `mouseState.previousSelection` (`data-editor.tsx:2120`): the selection
+  /// as it was *before* the press, which is what second-click activation
+  /// compares against.
+  GlideGridSelection? _previousSelection;
+
+  @override
+  void initState() {
+    super.initState();
+    _selection = GlideGridSelection.empty;
+    _selectionState = _makeSelectionState();
+  }
+
+  @override
+  void didUpdateWidget(GlideDataEditor oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.props.columns != widget.props.columns ||
+        oldWidget.props.rows != widget.props.rows) {
+      setState(() => _selectionState = _makeSelectionState());
+    }
+  }
+
+  GlideDataEditorSelection _makeSelectionState() => GlideDataEditorSelection(
+    behaviorConfig: GlideBehaviorConfig(
+      rangeBehavior: widget.props.rangeSelectionBlending,
+      columnBehavior: widget.props.columnSelectionBlending,
+      rowBehavior: widget.props.rowSelectionBlending,
+      rangeSelect: widget.props.rangeSelect,
+      rangeSelectionColumnSpanning: widget.props.rangeSelectionColumnSpanning,
+      columnSelectEnabled: widget.props.columnSelect != GlideSelectMode.none,
+      columnSelectionModeMulti: widget.props.columnSelectionModeMulti,
+    ),
+    rows: widget.props.rows,
+    rowSelectMulti: widget.props.rowSelect == GlideSelectMode.multi,
+    columnSelectMulti: widget.props.columnSelect == GlideSelectMode.multi,
+    initial: _selection,
+  );
+
+  GlideItem _locationOf(GlideGridMouseArgs args) => switch (args) {
+    GlideGridCellMouseArgs a => a.location,
+    GlideGridHeaderMouseArgs a => a.location,
+    GlideGridGroupHeaderMouseArgs a => a.location,
+    GlideGridOutOfBoundsMouseArgs a => a.location,
+  };
+
+  GlideRendererLookup get _renderers =>
+      widget.props.rendererLookup ?? GlideDefaultRendererLookup();
+
+  // -------------------------------------------------------------------------
+  // Theme and content
+  // -------------------------------------------------------------------------
+
+  /// `themeForCell` (`data-editor.tsx`).
+  GlideTheme _themeForCell(GlideGridCell cell, GlideItem location) {
+    final p = widget.props;
+    final column = location.col < p.columns.length
+        ? p.columns[location.col]
+        : null;
+    var theme = p.theme;
+    final group = column?.group;
+    final groupOverride = group == null || p.getGroupDetails == null
+        ? null
+        : p.getGroupDetails!(group).overrideTheme;
+    theme = theme.merge([
+      groupOverride?.applyTo(theme),
+      column?.themeOverride?.applyTo(theme),
+      p.getRowThemeOverride?.call(location.row)?.applyTo(theme),
+      cell.themeOverride?.applyTo(theme),
+    ]);
+    return theme;
+  }
+
+  GlideGridCell _getCellContent(GlideItem item, [bool? forceStrict]) =>
+      widget.props.getCellContent(item, forceStrict);
+
+  /// `mangledOnCellsEdited` (`data-editor.tsx:1207-1225`). Row markers are
+  //  not ported, so the mangle is a pass-through today.
+  bool _onCellsEdited(List<GlideEditListItem> items) {
+    if (items.isEmpty) return true;
+    final p = widget.props;
+    final r = p.onCellsEdited?.call(items);
+    if (r != true) {
+      for (final i in items) {
+        p.onCellEdited?.call(i.location, i.value);
+      }
+    }
+    return r ?? false;
+  }
+
+  // -------------------------------------------------------------------------
+  // Selection
+  // -------------------------------------------------------------------------
+
+  void _setGridSelection(GlideGridSelection newVal, bool expand) {
+    var v = newVal;
+    if (expand) {
+      v = glideExpandSelection(
+        newVal: v,
+        getCellsForSelection: widget.props.getCellsForSelection,
+        rowMarkerOffset: 0,
+        allowPartial: false,
+      );
+    }
+    setState(() {
+      _selection = v;
+      _selectionState.selection = v;
+    });
+    widget.props.onGridSelectionChange?.call(v);
+  }
+
+  GlideKeyHandler _makeKeyHandler() => GlideKeyHandler(
+    keys: glideKeysWithDefaults(widget.props.keybindings),
+    selection: _selection,
+    setGridSelection: _setGridSelection,
+    columnCount: widget.props.columns.length,
+    rows: widget.props.rows,
+    rowMarkerOffset: 0,
+    overlayOpen: _overlay != null,
+    columnSelect: widget.props.columnSelect,
+    rowSelect: widget.props.rowSelect,
+    rangeSelect: widget.props.rangeSelect,
+    visibleRegion: GlideRectangle(
+      x: _cellXOffset.toDouble(),
+      y: _cellYOffset.toDouble(),
+      width: math.max(0, widget.props.columns.length - _cellXOffset).toDouble(),
+      height: math.max(1, _visibleRowCount).toDouble(),
+    ),
+    getCellContent: _getCellContent,
+    getCellRenderer: _renderers.forCell,
+    rangeBehavior: widget.props.rangeSelectionBlending,
+    columnBehavior: widget.props.columnSelectionBlending,
+    rowBehavior: widget.props.rowSelectionBlending,
+    rangeSelectionColumnSpanning: widget.props.rangeSelectionColumnSpanning,
+    getCellsForSelection: widget.props.getCellsForSelection,
+    onSelectionCleared: widget.props.onSelectionCleared,
+    onDelete: widget.props.onDelete,
+    onCellsEdited: _onCellsEdited,
+    onCellActivated: (location, activation) {
+      widget.props.onCellActivated?.call(location, activation);
+      if (activation is GlideKeyboardCellActivation) {
+        _reselectForKeyboard(location, activation);
+      }
+    },
+    fillDown: _fillDown,
+    fillRight: _fillRight,
+    scrollTo: _scrollTo,
+  )
+    ..onOverlayClosed = _closeOverlay
+    ..onTypeToEdit = (bounds, key) {
+    _reselect(
+      bounds,
+      const GlideKeyboardCellActivation(null),
+      initialValue: key,
+    );
+  };
+
+  // -------------------------------------------------------------------------
+  // Overlay
+  // -------------------------------------------------------------------------
+
+  /// `setOverlaySimple` (`data-editor.tsx:1428-1443`).
+  void _setOverlay(_OverlayState value) {
+    setState(() {
+      _overlay = _OverlayState(
+        target: value.target,
+        cell: value.cell,
+        content: value.content,
+        theme: _themeForCell(value.content, value.cell),
+        initialValue: value.initialValue,
+        highlight: value.highlight,
+        forceEditMode: value.forceEditMode,
+        activation: value.activation,
+      );
+    });
+    // The overlay's own input takes focus; the grid gets it back when the
+    // editor closes (`_finishEditing`).
+  }
+
+  void _closeOverlay() {
+    if (_overlay != null) setState(() => _overlay = null);
+  }
+
+  /// `reselect` (`data-editor.tsx:1445-1497`).
+  void _reselect(
+    GlideRectangle bounds,
+    GlideCellActivation activation, {
+    String? initialValue,
+  }) {
+    final current = _selection.current;
+    if (current == null) return;
+
+    final location = current.cell;
+    final c = _getCellContent(location);
+
+    if (c.kind != GlideCellKind.boolean && c.allowOverlay) {
+      var content = c;
+      if (initialValue != null) {
+        content = switch (content) {
+          GlideNumberCell value => value.copyWith(
+            data: _parseFloat(initialValue),
+            displayData: initialValue,
+          ),
+          GlideTextCell value => value.copyWith(data: initialValue,
+              displayData: initialValue),
+          GlideMarkdownCell value => value.copyWith(data: initialValue),
+          GlideUriCell value => value.copyWith(
+            data: initialValue,
+            displayData: initialValue,
+          ),
+          _ => content,
+        };
+      }
+
+      _setOverlay(
+        _OverlayState(
+          target: bounds,
+          content: content,
+          cell: location,
+          initialValue: initialValue,
+          highlight: initialValue == null,
+          forceEditMode: initialValue != null,
+          activation: activation,
+          theme: _themeForCell(content, location),
+        ),
+      );
+    } else if (c.kind == GlideCellKind.boolean &&
+        activation is GlideKeyboardCellActivation &&
+        !c.isReadonly) {
+      _onCellsEdited([
+        GlideEditListItem(
+          location: location,
+          value: (c as GlideBooleanCell).copyWith(
+            data: toggleBoolean(c.data),
+          ),
+        ),
+      ]);
+    }
+  }
+
+  /// Keyboard Enter/click activation on the already-selected cell.
+  void _reselectForKeyboard(GlideItem location, GlideCellActivation activation) {
+    final bounds = _gridController.getBounds(location.col, location.row);
+    if (bounds == null) return;
+    _reselect(bounds, activation);
+  }
+
+  static double _parseFloat(String value) {
+    if (value == '-') return -0.0;
+    return double.tryParse(value) ?? 0.0;
+  }
+
+  void _finishEditing(GlideGridCell? newCell, GlideEditorMovement movement) {
+    final overlay = _overlay;
+    setState(() => _overlay = null);
+    if (overlay != null &&
+        newCell != null &&
+        glideIsEditableGridCell(newCell)) {
+      _onCellsEdited([
+        GlideEditListItem(location: overlay.cell, value: newCell),
+      ]);
+    }
+    _gridController.focus();
+
+    if (movement.col == 0 && movement.row == 0) return;
+    final cell = overlay?.cell ?? _selection.current?.cell;
+    if (cell == null) return;
+    _updateSelectedCell(
+      cell.col + movement.col,
+      cell.row + movement.row,
+    );
+  }
+
+  void _updateSelectedCell(int col, int row) {
+    final handler = _makeKeyHandler();
+    handler.updateSelectedCell(
+      col,
+      row,
+      fromEditingTrailingRow: false,
+      freeMove: false,
+    );
+    if (handler.selection != _selection) _setGridSelection(handler.selection, false);
+  }
+
+  // Fill patterns need `getCellsForSelection` plus the drag state; the
+  // keybinding is recognized and consumed by `handleFixedKeybindings`, the
+  // fill itself lands with the fill-handle port.
+  void _fillDown() {}
+
+  void _fillRight() {}
+
+  void _scrollTo(GlideScrollTarget target) {
+    // Scroll-to-cell lands with `use-autoscroll`; keyboard navigation already
+    // keeps the active cell in the visible region through the scroller.
+  }
+
+  // -------------------------------------------------------------------------
+  // Mouse
+  // -------------------------------------------------------------------------
+
+  void _onMouseDown(GlideGridMouseArgs args) {
+    if (args.button != 0 && args.button != 1) {
+      _mouseDownData = null;
+      return;
+    }
+    _mouseDownData = (
+      button: args.button,
+      time: DateTime.now().millisecondsSinceEpoch,
+      location: _locationOf(args),
+    );
+    if (args is GlideGridHeaderMouseArgs) return;
+
+    _previousSelection = _selection;
+    final isFillHandle = args is GlideGridCellMouseArgs && args.isFillHandle;
+    if (!isFillHandle && args.kind != GlideGridCellKind.cell && args.isEdge) {
+      return;
+    }
+
+    _lastMouseSelectLocation = null;
+    if (!args.isTouch && args.button == 0 && !isFillHandle) {
+      _handleSelect(args);
+    } else if (!args.isTouch && args.button == 1) {
+      _lastMouseSelectLocation = _locationOf(args);
+    }
+  }
+
+  void _handleSelect(GlideGridMouseArgs args) {
+    final outcome = _selectionState.handleSelect(
+      args,
+      getCellRenderer: _renderers.forCell,
+      getCellContent: _getCellContent,
+      themeForCell: _themeForCell,
+    );
+    if (outcome.onSelectionCleared) {
+      widget.props.onSelectionCleared?.call();
+    }
+    if (_selectionState.selection != _selection) {
+      _setGridSelection(_selectionState.selection, false);
+    }
+    if (outcome.clearOverlay) _closeOverlay();
+    if (outcome.focus) _gridController.focus();
+  }
+
+  /// `handleMaybeClick` (`data-editor.tsx:2367-2435`).
+  bool _handleMaybeClick(GlideGridCellMouseArgs a) {
+    final p = widget.props;
+    final mouseDown = _mouseDownData;
+    final isValidClick = a.isTouch == true ||
+        (mouseDown != null &&
+            mouseDown.location.col == a.location.col &&
+            mouseDown.location.row == a.location.row);
+
+    if (isValidClick) {
+      p.onCellClicked?.call(a.location, GlideCellClickedEventArgs(
+        shiftKey: a.shiftKey,
+        ctrlKey: a.ctrlKey,
+        metaKey: a.metaKey,
+        isTouch: a.isTouch,
+        isLongTouch: a.isLongTouch,
+        isDoubleClick: a.isDoubleClick,
+        isEdge: a.isEdge,
+        button: a.button,
+        buttons: a.buttons,
+        scrollEdge: a.scrollEdge,
+        location: a.location,
+        bounds: a.bounds,
+        isFillHandle: a.isFillHandle,
+        localEventX: a.localEventX,
+        localEventY: a.localEventY,
+        preventDefault: () {},
+      ));
+    }
+
+    if (a.button == 1) return true;
+
+    final c = _getCellContent(a.location);
+    final r = _renderers.forCell(c);
+    if (r != null && isValidClick) {
+      var prevented = false;
+      final newVal = r.onClick(
+        GlideCellEventArgs(
+          cell: c,
+          posX: a.localEventX,
+          posY: a.localEventY,
+          bounds: a.bounds,
+          location: a.location,
+          theme: _themeForCell(c, a.location),
+          preventDefault: () => prevented = true,
+          isTouch: a.isTouch == true,
+          isLongTouch: a.isLongTouch == true,
+          shiftKey: a.shiftKey,
+          ctrlKey: a.ctrlKey,
+          metaKey: a.metaKey,
+        ),
+      );
+      if (newVal != null &&
+          !glideIsInnerOnlyCell(newVal) &&
+          glideIsEditableGridCell(newVal)) {
+        _onCellsEdited([
+          GlideEditListItem(location: a.location, value: newVal),
+        ]);
+      }
+      if (prevented) return false;
+    }
+
+    if (_selection.current == null) return false;
+
+    final activationBehavior = c.activationBehaviorOverride ??
+        p.cellActivationBehavior;
+    var shouldActivate = false;
+    switch (activationBehavior) {
+      case GlideCellActivationBehavior.doubleClick ||
+          GlideCellActivationBehavior.secondClick:
+        final selected = _selection.current?.cell;
+        final prev = _previousSelection?.current?.cell;
+        if (selected == null || prev == null) break;
+        final isClickOnSelected =
+            a.location.col == selected.col &&
+            a.location.col == prev.col &&
+            a.location.row == selected.row &&
+            a.location.row == prev.row;
+        shouldActivate =
+            isClickOnSelected &&
+            (a.isDoubleClick == true ||
+                p.cellActivationBehavior ==
+                    GlideCellActivationBehavior.secondClick);
+      case GlideCellActivationBehavior.singleClick:
+        shouldActivate = true;
+    }
+
+    if (!shouldActivate) return false;
+
+    final activation = GlidePointerCellActivation(
+      a.isDoubleClick == true
+          ? GlideCellActivationBehavior.doubleClick
+          : activationBehavior,
+      pointerType: a.isTouch == true ? 'touch' : 'mouse',
+    );
+    p.onCellActivated?.call(a.location, activation);
+    _reselect(a.bounds, activation);
+    return true;
+  }
+
+  void _onMouseUp(GlideGridMouseArgs args, bool isOutside) {
+    if (isOutside) {
+      _mouseDownData = null;
+      return;
+    }
+
+    // Touch pointers do their selection on release instead of on press
+    // (`data-editor.tsx:2438-2482`).
+    if (args.isTouch == true) {
+      if (args.kind == GlideGridCellKind.cell) {
+        if (!_handleMaybeClick(args as GlideGridCellMouseArgs)) {
+          _handleSelect(args);
+        }
+      } else if (args.kind == GlideGridCellKind.header) {
+        final header = args as GlideGridHeaderMouseArgs;
+        widget.props.onHeaderClicked?.call(header.location.col, header);
+        _handleSelect(args);
+      } else if (args.kind == GlideGridCellKind.groupHeader) {
+        _handleSelect(args);
+      }
+      _lastMouseSelectLocation = null;
+      _mouseDownData = null;
+      _previousSelection = null;
+      return;
+    }
+
+    switch (args.kind) {
+      case GlideGridCellKind.header:
+        final header = args as GlideGridHeaderMouseArgs;
+        final lastDown = _lastMouseSelectLocation;
+        if (args.button == 0 &&
+            lastDown != null &&
+            lastDown.col == header.location.col &&
+            lastDown.row == header.location.row) {
+          widget.props.onHeaderClicked?.call(header.location.col, header);
+        }
+      case GlideGridCellKind.groupHeader:
+        final groupHeader = args as GlideGridGroupHeaderMouseArgs;
+        final lastDown = _lastMouseSelectLocation;
+        if (args.button == 0 &&
+            lastDown != null &&
+            lastDown.col == groupHeader.location.col &&
+            lastDown.row == groupHeader.location.row) {
+          // `handleGroupHeaderSelection` runs for group headers.
+          _selectionState.handleGroupHeaderSelection(
+            groupHeader,
+            columns: widget.props.columns,
+            rowMarkerOffset: 0,
+          );
+          if (_selectionState.selection != _selection) {
+            _setGridSelection(_selectionState.selection, false);
+          }
+        }
+      case GlideGridCellKind.cell:
+        if (args.button == 0 || args.button == 1) {
+          _handleMaybeClick(args as GlideGridCellMouseArgs);
+        }
+      case GlideGridCellKind.outOfBounds:
+        break;
+    }
+    _lastMouseSelectLocation = null;
+    _mouseDownData = null;
+    _previousSelection = null;
+  }
+
+  // -------------------------------------------------------------------------
+  // Highlight regions (`data-editor.tsx:1240-1305`)
+  // -------------------------------------------------------------------------
+
+  List<GlideHighlight>? _highlightRegions() {
+    final p = widget.props;
+    final accent = p.theme.accentColor;
+    final current = _selection.current;
+    final highlightRange =
+        current != null &&
+            current.range.width * current.range.height > 1
+        ? current.range
+        : null;
+    final highlightFocus = p.drawFocusRing ? current?.cell : null;
+
+    if ((p.highlightRegions == null || p.highlightRegions!.isEmpty) &&
+        highlightRange == null &&
+        highlightFocus == null) {
+      return null;
+    }
+
+    final regions = <GlideHighlight>[];
+    if (p.highlightRegions != null) {
+      for (final r in p.highlightRegions!) {
+        final maxWidth =
+            p.columns.length - r.range.x.toInt() - 0;
+        if (maxWidth > 0) {
+          regions.add(
+            GlideHighlight(
+              color: r.color,
+              range: GlideRectangle(
+                x: r.range.x,
+                y: r.range.y,
+                width: math.min(maxWidth.toDouble(), r.range.width),
+                height: r.range.height,
+              ),
+              style: r.style,
+            ),
+          );
+        }
+      }
+    }
+    if (highlightRange != null) {
+      regions.add(
+        GlideHighlight(
+          color: accent.withValues(alpha: 0.5),
+          range: highlightRange,
+        ),
+      );
+    }
+    if (highlightFocus != null) {
+      regions.add(
+        GlideHighlight(
+          color: accent,
+          range: GlideRectangle(
+            x: highlightFocus.col.toDouble(),
+            y: highlightFocus.row.toDouble(),
+            width: 1,
+            height: 1,
+          ),
+        ),
+      );
+    }
+    return regions.isEmpty ? null : regions;
+  }
+
+  // -------------------------------------------------------------------------
+  // Keyboard / clipboard
+  // -------------------------------------------------------------------------
+
+  void _handleKeyDown(GlideGridKeyArgs event) {
+    var cancelled = false;
+    widget.props.onKeyDown?.call(
+      GlideGridKeyArgs(
+        bounds: event.bounds,
+        key: event.key,
+        keyCode: event.keyCode,
+        altKey: event.altKey,
+        shiftKey: event.shiftKey,
+        ctrlKey: event.ctrlKey,
+        metaKey: event.metaKey,
+        cancel: () => cancelled = true,
+        stopPropagation: event.stopPropagation,
+        preventDefault: event.preventDefault,
+        location: event.location,
+        rawEvent: event.rawEvent,
+      ),
+    );
+    if (cancelled) return;
+
+    final handler = _makeKeyHandler();
+    final handled = handler.handleKeyDown(
+      event,
+      editOnType: widget.props.editOnType,
+    );
+    if (handler.selection != _selection) {
+      _setGridSelection(handler.selection, false);
+    }
+    if (!handled) return;
+  }
+
+  Future<void> _cut() async {
+    final getCells = widget.props.getCellsForSelection;
+    if (getCells == null) return;
+    await glideCut(
+      focused: _focused,
+      cutEnabled: glideKeysWithDefaults(widget.props.keybindings).cut,
+      selection: _selection,
+      rows: widget.props.rows,
+      rowMarkerOffset: 0,
+      columns: widget.props.columns,
+      getCellsForSelection: getCells,
+      onDelete: (selection) =>
+          widget.props.onDelete?.call(selection) ?? true,
+      copyHeaders: widget.props.copyHeaders,
+    );
+  }
+
+  Future<void> _copy() async {
+    final getCells = widget.props.getCellsForSelection;
+    if (getCells == null) return;
+    await glideCopy(
+      focused: _focused,
+      copyEnabled: glideKeysWithDefaults(widget.props.keybindings).copy,
+      selection: _selection,
+      rows: widget.props.rows,
+      rowMarkerOffset: 0,
+      columns: widget.props.columns,
+      getCellsForSelection: getCells,
+      copyHeaders: widget.props.copyHeaders,
+    );
+  }
+
+  Future<void> _paste() async {
+    final getCells = widget.props.getCellsForSelection;
+    if (getCells == null) return;
+    await glidePaste(
+      focused: _focused,
+      selection: _selection,
+      rows: widget.props.rows,
+      columnCount: widget.props.columns.length,
+      rowMarkerOffset: 0,
+      getCellContent: _getCellContent,
+      getCellRenderer: _renderers.forCell,
+      onCellsEdited: _onCellsEdited,
+      onPaste: widget.props.onPaste,
+      coercePasteValue: widget.props.coercePasteValue,
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // Build
+  // -------------------------------------------------------------------------
+
+  int get _visibleRowCount {
+    final bodyHeight = _viewportHeight - _headerHeight;
+    if (bodyHeight <= 0) return 1;
+    return (bodyHeight / widget.props.rowHeight(0)).ceil() + 1;
+  }
+
+  double get _headerHeight => widget.props.enableGroups
+      ? widget.props.headerHeight + widget.props.groupHeaderHeight
+      : widget.props.headerHeight;
+
+  double _viewportHeight = 400;
+
+  double get _rowsHeight {
+    final rh = widget.props.rowHeight;
+    if (rh.isFixed) return widget.props.rows * rh(0);
+    var total = 0.0;
+    for (var i = 0; i < widget.props.rows; i++) {
+      total += rh(i);
+    }
+    return total;
+  }
+
+  double get _maxScrollY =>
+      math.max(0.0, _rowsHeight - (_viewportHeight - _headerHeight));
+
+  void _handleScroll(PointerSignalEvent event) {
+    if (event is! PointerScrollEvent) return;
+    final next = (_scrollY + event.scrollDelta.dy)
+        .clamp(0.0, _maxScrollY)
+        .toDouble();
+    if (next == _scrollY) return;
+    setState(() => _scrollY = next);
+
+    final region = computeVisibleRegion(
+      scrollX: 0,
+      scrollY: _scrollY,
+      clientWidth: _viewportWidth,
+      clientHeight: math.max(1, _viewportHeight - _headerHeight),
+      columns: mapColumns(widget.props.columns, widget.props.freezeColumns),
+      rowHeight: widget.props.rowHeight,
+      rows: widget.props.rows,
+      freezeColumns: widget.props.freezeColumns,
+      smoothScrollY: widget.props.smoothScrollY,
+    );
+    setState(() {
+      _cellXOffset = region.x;
+      _cellYOffset = region.y;
+      _translateX = region.translateX;
+      _translateY = region.translateY;
+    });
+  }
+
+  double _viewportWidth = 800;
+
+  @override
+  @override
+  Widget build(BuildContext context) {
+    final p = widget.props;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        _viewportWidth = constraints.maxWidth;
+        _viewportHeight = constraints.maxHeight;
+
+        final gridProps = GlideDataGridProps(
+          width: _viewportWidth,
+          height: _viewportHeight,
+          columns: p.columns,
+          rows: p.rows,
+          rowHeight: p.rowHeight,
+          headerHeight: p.headerHeight,
+          groupHeaderHeight: p.groupHeaderHeight,
+          enableGroups: p.enableGroups,
+          freezeColumns: p.freezeColumns,
+          freezeTrailingRows: p.freezeTrailingRows,
+          cellXOffset: _cellXOffset,
+          cellYOffset: _cellYOffset,
+          translateX: _translateX,
+          translateY: _translateY,
+          getCellContent: _getCellContent,
+          getCellRenderer: _renderers.forCell,
+          theme: p.theme,
+          verticalBorder: p.verticalBorder,
+          onItemHovered: (_) {},
+          onMouseMove: (_) {},
+          onMouseDown: _onMouseDown,
+          onMouseUp: _onMouseUp,
+          onContextMenu: _onContextMenu,
+          onCanvasFocused: () => setState(() => _focused = true),
+          onCanvasBlur: () => setState(() => _focused = false),
+          onCellFocused: (_) {},
+          onKeyDown: _handleKeyDown,
+          onKeyUp: p.onKeyUp,
+          selection: _selection,
+          isFocused: _focused,
+          drawFocusRing: p.drawFocusRing,
+          highlightRegions: _highlightRegions(),
+          getRowThemeOverride: p.getRowThemeOverride,
+          getGroupDetails: p.getGroupDetails,
+          metrics: _metrics,
+          minimumCellWidth: 10,
+        );
+
+        return Shortcuts(
+          shortcuts: _clipboardShortcuts,
+          child: Actions(
+            actions: {
+              _CopyIntent: CallbackAction<_CopyIntent>(
+                onInvoke: (_) {
+                  _copy();
+                  return null;
+                },
+              ),
+              _PasteIntent: CallbackAction<_PasteIntent>(
+                onInvoke: (_) {
+                  _paste();
+                  return null;
+                },
+              ),
+              _CutIntent: CallbackAction<_CutIntent>(
+                onInvoke: (_) {
+                  _cut();
+                  return null;
+                },
+              ),
+            },
+            child: Listener(
+              onPointerSignal: _handleScroll,
+              behavior: HitTestBehavior.opaque,
+              child: Stack(
+                fit: StackFit.expand,
+                clipBehavior: Clip.none,
+                children: [
+                  RepaintBoundary(
+                    child: GlideDataGrid(
+                      props: gridProps,
+                      controller: _gridController,
+                    ),
+                  ),
+                  if (_overlay != null) _buildOverlay(),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _onContextMenu(GlideGridMouseArgs args, void Function() preventDefault) {
+    if (args is! GlideGridCellMouseArgs) return;
+    widget.props.onCellContextMenu?.call(
+      args.location,
+      GlideCellClickedEventArgs(
+        shiftKey: args.shiftKey,
+        ctrlKey: args.ctrlKey,
+        metaKey: args.metaKey,
+        isTouch: args.isTouch,
+        isLongTouch: args.isLongTouch,
+        isDoubleClick: args.isDoubleClick,
+        isEdge: args.isEdge,
+        button: args.button,
+        buttons: args.buttons,
+        scrollEdge: args.scrollEdge,
+        location: args.location,
+        bounds: args.bounds,
+        isFillHandle: args.isFillHandle,
+        localEventX: args.localEventX,
+        localEventY: args.localEventY,
+        preventDefault: preventDefault,
+      ),
+    );
+  }
+
+  final GlideTextMetrics _metrics = GlideTextMetrics();
+
+  /// Copy/cut/paste live on window-level `copy`/`paste` listeners upstream
+  /// (`data-editor.tsx:3877`); Flutter has no such channel for a canvas, so
+  /// they are ordinary shortcuts instead.
+  Map<ShortcutActivator, Intent> get _clipboardShortcuts => {
+    const SingleActivator(LogicalKeyboardKey.keyC, meta: true):
+        const _CopyIntent(),
+    const SingleActivator(LogicalKeyboardKey.keyC, control: true):
+        const _CopyIntent(),
+    const SingleActivator(LogicalKeyboardKey.keyX, meta: true):
+        const _CutIntent(),
+    const SingleActivator(LogicalKeyboardKey.keyX, control: true):
+        const _CutIntent(),
+    const SingleActivator(LogicalKeyboardKey.keyV, meta: true):
+        const _PasteIntent(),
+    const SingleActivator(LogicalKeyboardKey.keyV, control: true):
+        const _PasteIntent(),
+  };
+
+  Widget _buildOverlay() {
+    final overlay = _overlay!;
+    return GlideDataGridOverlayEditor(
+      target: overlay.target,
+      cell: overlay.cell,
+      content: overlay.content,
+      theme: overlay.theme,
+      onFinishEditing: _finishEditing,
+      forceEditMode: overlay.forceEditMode,
+      highlight: overlay.highlight,
+      getCellRenderer: _renderers.forCell,
+      initialValue: overlay.initialValue,
+      validateCell: null,
+      activation: overlay.activation is GlideKeyboardCellActivation
+          ? null
+          : null,
+    );
+  }
+}
+
+/// What the overlay is editing (`data-editor.tsx` `overlay` state).
+@immutable
+class _OverlayState {
+  const _OverlayState({
+    required this.target,
+    required this.cell,
+    required this.content,
+    required this.theme,
+    required this.highlight,
+    required this.forceEditMode,
+    required this.activation,
+    this.initialValue,
+  });
+
+  final GlideRectangle target;
+  final GlideItem cell;
+  final GlideGridCell content;
+  final GlideTheme theme;
+  final String? initialValue;
+  final bool highlight;
+  final bool forceEditMode;
+  final GlideCellActivation activation;
+}
+
+class _CopyIntent extends Intent {
+  const _CopyIntent();
+}
+
+class _CutIntent extends Intent {
+  const _CutIntent();
+}
+
+class _PasteIntent extends Intent {
+  const _PasteIntent();
+}

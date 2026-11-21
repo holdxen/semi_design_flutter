@@ -126,8 +126,10 @@ abstract class GlideCellRenderer {
       null;
 
   /// `provideEditor` (`:68`).
-  GlideEditorBuilder? provideEditor(GlideGridCell cell, GlideItem location) =>
-      null;
+  GlideEditorProvider? provideEditor(
+    GlideGridCell cell,
+    GlideItem location,
+  ) => null;
 
   /// `onClick` (`:71-81`). Returning a cell commits an edit without opening an
   /// overlay (used by booleans).
@@ -230,6 +232,62 @@ class GlideCellEventArgs {
 typedef GlideEditorBuilder =
     Widget Function(GlideEditorProps props);
 
+/// `ProvideEditorCallbackResult` (`data-grid-types.ts:401-410`): either the
+/// plain component (with the `disablePadding`/`disableStyling` flags React
+/// hangs off the function object) or an [GlideObjectEditor].
+sealed class GlideEditorProvider {
+  const GlideEditorProvider();
+
+  bool get disablePadding;
+  bool get disableStyling;
+}
+
+/// The plain-component form of [GlideEditorProvider].
+class GlideComponentEditor extends GlideEditorProvider {
+  const GlideComponentEditor(
+    this.builder, {
+    this.disablePadding = false,
+    this.disableStyling = false,
+  });
+
+  final GlideEditorBuilder builder;
+
+  @override
+  final bool disablePadding;
+
+  @override
+  final bool disableStyling;
+}
+
+/// `ObjectEditorCallbackResult` (`data-grid-types.ts`): `{ editor,
+/// deletedValue?, styleOverride? }`.
+class GlideObjectEditor extends GlideEditorProvider {
+  const GlideObjectEditor(
+    this.builder, {
+    this.deletedValue,
+    this.styleOverride,
+    this.disablePadding = false,
+    this.disableStyling = false,
+  });
+
+  final GlideEditorBuilder builder;
+
+  /// `deletedValue` (`data-editor.tsx:3166`): used by `deleteRange` when the
+  /// renderer has no `onDelete`.
+  final GlideGridCell Function(GlideGridCell cell)? deletedValue;
+  final GlideThemeOverride? styleOverride;
+
+  @override
+  final bool disablePadding;
+
+  @override
+  final bool disableStyling;
+}
+
+/// `isObjectEditorCallbackResult` (`data-grid-types.ts:420-424`).
+bool glideIsObjectEditor(GlideEditorProvider provider) =>
+    provider is GlideObjectEditor;
+
 /// `ProvideEditorComponent` props.
 class GlideEditorProps {
   const GlideEditorProps({
@@ -265,6 +323,9 @@ class GlideEditorProps {
 @immutable
 class GlideEditorMovement {
   const GlideEditorMovement(this.col, this.row);
+
+  /// `[0, 0]` — commit without moving.
+  static const GlideEditorMovement none = GlideEditorMovement(0, 0);
 
   static const GlideEditorMovement left = GlideEditorMovement(-1, 0);
   static const GlideEditorMovement right = GlideEditorMovement(1, 0);

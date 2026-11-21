@@ -768,6 +768,13 @@ class _GlideDataGridState extends State<GlideDataGrid> {
     return Focus(
       focusNode: _focusNode,
       autofocus: false,
+      onFocusChange: (focused) {
+        if (focused) {
+          p.onCanvasFocused();
+        } else {
+          p.onCanvasBlur();
+        }
+      },
       onKeyEvent: _handleKeyEvent,
       child: Listener(
         onPointerDown: _handlePointerDown,

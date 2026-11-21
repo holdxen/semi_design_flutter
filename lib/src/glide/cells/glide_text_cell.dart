@@ -56,8 +56,9 @@ class GlideTextCellRenderer extends GlideCellRenderer {
 
   /// `provideEditor` (`text-cell.tsx:36-58`).
   @override
-  GlideEditorBuilder? provideEditor(GlideGridCell cell, GlideItem location) {
-    return (props) {
+  GlideEditorProvider? provideEditor(GlideGridCell cell, GlideItem location) {
+    final textCell = cell as GlideTextCell;
+    return GlideComponentEditor((props) {
       final value = props.value as GlideTextCell;
       return GlideGrowingEntry(
         value: value.data,
@@ -68,7 +69,7 @@ class GlideTextCellRenderer extends GlideCellRenderer {
         onChange: (text) =>
             props.onChange(value.copyWith(data: text, displayData: text)),
       );
-    };
+    }, disablePadding: textCell.allowWrapping);
   }
 
   /// `onPaste` (`text-cell.tsx:59-62`).

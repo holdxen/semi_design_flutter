@@ -110,7 +110,8 @@ class GlideKeyHandler {
   final void Function()? onSearch;
   final GlideDeleteCallback? onDelete;
   final GlideCellsEditedCallback? onCellsEdited;
-  final void Function(GlideItem location, String key)? onCellActivated;
+  final void Function(GlideItem location, GlideCellActivation activation)?
+  onCellActivated;
   final void Function()? fillDown;
   final void Function()? fillRight;
   final void Function(GlideScrollTarget target)? scrollTo;
@@ -302,7 +303,7 @@ class GlideKeyHandler {
         glideIsHotkey(k.activateCell, event, details)) {
       onCellActivated?.call(
         GlideItem(col - rowMarkerOffset, row),
-        event.key,
+        const GlideKeyboardCellActivation(null),
       );
     } else if (current.range.height > 1 &&
         glideIsHotkey(k.downFill, event, details)) {
@@ -767,7 +768,10 @@ class GlideKeyHandler {
       return false;
     }
 
-    onCellActivated?.call(GlideItem(col - rowMarkerOffset, row), key);
+    onCellActivated?.call(
+      GlideItem(col - rowMarkerOffset, row),
+      GlideKeyboardCellActivation(key),
+    );
     onTypeToEdit?.call(bounds, key);
     event.stopPropagation();
     event.preventDefault();
@@ -790,6 +794,16 @@ class GlideKeyHandler {
         GlideGridCell? newVal;
         final renderer = getCellRenderer(cellValue);
         newVal = renderer?.onDelete(cellValue);
+        if (newVal == null && renderer != null) {
+          // `editor?.deletedValue?.(cellValue)` (`data-editor.tsx:3166`).
+          final provider = renderer.provideEditor(
+            cellValue,
+            GlideItem(x - rowMarkerOffset, y),
+          );
+          if (provider is GlideObjectEditor) {
+            newVal = provider.deletedValue?.call(cellValue);
+          }
+        }
 
         if (newVal != null && glideIsEditableGridCell(newVal)) {
           editList.add(
