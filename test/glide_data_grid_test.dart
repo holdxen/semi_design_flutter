@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:semi_design_flutter/semi_design_flutter.dart';
 
+double _oddHeight(int row) => row.isEven ? 32.0 : 33.0;
+
 /// A 10x10 red square, used to stand in for a decoded network image.
 Future<ui.Image> _fakeImage() async {
   final recorder = ui.PictureRecorder();
@@ -1542,6 +1544,7 @@ void main() {
       int columnCount = 6,
       bool unsizedColumns = false,
       double minColumnWidth = 50,
+      double? scrollOffsetY,
       GlideRowGroupingOptions? rowGrouping,
       GlideTrailingRowOptions? trailingRowOptions,
       void Function()? onRowAppended,
@@ -1564,6 +1567,8 @@ void main() {
         ],
         rows: currentRows,
         rowGrouping: rowGrouping,
+        minColumnWidth: minColumnWidth,
+        scrollOffsetY: scrollOffsetY,
         onColumnAppended: onColumnAppended == null
             ? null
             : () {
@@ -2738,6 +2743,21 @@ void main() {
       await tester.pumpAndSettle();
       expect(selectionLog.last.current, isNull);
     });
+
+    testWidgets('scrollOffsetY starts the grid scrolled down', (tester) async {
+      await tester.pumpWidget(buildEditor(scrollOffsetY: 640));
+      await tester.pumpAndSettle();
+
+      // 640 / 32 = 20 rows in, so y = 45 is grid row 20 rather than row 0.
+      final gesture = await tester.startGesture(
+        const Offset(150, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(selectionLog.last.current!.cell.row, 20);
+    });
   });
 
   group('column sizer', () {
@@ -3310,6 +3330,73 @@ void main() {
       );
       expect(limits?.$1, 1);
       expect(limits?.$2, 5);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Rem adjuster (`data-editor/use-rem-adjuster.ts`)
+  // -------------------------------------------------------------------------
+
+  group('rem adjuster', () {
+    GlideRemAdjustment adjust({
+      bool scaleToRem = true,
+      double remSize = 16,
+    }) => glideRemAdjuster(
+      scaleToRem: scaleToRem,
+      remSize: remSize,
+      rowHeightIn: const GlideRowHeight.fixed(30),
+      headerHeightIn: 36,
+      groupHeaderHeightIn: 36,
+      themeIn: GlideTheme.light(),
+      overscrollXIn: 10,
+      overscrollYIn: 10,
+    );
+
+    test('is the identity when scaleToRem is off or remSize is 16', () {
+      final off = adjust(scaleToRem: false, remSize: 32);
+      expect(off.rowHeight(0), 30);
+      expect(off.headerHeight, 36);
+      expect(off.overscrollY, 10);
+
+      final sixteen = adjust(remSize: 16);
+      expect(sixteen.rowHeight(0), 30);
+      expect(sixteen.headerHeight, 36);
+      expect(sixteen.overscrollX, 10);
+      expect(identical(sixteen.theme, GlideTheme.light()), isTrue);
+    });
+
+    test('multiplies every dimension by remSize / 16', () {
+      final scaled = adjust(remSize: 32);
+      expect(scaled.rowHeight(0), 60);
+      expect(scaled.headerHeight, 72);
+      expect(scaled.groupHeaderHeight, 72);
+      expect(scaled.overscrollX, 20);
+      expect(scaled.overscrollY, 20);
+      expect(
+        scaled.theme.cellHorizontalPadding,
+        GlideTheme.light().cellHorizontalPadding * 2,
+      );
+      expect(
+        scaled.theme.cellVerticalPadding,
+        GlideTheme.light().cellVerticalPadding * 2,
+      );
+      // Everything else is untouched.
+      expect(scaled.theme.bgCell, GlideTheme.light().bgCell);
+    });
+
+    test('variable row heights are scaled and ceiled', () {
+      final scaled = glideRemAdjuster(
+        scaleToRem: true,
+        remSize: 24,
+        rowHeightIn: const GlideRowHeight.variable(_oddHeight),
+        headerHeightIn: 36,
+        groupHeaderHeightIn: 36,
+        themeIn: GlideTheme.light(),
+        overscrollXIn: 0,
+        overscrollYIn: 0,
+      );
+      expect(scaled.rowHeight(0), 48); // 32 * 1.5
+      expect(scaled.rowHeight(1), 50); // 33 * 1.5 = 49.5, ceiled
     });
   });
   group('animation manager', () {

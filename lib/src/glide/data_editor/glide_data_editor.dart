@@ -33,6 +33,7 @@ import 'glide_handle_select.dart';
 import 'glide_column_sizer.dart';
 import 'glide_key_handler.dart';
 import 'glide_keybindings.dart';
+import 'glide_rem_adjuster.dart';
 import 'glide_row_grouping.dart';
 
 /// `DataGridProps` subset the editor owns (`data-editor.tsx`).
@@ -101,6 +102,11 @@ class GlideDataEditorProps {
     this.minColumnWidth = 50,
     this.maxColumnWidth = 500,
     this.overscrollY = 0,
+    this.overscrollX = 0,
+    this.scaleToRem = false,
+    this.remSize,
+    this.scrollOffsetX,
+    this.scrollOffsetY,
     this.smoothScrollX = false,
     this.smoothScrollY = false,
     this.showSearch = false,
@@ -235,6 +241,21 @@ class GlideDataEditorProps {
   final void Function(GlideFillPatternArgs args)? onFillPattern;
 
   final double overscrollY;
+
+  /// `overscrollX` (`data-editor.tsx`): extra horizontal scroll extent.
+  final double overscrollX;
+
+  /// `scaleToRem` / `remSize` (`data-editor.tsx:657`, `:896`): multiply every
+  /// dimension by `remSize / 16`. Flutter has no root font size, so [remSize]
+  /// is supplied by the caller (or derived from the platform text scaler).
+  final bool scaleToRem;
+  final double? remSize;
+
+  /// `scrollOffsetX` / `scrollOffsetY` (`data-editor.tsx:415-420`): initial
+  /// scroll position applied once the grid has been laid out.
+  final double? scrollOffsetX;
+  final double? scrollOffsetY;
+
   final bool smoothScrollX;
   final bool smoothScrollY;
   final bool showSearch;
@@ -323,10 +344,24 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     super.initState();
     _selection = GlideGridSelection.empty;
     _rebuildRowGrouping();
+    _rebuildRemAdjustment(16);
     _rebuildSizedColumns();
     _rebuildMangledColumns();
     _selectionState = _makeSelectionState();
     _autoscrollTicker = createTicker(_onAutoscrollTick);
+
+    // `useInitialScrollOffset` (`use-initial-scroll-offset.ts:38-71`): the
+    // offsets only take effect once the viewport exists, so they are applied
+    // after the first frame has been laid out.
+    final initialX = widget.props.scrollOffsetX;
+    final initialY = widget.props.scrollOffsetY;
+    if (initialX != null) _scrollX = initialX;
+    if (initialY != null) _scrollY = initialY;
+    if (initialX != null || initialY != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _applyScroll();
+      });
+    }
   }
 
   @override
@@ -344,6 +379,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
         oldWidget.props.rowGrouping != widget.props.rowGrouping ||
         oldWidget.props.rowHeight != widget.props.rowHeight) {
       _rebuildRowGrouping();
+      _rebuildRemAdjustment(16);
       _rebuildSizedColumns();
       _rebuildMangledColumns();
       setState(() => _selectionState = _makeSelectionState());
@@ -420,6 +456,10 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     GlideRowMarkerKind.none => GlideMarkerKind.checkbox,
   };
 
+  /// `useRemAdjuster` result (`use-rem-adjuster.ts:15-47`); set in
+  /// `initState`, which can already take the identity path.
+  late GlideRemAdjustment _remAdjustment;
+
   /// `useRowGroupingInner` result (`row-grouping.ts:247-326`).
   GlideRowGroupingResult _rowGrouping = const GlideRowGroupingResult(
     rows: 0,
@@ -433,11 +473,12 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   /// when `rowGrouping` is set (`data-editor.tsx:936`).
   int get _groupedRows => _rowGrouping.rows;
 
-  /// `rowHeight` after `useRowGroupingInner` wrapped it.
-  GlideRowHeight get _effectiveRowHeight =>
-      _rowGrouping.rowHeight == null
-      ? widget.props.rowHeight
-      : GlideRowHeight.variable(_rowGrouping.rowHeight!);
+  /// `rowHeight` after `useRowGroupingInner` (`row-grouping.ts:270`) and
+  /// `useRemAdjuster` (`use-rem-adjuster.ts:21`) have both wrapped it.
+  GlideRowHeight get _effectiveRowHeight => _remAdjustment.rowHeight;
+
+  /// The rem-scaled theme (`use-rem-adjuster.ts:34-40`).
+  GlideTheme get _theme => _remAdjustment.theme;
 
   /// `getRowThemeOverride` adapted to the grid's one-argument signature.
   GlideGetRowThemeOverride? get _rowThemeOverride =>
@@ -476,6 +517,25 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   List<GlideGridColumn> _mangledColumns = const [];
 
   /// `useColumnSizer` (`use-column-sizer.ts:108-217`).
+  /// `useRemAdjuster` (`data-editor.tsx:939-948`), which runs after
+  /// `useRowGroupingInner` (`:936`).
+  void _rebuildRemAdjustment(double remSize) {
+    final p = widget.props;
+    final grouped = _rowGrouping.rowHeight == null
+        ? p.rowHeight
+        : GlideRowHeight.variable(_rowGrouping.rowHeight!);
+    _remAdjustment = glideRemAdjuster(
+      scaleToRem: p.scaleToRem,
+      remSize: remSize,
+      rowHeightIn: grouped,
+      headerHeightIn: p.headerHeight,
+      groupHeaderHeightIn: p.groupHeaderHeight,
+      themeIn: p.theme,
+      overscrollXIn: p.overscrollX,
+      overscrollYIn: p.overscrollY,
+    );
+  }
+
   void _rebuildSizedColumns() {
     final p = widget.props;
     if (identical(_sizedKeyColumns, p.columns) &&
@@ -493,7 +553,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       clientWidth: _viewportWidth,
       minColumnWidth: p.minColumnWidth,
       maxColumnWidth: p.maxColumnWidth,
-      theme: p.theme,
+      theme: _theme,
       getCellRenderer: _renderers.forCell,
       metrics: _metrics,
       memo: _columnSizeMemo,
@@ -2179,7 +2239,12 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   }
 
   double get _maxScrollY =>
-      math.max(0.0, _rowsHeight - (_viewportHeight - _headerHeight));
+      math.max(
+        0.0,
+        _rowsHeight +
+            _remAdjustment.overscrollY -
+            (_viewportHeight - _headerHeight),
+      );
 
   /// `useColumnSizer`'s `nonGrowWidth` (`data-editor.tsx:1118`): the width of
   /// the columns themselves, which is what the horizontal extent is derived
@@ -2188,7 +2253,8 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   /// (`data-editor.tsx:1129`): the horizontal scroll extent.
   double get _columnsWidth =>
       _sizedColumns.nonGrowWidth +
-      (_markerOffset == 1 ? _rowMarkerWidth : 0);
+      (_markerOffset == 1 ? _rowMarkerWidth : 0) +
+      _remAdjustment.overscrollX;
 
   double get _stickyWidth {
     var total = 0.0;
@@ -2256,6 +2322,9 @@ class _GlideDataEditorState extends State<GlideDataEditor>
         _viewportWidth = constraints.maxWidth;
         _viewportHeight = constraints.maxHeight;
         _rebuildRowGrouping();
+        _rebuildRemAdjustment(
+          p.remSize ?? MediaQuery.textScalerOf(context).scale(16),
+        );
         _rebuildSizedColumns();
         _rebuildMangledColumns();
 
@@ -2266,11 +2335,13 @@ class _GlideDataEditorState extends State<GlideDataEditor>
           rows: _mangledRows,
           hasAppendRow: _showTrailingBlankRow,
           rowHeight: _effectiveRowHeight,
-          headerHeight: p.headerHeight,
+          headerHeight: _remAdjustment.headerHeight,
           // `data-editor.tsx:4276` forwards 0 when groups are off, which is
           // what keeps `computeBounds`' `totalHeaderHeight - groupHeaderHeight`
           // consistent for header rows.
-          groupHeaderHeight: p.enableGroups ? p.groupHeaderHeight : 0,
+          groupHeaderHeight: p.enableGroups
+              ? _remAdjustment.groupHeaderHeight
+              : 0,
           enableGroups: p.enableGroups,
           freezeColumns: _mangledFreezeColumns,
           freezeTrailingRows: p.freezeTrailingRows,
@@ -2280,7 +2351,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
           translateY: _translateY,
           getCellContent: _getCellContent,
           getCellRenderer: _renderers.forCell,
-          theme: p.theme,
+          theme: _theme,
           verticalBorder: p.verticalBorder,
           onItemHovered: _onItemHovered,
           onMouseMove: (_) {},
