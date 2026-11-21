@@ -838,6 +838,42 @@ class GlideMarkerCell extends GlideGridCell {
 /// `checkboxStyle: "square" | "circle"` (`data-grid-types.ts:519`).
 enum GlideMarkerCheckboxStyle { square, circle }
 
+/// `RowMarkerOptions["kind"]` (`data-editor.tsx:98`).
+enum GlideRowMarkerKind {
+  none,
+  checkbox,
+  number,
+  clickableNumber,
+  checkboxVisible,
+  both,
+}
+
+/// `RowMarkerOptions` (`data-editor.tsx:97-106`).
+@immutable
+class GlideRowMarkerOptions {
+  const GlideRowMarkerOptions({
+    this.kind = GlideRowMarkerKind.checkbox,
+    this.checkboxStyle = GlideMarkerCheckboxStyle.square,
+    this.startIndex = 1,
+    this.width,
+    this.theme,
+    this.headerTheme,
+    this.headerAlwaysVisible = false,
+    this.headerDisabled = false,
+  });
+
+  final GlideRowMarkerKind kind;
+  final GlideMarkerCheckboxStyle checkboxStyle;
+  final int startIndex;
+
+  /// Unset → sized from the row count (`data-editor.tsx:952`).
+  final double? width;
+  final GlideThemeOverride? theme;
+  final GlideThemeOverride? headerTheme;
+  final bool headerAlwaysVisible;
+  final bool headerDisabled;
+}
+
 /// `markerKind: "checkbox" | "number" | "both" | "checkbox-visible"`
 /// (`data-grid-types.ts:520`).
 enum GlideMarkerKind { checkbox, number, both, checkboxVisible }

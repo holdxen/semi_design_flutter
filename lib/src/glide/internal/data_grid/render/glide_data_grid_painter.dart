@@ -17,6 +17,7 @@ import 'dart:math' as math;
 import 'package:flutter/rendering.dart';
 
 import '../../../cells/glide_cell_types.dart';
+import 'glide_draw_checkbox.dart';
 import 'glide_draw_grid_arg.dart';
 import 'glide_render_walk.dart';
 
@@ -545,6 +546,39 @@ class GlideDataGridPainter extends CustomPainter {
           totalHeaderHeight - headerTop,
         );
         canvas.drawRect(rect, Paint()..color = bg);
+
+        // `drawHeaderInner`'s marker branch (`data-grid-render.header.ts:
+        // 433-459`): the marker column shows a checkbox instead of a title.
+        final ext = c.extension;
+        if (ext?.rowMarker != null && ext!.headerRowMarkerDisabled != true) {
+          final checked = ext.rowMarkerChecked ?? GlideBooleanValue.empty;
+          final noHover =
+              a.dragAndDropState != null ||
+              a.isResizing;
+          final hovered =
+              !noHover &&
+              a.hoverInfo == GlideItem(c.sourceIndex, GlideItem.headerRow);
+          final alwaysVisible = ext.headerRowMarkerAlwaysVisible;
+          if (checked == GlideBooleanValue.checked ||
+              alwaysVisible ||
+              hovered) {
+            final markerTheme = ext.headerRowMarkerTheme?.applyTo(theme) ??
+                theme;
+            drawCheckbox(
+              canvas,
+              markerTheme,
+              checked,
+              drawX,
+              headerTop,
+              c.width,
+              totalHeaderHeight - headerTop,
+              maxSize: theme.checkboxMaxSize,
+              alignment: GlideContentAlign.center,
+              style: ext.rowMarker!,
+            );
+          }
+          return null;
+        }
 
         final style = theme.headerTextStyle.copyWith(
           color: selected ? theme.textHeader : theme.textHeader,

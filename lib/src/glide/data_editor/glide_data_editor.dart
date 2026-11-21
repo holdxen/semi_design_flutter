@@ -62,6 +62,8 @@ class GlideDataEditorProps {
     this.rowSelectionBlending = GlideSelectionBlending.exclusive,
     this.rangeSelectionColumnSpanning = true,
     this.columnSelectionModeMulti = false,
+    this.rowMarkers,
+    this.rowSelectionMode = GlideSelectMode.auto,
     this.keybindings,
     this.editOnType = true,
     this.copyHeaders = false,
@@ -76,6 +78,7 @@ class GlideDataEditorProps {
     this.onColumnResizeEnd,
     this.onColumnMoved,
     this.onColumnProposeMove,
+    this.onRowMoved,
     this.lockColumns = 0,
     this.resizeIndicator = GlideResizeIndicator.full,
     this.onGridSelectionChange,
@@ -135,6 +138,13 @@ class GlideDataEditorProps {
   final bool rangeSelectionColumnSpanning;
   final bool columnSelectionModeMulti;
 
+  /// `rowMarkers` (`data-editor.tsx:331`): null/`none` adds no marker
+  /// column.
+  final GlideRowMarkerOptions? rowMarkers;
+
+  /// `rowSelectionMode` (`data-editor.tsx:849`).
+  final GlideSelectMode rowSelectionMode;
+
   final GlideKeybinds? keybindings;
   final bool editOnType;
   final bool copyHeaders;
@@ -186,6 +196,9 @@ class GlideDataEditorProps {
   /// Returning false from [onColumnProposeMove] rejects the move.
   final void Function(int from, int to)? onColumnMoved;
   final bool? Function(int from, int to)? onColumnProposeMove;
+
+  /// `onRowMoved` (`data-editor.tsx`): also enables the marker drag handle.
+  final void Function(int from, int to)? onRowMoved;
 
   /// `lockColumns` (`data-grid-dnd.tsx:133`): columns before this index are
   /// not drop targets.
@@ -265,6 +278,13 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   double? _dragStartX;
   bool _dragColActive = false;
 
+  /// `dragRow` / `dropRow` / `dragStartY` / `dragRowActive`
+  /// (`data-grid-dnd.tsx:88-94`).
+  int? _dragRow;
+  int? _dropRow;
+  double? _dragStartY;
+  bool _dragRowActive = false;
+
   bool get _canDragCol => widget.props.onColumnMoved != null;
 
   /// `visibleRegionRef` (`data-editor.tsx:2831`).
@@ -278,6 +298,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   void initState() {
     super.initState();
     _selection = GlideGridSelection.empty;
+    _rebuildMangledColumns();
     _selectionState = _makeSelectionState();
     _autoscrollTicker = createTicker(_onAutoscrollTick);
   }
@@ -292,7 +313,9 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   void didUpdateWidget(GlideDataEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.props.columns != widget.props.columns ||
-        oldWidget.props.rows != widget.props.rows) {
+        oldWidget.props.rows != widget.props.rows ||
+        oldWidget.props.rowMarkers != widget.props.rowMarkers) {
+      _rebuildMangledColumns();
       setState(() => _selectionState = _makeSelectionState());
     }
   }
@@ -310,8 +333,125 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     rows: widget.props.rows,
     rowSelectMulti: widget.props.rowSelect == GlideSelectMode.multi,
     columnSelectMulti: widget.props.columnSelect == GlideSelectMode.multi,
+    rowMarkerOffset: _markerOffset,
+    hasRowMarkers: _hasRowMarkers,
+    rowMarkersAreNumbers:
+        _rowMarkers == GlideRowMarkerKind.number ||
+        _rowMarkers == GlideRowMarkerKind.none,
+    rowSelectEnabled: widget.props.rowSelect != GlideSelectMode.none,
+    rowSelectionModeMulti:
+        widget.props.rowSelectionMode == GlideSelectMode.multi,
+    rowDragEnabled: widget.props.onRowMoved != null,
+    headerRowMarkerDisabled: _headerRowMarkerDisabled,
     initial: _selection,
   );
+
+  // -------------------------------------------------------------------------
+  // Row markers (`data-editor.tsx:911-956`, `:1141-1169`)
+  // -------------------------------------------------------------------------
+
+  GlideRowMarkerOptions? get _rowMarkerOpts => widget.props.rowMarkers;
+  GlideRowMarkerKind get _rowMarkers =>
+      _rowMarkerOpts?.kind ?? GlideRowMarkerKind.none;
+  bool get _hasRowMarkers => _rowMarkers != GlideRowMarkerKind.none;
+  int get _markerOffset => _hasRowMarkers ? 1 : 0;
+
+  int get _rowMarkerWidth {
+    final explicit = _rowMarkerOpts?.width;
+    if (explicit != null) return explicit.toInt();
+    final rows = widget.props.rows;
+    return rows > 10000 ? 48 : rows > 1000 ? 44 : rows > 100 ? 36 : 32;
+  }
+
+  bool get _headerRowMarkerDisabled =>
+      widget.props.rowSelect != GlideSelectMode.multi ||
+      (_rowMarkerOpts?.headerDisabled ?? false);
+
+  /// `rowMarkerChecked` (`data-editor.tsx:1139`).
+  GlideBooleanValue get _headerRowMarkerChecked {
+    final selected = _selection.rows.length;
+    if (selected == 0) return GlideBooleanValue.unchecked;
+    if (selected == widget.props.rows) return GlideBooleanValue.checked;
+    return GlideBooleanValue.empty;
+  }
+
+  GlideMarkerKind get _markerKind => switch (_rowMarkers) {
+    GlideRowMarkerKind.checkbox => GlideMarkerKind.checkbox,
+    GlideRowMarkerKind.number || GlideRowMarkerKind.clickableNumber =>
+      GlideMarkerKind.number,
+    GlideRowMarkerKind.checkboxVisible => GlideMarkerKind.checkboxVisible,
+    GlideRowMarkerKind.both => GlideMarkerKind.both,
+    GlideRowMarkerKind.none => GlideMarkerKind.checkbox,
+  };
+
+  /// `mangledCols` (`data-editor.tsx:1141-1169`); rebuilt whenever the
+  /// columns or the marker options change.
+  List<GlideGridColumn> _mangledColumns = const [];
+
+  void _rebuildMangledColumns() {
+    final opts = _rowMarkerOpts;
+    if (!_hasRowMarkers || opts == null) {
+      _mangledColumns = widget.props.columns;
+      return;
+    }
+    _mangledColumns = [
+      GlideGridColumn(
+        title: '',
+        width: _rowMarkerWidth.toDouble(),
+        hasMenu: false,
+        style: GlideCellStyle.normal,
+        themeOverride: opts.theme,
+        extension: GlideInnerColumnExtension(
+          rowMarker: opts.checkboxStyle,
+          rowMarkerChecked: _headerRowMarkerChecked,
+          headerRowMarkerTheme: opts.headerTheme,
+          headerRowMarkerAlwaysVisible: opts.headerAlwaysVisible,
+          headerRowMarkerDisabled: _headerRowMarkerDisabled,
+        ),
+      ),
+      ...widget.props.columns,
+    ];
+  }
+
+  /// `lockColumns={rowMarkerOffset}` (`data-editor.tsx:4263`); the marker
+  /// column is never a drop target.
+  int get _lockColumns =>
+      math.max(widget.props.lockColumns, _markerOffset);
+
+  /// `mangledFreezeColumns` (`data-editor.tsx:3994`).
+  int get _mangledFreezeColumns => math.min(
+    _mangledColumns.length,
+    widget.props.freezeColumns + (_hasRowMarkers ? 1 : 0),
+  );
+
+  GlideMarkerCell _markerCellFor(int row) => GlideMarkerCell(
+    row: (_rowMarkerOpts?.startIndex ?? 1) + row,
+    drawHandle: widget.props.onRowMoved != null,
+    checked: _selection.rows.hasIndex(row)
+        ? GlideBooleanValue.checked
+        : GlideBooleanValue.unchecked,
+    checkboxStyle: _rowMarkerOpts?.checkboxStyle ??
+        GlideMarkerCheckboxStyle.square,
+    markerKind: _markerKind,
+  );
+
+  /// `getCellsForSelectionMangled` (`use-cells-for-selection.ts:42-67`).
+  GlideCellArray? _getCellsForSelection(GlideRectangle region) {
+    final direct = widget.props.getCellsForSelection;
+    if (direct == null) return null;
+    final offset = _markerOffset;
+    if (offset == 0) return direct(region);
+
+    final newX = region.x - offset;
+    if (newX < 0) {
+      final r = direct(region.copyWith(x: 0, width: region.width - 1));
+      if (r == null) return null;
+      return [
+        for (final row in r) [const GlideLoadingCell(), ...row],
+      ];
+    }
+    return direct(region.copyWith(x: newX));
+  }
 
   GlideItem _locationOf(GlideGridMouseArgs args) => switch (args) {
     GlideGridCellMouseArgs a => a.location,
@@ -330,8 +470,9 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   /// `themeForCell` (`data-editor.tsx`).
   GlideTheme _themeForCell(GlideGridCell cell, GlideItem location) {
     final p = widget.props;
-    final column = location.col < p.columns.length
-        ? p.columns[location.col]
+    final mangled = _mangledColumns;
+    final column = location.col < mangled.length
+        ? mangled[location.col]
         : null;
     var theme = p.theme;
     final group = column?.group;
@@ -347,17 +488,62 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     return theme;
   }
 
-  GlideGridCell _getCellContent(GlideItem item, [bool? forceStrict]) =>
-      widget.props.getCellContent(item, forceStrict);
+  /// `getMangledCellContent` (`data-editor.tsx:1309-1381`), wrapped by
+  /// `DataGridDnd`'s row-remap (`data-grid-dnd.tsx:347-363`).
+  GlideGridCell _getCellContent(GlideItem item, [bool? forceStrict]) {
+    var col = item.col;
+    var row = item.row;
+
+    final dragRow = _dragRow;
+    final dropRow = _dropRow;
+    if (dragRow != null && dropRow != null) {
+      if (row == dropRow) {
+        row = dragRow;
+      } else {
+        if (row > dropRow) row -= 1;
+        if (row >= dragRow) row += 1;
+      }
+    }
+
+    if (_markerOffset == 1 && col == 0) return _markerCellFor(row);
+
+    var cell = widget.props.getCellContent(
+      GlideItem(col - _markerOffset, row),
+      forceStrict,
+    );
+    final span = cell.span;
+    if (_markerOffset != 0 && span != null) {
+      // Spans are reported in user coordinates (`data-editor.tsx:1374-1379`).
+      cell = cell is GlideTextCell
+          ? cell.copyWith(
+              span: (
+                start: span.start + _markerOffset,
+                end: span.end + _markerOffset,
+              ),
+            )
+          : cell;
+    }
+    return cell;
+  }
 
   /// `mangledOnCellsEdited` (`data-editor.tsx:1207-1225`). Row markers are
   //  not ported, so the mangle is a pass-through today.
   bool _onCellsEdited(List<GlideEditListItem> items) {
     if (items.isEmpty) return true;
     final p = widget.props;
-    final r = p.onCellsEdited?.call(items);
+    final offset = _markerOffset;
+    final mangled = offset == 0
+        ? items
+        : [
+            for (final i in items)
+              GlideEditListItem(
+                location: GlideItem(i.location.col - offset, i.location.row),
+                value: i.value,
+              ),
+          ];
+    final r = p.onCellsEdited?.call(mangled);
     if (r != true) {
-      for (final i in items) {
+      for (final i in mangled) {
         p.onCellEdited?.call(i.location, i.value);
       }
     }
@@ -373,8 +559,8 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     if (expand) {
       v = glideExpandSelection(
         newVal: v,
-        getCellsForSelection: widget.props.getCellsForSelection,
-        rowMarkerOffset: 0,
+        getCellsForSelection: _getCellsForSelection,
+        rowMarkerOffset: _markerOffset,
         allowPartial: false,
       );
     }
@@ -382,16 +568,18 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       _selection = v;
       _selectionState.selection = v;
     });
-    widget.props.onGridSelectionChange?.call(v);
+    // `setGridSelection` hands the public API marker-free coordinates
+    // (`data-editor.tsx:1009`).
+    widget.props.onGridSelectionChange?.call(glideShiftSelection(v, -_markerOffset));
   }
 
   GlideKeyHandler _makeKeyHandler() => GlideKeyHandler(
     keys: glideKeysWithDefaults(widget.props.keybindings),
     selection: _selection,
     setGridSelection: _setGridSelection,
-    columnCount: widget.props.columns.length,
+    columnCount: _mangledColumns.length,
     rows: widget.props.rows,
-    rowMarkerOffset: 0,
+    rowMarkerOffset: _markerOffset,
     overlayOpen: _overlay != null,
     columnSelect: widget.props.columnSelect,
     rowSelect: widget.props.rowSelect,
@@ -402,13 +590,15 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       width: math.max(0, widget.props.columns.length - _cellXOffset).toDouble(),
       height: math.max(1, _visibleRowCount).toDouble(),
     ),
-    getCellContent: _getCellContent,
+    // `handleFixedKeybindings` works in user coordinates
+    // (`data-editor.tsx:3515`, `:3154`).
+    getCellContent: widget.props.getCellContent,
     getCellRenderer: _renderers.forCell,
     rangeBehavior: widget.props.rangeSelectionBlending,
     columnBehavior: widget.props.columnSelectionBlending,
     rowBehavior: widget.props.rowSelectionBlending,
     rangeSelectionColumnSpanning: widget.props.rangeSelectionColumnSpanning,
-    getCellsForSelection: widget.props.getCellsForSelection,
+    getCellsForSelection: _getCellsForSelection,
     onSelectionCleared: widget.props.onSelectionCleared,
     onDelete: widget.props.onDelete,
     onCellsEdited: _onCellsEdited,
@@ -728,7 +918,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     if (args.kind != GlideGridCellKind.header) return;
     final header = args as GlideGridHeaderMouseArgs;
     final col = header.location.col;
-    if (col < widget.props.lockColumns || col < 0 || col >= columns.length) {
+    if (col < _lockColumns || col < 0 || col >= columns.length) {
       return;
     }
 
@@ -765,14 +955,14 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       if ((position.dx - dragStartX).abs() > 20 && !_dragColActive) {
         setState(() => _dragColActive = true);
       }
-    } else if (_dragRowActive) {
-      // Row dragging lives with the row-marker port.
+    } else if (_dragRow != null && _dragStartY != null) {
+      if ((position.dy - _dragStartY!).abs() > 20 && !_dragRowActive) {
+        setState(() => _dragRowActive = true);
+      }
     } else {
       _resizeDrag(position);
     }
   }
-
-  bool get _dragRowActive => false;
 
   void _resizeDrag(Offset position) {
     final col = _resizeCol;
@@ -855,14 +1045,18 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     _dropCol = null;
     _dragStartX = null;
     _dragColActive = false;
+    _dragRow = null;
+    _dropRow = null;
+    _dragStartY = null;
+    _dragRowActive = false;
   }
 
   /// `normalSizeColumn` (`data-editor.tsx:2193-2241`).
   void _normalSizeColumn(int col) {
     final p = widget.props;
-    final getCells = p.getCellsForSelection;
+    final getCells = _getCellsForSelection;
     final onResize = p.onColumnResize;
-    if (getCells == null || onResize == null) return;
+    if (p.getCellsForSelection == null || onResize == null) return;
     if (col < 0 || col >= p.columns.length) return;
 
     final start = _visible?.y ?? 0;
@@ -905,14 +1099,29 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     final hoveredCol = _locationOf(args).col;
     if (_dragCol != null &&
         _dropCol != hoveredCol &&
-        hoveredCol >= widget.props.lockColumns) {
+        hoveredCol >= _lockColumns) {
       setState(() {
         _dragColActive = true;
         _dropCol = hoveredCol;
       });
       return;
     }
-    if (_dragColActive || _resizeCol != null) return;
+    if (_dragCol != null && _dragColActive) return;
+
+    // `dragRow !== undefined && row !== undefined` (`data-grid-dnd.tsx:136`).
+    final hoveredRow = _locationOf(args).row;
+    if (_dragRow != null && hoveredRow >= 0) {
+      setState(() {
+        _dragRowActive = true;
+        _dropRow = math.max(0, hoveredRow);
+        _scrollDir = args.scrollEdge;
+      });
+      _autoscroll.setDirection(args.scrollEdge.$1, args.scrollEdge.$2);
+      _setAutoscrollActive(args.scrollEdge != (0, 0));
+      return;
+    }
+
+    if (_dragColActive || _resizeCol != null || _dragRowActive) return;
 
     if (glideMouseArgsAreEqual(args, _hoveredArgs)) return;
     _hoveredArgs = args;
@@ -1145,6 +1354,20 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     }
 
     final isFillHandle = args is GlideGridCellMouseArgs && args.isFillHandle;
+
+    // `kind === "cell" && lockColumns > 0 && col === 0` — row dragging is
+    // armed from the marker column (`data-grid-dnd.tsx:172-181`).
+    if (!isFillHandle &&
+        args.kind == GlideGridCellKind.cell &&
+        _lockColumns > 0 &&
+        _locationOf(args).col == 0 &&
+        widget.props.onRowMoved != null) {
+      _dragStartY = (args as GlideGridCellMouseArgs).bounds.y;
+      _dragRow = _locationOf(args).row;
+      _dropRow = null;
+      _dragRowActive = false;
+    }
+
     _mouseDownData = (
       button: args.button,
       time: DateTime.now().millisecondsSinceEpoch,
@@ -1307,6 +1530,11 @@ class _GlideDataEditorState extends State<GlideDataEditor>
           widget.props.onColumnMoved?.call(dragCol, dropCol);
         }
       }
+      final dragRow = _dragRow;
+      final dropRow = _dropRow;
+      if (dragRow != null && dropRow != null && _dragRowActive) {
+        widget.props.onRowMoved?.call(dragRow, dropRow);
+      }
       _clearDragState();
     }
 
@@ -1427,14 +1655,15 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     final regions = <GlideHighlight>[];
     if (p.highlightRegions != null) {
       for (final r in p.highlightRegions!) {
-        final maxWidth =
-            p.columns.length - r.range.x.toInt() - 0;
+        final maxWidth = _mangledColumns.length -
+            r.range.x.toInt() -
+            _markerOffset;
         if (maxWidth > 0) {
           regions.add(
             GlideHighlight(
               color: r.color,
               range: GlideRectangle(
-                x: r.range.x,
+                x: r.range.x + _markerOffset,
                 y: r.range.y,
                 width: math.min(maxWidth.toDouble(), r.range.width),
                 height: r.range.height,
@@ -1514,16 +1743,15 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   }
 
   Future<void> _cut() async {
-    final getCells = widget.props.getCellsForSelection;
-    if (getCells == null) return;
+    if (widget.props.getCellsForSelection == null) return;
     await glideCut(
       focused: _focused,
       cutEnabled: glideKeysWithDefaults(widget.props.keybindings).cut,
       selection: _selection,
       rows: widget.props.rows,
-      rowMarkerOffset: 0,
+      rowMarkerOffset: _markerOffset,
       columns: widget.props.columns,
-      getCellsForSelection: getCells,
+      getCellsForSelection: _getCellsForSelection,
       onDelete: (selection) =>
           widget.props.onDelete?.call(selection) ?? true,
       copyHeaders: widget.props.copyHeaders,
@@ -1531,30 +1759,28 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   }
 
   Future<void> _copy() async {
-    final getCells = widget.props.getCellsForSelection;
-    if (getCells == null) return;
+    if (widget.props.getCellsForSelection == null) return;
     await glideCopy(
       focused: _focused,
       copyEnabled: glideKeysWithDefaults(widget.props.keybindings).copy,
       selection: _selection,
       rows: widget.props.rows,
-      rowMarkerOffset: 0,
+      rowMarkerOffset: _markerOffset,
       columns: widget.props.columns,
-      getCellsForSelection: getCells,
+      getCellsForSelection: _getCellsForSelection,
       copyHeaders: widget.props.copyHeaders,
     );
   }
 
   Future<void> _paste() async {
-    final getCells = widget.props.getCellsForSelection;
-    if (getCells == null) return;
+    if (widget.props.getCellsForSelection == null) return;
     await glidePaste(
       focused: _focused,
       selection: _selection,
       rows: widget.props.rows,
-      columnCount: widget.props.columns.length,
-      rowMarkerOffset: 0,
-      getCellContent: _getCellContent,
+      columnCount: _mangledColumns.length,
+      rowMarkerOffset: _markerOffset,
+      getCellContent: widget.props.getCellContent,
       getCellRenderer: _renderers.forCell,
       onCellsEdited: _onCellsEdited,
       onPaste: widget.props.onPaste,
@@ -1665,13 +1891,14 @@ class _GlideDataEditorState extends State<GlideDataEditor>
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        _rebuildMangledColumns();
         _viewportWidth = constraints.maxWidth;
         _viewportHeight = constraints.maxHeight;
 
         final gridProps = GlideDataGridProps(
           width: _viewportWidth,
           height: _viewportHeight,
-          columns: p.columns,
+          columns: _mangledColumns,
           rows: p.rows,
           rowHeight: p.rowHeight,
           headerHeight: p.headerHeight,
@@ -1680,7 +1907,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
           // consistent for header rows.
           groupHeaderHeight: p.enableGroups ? p.groupHeaderHeight : 0,
           enableGroups: p.enableGroups,
-          freezeColumns: p.freezeColumns,
+          freezeColumns: _mangledFreezeColumns,
           freezeTrailingRows: p.freezeTrailingRows,
           cellXOffset: _cellXOffset,
           cellYOffset: _cellYOffset,

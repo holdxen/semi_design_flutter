@@ -518,8 +518,10 @@ class GlideMarkerCellRenderer extends GlideCellRenderer {
       );
     } else if (drawNumber) {
       final metrics = args.metrics ?? GlideTextMetrics();
+      // `const text = index.toString()` (`marker-cell.tsx:106`) where
+      // `index` is `cell.row`, already offset by `rowMarkerStartIndex`.
       final painter = metrics.painter(
-        '${cell.row + 1}',
+        '${cell.row}',
         theme.markerTextStyle.copyWith(color: theme.textMedium),
       );
       painter.paint(

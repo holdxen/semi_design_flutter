@@ -132,6 +132,7 @@ class _GlideDataGridPageState extends State<GlideDataGridPage> {
                   enableGroups: true,
                   groupHeaderHeight: 30,
                   verticalBorder: (_) => true,
+                  rowMarkers: const GlideRowMarkerOptions(),
                   onCellsEdited: _onCellsEdited,
                   onGridSelectionChange: _onSelectionChanged,
                 ),

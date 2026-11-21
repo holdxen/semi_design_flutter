@@ -20,8 +20,9 @@ import '../internal/data_grid/glide_selection_behavior.dart';
 import 'glide_data_editor_fns.dart';
 import 'glide_keybindings.dart';
 
-/// `columnSelect` / `rowSelect` (`"none" | "single" | "multi"`).
-enum GlideSelectMode { none, single, multi }
+/// `columnSelect` / `rowSelect` (`"none" | "single" | "multi"`) plus the
+/// `rowSelectionMode` value `"auto"` (`data-editor.tsx:849`).
+enum GlideSelectMode { none, single, multi, auto }
 
 /// `scrollTo(col, row, axis?)`.
 @immutable

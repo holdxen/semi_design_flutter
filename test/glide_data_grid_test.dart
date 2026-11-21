@@ -1523,6 +1523,8 @@ void main() {
       onColumnResizeEnd,
       void Function(int from, int to)? onColumnMoved,
       bool? Function(int from, int to)? onColumnProposeMove,
+      void Function(int from, int to)? onRowMoved,
+      GlideRowMarkerOptions? rowMarkers,
     }) {
       edits = [];
       selectionLog = [];
@@ -1560,6 +1562,8 @@ void main() {
         onColumnResizeEnd: onColumnResizeEnd,
         onColumnMoved: onColumnMoved,
         onColumnProposeMove: onColumnProposeMove,
+        onRowMoved: onRowMoved,
+        rowMarkers: rowMarkers,
         getCellsForSelection: (region) => [
           for (var y = region.y.toInt();
               y < region.y + region.height && y < cells.length;
@@ -2100,6 +2104,129 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(moved, isEmpty);
+    });
+
+    testWidgets('row markers add a leading column that selects the row',
+        (tester) async {
+      await tester.pumpWidget(
+        buildEditor(rowMarkers: const GlideRowMarkerOptions()),
+      );
+      await tester.pumpAndSettle();
+
+      // The marker column is 36px wide for >100 rows.
+      final gesture = await tester.startGesture(
+        const Offset(18, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(selectionLog.last.rows.toArray(), [0]);
+      expect(selectionLog.last.current, isNull);
+      // A normal cell click leaves the row selection alone.
+      final other = await tester.startGesture(
+        const Offset(150, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await other.up();
+      await tester.pumpAndSettle();
+      // Clicking a body cell replaces the selection and drops the row set.
+      expect(selectionLog.last.rows.length, 0);
+      expect(selectionLog.last.current!.cell, const GlideItem(1, 0));
+    });
+
+    testWidgets('user column coordinates exclude the marker column',
+        (tester) async {
+      await tester.pumpWidget(
+        buildEditor(rowMarkers: const GlideRowMarkerOptions()),
+      );
+      await tester.pumpAndSettle();
+
+      // x = 150 lands on the *second* user column once the 36px marker column
+      // is in front of it, but `onGridSelectionChange` reports user indices.
+      final gesture = await tester.startGesture(
+        const Offset(150, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(selectionLog.last.current!.cell, const GlideItem(1, 0));
+    });
+
+    testWidgets('clicking the header marker selects every row',
+        (tester) async {
+      await tester.pumpWidget(
+        buildEditor(rowMarkers: const GlideRowMarkerOptions()),
+      );
+      await tester.pumpAndSettle();
+
+      final gesture = await tester.startGesture(
+        const Offset(18, 15),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(selectionLog.last.rows.length, 200);
+      expect(selectionLog.last.current, isNull);
+
+      // Clicking it again clears the rows.
+      final again = await tester.startGesture(
+        const Offset(18, 15),
+        kind: PointerDeviceKind.mouse,
+      );
+      await again.up();
+      await tester.pumpAndSettle();
+      expect(selectionLog.last.rows.length, 0);
+    });
+
+    testWidgets('dragging a row by its marker calls onRowMoved',
+        (tester) async {
+      final moved = <(int, int)>[];
+      await tester.pumpWidget(
+        buildEditor(
+          rowMarkers: const GlideRowMarkerOptions(),
+          onRowMoved: (from, to) => moved.add((from, to)),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final drag = await tester.startGesture(
+        const Offset(18, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await tester.pump();
+
+      await drag.moveTo(const Offset(18, 140));
+      await tester.pump();
+      await drag.up();
+      await tester.pumpAndSettle();
+
+      expect(moved, [(0, 3)]);
+    });
+
+    testWidgets('row markers of kind number are not clickable rows',
+        (tester) async {
+      await tester.pumpWidget(
+        buildEditor(
+          rowMarkers: const GlideRowMarkerOptions(
+            kind: GlideRowMarkerKind.number,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final gesture = await tester.startGesture(
+        const Offset(18, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      // `rowMarkers === "number"` bails out of the marker branch entirely
+      // (`data-editor.tsx:1856`), so nothing is selected.
+      expect(selectionLog, isEmpty);
     });
   });
 

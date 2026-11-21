@@ -68,6 +68,12 @@ class GlideDataEditorSelection {
     required this.rowSelectMulti,
     required this.columnSelectMulti,
     this.rowMarkerOffset = 0,
+    this.hasRowMarkers = false,
+    this.rowMarkersAreNumbers = false,
+    this.rowSelectEnabled = true,
+    this.rowSelectionModeMulti = false,
+    this.rowDragEnabled = false,
+    this.headerRowMarkerDisabled = false,
     GlideGridSelection initial = GlideGridSelection.empty,
   }) : selection = initial;
 
@@ -76,6 +82,27 @@ class GlideDataEditorSelection {
   final bool rowSelectMulti;
   final bool columnSelectMulti;
   final int rowMarkerOffset;
+
+  /// `rowMarkers !== "none"` (`data-editor.tsx:953`); enables the marker
+  /// branch of `handleSelect`.
+  final bool hasRowMarkers;
+
+  /// `rowMarkers === "number"` — numbers are not clickable
+  /// (`data-editor.tsx:1856`).
+  final bool rowMarkersAreNumbers;
+
+  /// `rowSelect !== "none"` (`data-editor.tsx:1857`).
+  final bool rowSelectEnabled;
+
+  /// `rowSelectionMode === "multi"` (`data-editor.tsx:1894`).
+  final bool rowSelectionModeMulti;
+
+  /// `onRowMoved !== undefined` (`data-editor.tsx:1866`): the checkbox also
+  /// acts as the drag handle's hit test.
+  final bool rowDragEnabled;
+
+  /// `headerRowMarkerDisabled` (`data-editor.tsx:919`).
+  final bool headerRowMarkerDisabled;
 
   GlideGridSelection selection;
   int? lastSelectedCol;
@@ -112,6 +139,7 @@ class GlideDataEditorSelection {
     };
 
     final selectedColumns = selection.columns;
+    final selectedRows = selection.rows;
     final cellCol = selection.current?.cell.col;
     final cellRow = selection.current?.cell.row;
 
@@ -119,8 +147,88 @@ class GlideDataEditorSelection {
       case GlideGridCellKind.cell:
         lastSelectedCol = null;
 
-        // The row-marker column (`col === 0 && hasRowMarkers`) is not
-        // ported; see the file header.
+        // `col === 0 && hasRowMarkers` (`data-editor.tsx:1853-1911`).
+        if (hasRowMarkers && col == 0) {
+          if (rowMarkersAreNumbers || !rowSelectEnabled) break;
+
+          final cellArgs = args as GlideGridCellMouseArgs;
+          final markerCell = getCellContent(cellArgs.location);
+          if (markerCell is! GlideMarkerCell) break;
+
+          // With row dragging enabled the checkbox doubles as the drag
+          // handle's hit test (`data-editor.tsx:1866-1879`).
+          if (rowDragEnabled) {
+            final bounds = cellArgs.bounds;
+            final centerX = markerCell.drawHandle
+                ? 7 + (bounds.width - 7) / 2
+                : bounds.width / 2;
+            final centerY = bounds.height / 2;
+            final localX = cellArgs.localEventX - bounds.x;
+            final localY = cellArgs.localEventY - bounds.y;
+            final onCheckbox = (localX - centerX).abs() <= 10 &&
+                (localY - centerY).abs() <= 10;
+            if (!onCheckbox) break;
+          }
+
+          final isSelected = selectedRows.hasIndex(row);
+          final lastHighlighted = lastSelectedRow;
+
+          if (rowSelectMulti &&
+              (cellArgs.shiftKey || cellArgs.isLongTouch == true) &&
+              lastHighlighted != null &&
+              selectedRows.hasIndex(lastHighlighted)) {
+            final newSlice = GlideSlice(
+              lastHighlighted < row ? lastHighlighted : row,
+              (lastHighlighted > row ? lastHighlighted : row) + 1,
+            );
+            if (isMultiKey || cellArgs.isTouch || rowSelectionModeMulti) {
+              behavior.setSelectedRows(
+                newRows: null,
+                append: newSlice,
+                allowMixed: true,
+              );
+            } else {
+              behavior.setSelectedRows(
+                newRows: GlideCompactSelection.fromSingleSelection(newSlice),
+                append: null,
+                allowMixed: isMultiKey,
+              );
+            }
+          } else if (rowSelectMulti &&
+              (isMultiKey ||
+                  cellArgs.isTouch ||
+                  rowSelectionModeMulti)) {
+            if (isSelected) {
+              behavior.setSelectedRows(
+                newRows: selectedRows.remove(row),
+                append: null,
+                allowMixed: true,
+              );
+            } else {
+              behavior.setSelectedRows(
+                newRows: null,
+                append: row,
+                allowMixed: true,
+              );
+              lastSelectedRow = row;
+            }
+          } else if (isSelected && selectedRows.length == 1) {
+            behavior.setSelectedRows(
+              newRows: const GlideCompactSelection.empty(),
+              append: null,
+              allowMixed: isMultiKey,
+            );
+          } else {
+            behavior.setSelectedRows(
+              newRows: GlideCompactSelection.fromSingleSelection(row),
+              append: null,
+              allowMixed: isMultiKey,
+            );
+            lastSelectedRow = row;
+          }
+          return const GlideSelectOutcome(clearOverlay: true, focus: true);
+        }
+
         if (col < rowMarkerOffset) break;
         if (cellCol == col && cellRow == row) break;
 
@@ -190,6 +298,31 @@ class GlideDataEditorSelection {
         return const GlideSelectOutcome(clearOverlay: true, focus: true);
 
       case GlideGridCellKind.header:
+        // The marker header selects (or clears) every row
+        // (`data-editor.tsx:1997-2007`).
+        if (hasRowMarkers && col == 0) {
+          lastSelectedRow = null;
+          lastSelectedCol = null;
+          if (!headerRowMarkerDisabled && rowSelectMulti) {
+            if (selectedRows.length != rows) {
+              behavior.setSelectedRows(
+                newRows: GlideCompactSelection.fromSingleSelection(
+                  GlideSlice(0, rows),
+                ),
+                append: null,
+                allowMixed: isMultiKey,
+              );
+            } else {
+              behavior.setSelectedRows(
+                newRows: const GlideCompactSelection.empty(),
+                append: null,
+                allowMixed: isMultiKey,
+              );
+            }
+          }
+          return const GlideSelectOutcome(clearOverlay: true, focus: true);
+        }
+
         final lastCol = lastSelectedCol;
         if (columnSelectMulti &&
             (args.shiftKey || args.isLongTouch == true) &&
