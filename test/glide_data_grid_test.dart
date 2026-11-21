@@ -1546,6 +1546,8 @@ void main() {
       double minColumnWidth = 50,
       double? scrollOffsetY,
       GlideKeybinds? keybindingsOverride,
+      String? group,
+      void Function(String groupName, String newVal)? onGroupHeaderRenamed,
       void Function(GlideItem location)? onCellFocused,
       void Function(GlideVisibleRegion region, GlideVisibleRegionExtras extras)?
       onVisibleRegionChanged,
@@ -1571,9 +1573,21 @@ void main() {
         columns: [
           for (var i = 0; i < currentCols; i++)
             unsizedColumns
-                ? GlideGridColumn(title: 'C$i', id: 'c$i')
-                : GlideGridColumn(title: 'C$i', width: 100),
+                ? GlideGridColumn(
+                    title: 'C$i',
+                    id: 'c$i',
+                    group: group,
+                    width: 100,
+                  )
+                : GlideGridColumn(
+                    title: 'C$i',
+                    width: 100,
+                    group: group,
+                  ),
         ],
+        enableGroups: group != null,
+        groupHeaderHeight: 30,
+        onGroupHeaderRenamed: onGroupHeaderRenamed,
         rows: currentRows,
         rowGrouping: rowGrouping,
         minColumnWidth: minColumnWidth,
@@ -2889,6 +2903,47 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       await tester.pumpAndSettle();
       expect(log, contains('done'));
+    });
+
+    testWidgets('a group header exposes the rename action', (tester) async {
+      final renamed = <String>[];
+      await tester.pumpWidget(
+        buildEditor(
+          columnCount: 3,
+          group: 'Team A',
+          onGroupHeaderRenamed: (group, value) => renamed.add('$group=$value'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Hovering the group header reveals its actions
+      // (`data-grid-render.header.ts:218`).
+      await tester.startGesture(
+        const Offset(100, 15),
+        kind: PointerDeviceKind.mouse,
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+
+      // The single action sits 26px in from the right edge of the 300px-wide
+      // group span (`getActionBoundsForGroup`).
+      final action = await tester.startGesture(
+        const Offset(285, 15),
+        kind: PointerDeviceKind.mouse,
+      );
+      await action.up();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(GlideGroupRename), findsOneWidget);
+
+      await tester.enterText(
+        find.byType(TextField),
+        'Team B',
+      );
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+
+      expect(renamed, ['Team A=Team B']);
+      expect(find.byType(GlideGroupRename), findsNothing);
     });
   });
 

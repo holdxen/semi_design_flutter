@@ -3,16 +3,71 @@
 // dpr, sprite manager, image loader, render strategy).
 import 'package:flutter/widgets.dart';
 
+import 'package:flutter/material.dart';
+
 import '../../../cells/glide_cell_types.dart';
 import '../../../common/glide_image_window_loader.dart';
 import '../glide_cell_set.dart';
 
 /// `GroupDetails`: per-group theme override.
 @immutable
+/// `GroupDetails` (`data-grid-render.cells.ts:42-50`).
+@immutable
 class GlideGroupDetails {
-  const GlideGroupDetails({this.overrideTheme});
+  const GlideGroupDetails({
+    required this.name,
+    this.icon,
+    this.overrideTheme,
+    this.actions,
+  });
 
+  final String name;
+
+  /// Upstream is a sprite name (`GridColumnIcon | string`); this port has no
+  /// sprite manager, so a Flutter [IconData] is used instead.
+  final IconData? icon;
   final GlideThemeOverride? overrideTheme;
+  final List<GlideGroupAction>? actions;
+}
+
+/// One entry of `GroupDetails.actions` (`data-grid-render.cells.ts:45-49`).
+@immutable
+class GlideGroupAction {
+  const GlideGroupAction({
+    required this.title,
+    required this.onClick,
+    this.icon,
+  });
+
+  final String title;
+  final IconData? icon;
+
+  /// Upstream receives the `GridMouseGroupHeaderEventArgs`; the group name is
+  /// already closed over by the callback's owner, so only the bounds that the
+  /// rename editor positions itself with are passed.
+  final void Function(GlideRectangle bounds) onClick;
+}
+
+/// `getActionBoundsForGroup` (`data-grid-render.header.ts`): 26px boxes
+/// counted back from the right edge of the group header.
+List<GlideRectangle> getActionBoundsForGroup(
+  GlideRectangle box,
+  List<GlideGroupAction> actions,
+) {
+  final result = <GlideRectangle>[];
+  var x = box.x + box.width - 26 * actions.length;
+  for (var i = 0; i < actions.length; i++) {
+    result.add(
+      GlideRectangle(
+        x: x,
+        y: box.y + box.height / 2 - 13,
+        width: 26,
+        height: 26,
+      ),
+    );
+    x += 26;
+  }
+  return result;
 }
 
 /// `GetRowThemeCallback`.

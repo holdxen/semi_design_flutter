@@ -18,6 +18,7 @@ export 'data_editor/glide_column_sizer.dart';
 export 'data_editor/glide_copy_paste.dart';
 export 'data_editor/glide_data_editor.dart';
 export 'data_editor/glide_data_editor_fns.dart';
+export 'data_editor/glide_group_rename.dart';
 export 'data_editor/glide_handle_select.dart';
 export 'data_editor/glide_key_handler.dart';
 export 'data_editor/glide_rem_adjuster.dart';

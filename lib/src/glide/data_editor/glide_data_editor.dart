@@ -12,9 +12,9 @@
 import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 
 import '../cells/glide_cell_registry.dart';
 import '../cells/glide_cell_types.dart';
@@ -29,6 +29,7 @@ import '../internal/scrolling_data_grid/glide_autoscroll.dart';
 import '../internal/scrolling_data_grid/glide_scrolling_data_grid.dart';
 import 'glide_clipboard.dart';
 import 'glide_data_editor_fns.dart';
+import 'glide_group_rename.dart';
 import 'glide_handle_select.dart';
 import 'glide_column_sizer.dart';
 import 'glide_key_handler.dart';
@@ -101,6 +102,7 @@ class GlideDataEditorProps {
     this.onFinishedEditing,
     this.onVisibleRegionChanged,
     this.onCellFocused,
+    this.onGroupHeaderRenamed,
     this.onMouseMove,
     this.getRowThemeOverride,
     this.getGroupDetails,
@@ -228,6 +230,11 @@ class GlideDataEditorProps {
   /// accessibility tree, which is not ported; here it reports the active cell
   /// whenever the selection moves.
   final void Function(GlideItem location)? onCellFocused;
+
+  /// `onGroupHeaderRenamed` (`data-editor.tsx:241`): enabling it adds a
+  /// "Rename" action to every group header (`mangledGetGroupDetails`,
+  /// `:1401-1423`).
+  final void Function(String groupName, String newVal)? onGroupHeaderRenamed;
 
   /// `onMouseMove` (`data-grid.tsx:1359`).
   final void Function(GlideGridMouseArgs args)? onMouseMove;
@@ -823,6 +830,43 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     markerKind: _markerKind,
   );
 
+  /// `mangledGetGroupDetails` (`data-editor.tsx:1401-1423`): the user's
+  /// callback plus the Rename action when `onGroupHeaderRenamed` is set.
+  GlideGroupDetails _groupDetails(String group) {
+    final base = widget.props.getGroupDetails?.call(group) ??
+        GlideGroupDetails(name: group);
+    final onRename = widget.props.onGroupHeaderRenamed;
+    if (onRename == null) return base;
+
+    return GlideGroupDetails(
+      name: base.name,
+      icon: base.icon,
+      overrideTheme: base.overrideTheme,
+      actions: [
+        ...?base.actions,
+        GlideGroupAction(
+          title: 'Rename',
+          icon: Icons.edit,
+          onClick: (bounds) => _beginGroupRename(group, bounds),
+        ),
+      ],
+    );
+  }
+
+  /// `setRenameGroup` (`data-editor.tsx:1435-1438`).
+  void _beginGroupRename(String group, GlideRectangle bounds) {
+    setState(() => _renameGroup = (group: group, bounds: bounds));
+  }
+
+  ({String group, GlideRectangle bounds})? _renameGroup;
+
+  void _finishGroupRename(String newValue) {
+    final renaming = _renameGroup;
+    setState(() => _renameGroup = null);
+    if (renaming == null) return;
+    widget.props.onGroupHeaderRenamed?.call(renaming.group, newValue);
+  }
+
   /// `onVisibleRegionChangedImpl`'s `extras` (`data-editor.tsx:2594-2627`).
   GlideVisibleRegionExtras _computeVisibleExtras(GlideVisibleRegion region) {
     final p = widget.props;
@@ -1143,9 +1187,9 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     final column = location.col < mangled.length ? mangled[location.col] : null;
     var theme = p.theme;
     final group = column?.group;
-    final groupOverride = group == null || p.getGroupDetails == null
+    final groupOverride = group == null
         ? null
-        : p.getGroupDetails!(group).overrideTheme;
+        : _groupDetails(group).overrideTheme;
     theme = theme.merge([
       groupOverride?.applyTo(theme),
       column?.themeOverride?.applyTo(theme),
@@ -2701,7 +2745,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
               : null,
           highlightRegions: _highlightRegions(),
           getRowThemeOverride: _rowThemeOverride,
-          getGroupDetails: p.getGroupDetails,
+          getGroupDetails: _groupDetails,
           metrics: _metrics,
           minimumCellWidth: 10,
         );
@@ -2743,6 +2787,14 @@ class _GlideDataEditorState extends State<GlideDataEditor>
                     ),
                   ),
                   if (_overlay != null) _buildOverlay(),
+                  if (_renameGroup != null)
+                    GlideGroupRename(
+                      bounds: _renameGroup!.bounds,
+                      group: _renameGroup!.group,
+                      theme: _theme,
+                      onClose: () => setState(() => _renameGroup = null),
+                      onFinish: _finishGroupRename,
+                    ),
                   if (_showSearch)
                     GlideSearchBar(
                       value: _searchValue,

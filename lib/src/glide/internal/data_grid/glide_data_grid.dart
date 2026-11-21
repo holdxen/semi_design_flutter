@@ -15,6 +15,7 @@ import 'package:flutter/widgets.dart';
 
 import '../../cells/glide_cell_types.dart';
 import '../../common/glide_image_window_loader.dart';
+import '../../common/glide_math.dart';
 import '../../common/glide_is_hotkey.dart';
 import 'glide_animation_manager.dart';
 import 'glide_event_args.dart';
@@ -642,6 +643,26 @@ class _GlideDataGridState extends State<GlideDataGrid>
   // Pointer wiring (`onPointerDown/Move/Up`, `data-grid.tsx:1076-1375`)
   // -------------------------------------------------------------------------
 
+  /// `groupHeaderActionForEvent` (`data-grid.tsx:1004-1020`).
+  ///
+  /// Upstream compares `localEventY + box.y`, which only ever lands inside the
+  /// top 26px of the header; the bounds-relative form is used here instead.
+  GlideGroupAction? _groupHeaderAction(GlideGridGroupHeaderMouseArgs args) {
+    final details = widget.props.getGroupDetails?.call(args.group);
+    final actions = details?.actions;
+    if (actions == null || actions.isEmpty) return null;
+    final boxes = getActionBoundsForGroup(args.bounds, actions);
+    for (var i = 0; i < boxes.length; i++) {
+      final hit = pointInRect(
+        boxes[i],
+        args.bounds.x + args.localEventX,
+        args.bounds.y + args.localEventY,
+      );
+      if (hit) return actions[i];
+    }
+    return null;
+  }
+
   void _handlePointerDown(PointerDownEvent event) {
     final p = widget.props;
     _focusNode.requestFocus();
@@ -657,6 +678,12 @@ class _GlideDataGridState extends State<GlideDataGrid>
       metaKey: false,
       isTouch: _lastWasTouch,
     );
+    // `groupHeaderActionForEvent` on press (`data-grid.tsx:1105-1111`): the
+    // action owns the click, so the editor never sees it.
+    if (args is GlideGridGroupHeaderMouseArgs &&
+        _groupHeaderAction(args) != null) {
+      return;
+    }
     p.onMouseDown(args);
   }
 
@@ -729,6 +756,15 @@ class _GlideDataGridState extends State<GlideDataGrid>
       isLongTouch: isLongTouch,
       isDoubleClick: isDoubleClick,
     );
+
+    // `groupHeaderActionForEvent` on release (`data-grid.tsx:1184-1192`).
+    if (args is GlideGridGroupHeaderMouseArgs) {
+      final action = _groupHeaderAction(args);
+      if (action != null) {
+        if (args.button == 0) action.onClick(args.bounds);
+        return;
+      }
+    }
 
     p.onMouseUp(args, false);
   }

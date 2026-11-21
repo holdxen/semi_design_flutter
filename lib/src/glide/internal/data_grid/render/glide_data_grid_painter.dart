@@ -14,9 +14,10 @@
 // - Damage still short-circuits cells, matching the `damage` fast path.
 import 'dart:math' as math;
 
-import 'package:flutter/rendering.dart';
+import 'package:flutter/widgets.dart';
 
 import '../../../cells/glide_cell_types.dart';
+import '../../../common/glide_math.dart';
 import 'glide_draw_checkbox.dart';
 import 'glide_draw_grid_arg.dart';
 import 'glide_render_walk.dart';
@@ -104,17 +105,14 @@ class GlideDataGridPainter extends CustomPainter {
         if (colWidth <= 0 || colHeight <= 0) return null;
 
         canvas.save();
-        canvas.clipRect(
-          Rect.fromLTWH(colDrawX, colDrawY, colWidth, colHeight),
-        );
+        canvas.clipRect(Rect.fromLTWH(colDrawX, colDrawY, colWidth, colHeight));
 
         final colSelected = a.selection.columns.hasIndex(c.sourceIndex);
         final groupDetails = a.getGroupDetails;
         final groupTheme = groupDetails == null
             ? null
             : groupDetails(c.group ?? '').overrideTheme;
-        final colTheme =
-            c.themeOverride == null && groupTheme == null
+        final colTheme = c.themeOverride == null && groupTheme == null
             ? a.theme
             : a.theme.merge([_realize(groupTheme), _realize(c.themeOverride)]);
 
@@ -147,8 +145,7 @@ class GlideDataGridPainter extends CustomPainter {
 
             final span = cell.span;
             if (span != null) {
-              final spanKey =
-                  '$row,${span.start},${span.end},${c.sticky}';
+              final spanKey = '$row,${span.start},${span.end},${c.sticky}';
               if (!handledSpans.contains(spanKey)) {
                 final areas = getSpanBounds(
                   span: span,
@@ -209,7 +206,8 @@ class GlideDataGridPainter extends CustomPainter {
               a.selection,
               a.drawFocus,
             );
-            final spanIsHighlighted = span != null &&
+            final spanIsHighlighted =
+                span != null &&
                 a.selection.columns.some(
                   (index) => index >= span.start && index <= span.end,
                 );
@@ -343,7 +341,12 @@ class GlideDataGridPainter extends CustomPainter {
       if (progress < lastUpdateAnimationMs) {
         final fade = 1 - progress / lastUpdateAnimationMs;
         canvas.drawRect(
-          Rect.fromLTWH(rect.x + 1, rect.y + 1, rect.width - 1, rect.height - 1),
+          Rect.fromLTWH(
+            rect.x + 1,
+            rect.y + 1,
+            rect.width - 1,
+            rect.height - 1,
+          ),
           Paint()..color = theme.bgSearchResult.withValues(alpha: fade),
         );
       } else if (arg.enqueue != null) {
@@ -428,11 +431,7 @@ class GlideDataGridPainter extends CustomPainter {
     }
 
     var freezeY = a.height + 0.5;
-    for (
-      var i = a.rows - a.freezeTrailingRows;
-      i < a.rows;
-      i++
-    ) {
+    for (var i = a.rows - a.freezeTrailingRows; i < a.rows; i++) {
       final rh = a.rowHeight(i);
       freezeY -= rh;
       canvas.drawLine(
@@ -454,9 +453,7 @@ class GlideDataGridPainter extends CustomPainter {
         Offset(a.width, ty),
         Paint()
           ..color =
-              rowTheme?.horizontalBorderColor ??
-              rowTheme?.borderColor ??
-              hColor
+              rowTheme?.horizontalBorderColor ?? rowTheme?.borderColor ?? hColor
           ..strokeWidth = 1,
       );
       y += a.rowHeight(row);
@@ -531,8 +528,7 @@ class GlideDataGridPainter extends CustomPainter {
       cb: (c, drawX, _, clipX, _) {
         final headerItem = GlideItem(c.sourceIndex, GlideItem.headerRow);
         final selected = a.selection.columns.hasIndex(c.sourceIndex);
-        final hasSelectedCell =
-            a.selection.current?.cell.col == c.sourceIndex;
+        final hasSelectedCell = a.selection.current?.cell.col == c.sourceIndex;
         final noHover = a.dragAndDropState != null || a.isResizing;
         final hover = noHover ? 0.0 : (a.hoverValues[headerItem] ?? 0);
 
@@ -575,8 +571,8 @@ class GlideDataGridPainter extends CustomPainter {
               ? 1.0
               : hover;
           if (alpha > 0) {
-            final markerTheme = ext.headerRowMarkerTheme?.applyTo(theme) ??
-                theme;
+            final markerTheme =
+                ext.headerRowMarkerTheme?.applyTo(theme) ?? theme;
             final markerRect = Rect.fromLTWH(
               drawX,
               headerTop,
@@ -641,26 +637,123 @@ class GlideDataGridPainter extends CustomPainter {
         translateX: a.translateX,
         groupHeaderHeight: a.groupHeaderHeight,
         cb: (colSpan, group, x, y, w, h) {
-          if (group.isEmpty) return;
+          // `drawGroups` (`data-grid-render.header.ts:159-260`).
+          final details =
+              a.getGroupDetails?.call(group) ?? GlideGroupDetails(name: group);
+          final groupTheme = details.overrideTheme?.applyTo(theme) ?? theme;
+          final hovered = a.hoverInfo;
+          final isHovered =
+              hovered != null &&
+              hovered.row == GlideItem.groupHeaderRow &&
+              hovered.col >= colSpan.$1 &&
+              hovered.col <= colSpan.$2;
+          final fillColor = isHovered
+              ? (groupTheme.bgGroupHeaderHovered ?? theme.bgHeaderHovered)
+              : (groupTheme.bgGroupHeader ?? theme.bgHeader);
+
+          canvas.save();
+          canvas.clipRect(Rect.fromLTWH(x, y, w, h));
           canvas.drawRect(
-            Rect.fromLTWH(x, 0, w, h),
-            Paint()..color = theme.bgGroupHeader ?? theme.bgHeader,
+            Rect.fromLTWH(x, y, w, h),
+            Paint()..color = fillColor,
           );
+
+          const xPad = 8.0;
+          var drawX = x;
+          if (details.icon != null) {
+            _paintIcon(
+              canvas,
+              details.icon!,
+              Rect.fromLTWH(drawX + xPad, (h - 20) / 2, 20, 20),
+              groupTheme.textGroupHeader ?? groupTheme.textHeader,
+            );
+            drawX += 26;
+          }
+
           final painter = a.metrics.painter(
-            group,
+            details.name,
             theme.headerTextStyle.copyWith(
-              color: theme.textGroupHeader ?? theme.textHeader,
+              color: groupTheme.textGroupHeader ?? theme.textHeader,
             ),
-            maxWidth: math.max(1.0, w - theme.cellHorizontalPadding * 2),
+            maxWidth: math.max(1.0, x + w - drawX - xPad),
             ellipsis: true,
           );
           painter.paint(
             canvas,
-            Offset(
-              x + (w - painter.width) / 2,
-              h / 2 - painter.height / 2,
-            ),
+            Offset(drawX + xPad, h / 2 - painter.height / 2),
           );
+
+          // Actions only appear while the header is hovered; the fade lets the
+          // name disappear underneath them (`:218-257`).
+          final actions = details.actions;
+          if (actions != null && actions.isNotEmpty && isHovered) {
+            final boxes = getActionBoundsForGroup(
+              GlideRectangle(x: x, y: y, width: w, height: h),
+              actions,
+            );
+            final fadeStartX = boxes.first.x - 10;
+            final fadeWidth = x + w - fadeStartX;
+            if (fadeWidth > 0) {
+              final shader = LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [fillColor.withValues(alpha: 0), fillColor],
+                stops: [0, math.min(1.0, 10 / fadeWidth), 1],
+              ).createShader(Rect.fromLTWH(fadeStartX, y, fadeWidth, h));
+              canvas.drawRect(
+                Rect.fromLTWH(fadeStartX, y, fadeWidth, h),
+                Paint()..shader = shader,
+              );
+            }
+
+            for (var i = 0; i < actions.length; i++) {
+              final action = actions[i];
+              final box = boxes[i];
+              final actionHovered = pointInRect(
+                box,
+                hovered.col.toDouble(),
+                hovered.row.toDouble(),
+              );
+              final icon = action.icon;
+              if (icon != null) {
+                _paintIcon(
+                  canvas,
+                  icon,
+                  Rect.fromLTWH(
+                    box.x + box.width / 2 - 10,
+                    box.y + box.height / 2 - 10,
+                    20,
+                    20,
+                  ),
+                  (actionHovered
+                          ? (groupTheme.textGroupHeader ?? theme.textHeader)
+                          : (groupTheme.textGroupHeader ?? theme.textHeader))
+                      .withValues(alpha: actionHovered ? 1 : 0.6),
+                );
+              } else {
+                // No sprite manager: fall back to the action's initial.
+                final label = action.title.isEmpty
+                    ? '?'
+                    : action.title.substring(0, 1).toUpperCase();
+                final labelPainter = a.metrics.painter(
+                  label,
+                  theme.headerTextStyle.copyWith(
+                    color: (groupTheme.textGroupHeader ?? theme.textHeader)
+                        .withValues(alpha: actionHovered ? 1 : 0.6),
+                  ),
+                );
+                labelPainter.paint(
+                  canvas,
+                  Offset(
+                    box.x + box.width / 2 - labelPainter.width / 2,
+                    box.y + box.height / 2 - labelPainter.height / 2,
+                  ),
+                );
+              }
+            }
+          }
+
+          canvas.restore();
         },
       );
     }
@@ -866,6 +959,25 @@ class GlideDataGridPainter extends CustomPainter {
     }
   }
 
+  /// Upstream draws group icons through the sprite manager, which this port
+  /// does not have; [GlideGroupAction.icon] is a Flutter [IconData] instead.
+  void _paintIcon(Canvas canvas, IconData icon, Rect rect, Color color) {
+    final painter = TextPainter(
+      text: TextSpan(
+        text: String.fromCharCode(icon.codePoint),
+        style: TextStyle(color: color, fontSize: rect.height),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    painter.paint(
+      canvas,
+      Offset(
+        rect.center.dx - painter.width / 2,
+        rect.center.dy - painter.height / 2,
+      ),
+    );
+  }
+
   /// Canvas 2D has a `setLineDash` Flutter's `Paint` does not, so the dash is
   /// cut out of the outline with `PathMetrics` — the same reason upstream's
   /// `hugRectToTarget` exists (dashed outlines must stay cheap).
@@ -911,7 +1023,8 @@ class GlideDataGridPainter extends CustomPainter {
 
     final path = radius == 0
         ? (Path()..addRect(rect))
-        : (Path()..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(radius))));
+        : (Path()
+            ..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(radius))));
 
     canvas.drawPath(path, Paint()..color = a.theme.bgCell);
     canvas.drawPath(
@@ -923,7 +1036,8 @@ class GlideDataGridPainter extends CustomPainter {
     );
   }
 
-  GlideTheme? _realize(GlideThemeOverride? override) => override?.applyTo(arg.theme);
+  GlideTheme? _realize(GlideThemeOverride? override) =>
+      override?.applyTo(arg.theme);
 
   @override
   bool shouldRepaint(GlideDataGridPainter oldDelegate) =>
