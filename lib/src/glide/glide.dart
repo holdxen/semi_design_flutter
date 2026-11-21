@@ -25,4 +25,5 @@ export 'internal/data_grid/glide_selection.dart';
 export 'internal/data_grid_overlay_editor/glide_data_grid_overlay_editor.dart';
 export 'internal/data_grid/glide_selection_behavior.dart';
 export 'internal/data_grid/glide_types.dart';
+export 'internal/scrolling_data_grid/glide_autoscroll.dart';
 export 'internal/scrolling_data_grid/glide_scrolling_data_grid.dart';

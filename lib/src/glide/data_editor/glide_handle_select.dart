@@ -81,7 +81,7 @@ class GlideDataEditorSelection {
   int? lastSelectedCol;
   int? lastSelectedRow;
 
-  GlideSelectionBehavior _behavior() => GlideSelectionBehavior(
+  GlideSelectionBehavior createBehavior() => GlideSelectionBehavior(
     gridSelection: selection,
     setGridSelection: (newVal, expand) => selection = newVal,
     rangeBehavior: behaviorConfig.rangeBehavior,
@@ -102,7 +102,7 @@ class GlideDataEditorSelection {
     final isMultiKey = defaultTargetPlatform == TargetPlatform.macOS
         ? args.metaKey
         : args.ctrlKey;
-    final behavior = _behavior();
+    final behavior = createBehavior();
 
     final (col, row) = switch (args) {
       GlideGridCellMouseArgs a => (a.location.col, a.location.row),
@@ -292,7 +292,7 @@ class GlideDataEditorSelection {
         ? args.metaKey
         : args.ctrlKey;
     final col = args.location.col;
-    final behavior = _behavior();
+    final behavior = createBehavior();
     final selectedColumns = selection.columns;
 
     if (col < rowMarkerOffset) return const GlideSelectOutcome();

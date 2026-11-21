@@ -1509,6 +1509,7 @@ void main() {
     Widget buildEditor({
       GlideGridCell Function(GlideItem item)? content,
       bool editOnType = true,
+      GlideKeybinds? keybindings,
     }) {
       edits = [];
       selectionLog = [];
@@ -1538,6 +1539,7 @@ void main() {
           activationLog.add('$location:$key');
         },
         editOnType: editOnType,
+        keybindings: keybindings,
         getCellsForSelection: (region) => [
           for (var y = region.y.toInt();
               y < region.y + region.height && y < cells.length;
@@ -1699,5 +1701,205 @@ void main() {
       final value = edits.single.value as GlideTextCell;
       expect(value.data, 'z');
     });
+
+    testWidgets('navigating to a far cell scrolls it into view',
+        (tester) async {
+      await tester.pumpWidget(buildEditor());
+      await tester.pumpAndSettle();
+
+      // Select a cell in the first screenful.
+      final gesture = await tester.startGesture(
+        const Offset(150, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(selectionLog.last.current!.cell.row, 0);
+
+      // ctrl+End → last cell.
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.end);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pumpAndSettle();
+      expect(selectionLog.last.current!.cell, const GlideItem(5, 199));
+
+      // Without scrolling this point would still map to row 2; with the
+      // scroller having moved to the bottom it maps near the last row.
+      final after = await tester.startGesture(
+        const Offset(150, 100),
+        kind: PointerDeviceKind.mouse,
+      );
+      await after.up();
+      await tester.pumpAndSettle();
+      final row = selectionLog.last.current!.cell.row;
+      expect(row, greaterThan(180));
+    });
+
+    testWidgets('ctrl+d fills the selection downward', (tester) async {
+      await tester.pumpWidget(
+        buildEditor(keybindings: const GlideKeybinds(downFill: true)),
+      );
+      await tester.pumpAndSettle();
+
+      final start = await tester.startGesture(
+        const Offset(50, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await start.up();
+      await tester.pumpAndSettle();
+
+      for (var i = 0; i < 2; i++) {
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.pumpAndSettle();
+      }
+      final range = selectionLog.last.current!.range;
+      expect(range.height, 3);
+      expect(edits, isEmpty);
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyD);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pumpAndSettle();
+
+      expect(edits, hasLength(2));
+      expect(
+        edits.map((e) => e.location).toList(),
+        [const GlideItem(0, 1), const GlideItem(0, 2)],
+      );
+      expect((edits.first.value as GlideTextCell).data, 'r0 c0');
+    });
+
+    testWidgets('ctrl+r fills the selection rightward', (tester) async {
+      await tester.pumpWidget(
+        buildEditor(keybindings: const GlideKeybinds(rightFill: true)),
+      );
+      await tester.pumpAndSettle();
+
+      final start = await tester.startGesture(
+        const Offset(50, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await start.up();
+      await tester.pumpAndSettle();
+
+      for (var i = 0; i < 2; i++) {
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.pumpAndSettle();
+      }
+      expect(selectionLog.last.current!.range.width, 3);
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyR);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pumpAndSettle();
+
+      expect(edits, hasLength(2));
+      expect(
+        edits.map((e) => e.location).toList(),
+        [const GlideItem(1, 0), const GlideItem(2, 0)],
+      );
+      expect((edits.first.value as GlideTextCell).data, 'r0 c0');
+    });
+
+    testWidgets('dragging from a selected cell grows the range', (tester) async {
+      await tester.pumpWidget(buildEditor());
+      await tester.pumpAndSettle();
+
+      final gesture = await tester.startGesture(
+        const Offset(50, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(selectionLog.last.current!.range.width, 1);
+
+      // Press again on (0,0) and drag to (2, 3).
+      final drag = await tester.startGesture(
+        const Offset(50, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await tester.pumpAndSettle();
+      await drag.moveTo(const Offset(250, 140));
+      await tester.pumpAndSettle();
+      await drag.up();
+      await tester.pumpAndSettle();
+
+      final range = selectionLog.last.current!.range;
+      expect(range.x, 0);
+      expect(range.y, 0);
+      expect(range.width, 3);
+      expect(range.height, 4);
+      // The anchor cell does not move while dragging.
+      expect(selectionLog.last.current!.cell, const GlideItem(0, 0));
+    });
+
+    testWidgets('autoscroll ramps up while the pointer sits on an edge',
+        (tester) async {
+      await tester.pumpWidget(buildEditor());
+      await tester.pumpAndSettle();
+
+      final gesture = await tester.startGesture(
+        const Offset(50, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      final drag = await tester.startGesture(
+        const Offset(50, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await tester.pump();
+
+      // Below the last row's body: y > height puts `scrollEdge` on +1.
+      await drag.moveTo(const Offset(50, 410));
+      await tester.pump();
+      final before = selectionLog.last.current!.range.height;
+
+      // The autoscroll ticker keeps scheduling frames, so `pumpAndSettle`
+      // would never return; pump fixed durations instead.
+      for (var i = 0; i < 12; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      await drag.up();
+      await tester.pumpAndSettle();
+
+      final after = selectionLog.last.current!.range.height;
+      expect(after, greaterThan(before));
+    });
+  });
+
+  group('autoscroll', () {
+    test('ramps from zero to full speed over 1300ms', () {
+      final auto = GlideAutoscroll();
+      expect(auto.isActive, isFalse);
+      expect(auto.advance(16), (0.0, 0.0));
+
+      auto.setDirection(0, 1);
+      expect(auto.isActive, isTrue);
+
+      // Early frames move slowly.
+      var total = 0.0;
+      for (var i = 0; i < 6; i++) {
+        final (_, dy) = auto.advance(16);
+        total += dy;
+      }
+      final early = total;
+
+      // After the ramp window a frame moves much further.
+      auto.advance(1400);
+      final ( _, full) = auto.advance(16);
+      expect(full, greaterThan(early / 6));
+
+      auto.setDirection(0, 0);
+      expect(auto.isActive, isFalse);
+      expect(auto.advance(16), (0.0, 0.0));
+    });
   });
 }
+
+

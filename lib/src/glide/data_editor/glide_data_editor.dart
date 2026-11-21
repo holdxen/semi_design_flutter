@@ -12,6 +12,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -23,6 +24,7 @@ import '../internal/data_grid/glide_event_args.dart';
 import '../internal/data_grid/glide_selection_behavior.dart';
 import '../internal/data_grid/render/glide_draw_grid_arg.dart';
 import '../internal/data_grid_overlay_editor/glide_data_grid_overlay_editor.dart';
+import '../internal/scrolling_data_grid/glide_autoscroll.dart';
 import '../internal/scrolling_data_grid/glide_scrolling_data_grid.dart';
 import 'glide_clipboard.dart';
 import 'glide_data_editor_fns.dart';
@@ -65,6 +67,7 @@ class GlideDataEditorProps {
     this.getCellsForSelection,
     this.coercePasteValue,
     this.onPaste,
+    this.onItemHovered,
     this.onGridSelectionChange,
     this.onSelectionCleared,
     this.onDelete,
@@ -127,6 +130,7 @@ class GlideDataEditorProps {
   final GlideCoercePasteValue? coercePasteValue;
   final GlidePasteCallback? onPaste;
 
+  final void Function(GlideGridMouseArgs args)? onItemHovered;
   final void Function(GlideGridSelection selection)? onGridSelectionChange;
   final void Function()? onSelectionCleared;
   final GlideDeleteCallback? onDelete;
@@ -160,7 +164,8 @@ class GlideDataEditor extends StatefulWidget {
   State<GlideDataEditor> createState() => _GlideDataEditorState();
 }
 
-class _GlideDataEditorState extends State<GlideDataEditor> {
+class _GlideDataEditorState extends State<GlideDataEditor>
+    with TickerProviderStateMixin {
   final GlideDataGridController _gridController = GlideDataGridController();
 
   late GlideGridSelection _selection;
@@ -186,11 +191,31 @@ class _GlideDataEditorState extends State<GlideDataEditor> {
   /// compares against.
   GlideGridSelection? _previousSelection;
 
+  /// `hoveredRef` (`data-editor.tsx:2729`).
+  GlideGridMouseArgs? _hoveredArgs;
+
+  /// `scrollDir` (`data-editor.tsx:2243`).
+  (int, int)? _scrollDir;
+
+  /// `visibleRegionRef` (`data-editor.tsx:2831`).
+  GlideVisibleRegion? _visible;
+
+  late final Ticker _autoscrollTicker;
+  Duration _lastTick = Duration.zero;
+  final GlideAutoscroll _autoscroll = GlideAutoscroll();
+
   @override
   void initState() {
     super.initState();
     _selection = GlideGridSelection.empty;
     _selectionState = _makeSelectionState();
+    _autoscrollTicker = createTicker(_onAutoscrollTick);
+  }
+
+  @override
+  void dispose() {
+    _autoscrollTicker.dispose();
+    super.dispose();
   }
 
   @override
@@ -463,16 +488,328 @@ class _GlideDataEditorState extends State<GlideDataEditor> {
     if (handler.selection != _selection) _setGridSelection(handler.selection, false);
   }
 
-  // Fill patterns need `getCellsForSelection` plus the drag state; the
-  // keybinding is recognized and consumed by `handleFixedKeybindings`, the
-  // fill itself lands with the fill-handle port.
-  void _fillDown() {}
+  // -------------------------------------------------------------------------
+  // Fill (`data-editor.tsx:2245-2330`)
+  // -------------------------------------------------------------------------
 
-  void _fillRight() {}
+  /// `fillPattern` (`data-editor.tsx:2245-2296`).
+  void _fillPattern(
+    GlideGridSelection previousSelection,
+    GlideGridSelection currentSelection,
+  ) {
+    final getCells = widget.props.getCellsForSelection;
+    final patternRange = previousSelection.current?.range;
+    final currentRange = currentSelection.current?.range;
+    if (patternRange == null ||
+        currentRange == null ||
+        getCells == null) {
+      return;
+    }
+
+    final pattern = getCells(patternRange);
+    if (pattern == null || pattern.isEmpty) return;
+
+    final edits = <GlideEditListItem>[];
+    for (var x = 0; x < currentRange.width; x++) {
+      for (var y = 0; y < currentRange.height; y++) {
+        final item = GlideItem(
+          currentRange.x.toInt() + x,
+          currentRange.y.toInt() + y,
+        );
+        if (itemIsInRect(item, patternRange)) continue;
+        final patternCell =
+            pattern[y % patternRange.height.toInt()]
+                [x % patternRange.width.toInt()];
+        if (glideIsInnerOnlyCell(patternCell) ||
+            !glideIsReadWriteCell(patternCell)) {
+          continue;
+        }
+        edits.add(GlideEditListItem(location: item, value: patternCell));
+      }
+    }
+    if (edits.isNotEmpty) _onCellsEdited(edits);
+  }
+
+  /// `fillDown` (`data-editor.tsx:2315-2330`): the first row of the range is
+  /// the pattern, the whole range is the destination.
+  void _fillDown() {
+    final current = _selection.current;
+    if (current == null || current.range.height <= 1) return;
+    _fillPattern(
+      _selection.copyWith(
+        current: current.copyWith(
+          range: current.range.copyWith(height: 1),
+        ),
+      ),
+      _selection,
+    );
+  }
+
+  void _fillRight() {
+    final current = _selection.current;
+    if (current == null || current.range.width <= 1) return;
+    _fillPattern(
+      _selection.copyWith(
+        current: current.copyWith(
+          range: current.range.copyWith(width: 1),
+        ),
+      ),
+      _selection,
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // scrollTo (`data-editor.tsx:1524-1674`)
+  // -------------------------------------------------------------------------
 
   void _scrollTo(GlideScrollTarget target) {
-    // Scroll-to-cell lands with `use-autoscroll`; keyboard navigation already
-    // keeps the active cell in the visible region through the scroller.
+    final bounds = _gridController.getBounds(target.col, target.row);
+    if (bounds == null || bounds.width == 0 || bounds.height == 0) return;
+
+    var frozenWidth = 0.0;
+    for (var i = 0; i < widget.props.freezeColumns; i++) {
+      frozenWidth += widget.props.columns[i].width ?? 0;
+    }
+    final trailingHeight = widget.props.rowHeight.trailingHeight(
+      widget.props.rows,
+      widget.props.freezeTrailingRows,
+    );
+
+    var sLeft = frozenWidth;
+    var sRight = _viewportWidth;
+    var sTop = _headerHeight;
+    var sBottom = _viewportHeight - trailingHeight;
+
+    var scrollX = 0.0;
+    var scrollY = 0.0;
+    if (sLeft > bounds.x) {
+      scrollX = bounds.x - sLeft;
+    } else if (sRight < bounds.right) {
+      scrollX = bounds.right - sRight;
+    }
+    if (sTop > bounds.y) {
+      scrollY = bounds.y - sTop;
+    } else if (sBottom < bounds.bottom) {
+      scrollY = bounds.bottom - sBottom;
+    }
+
+    final axis = target.axis;
+    if (axis == GlideScrollAxis.vertical ||
+        target.col < widget.props.freezeColumns) {
+      scrollX = 0;
+    } else if (axis == GlideScrollAxis.horizontal ||
+        target.row >= widget.props.rows - widget.props.freezeTrailingRows) {
+      scrollY = 0;
+    }
+
+    if (scrollX == 0 && scrollY == 0) return;
+    setState(() {
+      _scrollX = clampDouble(_scrollX + scrollX, 0, _maxScrollX);
+      _scrollY = clampDouble(_scrollY + scrollY, 0, _maxScrollY);
+    });
+    _applyScroll();
+  }
+
+  // -------------------------------------------------------------------------
+  // Hover, drag selection and autoscroll
+  //   (`data-editor.tsx:2728-2850`, `data-editor/use-autoscroll.ts`)
+  // -------------------------------------------------------------------------
+
+  void _onItemHovered(GlideGridMouseArgs args) {
+    if (glideMouseArgsAreEqual(args, _hoveredArgs)) return;
+    _hoveredArgs = args;
+
+    final mouseDown = _mouseDownData;
+    final dragging = mouseDown != null && mouseDown.button == 0;
+
+    if (dragging &&
+        args.buttons != 0 &&
+        _selection.current != null &&
+        (widget.props.rangeSelect == GlideRangeSelect.rect ||
+            widget.props.rangeSelect == GlideRangeSelect.multiRect)) {
+      _dragSelect(args);
+    }
+
+    _updateScrollDir(args);
+    widget.props.onItemHovered?.call(args);
+  }
+
+  /// The rect-drag branch of `onItemHoveredImpl` (`data-editor.tsx:2749-2805`).
+  void _dragSelect(GlideGridMouseArgs args) {
+    final current = _selection.current!;
+    final selectedCol = current.cell.col;
+    final selectedRow = current.cell.row;
+    final hovered = _locationOf(args);
+    var col = hovered.col;
+    var row = hovered.row;
+
+    if (row < 0) row = _cellYOffset;
+    col = math.max(col, 0);
+
+    final deltaX = col - selectedCol;
+    final deltaY = row - selectedRow;
+    final newRange = GlideRectangle(
+      x: (deltaX >= 0 ? selectedCol : col).toDouble(),
+      y: (deltaY >= 0 ? selectedRow : row).toDouble(),
+      width: (deltaX.abs() + 1).toDouble(),
+      height: (deltaY.abs() + 1).toDouble(),
+    );
+
+    _selectionState.selection = _selection;
+    _selectionState.createBehavior().setCurrent(
+      value: (cell: current.cell, range: newRange),
+      expand: true,
+      append: false,
+      trigger: GlideSelectionTrigger.drag,
+    );
+    if (_selectionState.selection != _selection) {
+      _setGridSelection(_selectionState.selection, true);
+    }
+  }
+
+  /// `setScrollDir` (`data-editor.tsx:2556-2562`): only scroll while a
+  /// button is held.
+  void _updateScrollDir(GlideGridMouseArgs args) {
+    final (x, y) = args.scrollEdge;
+    final mouseDown = _mouseDownData;
+    final next = mouseDown == null ? null : (x, y);
+    if (next == _scrollDir) return;
+    setState(() => _scrollDir = next);
+    _autoscroll.setDirection(next?.$1 ?? 0, next?.$2 ?? 0);
+    _setAutoscrollActive(next != null && next != (0, 0));
+  }
+
+  void _setAutoscrollActive(bool active) {
+    if (active && !_autoscrollTicker.isActive) {
+      _lastTick = Duration.zero;
+      _autoscrollTicker.start();
+    } else if (!active && _autoscrollTicker.isActive) {
+      _autoscrollTicker.stop();
+      _autoscroll.setDirection(0, 0);
+    }
+  }
+
+  void _onAutoscrollTick(Duration elapsed) {
+    if (_lastTick == Duration.zero) {
+      _lastTick = elapsed;
+      return;
+    }
+    final dtMs =
+        (elapsed - _lastTick).inMicroseconds / 1000.0; // ignore: avoid_multiple_declarations
+    _lastTick = elapsed;
+
+    final (dx, dy) = _autoscroll.advance(dtMs);
+    if (dx == 0 && dy == 0) return;
+    setState(() {
+      _scrollX = clampDouble(_scrollX + dx, 0, _maxScrollX);
+      _scrollY = clampDouble(_scrollY + dy, 0, _maxScrollY);
+    });
+    _applyScroll();
+    _adjustSelectionOnScroll();
+  }
+
+  /// `adjustSelectionOnScroll` (`data-editor.tsx:2826-2848`).
+  void _adjustSelectionOnScroll() {
+    final args = _hoveredArgs;
+    if (args == null) return;
+    final (xDir, yDir) = args.scrollEdge;
+    if (xDir == 0 && yDir == 0) return;
+
+    final visible = _visible;
+    if (visible == null) return;
+    final hovered = _locationOf(args);
+    var col = hovered.col;
+    var row = hovered.row;
+
+    if (xDir == -1) {
+      col = visible.x;
+    } else if (xDir == 1) {
+      col = visible.x + visible.width;
+    }
+    if (yDir == -1) {
+      row = math.max(0, visible.y);
+    } else if (yDir == 1) {
+      row = math.min(widget.props.rows - 1, visible.y + visible.height);
+    }
+
+    col = clampInt(col, 0, widget.props.columns.length - 1);
+    row = clampInt(row, 0, widget.props.rows - 1);
+
+    _onItemHovered(_withLocation(args, col, row));
+  }
+
+  /// Rebuilds [args] with a different `location`, mirroring
+  /// `onItemHoveredImpl({...args, location})`.
+  GlideGridMouseArgs _withLocation(GlideGridMouseArgs args, int col, int row) {
+    final location = GlideItem(col, row);
+    return switch (args) {
+      GlideGridCellMouseArgs a => GlideGridCellMouseArgs(
+        shiftKey: a.shiftKey,
+        ctrlKey: a.ctrlKey,
+        metaKey: a.metaKey,
+        isTouch: a.isTouch,
+        isLongTouch: a.isLongTouch,
+        isDoubleClick: a.isDoubleClick,
+        isEdge: a.isEdge,
+        button: a.button,
+        buttons: a.buttons,
+        scrollEdge: a.scrollEdge,
+        location: location,
+        bounds: a.bounds,
+        isFillHandle: a.isFillHandle,
+        localEventX: a.localEventX,
+        localEventY: a.localEventY,
+      ),
+      GlideGridHeaderMouseArgs a => GlideGridHeaderMouseArgs(
+        shiftKey: a.shiftKey,
+        ctrlKey: a.ctrlKey,
+        metaKey: a.metaKey,
+        isTouch: a.isTouch,
+        isLongTouch: a.isLongTouch,
+        isDoubleClick: a.isDoubleClick,
+        isEdge: a.isEdge,
+        button: a.button,
+        buttons: a.buttons,
+        scrollEdge: a.scrollEdge,
+        location: location,
+        bounds: a.bounds,
+        group: a.group,
+        localEventX: a.localEventX,
+        localEventY: a.localEventY,
+      ),
+      GlideGridGroupHeaderMouseArgs a => GlideGridGroupHeaderMouseArgs(
+        shiftKey: a.shiftKey,
+        ctrlKey: a.ctrlKey,
+        metaKey: a.metaKey,
+        isTouch: a.isTouch,
+        isLongTouch: a.isLongTouch,
+        isDoubleClick: a.isDoubleClick,
+        isEdge: a.isEdge,
+        button: a.button,
+        buttons: a.buttons,
+        scrollEdge: a.scrollEdge,
+        location: location,
+        bounds: a.bounds,
+        group: a.group,
+        localEventX: a.localEventX,
+        localEventY: a.localEventY,
+      ),
+      GlideGridOutOfBoundsMouseArgs a => GlideGridOutOfBoundsMouseArgs(
+        shiftKey: a.shiftKey,
+        ctrlKey: a.ctrlKey,
+        metaKey: a.metaKey,
+        isTouch: a.isTouch,
+        isLongTouch: a.isLongTouch,
+        isDoubleClick: a.isDoubleClick,
+        isEdge: a.isEdge,
+        button: a.button,
+        buttons: a.buttons,
+        scrollEdge: a.scrollEdge,
+        location: location,
+        isMaybeScrollbar: a.isMaybeScrollbar,
+        region: a.region,
+      ),
+    };
   }
 
   // -------------------------------------------------------------------------
@@ -685,6 +1022,10 @@ class _GlideDataEditorState extends State<GlideDataEditor> {
     _lastMouseSelectLocation = null;
     _mouseDownData = null;
     _previousSelection = null;
+    if (_scrollDir != null) {
+      setState(() => _scrollDir = null);
+      _setAutoscrollActive(false);
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -866,16 +1207,35 @@ class _GlideDataEditorState extends State<GlideDataEditor> {
   double get _maxScrollY =>
       math.max(0.0, _rowsHeight - (_viewportHeight - _headerHeight));
 
-  void _handleScroll(PointerSignalEvent event) {
-    if (event is! PointerScrollEvent) return;
-    final next = (_scrollY + event.scrollDelta.dy)
-        .clamp(0.0, _maxScrollY)
-        .toDouble();
-    if (next == _scrollY) return;
-    setState(() => _scrollY = next);
+  /// `useColumnSizer`'s `nonGrowWidth` (`data-editor.tsx:1118`): the width of
+  /// the columns themselves, which is what the horizontal extent is derived
+  /// from (`scrolling-data-grid.tsx:105`).
+  double get _columnsWidth {
+    var total = 0.0;
+    for (final c in widget.props.columns) {
+      total += c.width ?? 0;
+    }
+    return total;
+  }
 
+  double get _stickyWidth {
+    var total = 0.0;
+    for (var i = 0; i < widget.props.freezeColumns; i++) {
+      total += widget.props.columns[i].width ?? 0;
+    }
+    return total;
+  }
+
+  double get _maxScrollX => math.max(
+    0.0,
+    _columnsWidth - (_viewportWidth - _stickyWidth),
+  );
+
+  /// Derives `cellXOffset`/`cellYOffset`/`translateX`/`translateY` from the
+  /// current scroll offsets (`scrolling-data-grid.tsx:121-240`).
+  void _applyScroll() {
     final region = computeVisibleRegion(
-      scrollX: 0,
+      scrollX: _scrollX,
       scrollY: _scrollY,
       clientWidth: _viewportWidth,
       clientHeight: math.max(1, _viewportHeight - _headerHeight),
@@ -883,9 +1243,11 @@ class _GlideDataEditorState extends State<GlideDataEditor> {
       rowHeight: widget.props.rowHeight,
       rows: widget.props.rows,
       freezeColumns: widget.props.freezeColumns,
+      smoothScrollX: widget.props.smoothScrollX,
       smoothScrollY: widget.props.smoothScrollY,
     );
     setState(() {
+      _visible = region;
       _cellXOffset = region.x;
       _cellYOffset = region.y;
       _translateX = region.translateX;
@@ -893,9 +1255,26 @@ class _GlideDataEditorState extends State<GlideDataEditor> {
     });
   }
 
-  double _viewportWidth = 800;
+  void _handleScroll(PointerSignalEvent event) {
+    if (event is! PointerScrollEvent) return;
+    // Shift + wheel scrolls horizontally, matching the browser.
+    final horizontal = HardwareKeyboard.instance.isShiftPressed;
+    var dx = horizontal ? event.scrollDelta.dy : event.scrollDelta.dx;
+    final dy = horizontal ? 0.0 : event.scrollDelta.dy;
 
-  @override
+    final nextY = clampDouble(_scrollY + dy, 0, _maxScrollY);
+    final nextX = clampDouble(_scrollX + dx, 0, _maxScrollX);
+    if (nextY == _scrollY && nextX == _scrollX) return;
+    setState(() {
+      _scrollY = nextY;
+      _scrollX = nextX;
+    });
+    _applyScroll();
+  }
+
+  double _viewportWidth = 800;
+  double _scrollX = 0;
+
   @override
   Widget build(BuildContext context) {
     final p = widget.props;
@@ -924,7 +1303,7 @@ class _GlideDataEditorState extends State<GlideDataEditor> {
           getCellRenderer: _renderers.forCell,
           theme: p.theme,
           verticalBorder: p.verticalBorder,
-          onItemHovered: (_) {},
+          onItemHovered: _onItemHovered,
           onMouseMove: (_) {},
           onMouseDown: _onMouseDown,
           onMouseUp: _onMouseUp,

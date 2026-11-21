@@ -67,6 +67,18 @@ class GlideRectangle {
   double get right => x + width;
   double get bottom => y + height;
 
+  GlideRectangle copyWith({
+    double? x,
+    double? y,
+    double? width,
+    double? height,
+  }) => GlideRectangle(
+    x: x ?? this.x,
+    y: y ?? this.y,
+    width: width ?? this.width,
+    height: height ?? this.height,
+  );
+
   GlideRectangle translate(double dx, double dy) =>
       GlideRectangle(x: x + dx, y: y + dy, width: width, height: height);
 
