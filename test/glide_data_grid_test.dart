@@ -1545,6 +1545,7 @@ void main() {
       bool unsizedColumns = false,
       double minColumnWidth = 50,
       double? scrollOffsetY,
+      GlideKeybinds? keybindingsOverride,
       GlideRowGroupingOptions? rowGrouping,
       GlideTrailingRowOptions? trailingRowOptions,
       void Function()? onRowAppended,
@@ -1569,6 +1570,7 @@ void main() {
         rowGrouping: rowGrouping,
         minColumnWidth: minColumnWidth,
         scrollOffsetY: scrollOffsetY,
+        keybindings: keybindingsOverride ?? keybindings,
         onColumnAppended: onColumnAppended == null
             ? null
             : () {
@@ -1605,7 +1607,6 @@ void main() {
           activationLog.add('$location:$key');
         },
         editOnType: editOnType,
-        keybindings: keybindings,
         fillHandle: fillHandle,
         onFillPattern: onFillPattern,
         onColumnResize: onColumnResize,
@@ -2758,6 +2759,47 @@ void main() {
 
       expect(selectionLog.last.current!.cell.row, 20);
     });
+
+    testWidgets('search opens with the binding, finds matches and closes',
+        (tester) async {
+      await tester.pumpWidget(
+        buildEditor(
+          keybindingsOverride: const GlideKeybinds(search: true),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final cell = await tester.startGesture(
+        const Offset(150, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await cell.up();
+      await tester.pumpAndSettle();
+
+      // `primary+f` opens the bar (`keybindingDefaults.search`).
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TextField), findsOneWidget);
+      expect(find.text('Type to search'), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField), 'r1 c2');
+      await tester.pumpAndSettle();
+
+      expect(find.text('1 result'), findsOneWidget);
+
+      // Enter advances to the first (and only) match.
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(find.text('1 of 1 result'), findsOneWidget);
+
+      // Escape closes the bar.
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      expect(find.text('Type to search'), findsNothing);
+    });
   });
 
   group('column sizer', () {
@@ -3397,6 +3439,145 @@ void main() {
       );
       expect(scaled.rowHeight(0), 48); // 32 * 1.5
       expect(scaled.rowHeight(1), 50); // 33 * 1.5 = 49.5, ceiled
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Search (`internal/data-grid-search/data-grid-search.tsx`)
+  // -------------------------------------------------------------------------
+
+  group('search', () {
+    test('glideSearchRegex escapes the pattern but stays case insensitive', () {
+      final regex = glideSearchRegex('a.b');
+      expect(regex.hasMatch('a.b'), isTrue);
+      expect(regex.hasMatch('axb'), isFalse);
+      expect(regex.hasMatch('A.B'), isTrue);
+
+      expect(glideSearchRegex('r2').hasMatch('R2 c1'), isTrue);
+    });
+
+    test('glideSearchTestString mirrors the upstream switch', () {
+      expect(
+        glideSearchTestString(const GlideTextCell(data: 'x', displayData: 'hi')),
+        'hi',
+      );
+      expect(
+        glideSearchTestString(
+          const GlideNumberCell(data: 5, displayData: '5'),
+        ),
+        '5',
+      );
+      expect(
+        glideSearchTestString(const GlideUriCell(data: 'https://a')),
+        'https://a',
+      );
+      expect(
+        glideSearchTestString(
+          const GlideBooleanCell(data: GlideBooleanValue.checked),
+        ),
+        'true',
+      );
+      // Indeterminate has no boolean rendering upstream.
+      expect(
+        glideSearchTestString(
+          const GlideBooleanCell(data: GlideBooleanValue.indeterminate),
+        ),
+        isNull,
+      );
+      expect(
+        glideSearchTestString(const GlideBubbleCell(data: ['a', 'b'])),
+        'a\u{1F433}b',
+      );
+      // Protected/loading cells are not searchable.
+      expect(glideSearchTestString(const GlideProtectedCell()), isNull);
+      expect(glideSearchTestString(const GlideLoadingCell()), isNull);
+    });
+
+    test('the runner walks every row and reports progress', () async {
+      final runner = GlideSearchRunner();
+      final statuses = <GlideSearchStatus>[];
+      List<GlideItem>? results;
+
+      await runner.search(
+        pattern: 'c2',
+        rows: 5,
+        columnCount: 3,
+        startY: 0,
+        getCells: (region) => [
+          for (var y = region.y.toInt();
+              y < region.y + region.height && y < 5;
+              y++)
+            [
+              for (var x = region.x.toInt();
+                  x < region.x + region.width && x < 3;
+                  x++)
+                GlideTextCell(data: 'r$y c$x', displayData: 'r$y c$x'),
+            ],
+        ],
+        onResults: (r) => results = r,
+        onStatus: statuses.add,
+        onResultsChanged: (_, _) {},
+        selectedIndex: -1,
+      );
+
+      expect(results, isNotNull);
+      // Column 2 of every row.
+      expect(results, hasLength(5));
+      expect(results, contains(const GlideItem(2, 3)));
+      expect(statuses.last.rowsSearched, 5);
+      expect(statuses.last.results, 5);
+    });
+
+    test('an empty pattern resets without scanning', () async {
+      final runner = GlideSearchRunner();
+      var scanned = 0;
+      List<GlideItem>? results = const [GlideItem(0, 0)];
+
+      await runner.search(
+        pattern: '',
+        rows: 100,
+        columnCount: 3,
+        startY: 0,
+        getCells: (region) {
+          scanned++;
+          return const [];
+        },
+        onResults: (r) => results = r,
+        onStatus: (_) {},
+        onResultsChanged: (_, _) {},
+        selectedIndex: -1,
+      );
+
+      expect(scanned, 0);
+      expect(results, isEmpty);
+    });
+
+    test('a cancelled search stops mid-flight', () async {
+      final runner = GlideSearchRunner();
+      var scanned = 0;
+      final search = runner.search(
+        pattern: 'c',
+        rows: 1000,
+        columnCount: 3,
+        startY: 0,
+        getCells: (region) {
+          scanned++;
+          return [
+            [
+              for (var x = 0; x < 3; x++)
+                GlideTextCell(data: 'r0 c$x', displayData: 'r0 c$x'),
+            ],
+          ];
+        },
+        onResults: (_) {},
+        onStatus: (_) {},
+        onResultsChanged: (_, _) {},
+        selectedIndex: -1,
+      );
+      runner.cancel();
+      await search;
+
+      expect(scanned, lessThan(1000));
     });
   });
   group('animation manager', () {

@@ -30,6 +30,7 @@ export 'internal/data_grid/glide_data_grid.dart';
 export 'internal/data_grid/glide_event_args.dart';
 export 'internal/data_grid/glide_selection.dart';
 export 'internal/data_grid_overlay_editor/glide_data_grid_overlay_editor.dart';
+export 'internal/data_grid_search/glide_data_grid_search.dart';
 export 'internal/data_grid/glide_selection_behavior.dart';
 export 'internal/data_grid/glide_types.dart';
 export 'internal/scrolling_data_grid/glide_autoscroll.dart';

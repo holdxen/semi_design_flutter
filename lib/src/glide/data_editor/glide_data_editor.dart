@@ -35,6 +35,7 @@ import 'glide_key_handler.dart';
 import 'glide_keybindings.dart';
 import 'glide_rem_adjuster.dart';
 import 'glide_row_grouping.dart';
+import '../internal/data_grid_search/glide_data_grid_search.dart';
 
 /// `DataGridProps` subset the editor owns (`data-editor.tsx`).
 @immutable
@@ -109,7 +110,12 @@ class GlideDataEditorProps {
     this.scrollOffsetY,
     this.smoothScrollX = false,
     this.smoothScrollY = false,
-    this.showSearch = false,
+    this.showSearch,
+    this.searchValue,
+    this.searchResults,
+    this.onSearchValueChange,
+    this.onSearchResultsChanged,
+    this.onSearchClose,
     this.rendererLookup,
   });
 
@@ -258,7 +264,17 @@ class GlideDataEditorProps {
 
   final bool smoothScrollX;
   final bool smoothScrollY;
-  final bool showSearch;
+  /// `showSearch` (`data-grid-search.ts:71`): null lets the editor own the
+  /// visibility (toggled by the `search` keybinding).
+  final bool? showSearch;
+
+  /// Controlled search state (`data-grid-search.ts:59-87`).
+  final String? searchValue;
+  final List<GlideItem>? searchResults;
+  final void Function(String newVal)? onSearchValueChange;
+  final void Function(List<GlideItem> results, int navIndex)?
+  onSearchResultsChanged;
+  final void Function()? onSearchClose;
   final GlideRendererLookup? rendererLookup;
 }
 
@@ -287,6 +303,21 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   bool _focused = false;
 
   _OverlayState? _overlay;
+
+  /// Search state (`data-grid-search.ts:109-149`).
+  bool _showSearchInner = false;
+  String _searchValueInner = '';
+  List<GlideItem> _searchResultsInner = const [];
+  GlideSearchStatus? _searchStatus;
+  int _searchSelectedIndex = -1;
+  final GlideSearchRunner _searchRunner = GlideSearchRunner();
+  late final TextEditingController _searchTextController;
+  final FocusNode _searchFocusNode = FocusNode(debugLabel: 'GlideSearch');
+
+  bool get _showSearch => widget.props.showSearch ?? _showSearchInner;
+  String get _searchValue => widget.props.searchValue ?? _searchValueInner;
+  List<GlideItem> get _searchResults =>
+      widget.props.searchResults ?? _searchResultsInner;
 
   /// `lastMouseDownData` (`data-editor.tsx:2091`).
   ({int button, int time, GlideItem location})? _mouseDownData;
@@ -348,6 +379,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     _rebuildSizedColumns();
     _rebuildMangledColumns();
     _selectionState = _makeSelectionState();
+    _searchTextController = TextEditingController();
     _autoscrollTicker = createTicker(_onAutoscrollTick);
 
     // `useInitialScrollOffset` (`use-initial-scroll-offset.ts:38-71`): the
@@ -366,8 +398,128 @@ class _GlideDataEditorState extends State<GlideDataEditor>
 
   @override
   void dispose() {
+    _searchRunner.cancel();
+    _searchTextController.dispose();
+    _searchFocusNode.dispose();
     _autoscrollTicker.dispose();
     super.dispose();
+  }
+
+  // -------------------------------------------------------------------------
+  // Search (`internal/data-grid-search/data-grid-search.tsx`)
+  // -------------------------------------------------------------------------
+
+  void _openSearch() {
+    setState(() {
+      _showSearchInner = true;
+      _searchValueInner = '';
+      _searchStatus = null;
+      _searchSelectedIndex = -1;
+      _searchResultsInner = const [];
+    });
+    _searchTextController.clear();
+    _searchRunner.cancel();
+    widget.props.onSearchResultsChanged?.call(const [], -1);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _searchFocusNode.requestFocus();
+    });
+  }
+
+  void _closeSearch() {
+    _searchRunner.cancel();
+    setState(() {
+      _showSearchInner = false;
+      _searchValueInner = '';
+      _searchStatus = null;
+      _searchSelectedIndex = -1;
+      _searchResultsInner = const [];
+    });
+    _searchTextController.clear();
+    widget.props.onSearchClose?.call();
+    widget.props.onSearchResultsChanged?.call(const [], -1);
+    _gridController.focus();
+  }
+
+  /// `onSearchChange` (`data-grid-search.ts:285-298`).
+  void _onSearchChanged(String value) {
+    widget.props.onSearchValueChange?.call(value);
+    if (widget.props.searchResults != null) return;
+
+    setState(() => _searchValueInner = value);
+    if (value.isEmpty) {
+      _searchRunner.cancel();
+      setState(() {
+        _searchStatus = null;
+        _searchResultsInner = const [];
+      });
+      return;
+    }
+    _runSearch(value);
+  }
+
+  Future<void> _runSearch(String value) async {
+    if (widget.props.getCellsForSelection == null) return;
+    await _searchRunner.search(
+      pattern: value,
+      rows: _mangledRows,
+      columnCount: _mangledColumns.length,
+      startY: _cellYOffset,
+      getCells: _getCellsForSelection,
+      onResults: (results) => setState(() => _searchResultsInner = results),
+      onStatus: (status) => setState(() => _searchStatus = status),
+      onResultsChanged: (results, navIndex) =>
+          widget.props.onSearchResultsChanged?.call(results, navIndex),
+      selectedIndex: _searchSelectedIndex,
+    );
+  }
+
+  /// `onNext` / `onPrev` (`data-grid-search.ts:321-348`).
+  void _searchStep(int delta) {
+    final status = _searchStatus;
+    if (status == null || status.results == 0) return;
+    var newIndex = (status.selectedIndex + delta) % status.results;
+    if (newIndex < 0) newIndex += status.results;
+
+    setState(() {
+      _searchSelectedIndex = newIndex;
+      _searchStatus = GlideSearchStatus(
+        rowsSearched: status.rowsSearched,
+        results: status.results,
+        selectedIndex: newIndex,
+      );
+    });
+
+    final results = _searchResults;
+    widget.props.onSearchResultsChanged?.call(results, newIndex);
+    if (newIndex >= 0 && newIndex < results.length) {
+      // Upstream leaves the scroll to `onSearchResultsChanged`'s consumer;
+      // this port has no consumer, so the editor does it itself.
+      final item = results[newIndex];
+      _scrollTo(GlideScrollTarget(item.col - _markerOffset, item.row));
+    }
+  }
+
+  /// `onSearchKeyDown` (`data-grid-search.ts:350-365`).
+  KeyEventResult _handleSearchKey(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+    final key = event.logicalKey;
+
+    if (key == LogicalKeyboardKey.escape ||
+        ((HardwareKeyboard.instance.isControlPressed ||
+                HardwareKeyboard.instance.isMetaPressed) &&
+            key == LogicalKeyboardKey.keyF)) {
+      _closeSearch();
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.enter) {
+      if (HardwareKeyboard.instance.isShiftPressed) {
+        _searchStep(-1);
+      } else {
+        _searchStep(1);
+      }
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
   }
 
   @override
@@ -978,6 +1130,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     appendRow: (col, openOverlay) =>
         _appendRow(col, openOverlay: openOverlay),
     getCustomNewRowTargetColumn: _customNewRowTargetColumn,
+    onSearch: _openSearch,
     rowGroupingNavBehavior: widget.props.rowGrouping?.navigationBehavior,
     isGroupHeaderRow: _isGroupHeaderRow,
     getSelectionRowLimits: _getSelectionRowLimits,
@@ -2418,6 +2571,22 @@ class _GlideDataEditorState extends State<GlideDataEditor>
                     ),
                   ),
                   if (_overlay != null) _buildOverlay(),
+                  if (_showSearch)
+                    GlideSearchBar(
+                      value: _searchValue,
+                      onChanged: _onSearchChanged,
+                      status: _searchStatus,
+                      rows: _mangledRows,
+                      theme: _theme,
+                      focusNode: _searchFocusNode,
+                      textController: _searchTextController,
+                      onKeyDown: _handleSearchKey,
+                      onPrev: () => _searchStep(-1),
+                      onNext: () => _searchStep(1),
+                      showClose: widget.props.onSearchClose != null,
+                      onClose: _closeSearch,
+                      onCancelPointer: () {},
+                    ),
                 ],
               ),
             ),
