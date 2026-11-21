@@ -16,6 +16,7 @@ import '../common/glide_utils.dart';
 import '../internal/data_grid/render/glide_draw_checkbox.dart';
 import '../internal/data_grid/render/glide_draw_text.dart';
 import '../internal/data_grid_overlay_editor/private/glide_bubbles_overlay_editor.dart';
+import '../internal/data_grid_overlay_editor/private/glide_drilldown_overlay_editor.dart';
 import '../internal/data_grid_overlay_editor/private/glide_markdown_overlay_editor.dart';
 import '../internal/data_grid_overlay_editor/private/glide_uri_overlay_editor.dart';
 import '../internal/growing_entry/glide_growing_entry.dart';
@@ -514,6 +515,18 @@ class GlideDrilldownCellRenderer extends GlideCellRenderer {
       );
       renderX += pillWidth + theme.bubbleMargin;
     }
+  }
+
+  /// `provideEditor` (`drilldown-cell.tsx:33-36`).
+  @override
+  GlideEditorProvider? provideEditor(GlideGridCell cell, GlideItem location) {
+    return GlideComponentEditor((props) {
+      final value = props.value as GlideDrilldownCell;
+      return GlideDrilldownOverlayEditor(
+        drilldowns: value.data,
+        theme: props.theme,
+      );
+    });
   }
 
   @override

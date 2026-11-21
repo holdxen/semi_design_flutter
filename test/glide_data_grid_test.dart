@@ -2616,6 +2616,63 @@ void main() {
       // the decoded image.
       expect(find.text('image failed'), findsOneWidget);
     });
+
+    testWidgets('drilldown cells open a read-only chip editor',
+        (tester) async {
+      await tester.pumpWidget(
+        buildEditor(
+          content: (item) => item == const GlideItem(1, 0)
+              ? const GlideDrilldownCell(
+                  data: [
+                    GlideDrilldownCellData(text: 'Alpha'),
+                    GlideDrilldownCellData(text: 'Beta'),
+                  ],
+                )
+              : const GlideTextCell(data: 'x', displayData: 'x'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      for (var i = 0; i < 2; i++) {
+        final gesture = await tester.startGesture(
+          const Offset(150, 45),
+          kind: PointerDeviceKind.mouse,
+        );
+        await gesture.up();
+        await tester.pumpAndSettle();
+      }
+
+      // Read-only: no input, just the chips.
+      expect(find.byType(TextField), findsNothing);
+      expect(find.text('Alpha'), findsOneWidget);
+      expect(find.text('Beta'), findsOneWidget);
+    });
+
+    testWidgets('loading and protected cells never open an overlay',
+        (tester) async {
+      await tester.pumpWidget(
+        buildEditor(
+          content: (item) => switch (item.row) {
+            0 => const GlideLoadingCell(skeletonWidth: 40),
+            1 => const GlideProtectedCell(),
+            _ => const GlideTextCell(data: 'x', displayData: 'x'),
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      for (final row in [45, 77]) {
+        for (var i = 0; i < 2; i++) {
+          final gesture = await tester.startGesture(
+            Offset(150, row.toDouble()),
+            kind: PointerDeviceKind.mouse,
+          );
+          await gesture.up();
+          await tester.pumpAndSettle();
+        }
+        expect(find.byType(TextField), findsNothing);
+      }
+    });
   });
 
   group('column sizer', () {

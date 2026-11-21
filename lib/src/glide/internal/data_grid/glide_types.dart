@@ -325,11 +325,14 @@ sealed class GlideGridCell {
 
 /// `LoadingCell` (`data-grid-types.ts:324-329`).
 class GlideLoadingCell extends GlideGridCell {
+  /// `allowOverlay` defaults to false because the grid's own `loadingCell`
+  /// is `{ kind: Loading, allowOverlay: false }` (`data-editor.tsx:762-765`),
+  /// so a loading cell never opens an empty overlay.
   const GlideLoadingCell({
     this.skeletonWidth,
     this.skeletonHeight,
     this.skeletonWidthVariability,
-    super.allowOverlay,
+    super.allowOverlay = false,
     super.lastUpdated,
     super.style,
     super.themeOverride,
@@ -350,8 +353,11 @@ class GlideLoadingCell extends GlideGridCell {
 
 /// `ProtectedCell` (`data-grid-types.ts:331-334`).
 class GlideProtectedCell extends GlideGridCell {
+  /// `allowOverlay` defaults to false: the protected cell has no
+  /// `provideEditor` (`protected-cell.tsx`), and upstream's own examples
+  /// always pass `allowOverlay: false`.
   const GlideProtectedCell({
-    super.allowOverlay,
+    super.allowOverlay = false,
     super.lastUpdated,
     super.style,
     super.themeOverride,
