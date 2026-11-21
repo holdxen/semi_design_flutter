@@ -65,6 +65,7 @@ class GlideDataEditorProps {
     this.rowMarkers,
     this.trailingRowOptions,
     this.onRowAppended,
+    this.onColumnAppended,
     this.rowSelectionMode = GlideSelectMode.auto,
     this.keybindings,
     this.editOnType = true,
@@ -151,6 +152,11 @@ class GlideDataEditorProps {
   /// `onRowAppended` (`data-editor.tsx:221`): the owner inserts a row and
   /// rebuilds; the editor waits for `rows` to grow before focusing it.
   final void Function()? onRowAppended;
+
+  /// `onColumnAppended` (`data-editor.tsx:225`): return `"left"`, `"right"`
+  /// or a column index to control where the new column lands; null appends on
+  /// the right. The editor waits for the column count to grow.
+  final Object? Function()? onColumnAppended;
 
   /// `rowSelectionMode` (`data-editor.tsx:849`).
   final GlideSelectMode rowSelectionMode;
@@ -566,6 +572,84 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     );
   }
 
+  /// `appendColumn` (`data-editor.tsx:1744-1793`).
+  void _appendColumn(int row, {bool openOverlay = true}) {
+    final p = widget.props;
+    final append = p.onColumnAppended;
+    if (append == null) return;
+
+    final colsBefore = _mangledColumns.length;
+    final result = append();
+    _focusAfterColumnAppend(colsBefore, row, result, openOverlay, 0);
+  }
+
+  void _focusAfterColumnAppend(
+    int colsBefore,
+    int row,
+    Object? result,
+    bool openOverlay,
+    int attempt,
+  ) {
+    if (!mounted) return;
+    if (_mangledColumns.length > colsBefore) {
+      _selectAppendedColumn(colsBefore, row, result, openOverlay);
+      return;
+    }
+    if (attempt >= 10) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _focusAfterColumnAppend(
+          colsBefore,
+          row,
+          result,
+          openOverlay,
+          attempt + 1,
+        );
+      }
+    });
+  }
+
+  /// `doFocus` of `appendColumn` (`data-editor.tsx:1763-1786`).
+  void _selectAppendedColumn(
+    int colsBefore,
+    int row,
+    Object? result,
+    bool openOverlay,
+  ) {
+    var col = colsBefore;
+    if (result is int) {
+      col = result;
+    } else if (result == 'left') {
+      col = 0;
+    }
+    col = clampInt(col, 0, math.max(0, _mangledColumns.length - 1));
+    row = clampInt(row, 0, math.max(0, _mangledRows - 1));
+
+    final behavior = _selectionState.createBehavior();
+    behavior.setCurrent(
+      value: (
+        cell: GlideItem(col, row),
+        range: GlideRectangle(
+          x: col.toDouble(),
+          y: row.toDouble(),
+          width: 1,
+          height: 1,
+        ),
+      ),
+      expand: false,
+      append: false,
+      trigger: GlideSelectionTrigger.edit,
+    );
+    _setGridSelection(_selectionState.selection, false);
+    _scrollTo(GlideScrollTarget(col - _markerOffset, row));
+
+    if (openOverlay) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _focusOnRowFromTrailingBlankRow(col, row);
+      });
+    }
+  }
+
   /// `getCellsForSelectionMangled` (`use-cells-for-selection.ts:42-67`).
   GlideCellArray? _getCellsForSelection(GlideRectangle region) {
     final direct = widget.props.getCellsForSelection;
@@ -873,16 +957,26 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     final cell = overlay?.cell ?? _selection.current?.cell;
     if (cell == null) return;
 
-    // `isEditingLastRow && movY === 1` (`data-editor.tsx:3101-3110`): moving
-    // down out of the trailing row appends instead of moving the selection.
+    // `isEditingLastRow && movY === 1` (`data-editor.tsx:3101-3110`) and
+    // `isEditingLastCol && movX === 1` (`:3111-3115`): moving out of the last
+    // row/column appends instead of moving the selection.
+    var updateSelected = true;
     if (newCell != null &&
         movement.row == 1 &&
         _showTrailingBlankRow &&
         widget.props.onRowAppended != null &&
         cell.row == _mangledRows - 1) {
+      updateSelected = false;
       _appendRow(cell.col + movement.col, openOverlay: false);
-      return;
     }
+    if (newCell != null &&
+        movement.col == 1 &&
+        widget.props.onColumnAppended != null &&
+        cell.col == _mangledColumns.length - 1) {
+      updateSelected = false;
+      _appendColumn(cell.row + movement.row, openOverlay: false);
+    }
+    if (!updateSelected) return;
 
     _updateSelectedCell(
       cell.col + movement.col,

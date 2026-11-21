@@ -1526,22 +1526,31 @@ void main() {
       void Function(int from, int to)? onRowMoved,
       GlideRowMarkerOptions? rowMarkers,
       int rows = 200,
+      int columnCount = 6,
       GlideTrailingRowOptions? trailingRowOptions,
       void Function()? onRowAppended,
+      Object? Function()? onColumnAppended,
     }) {
       edits = [];
       selectionLog = [];
       activationLog = [];
       final cells = table();
       var currentRows = rows;
+      var currentCols = columnCount;
       return StatefulBuilder(
         builder: (context, setRows) {
       final p = GlideDataEditorProps(
         columns: [
-          for (var i = 0; i < 6; i++)
+          for (var i = 0; i < currentCols; i++)
             GlideGridColumn(title: 'C$i', width: 100),
         ],
         rows: currentRows,
+        onColumnAppended: onColumnAppended == null
+            ? null
+            : () {
+                setRows(() => currentCols++);
+                return onColumnAppended();
+              },
         trailingRowOptions: trailingRowOptions,
         onRowAppended: trailingRowOptions == null
             ? null
@@ -1551,7 +1560,7 @@ void main() {
               },
         getCellContent: (item, [_]) {
           if (content != null) return content(item);
-          if (item.row >= cells.length) {
+          if (item.row >= cells.length || item.col >= cells[item.row].length) {
             return const GlideTextCell(data: 'new', displayData: 'new');
           }
           return cells[item.row][item.col];
@@ -2494,6 +2503,81 @@ void main() {
       expect(find.byType(TextField), findsNothing);
       expect(activationLog, isEmpty);
       expect(appended, 0);
+    });
+
+    testWidgets('tab in the last column appends a column', (tester) async {
+      var appended = 0;
+      await tester.pumpWidget(
+        buildEditor(
+          columnCount: 3,
+          onColumnAppended: () {
+            appended++;
+            return null;
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final start = await tester.startGesture(
+        const Offset(50, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await start.up();
+      await tester.pumpAndSettle();
+
+      for (var i = 0; i < 2; i++) {
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+        await tester.pumpAndSettle();
+      }
+      expect(selectionLog.last.current!.cell, const GlideItem(2, 0));
+      expect(appended, 0);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyQ);
+      await tester.pumpAndSettle();
+      expect(find.byType(TextField), findsOneWidget);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pumpAndSettle();
+
+      expect(appended, 1);
+      // The editor closed and the new column is selected.
+      expect(find.byType(TextField), findsNothing);
+      expect(selectionLog.last.current!.cell, const GlideItem(3, 0));
+      expect(edits, hasLength(1));
+    });
+
+    testWidgets('the appended column can be targeted from the left',
+        (tester) async {
+      var appended = 0;
+      await tester.pumpWidget(
+        buildEditor(
+          columnCount: 3,
+          onColumnAppended: () {
+            appended++;
+            return 'left';
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final start = await tester.startGesture(
+        const Offset(50, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await start.up();
+      await tester.pumpAndSettle();
+
+      for (var i = 0; i < 2; i++) {
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+        await tester.pumpAndSettle();
+      }
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyQ);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pumpAndSettle();
+
+      expect(appended, 1);
+      expect(selectionLog.last.current!.cell, const GlideItem(0, 0));
     });
   });
 
