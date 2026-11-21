@@ -6,12 +6,15 @@
 // `Focus` + `CustomPaint`; the DOM-only concerns (dpr, sprite manager,
 // `getBoundingClientRect` scaling, HTML5 drag and drop, accessibility tree)
 // are dropped or deferred.
+import 'dart:math' as math;
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../../cells/glide_cell_types.dart';
+import '../../common/glide_image_window_loader.dart';
 import '../../common/glide_is_hotkey.dart';
 import 'glide_animation_manager.dart';
 import 'glide_event_args.dart';
@@ -80,6 +83,7 @@ class GlideDataGridProps {
     this.minimumCellWidth = 10,
     this.onHeaderMenuClick,
     this.onHeaderIndicatorClick,
+    this.imageLoader,
   });
 
   final double width;
@@ -124,6 +128,10 @@ class GlideDataGridProps {
   onHeaderMenuClick;
   final void Function(int col, GlideRectangle screenPosition)?
   onHeaderIndicatorClick;
+
+  /// `imageWindowLoader` (`data-grid.tsx`): when null the grid owns one and
+  /// disposes it with itself.
+  final GlideImageWindowLoader? imageLoader;
 
   final GlideGridSelection selection;
   final List<GlideItem>? prelightCells;
@@ -205,6 +213,10 @@ class _GlideDataGridState extends State<GlideDataGrid>
   Map<GlideItem, double> _hoverValues = const {};
   late final Ticker _hoverTicker;
   Duration _lastHoverTick = Duration.zero;
+
+  /// `imageWindowLoader` (`data-grid.tsx:157`).
+  late GlideImageWindowLoader _imageLoader;
+  bool _ownsImageLoader = false;
   Offset? _pointer;
   bool _pointerInside = false;
   GlideGridMouseArgs? _hoveredArgs;
@@ -219,6 +231,21 @@ class _GlideDataGridState extends State<GlideDataGrid>
     super.initState();
     widget.controller?._state = this;
     _hoverTicker = createTicker(_onHoverTick);
+    _resolveImageLoader();
+  }
+
+  void _resolveImageLoader() {
+    final injected = widget.props.imageLoader;
+    if (injected != null) {
+      _imageLoader = injected;
+      _ownsImageLoader = false;
+    } else {
+      _imageLoader = GlideImageWindowLoader();
+      _ownsImageLoader = true;
+    }
+    _imageLoader.onLoaded = (_) {
+      if (mounted) setState(() {});
+    };
   }
 
   @override
@@ -228,14 +255,52 @@ class _GlideDataGridState extends State<GlideDataGrid>
       oldWidget.controller?._state = null;
       widget.controller?._state = this;
     }
+    if (!identical(oldWidget.props.imageLoader, widget.props.imageLoader)) {
+      if (_ownsImageLoader) _imageLoader.dispose();
+      _resolveImageLoader();
+    }
   }
 
   @override
   void dispose() {
     widget.controller?._state = null;
+    if (_ownsImageLoader) _imageLoader.dispose();
+    _imageLoader.onLoaded = null;
     _hoverTicker.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  /// `setWindow` (`image-window-loader.ts:52-66`): the visible cell rect,
+  /// derived from the offsets the grid already has instead of a scroll
+  /// position it does not own.
+  void _updateImageWindow(List<GlideMappedColumn> mapped) {
+    final p = widget.props;
+
+    var endCol = p.cellXOffset;
+    var x = p.translateX;
+    while (endCol < mapped.length && x <= p.width) {
+      x += mapped[endCol].width;
+      endCol++;
+    }
+
+    var endRow = p.cellYOffset;
+    var y = p.translateY;
+    while (endRow < p.rows && y <= p.height) {
+      y += p.rowHeight(endRow);
+      endRow++;
+    }
+
+    _imageLoader.setWindow(
+      GlideRectangle(
+        x: p.cellXOffset.toDouble(),
+        y: p.cellYOffset.toDouble(),
+        width: math.max(0, endCol - p.cellXOffset).toDouble(),
+        height: math.max(0, endRow - p.cellYOffset).toDouble(),
+      ),
+      p.freezeColumns,
+      const [],
+    );
   }
 
   /// `onAnimationFrame` (`data-grid.tsx:1266-1272`).
@@ -777,6 +842,7 @@ class _GlideDataGridState extends State<GlideDataGrid>
   Widget build(BuildContext context) {
     final p = widget.props;
     final mapped = mapColumns(p.columns, p.freezeColumns);
+    _updateImageWindow(mapped);
 
     final arg = GlideDrawGridArg(
       width: p.width,

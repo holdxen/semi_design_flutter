@@ -7,6 +7,7 @@
 // call `args.requestAnimationFrame()` to ask the grid for another frame.
 import 'package:flutter/widgets.dart';
 
+import '../common/glide_image_window_loader.dart';
 import '../common/glide_theme.dart';
 import '../internal/data_grid/glide_geometry.dart';
 import '../internal/data_grid/glide_types.dart';
@@ -33,6 +34,7 @@ class GlideDrawCellArgs {
     this.frameTime = 0,
     this.metrics,
     this.requestAnimationFrame,
+    this.imageLoader,
   });
 
   final Canvas canvas;
@@ -58,6 +60,9 @@ class GlideDrawCellArgs {
   /// `requestAnimationFrame(state?)` (`cell-types.ts:39`). Returning a value
   /// stores it as the renderer's per-cell draw state for the next frame.
   final void Function([Object? state])? requestAnimationFrame;
+
+  /// `imageLoader` (`cell-types.ts:27`): resolved images for image cells.
+  final GlideImageWindowLoader? imageLoader;
 
   GlideDrawCellArgs copyWith({
     GlideRectangle? rect,

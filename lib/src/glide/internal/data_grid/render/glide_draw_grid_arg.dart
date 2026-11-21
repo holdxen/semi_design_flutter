@@ -4,6 +4,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../../../cells/glide_cell_types.dart';
+import '../../../common/glide_image_window_loader.dart';
 import '../glide_cell_set.dart';
 
 /// `GroupDetails`: per-group theme override.
@@ -82,6 +83,7 @@ class GlideDrawGridArg {
     this.isResizing = false,
     this.resizeColumn,
     this.resizeIndicator = GlideResizeIndicator.full,
+    this.imageLoader,
   });
 
   final double width;
@@ -129,4 +131,5 @@ class GlideDrawGridArg {
   final bool isResizing;
   final int? resizeColumn;
   final GlideResizeIndicator resizeIndicator;
+  final GlideImageWindowLoader? imageLoader;
 }

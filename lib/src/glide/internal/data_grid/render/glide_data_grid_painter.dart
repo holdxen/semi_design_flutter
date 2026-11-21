@@ -367,6 +367,7 @@ class GlideDataGridPainter extends CustomPainter {
       hyperWrapping: arg.hyperWrapping,
       frameTime: arg.frameTime,
       metrics: arg.metrics,
+      imageLoader: arg.imageLoader,
       requestAnimationFrame: arg.enqueue == null
           ? null
           : ([state]) => arg.enqueue!(item),

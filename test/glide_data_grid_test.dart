@@ -1,8 +1,20 @@
 import 'package:flutter/gestures.dart';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:semi_design_flutter/semi_design_flutter.dart';
+
+/// A 10x10 red square, used to stand in for a decoded network image.
+Future<ui.Image> _fakeImage() async {
+  final recorder = ui.PictureRecorder();
+  Canvas(recorder).drawRect(
+    const Rect.fromLTWH(0, 0, 10, 10),
+    Paint()..color = const Color(0xFFFF0000),
+  );
+  return recorder.endRecording().toImage(10, 10);
+}
 
 // ---------------------------------------------------------------------------
 // Selection (`internal/data-grid/glide_selection.dart`)
@@ -31,6 +43,7 @@ class FakeClipboard extends GlideClipboard {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('GlideCompactSelection', () {
     test('add merges overlapping slices', () {
       var sel = const GlideCompactSelection.empty();
@@ -2579,6 +2592,30 @@ void main() {
       expect(appended, 1);
       expect(selectionLog.last.current!.cell, const GlideItem(0, 0));
     });
+
+    testWidgets('image cells open the overlay viewer', (tester) async {
+      await tester.pumpWidget(
+        buildEditor(
+          content: (item) => item == const GlideItem(1, 0)
+              ? const GlideImageCell(data: ['https://example.com/a.png'])
+              : const GlideTextCell(data: 'x', displayData: 'x'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      for (var i = 0; i < 2; i++) {
+        final gesture = await tester.startGesture(
+          const Offset(150, 45),
+          kind: PointerDeviceKind.mouse,
+        );
+        await gesture.up();
+        await tester.pumpAndSettle();
+      }
+
+      // The test binding has no network, so the placeholder shows instead of
+      // the decoded image.
+      expect(find.text('image failed'), findsOneWidget);
+    });
   });
 
   group('column sizer', () {
@@ -2748,6 +2785,178 @@ void main() {
     });
   });
 
+
+  // -------------------------------------------------------------------------
+  // Image cell + window loader (`cells/image-cell.tsx`,
+  // `common/image-window-loader.ts`)
+  // -------------------------------------------------------------------------
+
+  group('image cell', () {
+    test('measure is the url count times 50', () {
+      const renderer = GlideImageCellRenderer();
+      final width = renderer.measure(
+        const GlideImageCell(data: ['a', 'b', 'c']),
+        GlideTheme.light(),
+        GlideTextMetrics(),
+      );
+      expect(width, 150);
+    });
+
+    test('delete empties the url list', () {
+      const renderer = GlideImageCellRenderer();
+      final deleted = renderer.onDelete(
+        const GlideImageCell(data: ['a', 'b']),
+      ) as GlideImageCell;
+      expect(deleted.data, isEmpty);
+    });
+
+    test('paste only keeps parseable urls', () {
+      const renderer = GlideImageCellRenderer();
+      const cell = GlideImageCell(data: ['https://a/b.png']);
+
+      final changed = renderer.onPaste(
+        'https://a/b.png, https://c/d.png',
+        cell,
+        const GlidePasteDetails(),
+      ) as GlideImageCell;
+      expect(changed.data, ['https://a/b.png', 'https://c/d.png']);
+
+      // Identical url set is a no-op (`image-cell.tsx:74`).
+      expect(
+        renderer.onPaste('https://a/b.png', cell, const GlidePasteDetails()),
+        isNull,
+      );
+
+      // `not a url` has no scheme and is dropped; what is left differs from
+      // the current set, so the cell is updated.
+      final filtered = renderer.onPaste(
+        'nope, https://c/d.png',
+        cell,
+        const GlidePasteDetails(),
+      ) as GlideImageCell;
+      expect(filtered.data, ['https://c/d.png']);
+
+      // Dropping the only unparseable entry can leave the set unchanged.
+      expect(
+        renderer.onPaste(
+          'nope, https://a/b.png',
+          cell,
+          const GlidePasteDetails(),
+        ),
+        isNull,
+      );
+    });
+  });
+
+  group('image window loader', () {
+    late List<void Function(ui.Image?)> completions;
+    late int loads;
+
+    GlideImageWindowLoader makeLoader() {
+      completions = [];
+      loads = 0;
+      return GlideImageWindowLoader(
+        loadImage: (url, onComplete) {
+          loads++;
+          completions.add(onComplete);
+        },
+      );
+    }
+
+    test('caches by url and reports the decoded cell once', () async {
+      final loader = makeLoader();
+      final loaded = <GlideCellSet>[];
+      loader.onLoaded = loaded.add;
+      loader.setWindow(
+        const GlideRectangle(x: 0, y: 0, width: 10, height: 10),
+        0,
+        const [],
+      );
+
+      expect(loader.loadOrGetImage('a.png', 1, 2), isNull);
+      expect(loader.loadOrGetImage('a.png', 1, 3), isNull);
+      expect(loads, 1);
+      expect(loader.cachedCount, 1);
+
+      final image = await _fakeImage();
+      completions.single(image);
+
+      expect(loaded, hasLength(1));
+      expect(loaded.single.hasAt(1, 2), isTrue);
+      expect(loaded.single.hasAt(1, 3), isTrue);
+      expect(loader.loadOrGetImage('a.png', 1, 2), same(image));
+      expect(loads, 1);
+    });
+
+    test('a failed load is remembered instead of retried', () {
+      final loader = makeLoader();
+      loader.setWindow(
+        const GlideRectangle(x: 0, y: 0, width: 10, height: 10),
+        0,
+        const [],
+      );
+
+      expect(loader.loadOrGetImage('bad.png', 0, 0), isNull);
+      completions.single(null);
+
+      expect(loader.loadOrGetImage('bad.png', 0, 0), isNull);
+      expect(loads, 1);
+    });
+
+    test('an empty url never starts a load', () {
+      final loader = makeLoader();
+      expect(loader.loadOrGetImage('', 0, 0), isNull);
+      expect(loads, 0);
+      expect(loader.cachedCount, 0);
+    });
+
+    test('evicts entries whose cells leave the window', () async {
+      final loader = makeLoader();
+      loader.setWindow(
+        const GlideRectangle(x: 0, y: 0, width: 10, height: 10),
+        0,
+        const [],
+      );
+      loader.loadOrGetImage('a.png', 0, 0);
+      final image = await _fakeImage();
+      completions.single(image);
+      expect(loader.cachedCount, 1);
+
+      // Nothing in the new window → the entry goes.
+      loader.setWindow(
+        const GlideRectangle(x: 50, y: 50, width: 10, height: 10),
+        0,
+        const [],
+      );
+      expect(loader.cachedCount, 0);
+
+      // Loading it again starts a fresh load.
+      expect(loader.loadOrGetImage('a.png', 50, 50), isNull);
+      expect(loads, 2);
+    });
+
+    test('a frozen column keeps its entry alive', () async {
+      final loader = makeLoader();
+      loader.setWindow(
+        const GlideRectangle(x: 0, y: 0, width: 1, height: 1),
+        2,
+        const [],
+      );
+      loader.loadOrGetImage('frozen.png', 0, 0);
+      final image = await _fakeImage();
+      completions.single(image);
+
+      // Only the column axis moves: column 0 is frozen, and the row is still
+      // inside the window (`image-window-loader.ts:41-48`).
+      loader.setWindow(
+        const GlideRectangle(x: 50, y: 0, width: 10, height: 10),
+        2,
+        const [],
+      );
+      expect(loader.cachedCount, 1);
+      expect(loader.loadOrGetImage('frozen.png', 0, 0), same(image));
+    });
+  });
   group('animation manager', () {
     test('ramps the hovered item in over 80ms', () {
       final manager = GlideAnimationManager();

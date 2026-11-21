@@ -525,6 +525,23 @@ class GlideImageCell extends GlideGridCell {
 
   @override
   bool get isReadonly => readonly;
+
+  GlideImageCell copyWith({List<String>? data, bool? readonly}) =>
+      GlideImageCell(
+        data: data ?? this.data,
+        rounding: rounding,
+        displayData: displayData,
+        readonly: readonly ?? this.readonly,
+        allowOverlay: allowOverlay,
+        lastUpdated: lastUpdated,
+        style: style,
+        themeOverride: themeOverride,
+        span: span,
+        contentAlign: contentAlign,
+        cursor: cursor,
+        copyData: copyData,
+        activationBehaviorOverride: activationBehaviorOverride,
+      );
 }
 
 /// `BubbleCell` (`data-grid-types.ts:376-379`).
