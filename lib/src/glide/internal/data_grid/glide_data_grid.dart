@@ -88,6 +88,7 @@ class GlideDataGridProps {
     this.imageLoader,
     this.firstColAccessible = true,
     this.disableAccessibilityTree = false,
+    this.a11yRevision = 0,
   });
 
   final double width;
@@ -143,6 +144,10 @@ class GlideDataGridProps {
 
   /// `experimental.disableAccessibilityTree` (`data-grid.tsx:1739`).
   final bool disableAccessibilityTree;
+
+  /// Bumped by the owner whenever cell content changed outside of
+  /// `onCellsEdited`, so the cached accessibility tree is rebuilt.
+  final int a11yRevision;
 
   final GlideGridSelection selection;
   final List<GlideItem>? prelightCells;
@@ -684,8 +689,47 @@ class _GlideDataGridState extends State<GlideDataGrid>
     );
   }
 
+  /// Cached so a parent rebuild that only changed hover values (which the
+  /// semantics tree does not depend on) hands Flutter the very same widget
+  /// instance and the ~144 nodes are left alone.
+  ///
+  /// Staleness matches upstream's `useDebouncedMemo` (`data-grid.ts:1737`),
+  /// whose deps also exclude cell values: the tree refreshes when the
+  /// selection, offsets, columns, renderer or content callback change.
+  /// [GlideDataGridProps.a11yRevision] exists so the owner can force one.
+  Widget? _accessibilityTreeCache;
+  ({Object? key})? _accessibilityTreeKey;
+
   /// The `<table role="grid">` (`data-grid.tsx:1737-1856`), limited to the
   /// visible columns and rows exactly like the upstream virtualized tree.
+  Widget _accessibilityTree(
+    GlideDataGridProps p,
+    List<GlideMappedColumn> effectiveCols,
+  ) {
+    final key = (
+      p.width,
+      p.cellXOffset,
+      p.cellYOffset,
+      p.translateX,
+      p.rows,
+      p.selection,
+      p.firstColAccessible,
+      p.disableAccessibilityTree,
+      p.getCellContent,
+      p.getCellRenderer,
+      p.a11yRevision,
+      Object.hashAll([
+        for (final c in effectiveCols) c.sourceIndex,
+      ]),
+    );
+    final cached = _accessibilityTreeCache;
+    if (cached != null && _accessibilityTreeKey?.key == key) return cached;
+    _accessibilityTreeKey = (key: key);
+    final built = _buildAccessibilityTree(p, effectiveCols);
+    _accessibilityTreeCache = built;
+    return built;
+  }
+
   Widget _buildAccessibilityTree(
     GlideDataGridProps p,
     List<GlideMappedColumn> effectiveCols,
@@ -1107,7 +1151,7 @@ class _GlideDataGridState extends State<GlideDataGrid>
                     isComplex: true,
                     willChange: true,
                   ),
-                  _buildAccessibilityTree(p, mapped),
+                  _accessibilityTree(p, mapped),
                 ],
               ),
             ),

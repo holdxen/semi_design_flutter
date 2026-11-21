@@ -2987,6 +2987,121 @@ void main() {
       );
       handle.dispose();
     });
+
+    testWidgets('an edit refreshes the accessibility labels',
+        (tester) async {
+      final handle = tester.ensureSemantics();
+
+      // `content` reads the shared `edits` log, so the label only changes
+      // once the editor has routed a real edit through `_onCellsEdited`.
+      await tester.pumpWidget(
+        buildEditor(
+          columnCount: 3,
+          content: (item) {
+            final label = edits.isEmpty ? 'before' : 'after';
+            return GlideTextCell(data: label, displayData: label);
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.bySemanticsLabel('before'), findsWidgets);
+
+      // Select (0,0) then type: `editOnType` opens the overlay and Enter
+      // commits, routing the value through `_onCellsEdited`, which bumps
+      // `a11yRevision`. This covers the editor half of the contract — the
+      // grid half (the key actually containing it) is pinned by the test
+      // below. (`data-grid.ts:1737`)
+      final gesture = await tester.startGesture(
+        const Offset(50, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyA);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+
+      expect(edits, isNotEmpty);
+      // Every visible cell shares the label, so a single survivor would mean
+      // part of the cached tree was served stale.
+      expect(find.bySemanticsLabel('after'), findsWidgets);
+      expect(find.bySemanticsLabel('before'), findsNothing);
+      handle.dispose();
+    });
+
+    testWidgets('a stale tree is served until a11yRevision moves',
+        (tester) async {
+      final handle = tester.ensureSemantics();
+
+      var label = 'first';
+      var revision = 0;
+      // Hoisted so the key's `getCellContent`/`getCellRenderer` components
+      // are identical across pumps — only `a11yRevision` may change.
+      final lookup = GlideDefaultRendererLookup();
+      GlideGridCell content(GlideItem item, [bool? forceStrict]) =>
+          GlideTextCell(data: label, displayData: label);
+
+      Widget build() => Directionality(
+        textDirection: TextDirection.ltr,
+        child: SizedBox(
+          width: 400,
+          height: 300,
+          child: GlideDataGrid(
+            props: GlideDataGridProps(
+              width: 400,
+              height: 300,
+              columns: [
+                for (var i = 0; i < 4; i++)
+                  GlideGridColumn(title: 'C$i', width: 100),
+              ],
+              rows: 10,
+              rowHeight: const GlideRowHeight.fixed(30),
+              headerHeight: 30,
+              getCellContent: content,
+              getCellRenderer: lookup.forCell,
+              a11yRevision: revision,
+              theme: GlideTheme.light(),
+              verticalBorder: (_) => true,
+              onItemHovered: (_) {},
+              onMouseMove: (_) {},
+              onMouseDown: (_) {},
+              onMouseUp: (_, _) {},
+              onContextMenu: (_, _) {},
+              onCanvasFocused: () {},
+              onCanvasBlur: () {},
+              onCellFocused: (_) {},
+              onKeyDown: (_) {},
+              isFocused: true,
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(build());
+      await tester.pumpAndSettle();
+      expect(find.bySemanticsLabel('first'), findsWidgets);
+
+      // The backing data changed but the owner did not bump the revision:
+      // `useDebouncedMemo`'s deps exclude cell values (`data-grid.ts:1737`),
+      // so the cached labels are what the screen reader keeps reading.
+      label = 'second';
+      await tester.pumpWidget(build());
+      await tester.pumpAndSettle();
+      expect(find.bySemanticsLabel('first'), findsWidgets);
+      expect(find.bySemanticsLabel('second'), findsNothing);
+
+      // The revision bump is the invalidation signal.
+      revision++;
+      await tester.pumpWidget(build());
+      await tester.pumpAndSettle();
+      expect(find.bySemanticsLabel('second'), findsWidgets);
+      expect(find.bySemanticsLabel('first'), findsNothing);
+
+      handle.dispose();
+    });
   });
 
   group('column sizer', () {

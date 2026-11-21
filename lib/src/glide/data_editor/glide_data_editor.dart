@@ -361,6 +361,10 @@ class _GlideDataEditorState extends State<GlideDataEditor>
 
   _OverlayState? _overlay;
 
+  /// Bumped whenever cells change so the grid's cached accessibility tree
+  /// does not serve stale labels.
+  int _a11yRevision = 0;
+
   /// Search state (`data-grid-search.ts:109-149`).
   bool _showSearchInner = false;
   String _searchValueInner = '';
@@ -774,12 +778,33 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     );
   }
 
+  List<GlideGridColumn>? _mangledKeySized;
+  Object? _mangledKeyExtra;
+
+  /// `mangledCols` (`data-editor.tsx:1141-1169`).
+  ///
+  /// Rebuilt only when the sized columns or the marker column's state change,
+  /// so hover-driven rebuilds hand the grid (and the accessibility tree) the
+  /// same list instance.
   void _rebuildMangledColumns() {
     final opts = _rowMarkerOpts;
     if (!_hasRowMarkers || opts == null) {
-      _mangledColumns = _sizedColumns.columns;
+      if (!identical(_mangledKeySized, _sizedColumns.columns)) {
+        _mangledKeySized = _sizedColumns.columns;
+        _mangledKeyExtra = null;
+        _mangledColumns = _sizedColumns.columns;
+      }
       return;
     }
+
+    final extra = (_headerRowMarkerChecked, _rowMarkerWidth, opts);
+    if (identical(_mangledKeySized, _sizedColumns.columns) &&
+        _mangledKeyExtra == extra) {
+      return;
+    }
+    _mangledKeySized = _sizedColumns.columns;
+    _mangledKeyExtra = extra;
+
     _mangledColumns = [
       GlideGridColumn(
         title: '',
@@ -798,43 +823,6 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       ..._sizedColumns.columns,
     ];
   }
-
-  bool get _showTrailingBlankRow => widget.props.trailingRowOptions != null;
-
-  /// `mangledRows` (`data-editor.tsx:1205`).
-  int get _mangledRows =>
-      _showTrailingBlankRow ? _groupedRows + 1 : _groupedRows;
-
-  /// `lockColumns={rowMarkerOffset}` (`data-editor.tsx:4263`; the marker
-  /// column is never a drop target.
-  int get _lockColumns => math.max(widget.props.lockColumns, _markerOffset);
-
-  /// `mangledFreezeColumns` (`data-editor.tsx:3994`).
-  int get _mangledFreezeColumns => math.min(
-    _mangledColumns.length,
-    widget.props.freezeColumns + (_hasRowMarkers ? 1 : 0),
-  );
-
-  /// `rowNumberMapper(row) === undefined` means the row is a group header,
-  /// which gets a loading placeholder in the marker column
-  /// (`data-editor.tsx:1317-1319`).
-  GlideGridCell _markerCellFor(int row) {
-    final mapper = _rowGrouping.rowNumberMapper;
-    final mappedRow = mapper == null ? row : mapper(row);
-    if (mappedRow == null) return const GlideLoadingCell();
-    return _markerCellAt(mappedRow, row);
-  }
-
-  GlideMarkerCell _markerCellAt(int mappedRow, int row) => GlideMarkerCell(
-    row: (_rowMarkerOpts?.startIndex ?? 1) + mappedRow,
-    drawHandle: widget.props.onRowMoved != null,
-    checked: _selection.rows.hasIndex(row)
-        ? GlideBooleanValue.checked
-        : GlideBooleanValue.unchecked,
-    checkboxStyle:
-        _rowMarkerOpts?.checkboxStyle ?? GlideMarkerCheckboxStyle.square,
-    markerKind: _markerKind,
-  );
 
   /// `onCellFocused` (`data-editor.tsx:4124-4145`): the accessibility tree
   /// reporting that a cell (or header) took focus — the editor turns that
@@ -871,6 +859,35 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     _setGridSelection(_selectionState.selection, true);
     _scrollTo(GlideScrollTarget(cell.col - _markerOffset, cell.row));
   }
+
+  // -------------------------------------------------------------------------
+  // Trailing row, row markers, group details and visible-region extras.
+  // (`data-editor.tsx:953-956`, `:1141-1169`, `:1309-1423`, `:2594-2725`)
+  // -------------------------------------------------------------------------
+
+  /// `showTrailingBlankRow` (`data-editor.tsx:955`).
+  bool get _showTrailingBlankRow => widget.props.trailingRowOptions != null;
+
+  /// `mangledRows` (`data-editor.tsx:1205`).
+  int get _mangledRows =>
+      _showTrailingBlankRow ? _groupedRows + 1 : _groupedRows;
+
+  /// `trailingRowOptions.tint` (`data-editor.ts:3961-3965`): the trailing
+  /// row joins `disabledRows`, which the painter tints with `bgHeader`.
+  GlideCompactSelection get _disabledRows =>
+      _showTrailingBlankRow && widget.props.trailingRowOptions?.tint == true
+      ? GlideCompactSelection.fromArray([_mangledRows - 1])
+      : const GlideCompactSelection.empty();
+
+  /// `lockColumns={rowMarkerOffset}` (`data-editor.tsx:4263`): the marker
+  /// column is never a drop target.
+  int get _lockColumns => math.max(widget.props.lockColumns, _markerOffset);
+
+  /// `mangledFreezeColumns` (`data-editor.tsx:3994`).
+  int get _mangledFreezeColumns => math.min(
+    _mangledColumns.length,
+    widget.props.freezeColumns + (_hasRowMarkers ? 1 : 0),
+  );
 
   /// `mangledGetGroupDetails` (`data-editor.tsx:1401-1423`): the user's
   /// callback plus the Rename action when `onGroupHeaderRenamed` is set.
@@ -909,95 +926,25 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     widget.props.onGroupHeaderRenamed?.call(renaming.group, newValue);
   }
 
-  /// `onVisibleRegionChangedImpl`'s `extras` (`data-editor.tsx:2594-2627`).
-  GlideVisibleRegionExtras _computeVisibleExtras(GlideVisibleRegion region) {
-    final p = widget.props;
-    final selected = _selection.current?.cell;
-
-    final freezeRegion = p.freezeColumns == 0
-        ? null
-        : GlideRectangle(
-            x: 0,
-            y: region.y.toDouble(),
-            width: p.freezeColumns.toDouble(),
-            height: region.height.toDouble(),
-          );
-
-    final freezeRegions = <GlideRectangle>[];
-    if (freezeRegion != null) freezeRegions.add(freezeRegion);
-    if (p.freezeTrailingRows > 0) {
-      freezeRegions.add(
-        GlideRectangle(
-          x: region.x.toDouble(),
-          y: (_groupedRows - p.freezeTrailingRows).toDouble(),
-          width: region.width.toDouble(),
-          height: p.freezeTrailingRows.toDouble(),
-        ),
-      );
-      if (p.freezeColumns > 0) {
-        freezeRegions.add(
-          GlideRectangle(
-            x: 0,
-            y: (_groupedRows - p.freezeTrailingRows).toDouble(),
-            width: p.freezeColumns.toDouble(),
-            height: p.freezeTrailingRows.toDouble(),
-          ),
-        );
-      }
-    }
-
-    return GlideVisibleRegionExtras(
-      selected: selected == null
-          ? null
-          : GlideItem(selected.col - _markerOffset, selected.row),
-      freezeRegion: freezeRegion,
-      freezeRegions: freezeRegions,
-    );
+  /// `rowNumberMapper(row) === undefined` means the row is a group header,
+  /// which gets a loading placeholder in the marker column
+  /// (`data-editor.tsx:1317-1319`).
+  GlideGridCell _markerCellFor(int row) {
+    final mapper = _rowGrouping.rowNumberMapper;
+    final mappedRow = mapper == null ? row : mapper(row);
+    if (mappedRow == null) return const GlideLoadingCell();
+    return _markerCellAt(mappedRow, row);
   }
 
-  /// The `forceStrict` guard (`data-grid.tsx:966`, `:1282`): cells outside
-  /// the visible window resolve to a loading placeholder so off-screen work
-  /// never touches the consumer's data.
-  bool _isOutsideVisibleArea(int col, int row) {
-    final region = _visible;
-    if (region == null) return false;
-    final outerCol = col - _markerOffset;
-    if (region.x > outerCol ||
-        outerCol > region.x + region.width ||
-        region.y > row ||
-        row > region.y + region.height ||
-        row >= _groupedRows) {
-      final extras = _visibleExtras;
-      final selected = extras?.selected;
-      if (selected != null && selected.col == outerCol && selected.row == row) {
-        return false;
-      }
-      for (final rect in extras?.freezeRegions ?? const <GlideRectangle>[]) {
-        if (pointInRect(rect, outerCol.toDouble(), row.toDouble())) {
-          return false;
-        }
-      }
-      return true;
-    }
-    return false;
-  }
-
-  /// `trailingRowOptions.tint` (`data-editor.ts:3961-3965`): the trailing
-  /// row joins `disabledRows`, which the painter tints with `bgHeader`.
-  GlideCompactSelection get _disabledRows =>
-      _showTrailingBlankRow && widget.props.trailingRowOptions?.tint == true
-      ? GlideCompactSelection.fromArray([_mangledRows - 1])
-      : const GlideCompactSelection.empty();
-
-  /// `mapper(row).isGroupHeader` (`row-grouping.ts:190-238`).
-  bool _isGroupHeaderRow(int row) =>
-      mapRowIndexToPath(row, _rowGrouping.flattened).isGroupHeader;
-
-  /// `getSelectionRowLimits` (`data-editor.tsx:2708-2725`).
-  (int, int)? _getSelectionRowLimits(int row) => getSelectionRowLimits(
-    options: widget.props.rowGrouping,
-    flattened: _rowGrouping.flattened,
-    selectedRow: row,
+  GlideMarkerCell _markerCellAt(int mappedRow, int row) => GlideMarkerCell(
+    row: (_rowMarkerOpts?.startIndex ?? 1) + mappedRow,
+    drawHandle: widget.props.onRowMoved != null,
+    checked: _selection.rows.hasIndex(row)
+        ? GlideBooleanValue.checked
+        : GlideBooleanValue.unchecked,
+    checkboxStyle:
+        _rowMarkerOpts?.checkboxStyle ?? GlideMarkerCheckboxStyle.square,
+    markerKind: _markerKind,
   );
 
   /// The `NewRow` cell for the trailing row (`data-editor.tsx:1330-1347`).
@@ -1020,8 +967,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   int? _customNewRowTargetColumn(int col) {
     final p = widget.props;
     if (col < 0 || col >= _mangledColumns.length) return null;
-    final custom =
-        _mangledColumns[col].trailingRowOptions?.targetColumn ??
+    final custom = _mangledColumns[col].trailingRowOptions?.targetColumn ??
         p.trailingRowOptions?.targetColumn;
     final offset = _markerOffset;
     if (custom is int) return custom + offset;
@@ -1190,6 +1136,92 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     }
   }
 
+  /// `onVisibleRegionChangedImpl`'s `extras` (`data-editor.tsx:2594-2627`).
+  GlideVisibleRegionExtras _computeVisibleExtras(GlideVisibleRegion region) {
+    final p = widget.props;
+    final selected = _selection.current?.cell;
+
+    final freezeRegion = p.freezeColumns == 0
+        ? null
+        : GlideRectangle(
+            x: 0,
+            y: region.y.toDouble(),
+            width: p.freezeColumns.toDouble(),
+            height: region.height.toDouble(),
+          );
+
+    final freezeRegions = <GlideRectangle>[];
+    if (freezeRegion != null) freezeRegions.add(freezeRegion);
+    if (p.freezeTrailingRows > 0) {
+      freezeRegions.add(
+        GlideRectangle(
+          x: region.x.toDouble(),
+          y: (_groupedRows - p.freezeTrailingRows).toDouble(),
+          width: region.width.toDouble(),
+          height: p.freezeTrailingRows.toDouble(),
+        ),
+      );
+      if (p.freezeColumns > 0) {
+        freezeRegions.add(
+          GlideRectangle(
+            x: 0,
+            y: (_groupedRows - p.freezeTrailingRows).toDouble(),
+            width: p.freezeColumns.toDouble(),
+            height: p.freezeTrailingRows.toDouble(),
+          ),
+        );
+      }
+    }
+
+    return GlideVisibleRegionExtras(
+      selected: selected == null
+          ? null
+          : GlideItem(selected.col - _markerOffset, selected.row),
+      freezeRegion: freezeRegion,
+      freezeRegions: freezeRegions,
+    );
+  }
+
+  /// The `forceStrict` guard (`data-grid.tsx:966`, `:1282`): cells outside
+  /// the visible window resolve to a loading placeholder so off-screen work
+  /// never touches the consumer's data.
+  bool _isOutsideVisibleArea(int col, int row) {
+    final region = _visible;
+    if (region == null) return false;
+    final outerCol = col - _markerOffset;
+    if (region.x > outerCol ||
+        outerCol > region.x + region.width ||
+        region.y > row ||
+        row > region.y + region.height ||
+        row >= _groupedRows) {
+      final extras = _visibleExtras;
+      final selected = extras?.selected;
+      if (selected != null &&
+          selected.col == outerCol &&
+          selected.row == row) {
+        return false;
+      }
+      for (final rect in extras?.freezeRegions ?? const <GlideRectangle>[]) {
+        if (pointInRect(rect, outerCol.toDouble(), row.toDouble())) {
+          return false;
+        }
+      }
+      return true;
+    }
+    return false;
+  }
+
+  /// `mapper(row).isGroupHeader` (`row-grouping.ts:190-238`).
+  bool _isGroupHeaderRow(int row) =>
+      mapRowIndexToPath(row, _rowGrouping.flattened).isGroupHeader;
+
+  /// `getSelectionRowLimits` (`data-editor.tsx:2708-2725`).
+  (int, int)? _getSelectionRowLimits(int row) => getSelectionRowLimits(
+    options: widget.props.rowGrouping,
+    flattened: _rowGrouping.flattened,
+    selectedRow: row,
+  );
+
   /// `getCellsForSelectionMangled` (`use-cells-for-selection.ts:42-67`).
   GlideCellArray? _getCellsForSelection(GlideRectangle region) {
     final direct = widget.props.getCellsForSelection;
@@ -1215,8 +1247,21 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     GlideGridOutOfBoundsMouseArgs a => a.location,
   };
 
-  GlideRendererLookup get _renderers =>
-      widget.props.rendererLookup ?? GlideDefaultRendererLookup();
+  GlideRendererLookup? _renderersCache;
+  Object? _renderersKey;
+
+  /// Memoized so the `forCell` tear-off handed to the grid is the same
+  /// instance across builds — the accessibility tree's cache key compares
+  /// `getCellRenderer` with `==`, and a fresh `GlideDefaultRendererLookup()`
+  /// per call would defeat it.
+  GlideRendererLookup get _renderers {
+    final supplied = widget.props.rendererLookup;
+    if (_renderersCache == null || !identical(_renderersKey, supplied)) {
+      _renderersKey = supplied;
+      _renderersCache = supplied ?? GlideDefaultRendererLookup();
+    }
+    return _renderersCache!;
+  }
 
   // -------------------------------------------------------------------------
   // Theme and content
@@ -1294,6 +1339,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   //  not ported, so the mangle is a pass-through today.
   bool _onCellsEdited(List<GlideEditListItem> items) {
     if (items.isEmpty) return true;
+    _a11yRevision++;
     final p = widget.props;
     final offset = _markerOffset;
     final mangled = offset == 0
@@ -2791,6 +2837,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
           getGroupDetails: _groupDetails,
           metrics: _metrics,
           minimumCellWidth: 10,
+          a11yRevision: _a11yRevision,
         );
 
         return Shortcuts(
