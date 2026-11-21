@@ -38,7 +38,7 @@ class GlideDataGridPainter extends CustomPainter {
       a.mappedColumns,
       a.cellXOffset,
       a.width,
-      null,
+      a.dragAndDropState,
       a.translateX,
     );
     if (effectiveCols.isEmpty) return;
@@ -63,9 +63,12 @@ class GlideDataGridPainter extends CustomPainter {
     _drawHighlightRings(canvas);
     _drawFillHandle(canvas);
 
-    // Stage 17: column resize indicator.
+    // Stage 17: group separator, then the column resize indicator.
     if (a.enableGroups) {
       _drawGroupHeaderSeparator(canvas);
+    }
+    if (a.isResizing && a.resizeIndicator != GlideResizeIndicator.none) {
+      _drawColumnResizeIndicator(canvas, effectiveCols, totalHeaderHeight);
     }
   }
 
@@ -630,6 +633,58 @@ class GlideDataGridPainter extends CustomPainter {
         )
         ..strokeWidth = 1,
     );
+  }
+
+  /// `drawColumnResizeOutline` (`data-grid-render.ts:725-748`): a 2px rule
+  /// over the header, plus the body when `resizeIndicator == "full"`.
+  void _drawColumnResizeIndicator(
+    Canvas canvas,
+    List<GlideMappedColumn> effectiveCols,
+    double totalHeaderHeight,
+  ) {
+    final a = arg;
+    double? lineX;
+    for (final c in effectiveCols) {
+      if (c.sourceIndex == a.resizeColumn) {
+        lineX = null;
+        var x = 0.0;
+        for (final e in effectiveCols) {
+          if (e.sticky) {
+            x += e.width;
+            continue;
+          }
+          if (e.sourceIndex == a.resizeColumn) break;
+          x += e.width;
+        }
+        lineX = x + c.width + (c.sticky ? 0 : a.translateX);
+        break;
+      }
+    }
+    if (lineX == null) return;
+
+    final headerColor = Color.alphaBlend(
+      a.theme.resizeIndicatorColor ?? a.theme.accentLight,
+      a.theme.bgHeader,
+    );
+    canvas.drawLine(
+      Offset(lineX, 0),
+      Offset(lineX, totalHeaderHeight + 1),
+      Paint()
+        ..color = headerColor
+        ..strokeWidth = 2,
+    );
+    if (a.resizeIndicator == GlideResizeIndicator.full) {
+      canvas.drawLine(
+        Offset(lineX, totalHeaderHeight),
+        Offset(lineX, a.height),
+        Paint()
+          ..color = Color.alphaBlend(
+            a.theme.resizeIndicatorColor ?? a.theme.accentLight,
+            a.theme.bgCell,
+          )
+          ..strokeWidth = 2,
+      );
+    }
   }
 
   void _drawGroupHeaderSeparator(Canvas canvas) {

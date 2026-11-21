@@ -78,6 +78,10 @@ class GlideDrawGridArg {
     this.hyperWrapping = false,
     this.enqueue,
     this.minimumCellWidth = 10,
+    this.dragAndDropState,
+    this.isResizing = false,
+    this.resizeColumn,
+    this.resizeIndicator = GlideResizeIndicator.full,
   });
 
   final double width;
@@ -118,4 +122,11 @@ class GlideDrawGridArg {
   final bool hyperWrapping;
   final void Function(GlideItem item)? enqueue;
   final double minimumCellWidth;
+
+  /// `dragAndDropState` (`draw-grid-arg.ts:44`): swaps the two columns in
+  /// `getEffectiveColumns` so the preview shows the reordered header.
+  final GlideColumnDndState? dragAndDropState;
+  final bool isResizing;
+  final int? resizeColumn;
+  final GlideResizeIndicator resizeIndicator;
 }

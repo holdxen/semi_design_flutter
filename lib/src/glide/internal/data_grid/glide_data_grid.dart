@@ -57,6 +57,7 @@ class GlideDataGridProps {
     this.isDragging = false,
     this.isFilling = false,
     this.dragAndDropState,
+    this.resizeIndicator = GlideResizeIndicator.full,
     this.allowResize,
     this.resizeColumn,
     this.selection = GlideGridSelection.empty,
@@ -98,7 +99,8 @@ class GlideDataGridProps {
 
   /// `dragAndDropState` (`data-grid.tsx:234-238`): `{src, dest}` column pair
   /// while a column is being dragged.
-  final ({int src, int dest})? dragAndDropState;
+  final GlideColumnDndState? dragAndDropState;
+  final GlideResizeIndicator resizeIndicator;
   final bool isFocused;
 
   final List<GlideGridColumn> columns;

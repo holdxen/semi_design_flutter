@@ -1521,6 +1521,8 @@ void main() {
       void Function(GlideGridColumn column, double newSize, int colIndex,
               double newSizeWithGrow)?
       onColumnResizeEnd,
+      void Function(int from, int to)? onColumnMoved,
+      bool? Function(int from, int to)? onColumnProposeMove,
     }) {
       edits = [];
       selectionLog = [];
@@ -1556,6 +1558,8 @@ void main() {
         onColumnResize: onColumnResize,
         onColumnResizeStart: onColumnResizeStart,
         onColumnResizeEnd: onColumnResizeEnd,
+        onColumnMoved: onColumnMoved,
+        onColumnProposeMove: onColumnProposeMove,
         getCellsForSelection: (region) => [
           for (var y = region.y.toInt();
               y < region.y + region.height && y < cells.length;
@@ -2012,6 +2016,90 @@ void main() {
       expect(endLog, [170]);
       // The resize press is an edge press, so it must not change the selection.
       expect(selectionLog, isEmpty);
+    });
+
+    testWidgets('dragging a header reorders the column', (tester) async {
+      final moved = <(int, int)>[];
+      await tester.pumpWidget(
+        buildEditor(onColumnMoved: (from, to) => moved.add((from, to))),
+      );
+      await tester.pumpAndSettle();
+
+      // Press in the middle of column 1's header (not on either edge).
+      final drag = await tester.startGesture(
+        const Offset(150, 15),
+        kind: PointerDeviceKind.mouse,
+      );
+      await tester.pump();
+      expect(moved, isEmpty);
+
+      await drag.moveTo(const Offset(50, 15));
+      await tester.pump();
+      await drag.up();
+      await tester.pumpAndSettle();
+
+      expect(moved, [(1, 0)]);
+    });
+
+    testWidgets('a plain header click does not reorder', (tester) async {
+      final moved = <(int, int)>[];
+      await tester.pumpWidget(
+        buildEditor(onColumnMoved: (from, to) => moved.add((from, to))),
+      );
+      await tester.pumpAndSettle();
+
+      final click = await tester.startGesture(
+        const Offset(150, 15),
+        kind: PointerDeviceKind.mouse,
+      );
+      await click.up();
+      await tester.pumpAndSettle();
+
+      expect(moved, isEmpty);
+      // The header click still selects the column.
+      expect(selectionLog.last.columns.toArray(), [1]);
+    });
+
+    testWidgets('moving within the same column is not a reorder',
+        (tester) async {
+      final moved = <(int, int)>[];
+      await tester.pumpWidget(
+        buildEditor(onColumnMoved: (from, to) => moved.add((from, to))),
+      );
+      await tester.pumpAndSettle();
+
+      final drag = await tester.startGesture(
+        const Offset(150, 15),
+        kind: PointerDeviceKind.mouse,
+      );
+      await drag.moveTo(const Offset(190, 15));
+      await tester.pump();
+      await drag.up();
+      await tester.pumpAndSettle();
+
+      expect(moved, isEmpty);
+    });
+
+    testWidgets('onColumnProposeMove can reject a move', (tester) async {
+      final moved = <(int, int)>[];
+      await tester.pumpWidget(
+        buildEditor(
+          onColumnMoved: (from, to) => moved.add((from, to)),
+          onColumnProposeMove: (from, to) => false,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final drag = await tester.startGesture(
+        const Offset(150, 15),
+        kind: PointerDeviceKind.mouse,
+      );
+      await drag.moveTo(const Offset(50, 15));
+      await tester.pump();
+      await drag.up();
+      await tester.pumpAndSettle();
+
+      expect(moved, isEmpty);
     });
   });
 

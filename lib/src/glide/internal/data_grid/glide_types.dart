@@ -1040,6 +1040,9 @@ class GlideFillHandleConfig {
   final double outline;
 }
 
+/// `resizeIndicator: "full" | "header" | "none"` (`data-grid.tsx:311`).
+enum GlideResizeIndicator { full, header, none }
+
 /// `shape: "square" | "circle"` (`data-grid-types.ts:540`).
 enum GlideFillHandleShape { square, circle }
 
