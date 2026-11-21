@@ -95,6 +95,13 @@ class GlideDataEditorProps {
     this.onCellClicked,
     this.onCellContextMenu,
     this.onHeaderClicked,
+    this.onHeaderContextMenu,
+    this.onGroupHeaderClicked,
+    this.onGroupHeaderContextMenu,
+    this.onFinishedEditing,
+    this.onVisibleRegionChanged,
+    this.onCellFocused,
+    this.onMouseMove,
     this.getRowThemeOverride,
     this.getGroupDetails,
     this.highlightRegions,
@@ -199,6 +206,31 @@ class GlideDataEditorProps {
   final void Function(GlideItem location, GlideCellClickedEventArgs args)?
   onCellContextMenu;
   final void Function(int col, GlideGridHeaderMouseArgs args)? onHeaderClicked;
+
+  /// `onHeaderContextMenu` / `onGroupHeaderClicked` /
+  /// `onGroupHeaderContextMenu` (`data-editor.tsx:260`, `:233`, `:264`).
+  final void Function(int col, GlideHeaderClickedEventArgs args)?
+  onHeaderContextMenu;
+  final void Function(int col, GlideGroupHeaderClickedEventArgs args)?
+  onGroupHeaderClicked;
+  final void Function(int col, GlideGroupHeaderClickedEventArgs args)?
+  onGroupHeaderContextMenu;
+
+  /// `onFinishedEditing` (`data-editor.tsx:256`, `:3125`).
+  final void Function(GlideGridCell? newValue, GlideEditorMovement movement)?
+  onFinishedEditing;
+
+  /// `onVisibleRegionChanged` (`data-editor.ts:521`, `:2645`).
+  final void Function(GlideVisibleRegion region, GlideVisibleRegionExtras extras)?
+  onVisibleRegionChanged;
+
+  /// `onCellFocused` (`data-grid.tsx:171`): upstream fires it from the
+  /// accessibility tree, which is not ported; here it reports the active cell
+  /// whenever the selection moves.
+  final void Function(GlideItem location)? onCellFocused;
+
+  /// `onMouseMove` (`data-grid.tsx:1359`).
+  final void Function(GlideGridMouseArgs args)? onMouseMove;
 
   /// `getRowThemeOverride` (`row-grouping.ts:298-310`): the indexed form
   /// `(row, groupIndex, contentIndex)` upstream exposes.
@@ -1227,7 +1259,15 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     widget.props.onGridSelectionChange?.call(
       glideShiftSelection(v, -_markerOffset),
     );
+
+    final focused = v.current?.cell;
+    if (focused != null && focused != _lastFocusedCell) {
+      _lastFocusedCell = focused;
+      widget.props.onCellFocused?.call(focused);
+    }
   }
+
+  GlideItem? _lastFocusedCell;
 
   GlideKeyHandler _makeKeyHandler() =>
       GlideKeyHandler(
@@ -1389,6 +1429,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   }
 
   void _finishEditing(GlideGridCell? newCell, GlideEditorMovement movement) {
+    widget.props.onFinishedEditing?.call(newCell, movement);
     final overlay = _overlay;
     setState(() => _overlay = null);
     if (overlay != null &&
@@ -2295,7 +2336,22 @@ class _GlideDataEditorState extends State<GlideDataEditor>
             lastDown != null &&
             lastDown.col == groupHeader.location.col &&
             lastDown.row == groupHeader.location.row) {
-          // `handleGroupHeaderSelection` runs for group headers.
+          final adjustedCol = groupHeader.location.col - _markerOffset;
+          if (adjustedCol < 0) return;
+
+          // `onGroupHeaderClicked` runs first; a `preventDefault` skips the
+          // selection (`data-editor.ts:2504-2507`).
+          var prevented = false;
+          widget.props.onGroupHeaderClicked?.call(
+            adjustedCol,
+            GlideGroupHeaderClickedEventArgs(
+              col: adjustedCol,
+              args: groupHeader,
+              preventDefault: () => prevented = true,
+            ),
+          );
+          if (prevented) return;
+
           _selectionState.handleGroupHeaderSelection(
             groupHeader,
             columns: widget.props.columns,
@@ -2558,6 +2614,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       _translateX = region.translateX;
       _translateY = region.translateY;
     });
+    widget.props.onVisibleRegionChanged?.call(region, _visibleExtras!);
   }
 
   void _handleScroll(PointerSignalEvent event) {
@@ -2621,7 +2678,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
           theme: _theme,
           verticalBorder: p.verticalBorder,
           onItemHovered: _onItemHovered,
-          onMouseMove: (_) {},
+          onMouseMove: p.onMouseMove ?? (_) {},
           onPointerMoveRaw: _onPointerMoveRaw,
           onMouseDown: _onMouseDown,
           onMouseUp: _onMouseUp,
@@ -2711,29 +2768,64 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     );
   }
 
+  /// `onContextMenu` (`data-editor.tsx:3547-3571`).
   void _onContextMenu(GlideGridMouseArgs args, void Function() preventDefault) {
-    if (args is! GlideGridCellMouseArgs) return;
-    widget.props.onCellContextMenu?.call(
-      args.location,
-      GlideCellClickedEventArgs(
-        shiftKey: args.shiftKey,
-        ctrlKey: args.ctrlKey,
-        metaKey: args.metaKey,
-        isTouch: args.isTouch,
-        isLongTouch: args.isLongTouch,
-        isDoubleClick: args.isDoubleClick,
-        isEdge: args.isEdge,
-        button: args.button,
-        buttons: args.buttons,
-        scrollEdge: args.scrollEdge,
-        location: args.location,
-        bounds: args.bounds,
-        isFillHandle: args.isFillHandle,
-        localEventX: args.localEventX,
-        localEventY: args.localEventY,
-        preventDefault: preventDefault,
-      ),
-    );
+    final adjustedCol = _locationOf(args).col - _markerOffset;
+
+    if (args is GlideGridHeaderMouseArgs) {
+      widget.props.onHeaderContextMenu?.call(
+        adjustedCol,
+        GlideHeaderClickedEventArgs(
+          col: adjustedCol,
+          args: args,
+          preventDefault: preventDefault,
+        ),
+      );
+      return;
+    }
+
+    if (args is GlideGridGroupHeaderMouseArgs) {
+      if (adjustedCol < 0) return;
+      widget.props.onGroupHeaderContextMenu?.call(
+        adjustedCol,
+        GlideGroupHeaderClickedEventArgs(
+          col: adjustedCol,
+          args: args,
+          preventDefault: preventDefault,
+        ),
+      );
+      return;
+    }
+
+    if (args is GlideGridCellMouseArgs) {
+      final location = args.location;
+      widget.props.onCellContextMenu?.call(
+        GlideItem(location.col - _markerOffset, location.row),
+        GlideCellClickedEventArgs(
+          shiftKey: args.shiftKey,
+          ctrlKey: args.ctrlKey,
+          metaKey: args.metaKey,
+          isTouch: args.isTouch,
+          isLongTouch: args.isLongTouch,
+          isDoubleClick: args.isDoubleClick,
+          isEdge: args.isEdge,
+          button: args.button,
+          buttons: args.buttons,
+          scrollEdge: args.scrollEdge,
+          location: location,
+          bounds: args.bounds,
+          isFillHandle: args.isFillHandle,
+          localEventX: args.localEventX,
+          localEventY: args.localEventY,
+          preventDefault: preventDefault,
+        ),
+      );
+
+      // Right-clicking outside the selection moves it there first.
+      if (!_selection.hasItem(location)) {
+        _updateSelectedCell(location.col, location.row);
+      }
+    }
   }
 
   final GlideTextMetrics _metrics = GlideTextMetrics();

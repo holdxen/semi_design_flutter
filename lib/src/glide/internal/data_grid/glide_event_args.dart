@@ -255,6 +255,36 @@ class GlidePointerCellActivation extends GlideCellActivation {
   final String? pointerType;
 }
 
+/// `HeaderClickedEventArgs` (`event-args.ts:99`).
+@immutable
+class GlideHeaderClickedEventArgs {
+  const GlideHeaderClickedEventArgs({
+    required this.col,
+    required this.args,
+    required this.preventDefault,
+  });
+
+  /// The column index with the row-marker offset removed.
+  final int col;
+  final GlideGridHeaderMouseArgs args;
+  final void Function() preventDefault;
+}
+
+/// `GroupHeaderClickedEventArgs` (`event-args.ts:102`).
+@immutable
+class GlideGroupHeaderClickedEventArgs {
+  const GlideGroupHeaderClickedEventArgs({
+    required this.col,
+    required this.args,
+    required this.preventDefault,
+  });
+
+  /// The column index with the row-marker offset removed.
+  final int col;
+  final GlideGridGroupHeaderMouseArgs args;
+  final void Function() preventDefault;
+}
+
 /// `GridKeyEventArgs` (`event-args.ts:70-83`). `rawEvent` is a Flutter
 /// `KeyEvent` instead of a DOM event.
 @immutable

@@ -1546,6 +1546,14 @@ void main() {
       double minColumnWidth = 50,
       double? scrollOffsetY,
       GlideKeybinds? keybindingsOverride,
+      void Function(GlideItem location)? onCellFocused,
+      void Function(GlideVisibleRegion region, GlideVisibleRegionExtras extras)?
+      onVisibleRegionChanged,
+      void Function(GlideGridCell? newValue, GlideEditorMovement movement)?
+      onFinishedEditing,
+      void Function(int col, GlideHeaderClickedEventArgs args)?
+      onHeaderContextMenu,
+      void Function(GlideGridMouseArgs args)? onMouseMove,
       GlideRowGroupingOptions? rowGrouping,
       GlideTrailingRowOptions? trailingRowOptions,
       void Function()? onRowAppended,
@@ -1571,6 +1579,11 @@ void main() {
         minColumnWidth: minColumnWidth,
         scrollOffsetY: scrollOffsetY,
         keybindings: keybindingsOverride ?? keybindings,
+        onCellFocused: onCellFocused,
+        onVisibleRegionChanged: onVisibleRegionChanged,
+        onFinishedEditing: onFinishedEditing,
+        onHeaderContextMenu: onHeaderContextMenu,
+        onMouseMove: onMouseMove,
         onColumnAppended: onColumnAppended == null
             ? null
             : () {
@@ -2825,6 +2838,57 @@ void main() {
 
       expect(appended, 1);
       expect(selectionLog.last.current!.cell, const GlideItem(0, 3));
+    });
+
+    testWidgets('the remaining data-editor callbacks all fire', (tester) async {
+      final log = <String>[];
+      await tester.pumpWidget(
+        buildEditor(
+          onCellFocused: (item) => log.add('focus:$item'),
+          onVisibleRegionChanged: (region, _) => log.add('region:${region.y}'),
+          onFinishedEditing: (_, movement) => log.add('done'),
+          onHeaderContextMenu: (col, _) => log.add('headerMenu:$col'),
+          onMouseMove: (_) => log.add('move'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // The initial post-frame region pass.
+      expect(log, contains('region:0'));
+
+      final cell = await tester.startGesture(
+        const Offset(150, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await cell.moveBy(const Offset(1, 0));
+      await tester.pumpAndSettle();
+
+      expect(log, contains('move'));
+      expect(log, contains('focus:[1, 0]'));
+
+      // Right-clicking a header reports the header context menu.
+      final header = await tester.startGesture(
+        const Offset(150, 15),
+        kind: PointerDeviceKind.mouse,
+        buttons: kSecondaryButton,
+      );
+      await header.up();
+      await tester.pumpAndSettle();
+      expect(log, contains('headerMenu:1'));
+
+      // Opening and escaping the overlay reports the finish.
+      for (var i = 0; i < 2; i++) {
+        final second = await tester.startGesture(
+          const Offset(150, 45),
+          kind: PointerDeviceKind.mouse,
+        );
+        await second.up();
+        await tester.pumpAndSettle();
+      }
+      expect(find.byType(TextField), findsOneWidget);
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      expect(log, contains('done'));
     });
   });
 
