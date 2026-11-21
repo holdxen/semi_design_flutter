@@ -165,6 +165,26 @@ GlideVisibleRegion computeVisibleRegion({
   );
 }
 
+/// `VisibleRegion.extras` (`visible-region.ts:9-20`).
+@immutable
+class GlideVisibleRegionExtras {
+  const GlideVisibleRegionExtras({
+    this.selected,
+    this.freezeRegion,
+    this.freezeRegions = const [],
+  });
+
+  /// `extras.selected` (`data-editor.ts:2594-2597`): the current cell, in
+  /// marker-free coordinates.
+  final GlideItem? selected;
+
+  /// The frozen columns' rect (`data-editor.ts:2599-2607`).
+  final GlideRectangle? freezeRegion;
+
+  /// Frozen columns plus the frozen trailing rows (`:2609-2627`).
+  final List<GlideRectangle> freezeRegions;
+}
+
 /// Scroll extent of the virtual content (`scrolling-data-grid.tsx:105-117`).
 GlideSize computeScrollExtent({
   required List<GlideMappedColumn> columns,

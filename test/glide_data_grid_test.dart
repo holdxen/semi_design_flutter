@@ -2800,6 +2800,32 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Type to search'), findsNothing);
     });
+
+    testWidgets('a tinted trailing row does not disturb appending',
+        (tester) async {
+      var appended = 0;
+      await tester.pumpWidget(
+        buildEditor(
+          rows: 3,
+          trailingRowOptions: const GlideTrailingRowOptions(
+            hint: 'New row',
+            tint: true,
+          ),
+          onRowAppended: () => appended++,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final gesture = await tester.startGesture(
+        const Offset(50, 140),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(appended, 1);
+      expect(selectionLog.last.current!.cell, const GlideItem(0, 3));
+    });
   });
 
   group('column sizer', () {

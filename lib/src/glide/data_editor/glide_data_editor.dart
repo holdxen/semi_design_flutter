@@ -198,8 +198,7 @@ class GlideDataEditorProps {
   onCellClicked;
   final void Function(GlideItem location, GlideCellClickedEventArgs args)?
   onCellContextMenu;
-  final void Function(int col, GlideGridHeaderMouseArgs args)?
-  onHeaderClicked;
+  final void Function(int col, GlideGridHeaderMouseArgs args)? onHeaderClicked;
 
   /// `getRowThemeOverride` (`row-grouping.ts:298-310`): the indexed form
   /// `(row, groupIndex, contentIndex)` upstream exposes.
@@ -214,14 +213,26 @@ class GlideDataEditorProps {
   final GlideFillHandleDirection allowedFillDirections;
 
   /// `onColumnResize` / `...Start` / `...End` (`data-grid-dnd.tsx:40-70`).
-  final void Function(GlideGridColumn column, double newSize, int colIndex,
-      double newSizeWithGrow)?
+  final void Function(
+    GlideGridColumn column,
+    double newSize,
+    int colIndex,
+    double newSizeWithGrow,
+  )?
   onColumnResize;
-  final void Function(GlideGridColumn column, double newSize, int colIndex,
-      double newSizeWithGrow)?
+  final void Function(
+    GlideGridColumn column,
+    double newSize,
+    int colIndex,
+    double newSizeWithGrow,
+  )?
   onColumnResizeStart;
-  final void Function(GlideGridColumn column, double newSize, int colIndex,
-      double newSizeWithGrow)?
+  final void Function(
+    GlideGridColumn column,
+    double newSize,
+    int colIndex,
+    double newSizeWithGrow,
+  )?
   onColumnResizeEnd;
 
   /// `minColumnWidthIn`/`maxColumnWidthIn` (`data-editor.tsx:862-863`).
@@ -264,6 +275,7 @@ class GlideDataEditorProps {
 
   final bool smoothScrollX;
   final bool smoothScrollY;
+
   /// `showSearch` (`data-grid-search.ts:71`): null lets the editor own the
   /// visibility (toggled by the `search` keybinding).
   final bool? showSearch;
@@ -365,6 +377,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
 
   /// `visibleRegionRef` (`data-editor.tsx:2831`).
   GlideVisibleRegion? _visible;
+  GlideVisibleRegionExtras? _visibleExtras;
 
   late final Ticker _autoscrollTicker;
   Duration _lastTick = Duration.zero;
@@ -389,11 +402,9 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     final initialY = widget.props.scrollOffsetY;
     if (initialX != null) _scrollX = initialX;
     if (initialY != null) _scrollY = initialY;
-    if (initialX != null || initialY != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _applyScroll();
-      });
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _applyScroll();
+    });
   }
 
   @override
@@ -584,7 +595,13 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     final explicit = _rowMarkerOpts?.width;
     if (explicit != null) return explicit.toInt();
     final rows = widget.props.rows;
-    return rows > 10000 ? 48 : rows > 1000 ? 44 : rows > 100 ? 36 : 32;
+    return rows > 10000
+        ? 48
+        : rows > 1000
+        ? 44
+        : rows > 100
+        ? 36
+        : 32;
   }
 
   bool get _headerRowMarkerDisabled =>
@@ -601,8 +618,8 @@ class _GlideDataEditorState extends State<GlideDataEditor>
 
   GlideMarkerKind get _markerKind => switch (_rowMarkers) {
     GlideRowMarkerKind.checkbox => GlideMarkerKind.checkbox,
-    GlideRowMarkerKind.number || GlideRowMarkerKind.clickableNumber =>
-      GlideMarkerKind.number,
+    GlideRowMarkerKind.number ||
+    GlideRowMarkerKind.clickableNumber => GlideMarkerKind.number,
     GlideRowMarkerKind.checkboxVisible => GlideMarkerKind.checkboxVisible,
     GlideRowMarkerKind.both => GlideMarkerKind.both,
     GlideRowMarkerKind.none => GlideMarkerKind.checkbox,
@@ -745,8 +762,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
 
   /// `lockColumns={rowMarkerOffset}` (`data-editor.tsx:4263`; the marker
   /// column is never a drop target.
-  int get _lockColumns =>
-      math.max(widget.props.lockColumns, _markerOffset);
+  int get _lockColumns => math.max(widget.props.lockColumns, _markerOffset);
 
   /// `mangledFreezeColumns` (`data-editor.tsx:3994`).
   int get _mangledFreezeColumns => math.min(
@@ -770,10 +786,90 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     checked: _selection.rows.hasIndex(row)
         ? GlideBooleanValue.checked
         : GlideBooleanValue.unchecked,
-    checkboxStyle: _rowMarkerOpts?.checkboxStyle ??
-        GlideMarkerCheckboxStyle.square,
+    checkboxStyle:
+        _rowMarkerOpts?.checkboxStyle ?? GlideMarkerCheckboxStyle.square,
     markerKind: _markerKind,
   );
+
+  /// `onVisibleRegionChangedImpl`'s `extras` (`data-editor.tsx:2594-2627`).
+  GlideVisibleRegionExtras _computeVisibleExtras(GlideVisibleRegion region) {
+    final p = widget.props;
+    final selected = _selection.current?.cell;
+
+    final freezeRegion = p.freezeColumns == 0
+        ? null
+        : GlideRectangle(
+            x: 0,
+            y: region.y.toDouble(),
+            width: p.freezeColumns.toDouble(),
+            height: region.height.toDouble(),
+          );
+
+    final freezeRegions = <GlideRectangle>[];
+    if (freezeRegion != null) freezeRegions.add(freezeRegion);
+    if (p.freezeTrailingRows > 0) {
+      freezeRegions.add(
+        GlideRectangle(
+          x: region.x.toDouble(),
+          y: (_groupedRows - p.freezeTrailingRows).toDouble(),
+          width: region.width.toDouble(),
+          height: p.freezeTrailingRows.toDouble(),
+        ),
+      );
+      if (p.freezeColumns > 0) {
+        freezeRegions.add(
+          GlideRectangle(
+            x: 0,
+            y: (_groupedRows - p.freezeTrailingRows).toDouble(),
+            width: p.freezeColumns.toDouble(),
+            height: p.freezeTrailingRows.toDouble(),
+          ),
+        );
+      }
+    }
+
+    return GlideVisibleRegionExtras(
+      selected: selected == null
+          ? null
+          : GlideItem(selected.col - _markerOffset, selected.row),
+      freezeRegion: freezeRegion,
+      freezeRegions: freezeRegions,
+    );
+  }
+
+  /// The `forceStrict` guard (`data-grid.tsx:966`, `:1282`): cells outside
+  /// the visible window resolve to a loading placeholder so off-screen work
+  /// never touches the consumer's data.
+  bool _isOutsideVisibleArea(int col, int row) {
+    final region = _visible;
+    if (region == null) return false;
+    final outerCol = col - _markerOffset;
+    if (region.x > outerCol ||
+        outerCol > region.x + region.width ||
+        region.y > row ||
+        row > region.y + region.height ||
+        row >= _groupedRows) {
+      final extras = _visibleExtras;
+      final selected = extras?.selected;
+      if (selected != null && selected.col == outerCol && selected.row == row) {
+        return false;
+      }
+      for (final rect in extras?.freezeRegions ?? const <GlideRectangle>[]) {
+        if (pointInRect(rect, outerCol.toDouble(), row.toDouble())) {
+          return false;
+        }
+      }
+      return true;
+    }
+    return false;
+  }
+
+  /// `trailingRowOptions.tint` (`data-editor.ts:3961-3965`): the trailing
+  /// row joins `disabledRows`, which the painter tints with `bgHeader`.
+  GlideCompactSelection get _disabledRows =>
+      _showTrailingBlankRow && widget.props.trailingRowOptions?.tint == true
+      ? GlideCompactSelection.fromArray([_mangledRows - 1])
+      : const GlideCompactSelection.empty();
 
   /// `mapper(row).isGroupHeader` (`row-grouping.ts:190-238`).
   bool _isGroupHeaderRow(int row) =>
@@ -806,7 +902,8 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   int? _customNewRowTargetColumn(int col) {
     final p = widget.props;
     if (col < 0 || col >= _mangledColumns.length) return null;
-    final custom = _mangledColumns[col].trailingRowOptions?.targetColumn ??
+    final custom =
+        _mangledColumns[col].trailingRowOptions?.targetColumn ??
         p.trailingRowOptions?.targetColumn;
     final offset = _markerOffset;
     if (custom is int) return custom + offset;
@@ -1011,9 +1108,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   GlideTheme _themeForCell(GlideGridCell cell, GlideItem location) {
     final p = widget.props;
     final mangled = _mangledColumns;
-    final column = location.col < mangled.length
-        ? mangled[location.col]
-        : null;
+    final column = location.col < mangled.length ? mangled[location.col] : null;
     var theme = p.theme;
     final group = column?.group;
     final groupOverride = group == null || p.getGroupDetails == null
@@ -1052,8 +1147,13 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       return _newRowCell(col);
     }
 
+    final outerCol = col - _markerOffset;
+    if (forceStrict == true && _isOutsideVisibleArea(col, row)) {
+      return const GlideLoadingCell();
+    }
+
     var cell = widget.props.getCellContent(
-      GlideItem(col - _markerOffset, row),
+      GlideItem(outerCol, row),
       forceStrict,
     );
     final span = cell.span;
@@ -1109,71 +1209,86 @@ class _GlideDataEditorState extends State<GlideDataEditor>
         allowPartial: false,
       );
     }
+    // `selectionOutOfBounds` (`data-editor.ts:3951-3957`): a selection that
+    // no longer fits the grid is dropped.
+    final current = v.current;
+    if (current != null &&
+        (current.cell.col >= _mangledColumns.length ||
+            current.cell.row >= _mangledRows)) {
+      v = GlideGridSelection.empty;
+    }
+
     setState(() {
       _selection = v;
       _selectionState.selection = v;
     });
     // `setGridSelection` hands the public API marker-free coordinates
     // (`data-editor.tsx:1009`).
-    widget.props.onGridSelectionChange?.call(glideShiftSelection(v, -_markerOffset));
+    widget.props.onGridSelectionChange?.call(
+      glideShiftSelection(v, -_markerOffset),
+    );
   }
 
-  GlideKeyHandler _makeKeyHandler() => GlideKeyHandler(
-    keys: glideKeysWithDefaults(widget.props.keybindings),
-    selection: _selection,
-    setGridSelection: _setGridSelection,
-    columnCount: _mangledColumns.length,
-    rows: _mangledRows,
-    rowMarkerOffset: _markerOffset,
-    showTrailingBlankRow: _showTrailingBlankRow,
-    userRows: widget.props.rows,
-    appendRow: (col, openOverlay) =>
-        _appendRow(col, openOverlay: openOverlay),
-    getCustomNewRowTargetColumn: _customNewRowTargetColumn,
-    onSearch: _openSearch,
-    rowGroupingNavBehavior: widget.props.rowGrouping?.navigationBehavior,
-    isGroupHeaderRow: _isGroupHeaderRow,
-    getSelectionRowLimits: _getSelectionRowLimits,
-    overlayOpen: _overlay != null,
-    columnSelect: widget.props.columnSelect,
-    rowSelect: widget.props.rowSelect,
-    rangeSelect: widget.props.rangeSelect,
-    visibleRegion: GlideRectangle(
-      x: _cellXOffset.toDouble(),
-      y: _cellYOffset.toDouble(),
-      width: math.max(0, widget.props.columns.length - _cellXOffset).toDouble(),
-      height: math.max(1, _visibleRowCount).toDouble(),
-    ),
-    // `handleFixedKeybindings` works in user coordinates
-    // (`data-editor.tsx:3515`, `:3154`).
-    getCellContent: widget.props.getCellContent,
-    getCellRenderer: _renderers.forCell,
-    rangeBehavior: widget.props.rangeSelectionBlending,
-    columnBehavior: widget.props.columnSelectionBlending,
-    rowBehavior: widget.props.rowSelectionBlending,
-    rangeSelectionColumnSpanning: widget.props.rangeSelectionColumnSpanning,
-    getCellsForSelection: _getCellsForSelection,
-    onSelectionCleared: widget.props.onSelectionCleared,
-    onDelete: widget.props.onDelete,
-    onCellsEdited: _onCellsEdited,
-    onCellActivated: (location, activation) {
-      widget.props.onCellActivated?.call(location, activation);
-      if (activation is GlideKeyboardCellActivation) {
-        _reselectForKeyboard(location, activation);
-      }
-    },
-    fillDown: _fillDown,
-    fillRight: _fillRight,
-    scrollTo: _scrollTo,
-  )
-    ..onOverlayClosed = _closeOverlay
-    ..onTypeToEdit = (bounds, key) {
-    _reselect(
-      bounds,
-      const GlideKeyboardCellActivation(null),
-      initialValue: key,
-    );
-  };
+  GlideKeyHandler _makeKeyHandler() =>
+      GlideKeyHandler(
+          keys: glideKeysWithDefaults(widget.props.keybindings),
+          selection: _selection,
+          setGridSelection: _setGridSelection,
+          columnCount: _mangledColumns.length,
+          rows: _mangledRows,
+          rowMarkerOffset: _markerOffset,
+          showTrailingBlankRow: _showTrailingBlankRow,
+          userRows: widget.props.rows,
+          appendRow: (col, openOverlay) =>
+              _appendRow(col, openOverlay: openOverlay),
+          getCustomNewRowTargetColumn: _customNewRowTargetColumn,
+          onSearch: _openSearch,
+          rowGroupingNavBehavior: widget.props.rowGrouping?.navigationBehavior,
+          isGroupHeaderRow: _isGroupHeaderRow,
+          getSelectionRowLimits: _getSelectionRowLimits,
+          overlayOpen: _overlay != null,
+          columnSelect: widget.props.columnSelect,
+          rowSelect: widget.props.rowSelect,
+          rangeSelect: widget.props.rangeSelect,
+          visibleRegion: GlideRectangle(
+            x: _cellXOffset.toDouble(),
+            y: _cellYOffset.toDouble(),
+            width: math
+                .max(0, widget.props.columns.length - _cellXOffset)
+                .toDouble(),
+            height: math.max(1, _visibleRowCount).toDouble(),
+          ),
+          // `handleFixedKeybindings` works in user coordinates
+          // (`data-editor.tsx:3515`, `:3154`).
+          getCellContent: widget.props.getCellContent,
+          getCellRenderer: _renderers.forCell,
+          rangeBehavior: widget.props.rangeSelectionBlending,
+          columnBehavior: widget.props.columnSelectionBlending,
+          rowBehavior: widget.props.rowSelectionBlending,
+          rangeSelectionColumnSpanning:
+              widget.props.rangeSelectionColumnSpanning,
+          getCellsForSelection: _getCellsForSelection,
+          onSelectionCleared: widget.props.onSelectionCleared,
+          onDelete: widget.props.onDelete,
+          onCellsEdited: _onCellsEdited,
+          onCellActivated: (location, activation) {
+            widget.props.onCellActivated?.call(location, activation);
+            if (activation is GlideKeyboardCellActivation) {
+              _reselectForKeyboard(location, activation);
+            }
+          },
+          fillDown: _fillDown,
+          fillRight: _fillRight,
+          scrollTo: _scrollTo,
+        )
+        ..onOverlayClosed = _closeOverlay
+        ..onTypeToEdit = (bounds, key) {
+          _reselect(
+            bounds,
+            const GlideKeyboardCellActivation(null),
+            initialValue: key,
+          );
+        };
 
   // -------------------------------------------------------------------------
   // Overlay
@@ -1221,8 +1336,10 @@ class _GlideDataEditorState extends State<GlideDataEditor>
             data: _parseFloat(initialValue),
             displayData: initialValue,
           ),
-          GlideTextCell value => value.copyWith(data: initialValue,
-              displayData: initialValue),
+          GlideTextCell value => value.copyWith(
+            data: initialValue,
+            displayData: initialValue,
+          ),
           GlideMarkdownCell value => value.copyWith(data: initialValue),
           GlideUriCell value => value.copyWith(
             data: initialValue,
@@ -1250,16 +1367,17 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       _onCellsEdited([
         GlideEditListItem(
           location: location,
-          value: (c as GlideBooleanCell).copyWith(
-            data: toggleBoolean(c.data),
-          ),
+          value: (c as GlideBooleanCell).copyWith(data: toggleBoolean(c.data)),
         ),
       ]);
     }
   }
 
   /// Keyboard Enter/click activation on the already-selected cell.
-  void _reselectForKeyboard(GlideItem location, GlideCellActivation activation) {
+  void _reselectForKeyboard(
+    GlideItem location,
+    GlideCellActivation activation,
+  ) {
     final bounds = _gridController.getBounds(location.col, location.row);
     if (bounds == null) return;
     _reselect(bounds, activation);
@@ -1307,10 +1425,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     }
     if (!updateSelected) return;
 
-    _updateSelectedCell(
-      cell.col + movement.col,
-      cell.row + movement.row,
-    );
+    _updateSelectedCell(cell.col + movement.col, cell.row + movement.row);
   }
 
   void _updateSelectedCell(int col, int row) {
@@ -1321,7 +1436,9 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       fromEditingTrailingRow: false,
       freeMove: false,
     );
-    if (handler.selection != _selection) _setGridSelection(handler.selection, false);
+    if (handler.selection != _selection) {
+      _setGridSelection(handler.selection, false);
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -1336,9 +1453,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     final getCells = widget.props.getCellsForSelection;
     final patternRange = previousSelection.current?.range;
     final currentRange = currentSelection.current?.range;
-    if (patternRange == null ||
-        currentRange == null ||
-        getCells == null) {
+    if (patternRange == null || currentRange == null || getCells == null) {
       return;
     }
 
@@ -1367,8 +1482,8 @@ class _GlideDataEditorState extends State<GlideDataEditor>
         );
         if (itemIsInRect(item, patternRange)) continue;
         final patternCell =
-            pattern[y % patternRange.height.toInt()]
-                [x % patternRange.width.toInt()];
+            pattern[y % patternRange.height.toInt()][x %
+                patternRange.width.toInt()];
         if (glideIsInnerOnlyCell(patternCell) ||
             !glideIsReadWriteCell(patternCell)) {
           continue;
@@ -1386,9 +1501,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     if (current == null || current.range.height <= 1) return;
     _fillPattern(
       _selection.copyWith(
-        current: current.copyWith(
-          range: current.range.copyWith(height: 1),
-        ),
+        current: current.copyWith(range: current.range.copyWith(height: 1)),
       ),
       _selection,
     );
@@ -1399,9 +1512,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     if (current == null || current.range.width <= 1) return;
     _fillPattern(
       _selection.copyWith(
-        current: current.copyWith(
-          range: current.range.copyWith(width: 1),
-        ),
+        current: current.copyWith(range: current.range.copyWith(width: 1)),
       ),
       _selection,
     );
@@ -1796,7 +1907,8 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       return;
     }
     final dtMs =
-        (elapsed - _lastTick).inMicroseconds / 1000.0; // ignore: avoid_multiple_declarations
+        (elapsed - _lastTick).inMicroseconds /
+        1000.0; // ignore: avoid_multiple_declarations
     _lastTick = elapsed;
 
     final (dx, dy) = _autoscroll.advance(dtMs);
@@ -1988,30 +2100,34 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   bool _handleMaybeClick(GlideGridCellMouseArgs a) {
     final p = widget.props;
     final mouseDown = _mouseDownData;
-    final isValidClick = a.isTouch == true ||
+    final isValidClick =
+        a.isTouch == true ||
         (mouseDown != null &&
             mouseDown.location.col == a.location.col &&
             mouseDown.location.row == a.location.row);
 
     if (isValidClick) {
-      p.onCellClicked?.call(a.location, GlideCellClickedEventArgs(
-        shiftKey: a.shiftKey,
-        ctrlKey: a.ctrlKey,
-        metaKey: a.metaKey,
-        isTouch: a.isTouch,
-        isLongTouch: a.isLongTouch,
-        isDoubleClick: a.isDoubleClick,
-        isEdge: a.isEdge,
-        button: a.button,
-        buttons: a.buttons,
-        scrollEdge: a.scrollEdge,
-        location: a.location,
-        bounds: a.bounds,
-        isFillHandle: a.isFillHandle,
-        localEventX: a.localEventX,
-        localEventY: a.localEventY,
-        preventDefault: () {},
-      ));
+      p.onCellClicked?.call(
+        a.location,
+        GlideCellClickedEventArgs(
+          shiftKey: a.shiftKey,
+          ctrlKey: a.ctrlKey,
+          metaKey: a.metaKey,
+          isTouch: a.isTouch,
+          isLongTouch: a.isLongTouch,
+          isDoubleClick: a.isDoubleClick,
+          isEdge: a.isEdge,
+          button: a.button,
+          buttons: a.buttons,
+          scrollEdge: a.scrollEdge,
+          location: a.location,
+          bounds: a.bounds,
+          isFillHandle: a.isFillHandle,
+          localEventX: a.localEventX,
+          localEventY: a.localEventY,
+          preventDefault: () {},
+        ),
+      );
     }
 
     if (a.button == 1) return true;
@@ -2048,8 +2164,8 @@ class _GlideDataEditorState extends State<GlideDataEditor>
 
     if (_selection.current == null) return false;
 
-    final activationBehavior = c.activationBehaviorOverride ??
-        p.cellActivationBehavior;
+    final activationBehavior =
+        c.activationBehaviorOverride ?? p.cellActivationBehavior;
     var shouldActivate = false;
     switch (activationBehavior) {
       case GlideCellActivationBehavior.doubleClick ||
@@ -2215,8 +2331,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     final accent = p.theme.accentColor;
     final current = _selection.current;
     final highlightRange =
-        current != null &&
-            current.range.width * current.range.height > 1
+        current != null && current.range.width * current.range.height > 1
         ? current.range
         : null;
     final highlightFocus = p.drawFocusRing ? current?.cell : null;
@@ -2231,9 +2346,8 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     final regions = <GlideHighlight>[];
     if (p.highlightRegions != null) {
       for (final r in p.highlightRegions!) {
-        final maxWidth = _mangledColumns.length -
-            r.range.x.toInt() -
-            _markerOffset;
+        final maxWidth =
+            _mangledColumns.length - r.range.x.toInt() - _markerOffset;
         if (maxWidth > 0) {
           regions.add(
             GlideHighlight(
@@ -2328,8 +2442,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       rowMarkerOffset: _markerOffset,
       columns: widget.props.columns,
       getCellsForSelection: _getCellsForSelection,
-      onDelete: (selection) =>
-          widget.props.onDelete?.call(selection) ?? true,
+      onDelete: (selection) => widget.props.onDelete?.call(selection) ?? true,
       copyHeaders: widget.props.copyHeaders,
     );
   }
@@ -2391,13 +2504,12 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     return total;
   }
 
-  double get _maxScrollY =>
-      math.max(
-        0.0,
-        _rowsHeight +
-            _remAdjustment.overscrollY -
-            (_viewportHeight - _headerHeight),
-      );
+  double get _maxScrollY => math.max(
+    0.0,
+    _rowsHeight +
+        _remAdjustment.overscrollY -
+        (_viewportHeight - _headerHeight),
+  );
 
   /// `useColumnSizer`'s `nonGrowWidth` (`data-editor.tsx:1118`): the width of
   /// the columns themselves, which is what the horizontal extent is derived
@@ -2417,10 +2529,8 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     return total;
   }
 
-  double get _maxScrollX => math.max(
-    0.0,
-    _columnsWidth - (_viewportWidth - _stickyWidth),
-  );
+  double get _maxScrollX =>
+      math.max(0.0, _columnsWidth - (_viewportWidth - _stickyWidth));
 
   /// Derives `cellXOffset`/`cellYOffset`/`translateX`/`translateY` from the
   /// current scroll offsets (`scrolling-data-grid.tsx:121-240`).
@@ -2430,15 +2540,19 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       scrollY: _scrollY,
       clientWidth: _viewportWidth,
       clientHeight: math.max(1, _viewportHeight - _headerHeight),
-      columns: mapColumns(widget.props.columns, widget.props.freezeColumns),
+      // The visible region must be walked over the same columns the grid
+      // draws (sized + marker), otherwise auto-sized columns report width 0
+      // and every cell lands out of bounds.
+      columns: mapColumns(_mangledColumns, _mangledFreezeColumns),
       rowHeight: _effectiveRowHeight,
       rows: _mangledRows,
-      freezeColumns: widget.props.freezeColumns,
+      freezeColumns: _mangledFreezeColumns,
       smoothScrollX: widget.props.smoothScrollX,
       smoothScrollY: widget.props.smoothScrollY,
     );
     setState(() {
       _visible = region;
+      _visibleExtras = _computeVisibleExtras(region);
       _cellXOffset = region.x;
       _cellYOffset = region.y;
       _translateX = region.translateX;
@@ -2521,6 +2635,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
           isFocused: _focused,
           drawFocusRing: p.drawFocusRing,
           fillHandle: p.fillHandle,
+          disabledRows: _disabledRows,
           isResizing: _resizeCol != null,
           resizeColumn: _resizeCol,
           resizeIndicator: p.resizeIndicator,
