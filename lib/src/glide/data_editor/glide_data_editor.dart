@@ -65,6 +65,7 @@ class GlideDataEditorProps {
     this.columnSelectionBlending = GlideSelectionBlending.exclusive,
     this.rowSelectionBlending = GlideSelectionBlending.exclusive,
     this.rangeSelectionColumnSpanning = true,
+    this.strict = false,
     this.columnSelectionModeMulti = false,
     this.rowMarkers,
     this.rowGrouping,
@@ -162,6 +163,11 @@ class GlideDataEditorProps {
   final GlideSelectionBlending columnSelectionBlending;
   final GlideSelectionBlending rowSelectionBlending;
   final bool rangeSelectionColumnSpanning;
+
+  /// `experimental.strict` (`data-grid.ts:249`): every content lookup outside
+  /// the visible window resolves to a loading cell, not just the ones the
+  /// grid marks `forceStrict`.
+  final bool strict;
   final bool columnSelectionModeMulti;
 
   /// `rowMarkers` (`data-editor.tsx:331`): null/`none` adds no marker
@@ -1260,7 +1266,8 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     }
 
     final outerCol = col - _markerOffset;
-    if (forceStrict == true && _isOutsideVisibleArea(col, row)) {
+    if ((forceStrict == true || widget.props.strict) &&
+        _isOutsideVisibleArea(col, row)) {
       return const GlideLoadingCell();
     }
 

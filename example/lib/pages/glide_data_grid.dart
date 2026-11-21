@@ -15,28 +15,42 @@ class GlideDataGridPage extends StatefulWidget {
 class _GlideDataGridPageState extends State<GlideDataGridPage> {
   static const int _rows = 400;
 
-  late final List<GlideGridColumn> _columns;
+  late List<GlideGridColumn> _columns;
   late final List<List<GlideGridCell>> _cells;
+
+  /// Three groups of four columns; renamed through the group-header action.
+  final List<String> _groupNames = ['Group A', 'Group B', 'Group C'];
 
   String _status = '点击单元格，第二次点击或回车进入编辑';
 
   @override
   void initState() {
     super.initState();
-    _columns = [
-      for (var i = 0; i < 12; i++)
-        GlideGridColumn(
-          title: 'Column ${String.fromCharCode(65 + i)}',
-          width: 120 + (i % 3) * 40,
-          hasMenu: i == 0,
-          group: i < 4 ? 'Group A' : (i < 8 ? 'Group B' : 'Group C'),
-        ),
-    ];
-
+    _columns = _buildColumns();
     _cells = [
       for (var row = 0; row < _rows; row++)
         [for (var col = 0; col < _columns.length; col++) _makeCell(col, row)],
     ];
+  }
+
+  List<GlideGridColumn> _buildColumns() => [
+    for (var i = 0; i < 12; i++)
+      GlideGridColumn(
+        title: 'Column ${String.fromCharCode(65 + i)}',
+        width: 120 + (i % 3) * 40,
+        hasMenu: i == 0,
+        group: _groupNames[i ~/ 4],
+      ),
+  ];
+
+  void _renameGroup(String group, String value) {
+    final index = _groupNames.indexOf(group);
+    if (index < 0) return;
+    setState(() {
+      _groupNames[index] = value;
+      _columns = _buildColumns();
+      _status = '分组 $group 已重命名为 $value';
+    });
   }
 
   GlideGridCell _makeCell(int col, int row) {
@@ -133,6 +147,10 @@ class _GlideDataGridPageState extends State<GlideDataGridPage> {
                   groupHeaderHeight: 30,
                   verticalBorder: (_) => true,
                   rowMarkers: const GlideRowMarkerOptions(),
+                  trailingRowOptions: const GlideTrailingRowOptions(
+                    hint: 'New row',
+                  ),
+                  onGroupHeaderRenamed: _renameGroup,
                   onCellsEdited: _onCellsEdited,
                   onGridSelectionChange: _onSelectionChanged,
                 ),
