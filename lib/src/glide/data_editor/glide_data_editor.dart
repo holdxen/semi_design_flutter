@@ -323,6 +323,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     super.initState();
     _selection = GlideGridSelection.empty;
     _rebuildRowGrouping();
+    _rebuildSizedColumns();
     _rebuildMangledColumns();
     _selectionState = _makeSelectionState();
     _autoscrollTicker = createTicker(_onAutoscrollTick);
@@ -343,6 +344,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
         oldWidget.props.rowGrouping != widget.props.rowGrouping ||
         oldWidget.props.rowHeight != widget.props.rowHeight) {
       _rebuildRowGrouping();
+      _rebuildSizedColumns();
       _rebuildMangledColumns();
       setState(() => _selectionState = _makeSelectionState());
     }
@@ -459,14 +461,49 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     );
   }
 
+  /// `useColumnSizer` result (`use-column-sizer.ts:78-253`).
+  GlideSizedColumns _sizedColumns = const GlideSizedColumns(
+    columns: [],
+    nonGrowWidth: 0,
+  );
+  List<GlideGridColumn>? _sizedKeyColumns;
+  double _sizedKeyWidth = -1;
+  int _sizedKeyRows = -1;
+  final Map<String, double> _columnSizeMemo = {};
+
   /// `mangledCols` (`data-editor.tsx:1141-1169`); rebuilt whenever the
   /// columns or the marker options change.
   List<GlideGridColumn> _mangledColumns = const [];
 
+  /// `useColumnSizer` (`use-column-sizer.ts:108-217`).
+  void _rebuildSizedColumns() {
+    final p = widget.props;
+    if (identical(_sizedKeyColumns, p.columns) &&
+        _sizedKeyWidth == _viewportWidth &&
+        _sizedKeyRows == p.rows) {
+      return;
+    }
+    _sizedKeyColumns = p.columns;
+    _sizedKeyWidth = _viewportWidth;
+    _sizedKeyRows = p.rows;
+    _sizedColumns = useColumnSizer(
+      columns: p.columns,
+      rows: p.rows,
+      getCellsForSelection: _getCellsForSelection,
+      clientWidth: _viewportWidth,
+      minColumnWidth: p.minColumnWidth,
+      maxColumnWidth: p.maxColumnWidth,
+      theme: p.theme,
+      getCellRenderer: _renderers.forCell,
+      metrics: _metrics,
+      memo: _columnSizeMemo,
+    );
+  }
+
   void _rebuildMangledColumns() {
     final opts = _rowMarkerOpts;
     if (!_hasRowMarkers || opts == null) {
-      _mangledColumns = widget.props.columns;
+      _mangledColumns = _sizedColumns.columns;
       return;
     }
     _mangledColumns = [
@@ -484,7 +521,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
           headerRowMarkerDisabled: _headerRowMarkerDisabled,
         ),
       ),
-      ...widget.props.columns,
+      ..._sizedColumns.columns,
     ];
   }
 
@@ -2147,13 +2184,11 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   /// `useColumnSizer`'s `nonGrowWidth` (`data-editor.tsx:1118`): the width of
   /// the columns themselves, which is what the horizontal extent is derived
   /// from (`scrolling-data-grid.tsx:105`).
-  double get _columnsWidth {
-    var total = 0.0;
-    for (final c in widget.props.columns) {
-      total += c.width ?? 0;
-    }
-    return total;
-  }
+  /// `nonGrowWidth` (`use-column-sizer.ts:248-250`) plus the marker column
+  /// (`data-editor.tsx:1129`): the horizontal scroll extent.
+  double get _columnsWidth =>
+      _sizedColumns.nonGrowWidth +
+      (_markerOffset == 1 ? _rowMarkerWidth : 0);
 
   double get _stickyWidth {
     var total = 0.0;
@@ -2218,10 +2253,11 @@ class _GlideDataEditorState extends State<GlideDataEditor>
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        _rebuildRowGrouping();
-        _rebuildMangledColumns();
         _viewportWidth = constraints.maxWidth;
         _viewportHeight = constraints.maxHeight;
+        _rebuildRowGrouping();
+        _rebuildSizedColumns();
+        _rebuildMangledColumns();
 
         final gridProps = GlideDataGridProps(
           width: _viewportWidth,

@@ -1062,6 +1062,8 @@ class GlideGridColumn {
     Object? icon = _sentinel,
     GlideCellStyle? style,
     GlideThemeOverride? themeOverride,
+    GlideTrailingRowOptions? trailingRowOptions,
+    GlideInnerColumnExtension? extension,
   }) => GlideGridColumn(
     title: title ?? this.title,
     width: width ?? this.width,
@@ -1075,8 +1077,8 @@ class GlideGridColumn {
     grow: grow,
     style: style ?? this.style,
     themeOverride: themeOverride ?? this.themeOverride,
-    trailingRowOptions: trailingRowOptions,
-    extension: extension,
+    trailingRowOptions: trailingRowOptions ?? this.trailingRowOptions,
+    extension: extension ?? this.extension,
   );
 }
 
@@ -1101,6 +1103,24 @@ class GlideInnerColumnExtension {
   final GlideThemeOverride? headerRowMarkerTheme;
   final bool headerRowMarkerAlwaysVisible;
   final bool headerRowMarkerDisabled;
+
+  GlideInnerColumnExtension copyWith({
+    int? growOffset,
+    GlideMarkerCheckboxStyle? rowMarker,
+    GlideBooleanValue? rowMarkerChecked,
+    GlideThemeOverride? headerRowMarkerTheme,
+    bool? headerRowMarkerAlwaysVisible,
+    bool? headerRowMarkerDisabled,
+  }) => GlideInnerColumnExtension(
+    growOffset: growOffset ?? this.growOffset,
+    rowMarker: rowMarker ?? this.rowMarker,
+    rowMarkerChecked: rowMarkerChecked ?? this.rowMarkerChecked,
+    headerRowMarkerTheme: headerRowMarkerTheme ?? this.headerRowMarkerTheme,
+    headerRowMarkerAlwaysVisible:
+        headerRowMarkerAlwaysVisible ?? this.headerRowMarkerAlwaysVisible,
+    headerRowMarkerDisabled:
+        headerRowMarkerDisabled ?? this.headerRowMarkerDisabled,
+  );
 }
 
 /// `FillHandleDirection` (`data-grid-types.ts:528`).

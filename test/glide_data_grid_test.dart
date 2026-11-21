@@ -1540,6 +1540,8 @@ void main() {
       GlideRowMarkerOptions? rowMarkers,
       int rows = 200,
       int columnCount = 6,
+      bool unsizedColumns = false,
+      double minColumnWidth = 50,
       GlideRowGroupingOptions? rowGrouping,
       GlideTrailingRowOptions? trailingRowOptions,
       void Function()? onRowAppended,
@@ -1556,7 +1558,9 @@ void main() {
       final p = GlideDataEditorProps(
         columns: [
           for (var i = 0; i < currentCols; i++)
-            GlideGridColumn(title: 'C$i', width: 100),
+            unsizedColumns
+                ? GlideGridColumn(title: 'C$i', id: 'c$i')
+                : GlideGridColumn(title: 'C$i', width: 100),
         ],
         rows: currentRows,
         rowGrouping: rowGrouping,
@@ -2701,6 +2705,39 @@ void main() {
 
       expect(selectionLog.last.current!.cell.row, 1);
     });
+
+    testWidgets('unsized columns are measured and become hit-testable',
+        (tester) async {
+      await tester.pumpWidget(
+        buildEditor(
+          columnCount: 3,
+          unsizedColumns: true,
+          minColumnWidth: 100,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Without the sizer these columns would have width 0 and every click
+      // would land out of bounds.
+      final first = await tester.startGesture(
+        const Offset(10, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await first.up();
+      await tester.pumpAndSettle();
+      expect(selectionLog.last.current!.cell.col, 0);
+
+      // `minColumnWidth` floors the measurement to 100, so three columns end
+      // at x = 300 — past that the click falls out of bounds. The 150px
+      // `defaultSize` placeholder would have covered this point instead.
+      final past = await tester.startGesture(
+        const Offset(350, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await past.up();
+      await tester.pumpAndSettle();
+      expect(selectionLog.last.current, isNull);
+    });
   });
 
   group('column sizer', () {
@@ -2779,6 +2816,106 @@ void main() {
     });
   });
 
+
+  // -------------------------------------------------------------------------
+  // Column sizer (`data-editor/use-column-sizer.ts`)
+  // -------------------------------------------------------------------------
+
+  group('column sizer', () {
+    GlideSizedColumns size({
+      required List<GlideGridColumn> columns,
+      required int rows,
+      required double clientWidth,
+      required double minColumnWidth,
+      double maxColumnWidth = 500,
+      Map<String, double>? memo,
+    }) => useColumnSizer(
+      columns: columns,
+      rows: rows,
+      getCellsForSelection: (region) => [
+        for (var y = region.y.toInt(); y < region.y + region.height && y < rows; y++)
+          [
+            for (var x = region.x.toInt(); x < region.x + region.width; x++)
+              GlideTextCell(
+                data: 'r$y c$x',
+                displayData: 'r$y c$x',
+              ),
+          ],
+      ],
+      clientWidth: clientWidth,
+      minColumnWidth: minColumnWidth,
+      maxColumnWidth: maxColumnWidth,
+      theme: GlideTheme.light(),
+      getCellRenderer: GlideDefaultRendererLookup().forCell,
+      metrics: GlideTextMetrics(),
+      memo: memo,
+    );
+
+    test('already sized columns pass through untouched', () {
+      final columns = [
+        for (var i = 0; i < 3; i++)
+          GlideGridColumn(title: 'C$i', width: 100, id: 'c$i'),
+      ];
+      final result = size(
+        columns: columns,
+        rows: 5,
+        clientWidth: 400,
+        minColumnWidth: 50,
+      );
+      expect(identical(result.columns, columns), isTrue);
+      expect(result.nonGrowWidth, 300);
+    });
+
+    test('unsized columns are measured from the sampled rows', () {
+      final columns = [
+        for (var i = 0; i < 3; i++) GlideGridColumn(title: 'C$i', id: 'c$i'),
+      ];
+      final result = size(
+        columns: columns,
+        rows: 5,
+        clientWidth: 400,
+        minColumnWidth: 50,
+      );
+      expect(result.columns, hasLength(3));
+      for (final c in result.columns) {
+        expect(c.width, isNotNull);
+        // `minColumnWidth` floors every measurement.
+        expect(c.width, greaterThanOrEqualTo(50));
+      }
+      expect(result.nonGrowWidth, greaterThan(0));
+    });
+
+    test('grow columns absorb the leftover width', () {
+      final columns = [
+        GlideGridColumn(title: 'A', width: 100, id: 'a'),
+        GlideGridColumn(title: 'B', width: 100, id: 'b', grow: 1),
+      ];
+      final result = size(
+        columns: columns,
+        rows: 5,
+        clientWidth: 400,
+        minColumnWidth: 50,
+      );
+      // The extent is measured before the distribution (`:248-250`).
+      expect(result.nonGrowWidth, 200);
+      expect(result.columns[1].width, 300);
+      expect(result.columns[1].extension?.growOffset, 200);
+    });
+
+    test('the memo is keyed by column id', () {
+      final memo = <String, double>{};
+      final columns = [GlideGridColumn(title: 'C', id: 'c')];
+      size(
+        columns: columns,
+        rows: 5,
+        clientWidth: 400,
+        minColumnWidth: 50,
+        memo: memo,
+      );
+      expect(memo.keys, ['c']);
+      expect(memo['c'], greaterThanOrEqualTo(50));
+    });
+  });
   group('fill math', () {
     test('combineRects takes the union', () {
       final combined = combineRects(
