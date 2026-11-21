@@ -132,6 +132,7 @@ List<GlideMappedColumn> mapColumns(
       style: columns[i].style,
       themeOverride: columns[i].themeOverride,
       trailingRowOptions: columns[i].trailingRowOptions,
+      extension: columns[i].extension,
     ),
 ];
 

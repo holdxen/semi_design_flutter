@@ -940,6 +940,7 @@ class GlideGridColumn {
     this.style,
     this.themeOverride,
     this.trailingRowOptions,
+    this.extension,
   }) : assert(
          width != null || id != null,
          'a column must be sized (width) or auto sized (id)',
@@ -961,6 +962,10 @@ class GlideGridColumn {
   final GlideCellStyle? style;
   final GlideThemeOverride? themeOverride;
   final GlideTrailingRowOptions? trailingRowOptions;
+
+  /// `InnerColumnExtension` (`data-grid-types.ts:196-203`), merged into the
+  /// column type upstream.
+  final GlideInnerColumnExtension? extension;
 
   /// `isSizedGridColumn` (`data-grid-types.ts:169-171`).
   bool get isSized => width != null;
@@ -987,6 +992,7 @@ class GlideGridColumn {
     style: style ?? this.style,
     themeOverride: themeOverride ?? this.themeOverride,
     trailingRowOptions: trailingRowOptions,
+    extension: extension,
   );
 }
 

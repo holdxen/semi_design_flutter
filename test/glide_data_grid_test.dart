@@ -1512,6 +1512,15 @@ void main() {
       GlideKeybinds? keybindings,
       GlideFillHandleConfig? fillHandle,
       void Function(GlideFillPatternArgs args)? onFillPattern,
+      void Function(GlideGridColumn column, double newSize, int colIndex,
+              double newSizeWithGrow)?
+      onColumnResize,
+      void Function(GlideGridColumn column, double newSize, int colIndex,
+              double newSizeWithGrow)?
+      onColumnResizeStart,
+      void Function(GlideGridColumn column, double newSize, int colIndex,
+              double newSizeWithGrow)?
+      onColumnResizeEnd,
     }) {
       edits = [];
       selectionLog = [];
@@ -1544,6 +1553,9 @@ void main() {
         keybindings: keybindings,
         fillHandle: fillHandle,
         onFillPattern: onFillPattern,
+        onColumnResize: onColumnResize,
+        onColumnResizeStart: onColumnResizeStart,
+        onColumnResizeEnd: onColumnResizeEnd,
         getCellsForSelection: (region) => [
           for (var y = region.y.toInt();
               y < region.y + region.height && y < cells.length;
@@ -1948,6 +1960,134 @@ void main() {
 
       expect(called, isTrue);
       expect(edits, isEmpty);
+    });
+
+    testWidgets('clicking a header selects that column', (tester) async {
+      await tester.pumpWidget(buildEditor());
+      await tester.pumpAndSettle();
+
+      final gesture = await tester.startGesture(
+        const Offset(150, 15),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(selectionLog, isNotEmpty);
+      expect(selectionLog.last.columns.toArray(), [1]);
+      expect(selectionLog.last.current, isNull);
+    });
+
+    testWidgets('dragging a header edge resizes the column', (tester) async {
+      final startLog = <double>[];
+      final resizeLog = <double>[];
+      final endLog = <double>[];
+
+      await tester.pumpWidget(
+        buildEditor(
+          onColumnResizeStart: (c, w, i, g) => startLog.add(w),
+          onColumnResize: (c, w, i, g) => resizeLog.add(w),
+          onColumnResizeEnd: (c, w, i, g) => endLog.add(w),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // The right edge of column 0 is at x = 100; the 5px buffer starts at 95.
+      final drag = await tester.startGesture(
+        const Offset(97, 15),
+        kind: PointerDeviceKind.mouse,
+      );
+      await tester.pump();
+      // `bounds.width` carries the +1 grid line (`data-grid-lib.ts`), which is
+      // what upstream reports from `onColumnResizeStart` too.
+      expect(startLog, [101]);
+
+      await drag.moveTo(const Offset(170, 15));
+      await tester.pump();
+      await drag.up();
+      await tester.pumpAndSettle();
+
+      expect(resizeLog, isNotEmpty);
+      expect(resizeLog.last, 170);
+      expect(endLog, [170]);
+      // The resize press is an edge press, so it must not change the selection.
+      expect(selectionLog, isEmpty);
+    });
+  });
+
+  group('column sizer', () {
+    test('measureColumn takes the widest cell, floored and capped', () {
+      final theme = GlideTheme.light();
+      final cells = <List<GlideGridCell>>[
+        [
+          const GlideTextCell(data: 'hi', displayData: 'hi'),
+          const GlideTextCell(data: 'a', displayData: 'a'),
+        ],
+        [
+          const GlideTextCell(data: 'much longer text', displayData: 'x'),
+          const GlideTextCell(data: 'a', displayData: 'a'),
+        ],
+      ];
+
+      final width = glideMeasureColumn(
+        theme: theme,
+        column: const GlideGridColumn(title: 'C', width: 100),
+        colIndex: 0,
+        selectedData: cells,
+        minColumnWidth: 50,
+        maxColumnWidth: 500,
+        removeOutliers: false,
+        getCellRenderer: GlideDefaultRendererLookup().forCell,
+        metrics: GlideTextMetrics(),
+      );
+
+      expect(width, greaterThanOrEqualTo(50));
+      expect(width, lessThanOrEqualTo(500));
+      // The header title is part of the measurement too.
+      expect(
+        width,
+        greaterThanOrEqualTo(
+          theme.cellHorizontalPadding * 2 + 8,
+        ),
+      );
+    });
+
+    test('measureColumn respects the configured bounds', () {
+      final theme = GlideTheme.light();
+      final tiny = glideMeasureColumn(
+        theme: theme,
+        column: const GlideGridColumn(title: 'C', width: 10),
+        colIndex: 0,
+        selectedData: const [
+          [GlideTextCell(data: 'a', displayData: 'a')],
+        ],
+        minColumnWidth: 120,
+        maxColumnWidth: 500,
+        removeOutliers: false,
+        getCellRenderer: GlideDefaultRendererLookup().forCell,
+        metrics: GlideTextMetrics(),
+      );
+      expect(tiny, 120);
+
+      final huge = glideMeasureColumn(
+        theme: theme,
+        column: const GlideGridColumn(title: 'C', width: 10),
+        colIndex: 0,
+        selectedData: const [
+          [
+            GlideTextCell(
+              data: 'a very long piece of text that will not fit at all',
+              displayData: 'a very long piece of text that will not fit at all',
+            ),
+          ],
+        ],
+        minColumnWidth: 10,
+        maxColumnWidth: 60,
+        removeOutliers: false,
+        getCellRenderer: GlideDefaultRendererLookup().forCell,
+        metrics: GlideTextMetrics(),
+      );
+      expect(huge, 60);
     });
   });
 

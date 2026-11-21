@@ -13,6 +13,7 @@ export 'common/glide_is_hotkey.dart';
 export 'common/glide_math.dart';
 export 'common/glide_theme.dart';
 export 'data_editor/glide_clipboard.dart';
+export 'data_editor/glide_column_sizer.dart';
 export 'data_editor/glide_copy_paste.dart';
 export 'data_editor/glide_data_editor.dart';
 export 'data_editor/glide_data_editor_fns.dart';

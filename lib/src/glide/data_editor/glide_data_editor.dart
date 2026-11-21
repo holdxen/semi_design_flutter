@@ -30,6 +30,7 @@ import '../internal/scrolling_data_grid/glide_scrolling_data_grid.dart';
 import 'glide_clipboard.dart';
 import 'glide_data_editor_fns.dart';
 import 'glide_handle_select.dart';
+import 'glide_column_sizer.dart';
 import 'glide_key_handler.dart';
 import 'glide_keybindings.dart';
 
@@ -70,6 +71,9 @@ class GlideDataEditorProps {
     this.onPaste,
     this.onItemHovered,
     this.onFillPattern,
+    this.onColumnResize,
+    this.onColumnResizeStart,
+    this.onColumnResizeEnd,
     this.onGridSelectionChange,
     this.onSelectionCleared,
     this.onDelete,
@@ -82,6 +86,8 @@ class GlideDataEditorProps {
     this.highlightRegions,
     this.fillHandle,
     this.allowedFillDirections = GlideFillHandleDirection.orthogonal,
+    this.minColumnWidth = 50,
+    this.maxColumnWidth = 500,
     this.overscrollY = 0,
     this.smoothScrollX = false,
     this.smoothScrollY = false,
@@ -157,6 +163,21 @@ class GlideDataEditorProps {
   /// `allowedFillDirections` (`data-editor.tsx:868`).
   final GlideFillHandleDirection allowedFillDirections;
 
+  /// `onColumnResize` / `...Start` / `...End` (`data-grid-dnd.tsx:40-70`).
+  final void Function(GlideGridColumn column, double newSize, int colIndex,
+      double newSizeWithGrow)?
+  onColumnResize;
+  final void Function(GlideGridColumn column, double newSize, int colIndex,
+      double newSizeWithGrow)?
+  onColumnResizeStart;
+  final void Function(GlideGridColumn column, double newSize, int colIndex,
+      double newSizeWithGrow)?
+  onColumnResizeEnd;
+
+  /// `minColumnWidthIn`/`maxColumnWidthIn` (`data-editor.tsx:862-863`).
+  final double minColumnWidth;
+  final double maxColumnWidth;
+
   /// `onFillPattern` (`data-editor.tsx:2258`): called before the fill runs;
   /// call `preventDefault()` to cancel it.
   final void Function(GlideFillPatternArgs args)? onFillPattern;
@@ -216,6 +237,11 @@ class _GlideDataEditorState extends State<GlideDataEditor>
 
   /// `fillHighlightRegion` (`data-editor.tsx:1227`).
   GlideRectangle? _fillHighlightRegion;
+
+  /// `resizeCol` / `resizeColStartX` (`data-grid-dnd.tsx:90-91`).
+  int? _resizeCol;
+  double? _resizeColStartX;
+  double _lastResizeWidth = -1;
 
   /// `visibleRegionRef` (`data-editor.tsx:2831`).
   GlideVisibleRegion? _visible;
@@ -644,6 +670,167 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   }
 
   // -------------------------------------------------------------------------
+  // Column resizing (`internal/data-grid-dnd/data-grid-dnd.tsx:85-330`)
+  // -------------------------------------------------------------------------
+
+  bool get _canResize =>
+      widget.props.onColumnResize != null ||
+      widget.props.onColumnResizeEnd != null ||
+      widget.props.onColumnResizeStart != null;
+
+  /// `offsetColumnSize` (`data-grid-dnd.tsx:85-87`).
+  double _offsetColumnSize(int col, double width) {
+    final column = widget.props.columns[col];
+    return clampDouble(
+      (width - (column.extension?.growOffset ?? 0)).roundToDouble(),
+      widget.props.minColumnWidth.ceilToDouble(),
+      widget.props.maxColumnWidth.floorToDouble(),
+    );
+  }
+
+  void _detectResizeStart(GlideGridMouseArgs args) {
+    if (!_canResize) return;
+    final columns = widget.props.columns;
+    if (args.kind == GlideGridCellKind.outOfBounds && args.isEdge) {
+      final bounds = _gridController.getBounds(
+        columns.length - 1,
+        GlideItem.headerRow,
+      );
+      if (bounds != null) {
+        _resizeColStartX = bounds.x;
+        _resizeCol = columns.length - 1;
+      }
+      return;
+    }
+    if (args.kind != GlideGridCellKind.header) return;
+    final header = args as GlideGridHeaderMouseArgs;
+    final col = header.location.col;
+    if (!header.isEdge || col < 0 || col >= columns.length) return;
+
+    _resizeColStartX = header.bounds.x;
+    _resizeCol = col;
+    final width = header.bounds.width;
+    widget.props.onColumnResizeStart?.call(
+      columns[col],
+      width,
+      col,
+      width + (columns[col].extension?.growOffset ?? 0).toDouble(),
+    );
+  }
+
+  /// Window `mousemove` (`data-grid-dnd.tsx:299-330`).
+  void _onPointerMoveRaw(Offset position) {
+    final col = _resizeCol;
+    final startX = _resizeColStartX;
+    if (col == null || startX == null) return;
+    if (col < 0 || col >= widget.props.columns.length) return;
+
+    final newWidth = position.dx - startX;
+    final column = widget.props.columns[col];
+    final ns = _offsetColumnSize(col, newWidth);
+    widget.props.onColumnResize?.call(
+      column,
+      ns,
+      col,
+      ns + (column.extension?.growOffset ?? 0).toDouble(),
+    );
+    _lastResizeWidth = newWidth;
+
+    // Resizing a column that is part of a multi-column selection resizes the
+    // whole selection (`data-grid-dnd.tsx:321-331`).
+    final selected = _selection.columns;
+    if (selected.firstIndex == col) {
+      for (final c in selected.indices) {
+        if (c == col) continue;
+        if (c < 0 || c >= widget.props.columns.length) continue;
+        final other = widget.props.columns[c];
+        final s = _offsetColumnSize(c, _lastResizeWidth);
+        widget.props.onColumnResize?.call(
+          other,
+          s,
+          c,
+          s + (other.extension?.growOffset ?? 0).toDouble(),
+        );
+      }
+    }
+  }
+
+  /// `onMouseUpImpl`'s resize tail (`data-grid-dnd.tsx:222-255`).
+  void _commitResize() {
+    final col = _resizeCol;
+    _resizeCol = null;
+    _resizeColStartX = null;
+    if (col == null || col < 0 || col >= widget.props.columns.length) {
+      _lastResizeWidth = -1;
+      return;
+    }
+
+    final columns = widget.props.columns;
+    final column = columns[col];
+    final ns = _offsetColumnSize(col, _lastResizeWidth);
+    widget.props.onColumnResizeEnd?.call(
+      column,
+      ns,
+      col,
+      ns + (column.extension?.growOffset ?? 0).toDouble(),
+    );
+
+    final selected = _selection.columns;
+    if (selected.hasIndex(col)) {
+      for (final c in selected.indices) {
+        if (c == col) continue;
+        if (c < 0 || c >= columns.length) continue;
+        final other = columns[c];
+        final s = _offsetColumnSize(c, _lastResizeWidth);
+        widget.props.onColumnResizeEnd?.call(
+          other,
+          s,
+          c,
+          s + (other.extension?.growOffset ?? 0).toDouble(),
+        );
+      }
+    }
+    _lastResizeWidth = -1;
+  }
+
+  /// `normalSizeColumn` (`data-editor.tsx:2193-2241`).
+  void _normalSizeColumn(int col) {
+    final p = widget.props;
+    final getCells = p.getCellsForSelection;
+    final onResize = p.onColumnResize;
+    if (getCells == null || onResize == null) return;
+    if (col < 0 || col >= p.columns.length) return;
+
+    final start = _visible?.y ?? 0;
+    final height = math.min(
+      _visible?.height ?? 1,
+      math.max(1, p.rows - start),
+    );
+    final cells = getCells(
+      GlideRectangle(
+        x: col.toDouble(),
+        y: start.toDouble(),
+        width: 1,
+        height: height.toDouble(),
+      ),
+    );
+    if (cells == null) return;
+
+    final newWidth = glideMeasureColumn(
+      theme: p.theme,
+      column: p.columns[col],
+      colIndex: col,
+      selectedData: cells,
+      minColumnWidth: p.minColumnWidth,
+      maxColumnWidth: p.maxColumnWidth,
+      removeOutliers: false,
+      getCellRenderer: _renderers.forCell,
+      metrics: _metrics,
+    );
+    onResize(p.columns[col], newWidth, col, newWidth);
+  }
+
+  // -------------------------------------------------------------------------
   // Hover, drag selection and autoscroll
   //   (`data-editor.tsx:2728-2850`, `data-editor/use-autoscroll.ts`)
   // -------------------------------------------------------------------------
@@ -652,8 +839,9 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     if (glideMouseArgsAreEqual(args, _hoveredArgs)) return;
     _hoveredArgs = args;
 
-    final mouseDown = _mouseDownData;
-    final dragging = mouseDown != null && mouseDown.button == 0;
+    // `mouseState !== undefined` upstream; `_previousSelection` is only set
+    // for presses that reached `setMouseState`.
+    final dragging = _previousSelection != null;
 
     if (dragging &&
         args.buttons != 0 &&
@@ -871,21 +1059,28 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       _mouseDownData = null;
       return;
     }
+
+    // `DataGridDnd.onMouseDownImpl` (`data-grid-dnd.tsx:149-186`) runs before
+    // the editor's own handler.
+    if (args.button == 0) _detectResizeStart(args);
+
+    final isFillHandle = args is GlideGridCellMouseArgs && args.isFillHandle;
     _mouseDownData = (
       button: args.button,
       time: DateTime.now().millisecondsSinceEpoch,
       location: _locationOf(args),
     );
-    if (args is GlideGridHeaderMouseArgs) return;
 
-    _previousSelection = _selection;
-    final isFillHandle = args is GlideGridCellMouseArgs && args.isFillHandle;
-    _fillHandlePressed = isFillHandle;
+    // `!fh && kind !== "cell" && isEdge` returns before `setMouseState`, so a
+    // resize press never arms selection dragging.
     if (!isFillHandle && args.kind != GlideGridCellKind.cell && args.isEdge) {
       return;
     }
 
+    _previousSelection = _selection;
+    _fillHandlePressed = isFillHandle;
     _lastMouseSelectLocation = null;
+
     if (!args.isTouch && args.button == 0 && !isFillHandle) {
       _handleSelect(args);
     } else if (!args.isTouch && args.button == 1) {
@@ -1017,6 +1212,11 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       return;
     }
 
+    // `DataGridDnd.onMouseUpImpl` (`data-grid-dnd.tsx:220-266`).
+    if (args.button == 0 && _resizeCol != null) {
+      _commitResize();
+    }
+
     // Fill handle release (`data-editor.tsx:2342-2358`).
     if (_fillHandlePressed) {
       final previous = _previousSelection;
@@ -1063,7 +1263,13 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       case GlideGridCellKind.header:
         final header = args as GlideGridHeaderMouseArgs;
         final lastDown = _lastMouseSelectLocation;
-        if (args.button == 0 &&
+        if (header.isEdge) {
+          // Double-clicking a header edge re-measures the column
+          // (`data-editor.tsx:2489-2492`).
+          if (header.isDoubleClick == true) {
+            _normalSizeColumn(header.location.col);
+          }
+        } else if (args.button == 0 &&
             lastDown != null &&
             lastDown.col == header.location.col &&
             lastDown.row == header.location.row) {
@@ -1390,6 +1596,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
           verticalBorder: p.verticalBorder,
           onItemHovered: _onItemHovered,
           onMouseMove: (_) {},
+          onPointerMoveRaw: _onPointerMoveRaw,
           onMouseDown: _onMouseDown,
           onMouseUp: _onMouseUp,
           onContextMenu: _onContextMenu,

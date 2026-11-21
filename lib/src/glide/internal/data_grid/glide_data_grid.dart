@@ -34,6 +34,7 @@ class GlideDataGridProps {
     required this.onItemHovered,
     required this.onMouseMove,
     required this.onMouseDown,
+    this.onPointerMoveRaw,
     required this.onMouseUp,
     required this.onContextMenu,
     required this.onCanvasFocused,
@@ -128,6 +129,10 @@ class GlideDataGridProps {
 
   final void Function(GlideGridMouseArgs args) onItemHovered;
   final void Function(GlideGridMouseArgs args) onMouseMove;
+
+  /// Window-level `mousemove` (`data-grid.tsx`), used by column resizing
+  /// which must keep tracking after the pointer leaves the header.
+  final void Function(Offset position)? onPointerMoveRaw;
   final void Function(GlideGridMouseArgs args) onMouseDown;
   final void Function(GlideGridMouseArgs args, bool isOutside) onMouseUp;
   final void Function(GlideGridMouseArgs args, void Function() preventDefault)
@@ -384,142 +389,126 @@ class _GlideDataGridState extends State<GlideDataGrid> {
       );
     }
 
+    // Header rows (`data-grid.tsx:613-656`): the left edge of a column is
+    // reported as the right edge of the previous one.
+    if (row <= -1) {
+      var bounds = _getBoundsForItem(col, row)!;
+      var isEdge = bounds.x + bounds.width - x <= edgeDetectionBuffer;
+      var targetCol = col;
+      final previousCol = col - 1;
+      if (x - bounds.x <= edgeDetectionBuffer && previousCol >= 0) {
+        isEdge = true;
+        targetCol = previousCol;
+        bounds = _getBoundsForItem(previousCol, row)!;
+      }
+
+      final group = targetCol < p.columns.length
+          ? p.columns[targetCol].group ?? ''
+          : '';
+      final common = (
+        shiftKey: shiftKey,
+        ctrlKey: ctrlKey,
+        metaKey: metaKey,
+        isTouch: isTouch,
+        isLongTouch: isLongTouch,
+        isDoubleClick: isDoubleClick,
+        isEdge: isEdge,
+        button: button,
+        buttons: buttons,
+        scrollEdge: scrollEdge,
+        location: GlideItem(targetCol, row),
+        bounds: bounds,
+        group: group,
+        localEventX: x - bounds.x,
+        localEventY: y - bounds.y,
+      );
+
+      if (row == GlideItem.groupHeaderRow) {
+        return GlideGridGroupHeaderMouseArgs(
+          shiftKey: common.shiftKey,
+          ctrlKey: common.ctrlKey,
+          metaKey: common.metaKey,
+          isTouch: common.isTouch,
+          isLongTouch: common.isLongTouch,
+          isDoubleClick: common.isDoubleClick,
+          isEdge: common.isEdge,
+          button: common.button,
+          buttons: common.buttons,
+          scrollEdge: common.scrollEdge,
+          location: common.location,
+          bounds: common.bounds,
+          group: common.group,
+          localEventX: common.localEventX,
+          localEventY: common.localEventY,
+        );
+      }
+      return GlideGridHeaderMouseArgs(
+        shiftKey: common.shiftKey,
+        ctrlKey: common.ctrlKey,
+        metaKey: common.metaKey,
+        isTouch: common.isTouch,
+        isLongTouch: common.isLongTouch,
+        isDoubleClick: common.isDoubleClick,
+        isEdge: common.isEdge,
+        button: common.button,
+        buttons: common.buttons,
+        scrollEdge: common.scrollEdge,
+        location: common.location,
+        bounds: common.bounds,
+        group: common.group,
+        localEventX: common.localEventX,
+        localEventY: common.localEventY,
+      );
+    }
+
     final bounds = _getBoundsForItem(col, row)!;
-    final base = (
+    final isEdge = bounds.x + bounds.width - x < edgeDetectionBuffer;
+
+    return GlideGridCellMouseArgs(
       shiftKey: shiftKey,
       ctrlKey: ctrlKey,
       metaKey: metaKey,
       isTouch: isTouch,
       isLongTouch: isLongTouch,
       isDoubleClick: isDoubleClick,
-      isEdge: false,
+      isEdge: isEdge,
       button: button,
       buttons: buttons,
       scrollEdge: scrollEdge,
-      localEventX: x,
-      localEventY: y,
-    );
-
-    if (row == GlideItem.headerRow) {
-      return GlideGridHeaderMouseArgs(
-        shiftKey: base.shiftKey,
-        ctrlKey: base.ctrlKey,
-        metaKey: base.metaKey,
-        isTouch: base.isTouch,
-        isLongTouch: base.isLongTouch,
-        isDoubleClick: base.isDoubleClick,
-        isEdge: base.isEdge,
-        button: base.button,
-        buttons: base.buttons,
-        scrollEdge: base.scrollEdge,
-        location: GlideItem(col, GlideItem.headerRow),
-        bounds: bounds,
-        group: p.columns[col].group ?? '',
-        localEventX: x,
-        localEventY: y,
-      );
-    }
-
-    if (row == GlideItem.groupHeaderRow) {
-      return GlideGridGroupHeaderMouseArgs(
-        shiftKey: base.shiftKey,
-        ctrlKey: base.ctrlKey,
-        metaKey: base.metaKey,
-        isTouch: base.isTouch,
-        isLongTouch: base.isLongTouch,
-        isDoubleClick: base.isDoubleClick,
-        isEdge: base.isEdge,
-        button: base.button,
-        buttons: base.buttons,
-        scrollEdge: base.scrollEdge,
-        location: GlideItem(col, GlideItem.groupHeaderRow),
-        bounds: bounds,
-        group: p.columns[col].group ?? '',
-        localEventX: x,
-        localEventY: y,
-      );
-    }
-
-    return GlideGridCellMouseArgs(
-      shiftKey: base.shiftKey,
-      ctrlKey: base.ctrlKey,
-      metaKey: base.metaKey,
-      isTouch: base.isTouch,
-      isLongTouch: base.isLongTouch,
-      isDoubleClick: base.isDoubleClick,
-      isEdge: base.isEdge,
-      button: base.button,
-      buttons: base.buttons,
-      scrollEdge: base.scrollEdge,
       location: GlideItem(col, row),
       bounds: bounds,
-      isFillHandle: _isOverFillHandle(x, y),
-      localEventX: x,
-      localEventY: y,
+      isFillHandle: _isFillHandleAt(x, y),
+      localEventX: x - bounds.x,
+      localEventY: y - bounds.y,
     );
   }
 
-  bool _isOverFillHandle(double x, double y) {
+  /// Fill-handle hit test (`data-grid.tsx:662-687`): the handle center sits
+  /// exactly on the bottom-right corner of the selected range, offset by half
+  /// a pixel to line up with the grid lines.
+  bool _isFillHandleAt(double posX, double posY) {
     final p = widget.props;
     final config = p.fillHandle;
     final current = p.selection.current;
     if (config == null || current == null || !p.drawFocusRing) return false;
 
-    final bounds = _boundsForRange(current.range);
-    if (bounds == null || bounds.width == 0) return false;
-    final hx = bounds.x + bounds.width + config.offsetX;
-    final hy = bounds.y + bounds.height + config.offsetY;
-    final size = config.size;
-    return x >= hx - size && x <= hx + size && y >= hy - size && y <= hy + size;
-  }
+    final bottomRight = rectBottomRight(current.range);
+    final fillBounds = _getBoundsForItem(bottomRight.col, bottomRight.row);
+    if (fillBounds == null) return false;
 
-  GlideRectangle? _boundsForRange(GlideRectangle range) {
-    final p = widget.props;
-    final mapped = mapColumns(p.columns, p.freezeColumns);
-    final totalHeaderHeight = p.enableGroups
-        ? p.groupHeaderHeight + p.headerHeight
-        : p.headerHeight;
-    final topLeft = computeBounds(
-      col: range.x.toInt(),
-      row: range.y.toInt(),
-      width: p.width,
-      height: p.height,
-      groupHeaderHeight: p.groupHeaderHeight,
-      totalHeaderHeight: totalHeaderHeight,
-      cellXOffset: p.cellXOffset,
-      cellYOffset: p.cellYOffset,
-      translateX: p.translateX,
-      translateY: p.translateY,
-      rows: p.rows,
-      freezeColumns: p.freezeColumns,
-      freezeTrailingRows: p.freezeTrailingRows,
-      mappedColumns: mapped,
-      rowHeight: p.rowHeight,
-    );
-    final bottomRight = computeBounds(
-      col: (range.x + range.width - 1).toInt(),
-      row: (range.y + range.height - 1).toInt(),
-      width: p.width,
-      height: p.height,
-      groupHeaderHeight: p.groupHeaderHeight,
-      totalHeaderHeight: totalHeaderHeight,
-      cellXOffset: p.cellXOffset,
-      cellYOffset: p.cellYOffset,
-      translateX: p.translateX,
-      translateY: p.translateY,
-      rows: p.rows,
-      freezeColumns: p.freezeColumns,
-      freezeTrailingRows: p.freezeTrailingRows,
-      mappedColumns: mapped,
-      rowHeight: p.rowHeight,
-    );
-    if (topLeft.width == 0 || bottomRight.width == 0) return null;
-    return GlideRectangle(
-      x: topLeft.x,
-      y: topLeft.y,
-      width: bottomRight.x + bottomRight.width - topLeft.x,
-      height: bottomRight.y + bottomRight.height - topLeft.y,
-    );
+    final half = config.size / 2;
+    final centerX = fillBounds.x +
+        fillBounds.width +
+        config.offsetX -
+        half +
+        0.5;
+    final centerY = fillBounds.y +
+        fillBounds.height +
+        config.offsetY -
+        half +
+        0.5;
+    return (centerX - posX).abs() < config.size &&
+        (centerY - posY).abs() < config.size;
   }
 
   // -------------------------------------------------------------------------
@@ -546,6 +535,7 @@ class _GlideDataGridState extends State<GlideDataGrid> {
 
   void _handlePointerMove(PointerMoveEvent event) {
     final p = widget.props;
+    p.onPointerMoveRaw?.call(event.localPosition);
     final args = _getMouseArgsForPosition(
       event.localPosition.dx,
       event.localPosition.dy,
@@ -590,7 +580,8 @@ class _GlideDataGridState extends State<GlideDataGrid> {
     var isDoubleClick = false;
 
     // `data-grid.tsx:1154-1166`: a held touch longer than 500ms is a long
-    // touch, and a second release inside the window is a double click.
+    // touch, and a second release inside the window is a double click. The
+    // flags are computed before the args so every `kind` gets them.
     if (isTouch && _downTime != 0 && now - _downTime > 500) {
       isLongTouch = true;
     }
