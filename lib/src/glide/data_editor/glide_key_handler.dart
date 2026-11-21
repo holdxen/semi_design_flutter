@@ -65,6 +65,10 @@ class GlideKeyHandler {
     required this.visibleRegion,
     required this.getCellContent,
     required this.getCellRenderer,
+    this.showTrailingBlankRow = false,
+    this.userRows,
+    this.appendRow,
+    this.getCustomNewRowTargetColumn,
     this.rangeBehavior = GlideSelectionBlending.exclusive,
     this.columnBehavior = GlideSelectionBlending.exclusive,
     this.rowBehavior = GlideSelectionBlending.exclusive,
@@ -100,6 +104,21 @@ class GlideKeyHandler {
   final GlideRectangle visibleRegion;
   final GlideGridCell Function(GlideItem item) getCellContent;
   final GlideGetCellRenderer getCellRenderer;
+
+  /// `showTrailingBlankRow` (`data-editor.tsx:955`); [userRows] is the row
+  /// count *without* the trailing row, so the trailing row sits at index
+  /// `userRows`. Defaults to [rows], which is correct whenever there is no
+  /// trailing row.
+  final bool showTrailingBlankRow;
+  final int? userRows;
+
+  int get _userRows => userRows ?? rows;
+
+  /// `appendRow` (`data-editor.tsx:1687`).
+  final void Function(int col, bool openOverlay)? appendRow;
+
+  /// `getCustomNewRowTargetColumn` (`data-editor.tsx:1795`).
+  final int? Function(int col)? getCustomNewRowTargetColumn;
 
   final GlideSelectionBlending rangeBehavior;
   final GlideSelectionBlending columnBehavior;
@@ -190,7 +209,7 @@ class GlideKeyHandler {
             x: rowMarkerOffset.toDouble(),
             y: 0,
             width: columnCount.toDouble(),
-            height: rows.toDouble(),
+            height: _userRows.toDouble(),
           ),
         ),
       ),
@@ -232,7 +251,7 @@ class GlideKeyHandler {
               x: col.toDouble(),
               y: 0,
               width: 1,
-              height: rows.toDouble(),
+              height: _userRows.toDouble(),
             ),
           );
         }
@@ -302,10 +321,16 @@ class GlideKeyHandler {
     } else if (!overlayOpen &&
         event.bounds != null &&
         glideIsHotkey(k.activateCell, event, details)) {
-      onCellActivated?.call(
-        GlideItem(col - rowMarkerOffset, row),
-        const GlideKeyboardCellActivation(null),
-      );
+      if (showTrailingBlankRow && row == _userRows) {
+        // Enter on the trailing row appends instead of editing
+        // (`data-editor.tsx:3301-3305`).
+        appendRow?.call(getCustomNewRowTargetColumn?.call(col) ?? col, true);
+      } else {
+        onCellActivated?.call(
+          GlideItem(col - rowMarkerOffset, row),
+          const GlideKeyboardCellActivation(null),
+        );
+      }
     } else if (current.range.height > 1 &&
         glideIsHotkey(k.downFill, event, details)) {
       fillDown?.call();
@@ -349,7 +374,7 @@ class GlideKeyHandler {
         col -= 1;
         freeMove = true;
       } else if (glideIsHotkey(k.goToLastRow, event, details)) {
-        row = rows - 1;
+        row = math.max(0, _userRows - 1);
       } else if (glideIsHotkey(k.goToFirstRow, event, details)) {
         row = -(1 << 30);
       } else if (glideIsHotkey(k.goToLastColumn, event, details)) {
@@ -540,9 +565,10 @@ class GlideKeyHandler {
     var top = old.y.toInt();
     var bottom = (old.y + old.height).toInt();
 
-    // `getSelectionRowLimits` defaults to the full table.
+    // `getSelectionRowLimits` defaults to the full table (`data-editor.tsx:
+    // 2866`), which is the user row count — the trailing row is excluded.
     const minRow = 0;
-    final maxRowRaw = rows - 1;
+    final maxRowRaw = math.max(0, _userRows - 1);
     final maxRow = maxRowRaw + 1; // inclusive
 
     // Vertical first, in case new spans come in.
@@ -753,8 +779,15 @@ class GlideKeyHandler {
 
     final col = current.cell.col;
     final row = current.cell.row;
+
+    // `(!showTrailingBlankRow || row !== rows)` (`data-editor.tsx:3518`).
+    if (showTrailingBlankRow && row == _userRows) return false;
+
     final target = getCellContent(
-      GlideItem(col - rowMarkerOffset, clampInt(row, 0, rows - 1)),
+      GlideItem(
+        col - rowMarkerOffset,
+        clampInt(row, 0, math.max(0, _userRows - 1)),
+      ),
     );
     if (!glideIsEditableGridCell(target) ||
         target.kind == GlideCellKind.boolean) {

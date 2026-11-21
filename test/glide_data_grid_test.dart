@@ -1525,19 +1525,37 @@ void main() {
       bool? Function(int from, int to)? onColumnProposeMove,
       void Function(int from, int to)? onRowMoved,
       GlideRowMarkerOptions? rowMarkers,
+      int rows = 200,
+      GlideTrailingRowOptions? trailingRowOptions,
+      void Function()? onRowAppended,
     }) {
       edits = [];
       selectionLog = [];
       activationLog = [];
       final cells = table();
+      var currentRows = rows;
+      return StatefulBuilder(
+        builder: (context, setRows) {
       final p = GlideDataEditorProps(
         columns: [
           for (var i = 0; i < 6; i++)
             GlideGridColumn(title: 'C$i', width: 100),
         ],
-        rows: 200,
-        getCellContent: (item, [_]) =>
-            content?.call(item) ?? cells[item.row][item.col],
+        rows: currentRows,
+        trailingRowOptions: trailingRowOptions,
+        onRowAppended: trailingRowOptions == null
+            ? null
+            : () {
+                setRows(() => currentRows++);
+                onRowAppended?.call();
+              },
+        getCellContent: (item, [_]) {
+          if (content != null) return content(item);
+          if (item.row >= cells.length) {
+            return const GlideTextCell(data: 'new', displayData: 'new');
+          }
+          return cells[item.row][item.col];
+        },
         theme: GlideTheme.light(),
         rowHeight: const GlideRowHeight.fixed(32),
         headerHeight: 32,
@@ -1580,6 +1598,8 @@ void main() {
         home: Scaffold(
           body: SizedBox(width: 400, height: 400, child: GlideDataEditor(props: p)),
         ),
+      );
+        },
       );
     }
 
@@ -2382,6 +2402,98 @@ void main() {
       // than failing (`data-grid-overlay-editor.tsx:164-173`).
       expect(tester.takeException(), isNull);
       expect(find.byType(GlideDataGridOverlayEditor), findsOneWidget);
+    });
+
+    testWidgets('clicking the trailing row appends and focuses it',
+        (tester) async {
+      var appended = 0;
+      await tester.pumpWidget(
+        buildEditor(
+          rows: 3,
+          trailingRowOptions: const GlideTrailingRowOptions(hint: 'New row'),
+          onRowAppended: () => appended++,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // The trailing row sits right after the three user rows:
+      // y = 32 (header) + 3 * 32 = 128.
+      final gesture = await tester.startGesture(
+        const Offset(50, 140),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(appended, 1);
+      expect(selectionLog.last.current!.cell, const GlideItem(0, 3));
+      // `focusOnRowFromTrailingBlankRow` opens the editor in force-edit mode.
+      expect(find.byType(TextField), findsOneWidget);
+      expect(find.text('r3 c0'), findsOneWidget);
+    });
+
+    testWidgets('enter on the trailing row appends instead of editing',
+        (tester) async {
+      var appended = 0;
+      await tester.pumpWidget(
+        buildEditor(
+          rows: 3,
+          trailingRowOptions: const GlideTrailingRowOptions(),
+          onRowAppended: () => appended++,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final start = await tester.startGesture(
+        const Offset(50, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await start.up();
+      await tester.pumpAndSettle();
+
+      for (var i = 0; i < 3; i++) {
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+        await tester.pumpAndSettle();
+      }
+      expect(selectionLog.last.current!.cell, const GlideItem(0, 3));
+      expect(appended, 0);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+
+      expect(appended, 1);
+    });
+
+    testWidgets('typing on the trailing row does not open an editor',
+        (tester) async {
+      var appended = 0;
+      await tester.pumpWidget(
+        buildEditor(
+          rows: 3,
+          trailingRowOptions: const GlideTrailingRowOptions(),
+          onRowAppended: () => appended++,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final start = await tester.startGesture(
+        const Offset(50, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await start.up();
+      await tester.pumpAndSettle();
+
+      for (var i = 0; i < 3; i++) {
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+        await tester.pumpAndSettle();
+      }
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyZ);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TextField), findsNothing);
+      expect(activationLog, isEmpty);
+      expect(appended, 0);
     });
   });
 

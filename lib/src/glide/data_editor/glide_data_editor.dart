@@ -63,6 +63,8 @@ class GlideDataEditorProps {
     this.rangeSelectionColumnSpanning = true,
     this.columnSelectionModeMulti = false,
     this.rowMarkers,
+    this.trailingRowOptions,
+    this.onRowAppended,
     this.rowSelectionMode = GlideSelectMode.auto,
     this.keybindings,
     this.editOnType = true,
@@ -141,6 +143,14 @@ class GlideDataEditorProps {
   /// `rowMarkers` (`data-editor.tsx:331`): null/`none` adds no marker
   /// column.
   final GlideRowMarkerOptions? rowMarkers;
+
+  /// `trailingRowOptions` (`data-editor.tsx:291-306`): non-null adds the
+  /// "new row" row at the bottom (`:955`).
+  final GlideTrailingRowOptions? trailingRowOptions;
+
+  /// `onRowAppended` (`data-editor.tsx:221`): the owner inserts a row and
+  /// rebuilds; the editor waits for `rows` to grow before focusing it.
+  final void Function()? onRowAppended;
 
   /// `rowSelectionMode` (`data-editor.tsx:849`).
   final GlideSelectMode rowSelectionMode;
@@ -343,6 +353,10 @@ class _GlideDataEditorState extends State<GlideDataEditor>
         widget.props.rowSelectionMode == GlideSelectMode.multi,
     rowDragEnabled: widget.props.onRowMoved != null,
     headerRowMarkerDisabled: _headerRowMarkerDisabled,
+    showTrailingBlankRow: _showTrailingBlankRow,
+    userRows: widget.props.rows,
+    appendRow: (col) => _appendRow(col),
+    getCustomNewRowTargetColumn: _customNewRowTargetColumn,
     initial: _selection,
   );
 
@@ -413,7 +427,13 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     ];
   }
 
-  /// `lockColumns={rowMarkerOffset}` (`data-editor.tsx:4263`); the marker
+  bool get _showTrailingBlankRow => widget.props.trailingRowOptions != null;
+
+  /// `mangledRows` (`data-editor.tsx:1205`).
+  int get _mangledRows =>
+      _showTrailingBlankRow ? widget.props.rows + 1 : widget.props.rows;
+
+  /// `lockColumns={rowMarkerOffset}` (`data-editor.tsx:4263`; the marker
   /// column is never a drop target.
   int get _lockColumns =>
       math.max(widget.props.lockColumns, _markerOffset);
@@ -434,6 +454,117 @@ class _GlideDataEditorState extends State<GlideDataEditor>
         GlideMarkerCheckboxStyle.square,
     markerKind: _markerKind,
   );
+
+  /// The `NewRow` cell for the trailing row (`data-editor.tsx:1330-1347`).
+  GlideGridCell _newRowCell(int col) {
+    final column = _mangledColumns[col];
+    if (column.trailingRowOptions?.disabled == true) {
+      return const GlideLoadingCell();
+    }
+    final editorOpts = widget.props.trailingRowOptions;
+    final isFirst = col == _markerOffset;
+    final maybeFirstColumnHint = isFirst ? (editorOpts?.hint ?? '') : '';
+    final hint = column.trailingRowOptions?.hint ?? maybeFirstColumnHint;
+    return GlideNewRowCell(
+      hint: hint,
+      icon: column.trailingRowOptions?.addIcon ?? editorOpts?.addIcon,
+    );
+  }
+
+  /// `getCustomNewRowTargetColumn` (`data-editor.tsx:1795-1813`).
+  int? _customNewRowTargetColumn(int col) {
+    final p = widget.props;
+    if (col < 0 || col >= _mangledColumns.length) return null;
+    final custom = _mangledColumns[col].trailingRowOptions?.targetColumn ??
+        p.trailingRowOptions?.targetColumn;
+    final offset = _markerOffset;
+    if (custom is int) return custom + offset;
+    if (custom is GlideGridColumn) {
+      final index = p.columns.indexOf(custom);
+      if (index >= 0) return index + offset;
+    }
+    return null;
+  }
+
+  /// `appendRow` (`data-editor.tsx:1687-1742`). The Web version awaits the
+  /// consumer's promise and retries with a backoff; here the same job is a
+  /// post-frame check that `rows` grew.
+  void _appendRow(int col, {bool openOverlay = true}) {
+    final p = widget.props;
+    if (col < 0 || col >= _mangledColumns.length) return;
+    if (_mangledColumns[col].trailingRowOptions?.disabled == true) return;
+
+    final rowsBefore = p.rows;
+    p.onRowAppended?.call();
+    _focusAfterAppend(col, rowsBefore, openOverlay, 0);
+  }
+
+  void _focusAfterAppend(
+    int col,
+    int rowsBefore,
+    bool openOverlay,
+    int attempt,
+  ) {
+    if (!mounted) return;
+    if (widget.props.rows > rowsBefore) {
+      _selectAppendedRow(col, rowsBefore, openOverlay);
+      return;
+    }
+    if (attempt >= 10) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _focusAfterAppend(col, rowsBefore, openOverlay, attempt + 1);
+      }
+    });
+  }
+
+  /// `doFocus`'s `setCurrent` + `scrollTo` (`data-editor.tsx:1716-1740`).
+  void _selectAppendedRow(int col, int row, bool openOverlay) {
+    final behavior = _selectionState.createBehavior();
+    behavior.setCurrent(
+      value: (
+        cell: GlideItem(col, row),
+        range: GlideRectangle(
+          x: col.toDouble(),
+          y: row.toDouble(),
+          width: 1,
+          height: 1,
+        ),
+      ),
+      expand: false,
+      append: false,
+      trigger: GlideSelectionTrigger.edit,
+    );
+    _setGridSelection(_selectionState.selection, false);
+    _scrollTo(GlideScrollTarget(col - _markerOffset, row));
+
+    if (openOverlay) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _focusOnRowFromTrailingBlankRow(col, row);
+      });
+    }
+  }
+
+  /// `focusOnRowFromTrailingBlankRow` (`data-editor.tsx:1499-1522`).
+  void _focusOnRowFromTrailingBlankRow(int col, int row) {
+    final bounds = _gridController.getBounds(col, row);
+    if (bounds == null) return;
+    final location = GlideItem(col, row);
+    final content = _getCellContent(location);
+    if (!content.allowOverlay) return;
+    _setOverlay(
+      _OverlayState(
+        target: bounds,
+        content: content,
+        cell: location,
+        initialValue: null,
+        highlight: true,
+        forceEditMode: true,
+        activation: const GlideKeyboardCellActivation('Enter'),
+        theme: _themeForCell(content, location),
+      ),
+    );
+  }
 
   /// `getCellsForSelectionMangled` (`use-cells-for-selection.ts:42-67`).
   GlideCellArray? _getCellsForSelection(GlideRectangle region) {
@@ -507,6 +638,11 @@ class _GlideDataEditorState extends State<GlideDataEditor>
 
     if (_markerOffset == 1 && col == 0) return _markerCellFor(row);
 
+    // `isTrailing` (`data-editor.tsx:1329-1347`).
+    if (_showTrailingBlankRow && row == _mangledRows - 1) {
+      return _newRowCell(col);
+    }
+
     var cell = widget.props.getCellContent(
       GlideItem(col - _markerOffset, row),
       forceStrict,
@@ -578,8 +714,13 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     selection: _selection,
     setGridSelection: _setGridSelection,
     columnCount: _mangledColumns.length,
-    rows: widget.props.rows,
+    rows: _mangledRows,
     rowMarkerOffset: _markerOffset,
+    showTrailingBlankRow: _showTrailingBlankRow,
+    userRows: widget.props.rows,
+    appendRow: (col, openOverlay) =>
+        _appendRow(col, openOverlay: openOverlay),
+    getCustomNewRowTargetColumn: _customNewRowTargetColumn,
     overlayOpen: _overlay != null,
     columnSelect: widget.props.columnSelect,
     rowSelect: widget.props.rowSelect,
@@ -731,6 +872,18 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     if (movement.col == 0 && movement.row == 0) return;
     final cell = overlay?.cell ?? _selection.current?.cell;
     if (cell == null) return;
+
+    // `isEditingLastRow && movY === 1` (`data-editor.tsx:3101-3110`): moving
+    // down out of the trailing row appends instead of moving the selection.
+    if (newCell != null &&
+        movement.row == 1 &&
+        _showTrailingBlankRow &&
+        widget.props.onRowAppended != null &&
+        cell.row == _mangledRows - 1) {
+      _appendRow(cell.col + movement.col, openOverlay: false);
+      return;
+    }
+
     _updateSelectedCell(
       cell.col + movement.col,
       cell.row + movement.row,
@@ -1258,7 +1411,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     }
 
     col = clampInt(col, 0, widget.props.columns.length - 1);
-    row = clampInt(row, 0, widget.props.rows - 1);
+    row = clampInt(row, 0, _mangledRows - 1);
 
     _onItemHovered(_withLocation(args, col, row));
   }
@@ -1777,7 +1930,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     await glidePaste(
       focused: _focused,
       selection: _selection,
-      rows: widget.props.rows,
+      rows: _mangledRows,
       columnCount: _mangledColumns.length,
       rowMarkerOffset: _markerOffset,
       getCellContent: widget.props.getCellContent,
@@ -1806,9 +1959,10 @@ class _GlideDataEditorState extends State<GlideDataEditor>
 
   double get _rowsHeight {
     final rh = widget.props.rowHeight;
-    if (rh.isFixed) return widget.props.rows * rh(0);
+    final rows = _mangledRows;
+    if (rh.isFixed) return rows * rh(0);
     var total = 0.0;
-    for (var i = 0; i < widget.props.rows; i++) {
+    for (var i = 0; i < rows; i++) {
       total += rh(i);
     }
     return total;
@@ -1851,7 +2005,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       clientHeight: math.max(1, _viewportHeight - _headerHeight),
       columns: mapColumns(widget.props.columns, widget.props.freezeColumns),
       rowHeight: widget.props.rowHeight,
-      rows: widget.props.rows,
+      rows: _mangledRows,
       freezeColumns: widget.props.freezeColumns,
       smoothScrollX: widget.props.smoothScrollX,
       smoothScrollY: widget.props.smoothScrollY,
@@ -1899,7 +2053,8 @@ class _GlideDataEditorState extends State<GlideDataEditor>
           width: _viewportWidth,
           height: _viewportHeight,
           columns: _mangledColumns,
-          rows: p.rows,
+          rows: _mangledRows,
+          hasAppendRow: _showTrailingBlankRow,
           rowHeight: p.rowHeight,
           headerHeight: p.headerHeight,
           // `data-editor.tsx:4276` forwards 0 when groups are off, which is

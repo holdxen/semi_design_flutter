@@ -965,6 +965,8 @@ class GlideTrailingRowOptions {
     this.targetColumn,
     this.themeOverride,
     this.disabled = false,
+    this.tint = false,
+    this.sticky = false,
   });
 
   final String? hint;
@@ -974,6 +976,12 @@ class GlideTrailingRowOptions {
   final Object? targetColumn;
   final GlideThemeOverride? themeOverride;
   final bool disabled;
+
+  /// Editor-level extras (`data-editor.tsx:291-306`).
+  final bool tint;
+
+  /// Keeps the trailing row pinned while scrolling.
+  final bool sticky;
 }
 
 /// `BaseGridColumn` (`data-grid-types.ts:148-166`).

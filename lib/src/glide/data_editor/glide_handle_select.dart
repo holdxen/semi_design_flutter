@@ -74,6 +74,10 @@ class GlideDataEditorSelection {
     this.rowSelectionModeMulti = false,
     this.rowDragEnabled = false,
     this.headerRowMarkerDisabled = false,
+    this.showTrailingBlankRow = false,
+    this.userRows = 0,
+    this.appendRow,
+    this.getCustomNewRowTargetColumn,
     GlideGridSelection initial = GlideGridSelection.empty,
   }) : selection = initial;
 
@@ -103,6 +107,18 @@ class GlideDataEditorSelection {
 
   /// `headerRowMarkerDisabled` (`data-editor.tsx:919`).
   final bool headerRowMarkerDisabled;
+
+  /// `showTrailingBlankRow` (`data-editor.tsx:955`).
+  final bool showTrailingBlankRow;
+
+  /// The user row count; the trailing row sits at index `userRows`.
+  final int userRows;
+
+  /// `appendRow` (`data-editor.tsx:1687`).
+  final void Function(int col)? appendRow;
+
+  /// `getCustomNewRowTargetColumn` (`data-editor.tsx:1795`).
+  final int? Function(int col)? getCustomNewRowTargetColumn;
 
   GlideGridSelection selection;
   int? lastSelectedCol;
@@ -226,6 +242,14 @@ class GlideDataEditorSelection {
             );
             lastSelectedRow = row;
           }
+          return const GlideSelectOutcome(clearOverlay: true, focus: true);
+        }
+
+        // `col >= rowMarkerOffset && showTrailingBlankRow && row === rows`
+        // (`data-editor.tsx:1912-1915`).
+        if (showTrailingBlankRow && row == userRows && col >= rowMarkerOffset) {
+          final custom = getCustomNewRowTargetColumn?.call(col);
+          appendRow?.call(custom ?? col);
           return const GlideSelectOutcome(clearOverlay: true, focus: true);
         }
 
