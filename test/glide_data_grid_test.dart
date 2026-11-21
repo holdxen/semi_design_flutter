@@ -2266,6 +2266,123 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
+
+    testWidgets('number cells open the number editor and commit',
+        (tester) async {
+      await tester.pumpWidget(
+        buildEditor(
+          content: (item) => item == const GlideItem(1, 0)
+              ? const GlideNumberCell(data: 1234.5, displayData: '1,234.5')
+              : const GlideTextCell(data: 'x', displayData: 'x'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Second click activates the already-selected cell.
+      for (var i = 0; i < 2; i++) {
+        final gesture = await tester.startGesture(
+          const Offset(150, 45),
+          kind: PointerDeviceKind.mouse,
+        );
+        await gesture.up();
+        await tester.pumpAndSettle();
+      }
+
+      expect(find.byType(TextField), findsOneWidget);
+      expect(find.text('1,234.5'), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField), '42');
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+
+      expect(edits, hasLength(1));
+      final value = edits.single.value as GlideNumberCell;
+      expect(value.data, 42);
+      expect(value.displayData, '42');
+    });
+
+    testWidgets('uri cells show the preview until the pencil is tapped',
+        (tester) async {
+      await tester.pumpWidget(
+        buildEditor(
+          content: (item) => item == const GlideItem(1, 0)
+              ? const GlideUriCell(
+                  data: 'https://example.com/a',
+                  displayData: 'example.com/a',
+                )
+              : const GlideTextCell(data: 'x', displayData: 'x'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      for (var i = 0; i < 2; i++) {
+        final gesture = await tester.startGesture(
+          const Offset(150, 45),
+          kind: PointerDeviceKind.mouse,
+        );
+        await gesture.up();
+        await tester.pumpAndSettle();
+      }
+
+      expect(find.byType(TextField), findsNothing);
+      expect(find.text('example.com/a'), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.edit));
+      await tester.pumpAndSettle();
+      expect(find.byType(TextField), findsOneWidget);
+      expect(find.text('https://example.com/a'), findsOneWidget);
+    });
+
+    testWidgets('bubble cells open a read-only editor', (tester) async {
+      await tester.pumpWidget(
+        buildEditor(
+          content: (item) => item == const GlideItem(1, 0)
+              ? const GlideBubbleCell(data: ['alpha', 'beta'])
+              : const GlideTextCell(data: 'x', displayData: 'x'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      for (var i = 0; i < 2; i++) {
+        final gesture = await tester.startGesture(
+          const Offset(150, 45),
+          kind: PointerDeviceKind.mouse,
+        );
+        await gesture.up();
+        await tester.pumpAndSettle();
+      }
+
+      expect(find.byType(TextField), findsNothing);
+      expect(find.text('alpha'), findsOneWidget);
+      expect(find.text('beta'), findsOneWidget);
+    });
+
+    testWidgets('a cell without an editor still opens the overlay',
+        (tester) async {
+      await tester.pumpWidget(
+        buildEditor(
+          content: (item) => item == const GlideItem(1, 0)
+              ? const GlideImageCell(data: ['a.png'])
+              : const GlideTextCell(data: 'x', displayData: 'x'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      for (var i = 0; i < 2; i++) {
+        final gesture = await tester.startGesture(
+          const Offset(150, 45),
+          kind: PointerDeviceKind.mouse,
+        );
+        await gesture.up();
+        await tester.pumpAndSettle();
+      }
+
+      // `editorProvider === undefined` renders an empty clip region rather
+      // than failing (`data-grid-overlay-editor.tsx:164-173`).
+      expect(tester.takeException(), isNull);
+      expect(find.byType(GlideDataGridOverlayEditor), findsOneWidget);
+    });
   });
 
   group('column sizer', () {
@@ -2421,6 +2538,17 @@ void main() {
       auto.setDirection(0, 0);
       expect(auto.isActive, isFalse);
       expect(auto.advance(16), (0.0, 0.0));
+    });
+  });
+
+
+  group('number formatting', () {
+    test('glideNumberToDisplay drops the .0 of integral doubles', () {
+      expect(glideNumberToDisplay(1234, null), '1234');
+      expect(glideNumberToDisplay(1234.0, null), '1234');
+      expect(glideNumberToDisplay(1234.5, null), '1234.5');
+      expect(glideNumberToDisplay(1234.567, 2), '1234.57');
+      expect(glideNumberToDisplay(-42, null), '-42');
     });
   });
 

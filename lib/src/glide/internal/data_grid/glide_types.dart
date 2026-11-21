@@ -434,7 +434,7 @@ class GlideNumberCell extends GlideGridCell {
     this.readonly = false,
     this.fixedDecimals,
     this.allowNegative = true,
-    this.thousandSeparator = false,
+    this.thousandSeparator,
     this.decimalSeparator = '.',
     this.hoverEffect = false,
     this.hoverEffectTheme,
@@ -454,7 +454,10 @@ class GlideNumberCell extends GlideGridCell {
   final bool readonly;
   final int? fixedDecimals;
   final bool allowNegative;
-  final bool thousandSeparator;
+
+  /// `thousandSeparator?: boolean | string` (`data-grid-types.ts`): null keeps
+  /// the locale default (grouping on), `false` turns grouping off.
+  final bool? thousandSeparator;
   final String decimalSeparator;
   final bool hoverEffect;
   final GlideHoverEffectTheme? hoverEffectTheme;
@@ -652,6 +655,20 @@ class GlideRowIdCell extends GlideGridCell {
 
   @override
   bool get isReadonly => readonly;
+
+  GlideRowIdCell copyWith({String? data, bool? readonly}) => GlideRowIdCell(
+    data: data ?? this.data,
+    readonly: readonly ?? this.readonly,
+    allowOverlay: allowOverlay,
+    lastUpdated: lastUpdated,
+    style: style,
+    themeOverride: themeOverride,
+    span: span,
+    contentAlign: contentAlign,
+    cursor: cursor,
+    copyData: copyData,
+    activationBehaviorOverride: activationBehaviorOverride,
+  );
 }
 
 /// `MarkdownCell` (`data-grid-types.ts:480-484`).

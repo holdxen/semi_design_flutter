@@ -106,3 +106,12 @@ bool glideIsReadWriteCell(GlideGridCell cell) {
     _ => false,
   };
 }
+
+/// The string a number cell shows for [value]: `fixedDecimals` when set,
+/// otherwise the shortest round-tripping form (so `1234.0` renders `1234`).
+String glideNumberToDisplay(num value, int? fixedDecimals) {
+  if (fixedDecimals != null) return value.toStringAsFixed(fixedDecimals);
+  return value.truncateToDouble() == value
+      ? value.toStringAsFixed(0)
+      : '$value';
+}

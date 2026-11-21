@@ -167,25 +167,20 @@ class _GlideDataGridOverlayEditorState
     return KeyEventResult.handled;
   }
 
-  ({GlideEditorBuilder builder, bool pad, bool style, GlideThemeOverride? styleOverride})
+  ({GlideEditorBuilder builder, bool pad, bool style, GlideThemeOverride? styleOverride})?
   _resolveEditor() {
     final external = widget.provideEditor;
     if (external != null) {
-      return (
-        builder: external,
-        pad: true,
-        style: true,
-        styleOverride: null,
-      );
+      return (builder: external, pad: true, style: true, styleOverride: null);
     }
 
+    // `editorProvider === undefined` leaves the clip region empty upstream
+    // (`data-grid-overlay-editor.tsx:164-173`), so a cell without an editor
+    // still opens a styled box rather than failing.
     final renderer = widget.getCellRenderer(widget.content);
     final provider = renderer?.provideEditor(widget.content, widget.cell);
-    if (provider == null) {
-      throw StateError(
-        'No editor for cell ${widget.content.kind} at ${widget.cell}',
-      );
-    }
+    if (provider == null) return null;
+
     final builder = provider is GlideObjectEditor
         ? provider.builder
         : (provider as GlideComponentEditor).builder;
@@ -214,7 +209,7 @@ class _GlideDataGridOverlayEditorState
     final minWidth = widget.target.width + bloomX * 2;
     final minHeight = widget.target.height + bloomY * 2;
 
-    final editor = resolved.builder(
+    final editor = resolved?.builder(
       GlideEditorProps(
         value: _targetValue,
         target: widget.target,
@@ -234,7 +229,7 @@ class _GlideDataGridOverlayEditorState
         final maxTop = math.max(0.0, constraints.maxHeight - minHeight - 10);
 
         // `gdg-pad` (`data-grid-overlay-editor-style.tsx:52-54`).
-        final padding = resolved.pad
+        final padding = (resolved?.pad ?? true)
             ? EdgeInsets.fromLTRB(
                 8.5,
                 math.max(0, (widget.target.height - 28) / 2),
@@ -251,7 +246,7 @@ class _GlideDataGridOverlayEditorState
           ),
           child: Container(
             padding: padding,
-            decoration: resolved.style
+            decoration: (resolved?.style ?? true)
                 ? BoxDecoration(
                     color: theme.bgCell,
                     borderRadius: BorderRadius.circular(2),
@@ -276,7 +271,7 @@ class _GlideDataGridOverlayEditorState
                 : null,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(2),
-              child: editor,
+              child: editor ?? const SizedBox.shrink(),
             ),
           ),
         );

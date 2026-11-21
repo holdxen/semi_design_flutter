@@ -15,6 +15,10 @@ import 'package:flutter/widgets.dart';
 import '../common/glide_utils.dart';
 import '../internal/data_grid/render/glide_draw_checkbox.dart';
 import '../internal/data_grid/render/glide_draw_text.dart';
+import '../internal/data_grid_overlay_editor/private/glide_bubbles_overlay_editor.dart';
+import '../internal/data_grid_overlay_editor/private/glide_markdown_overlay_editor.dart';
+import '../internal/data_grid_overlay_editor/private/glide_uri_overlay_editor.dart';
+import '../internal/growing_entry/glide_growing_entry.dart';
 import 'glide_cell_types.dart';
 
 /// `makeAccessibilityStringForArray` (`common/utils.tsx`).
@@ -103,6 +107,16 @@ class GlideBubbleCellRenderer extends GlideCellRenderer {
         Offset(box.x + theme.bubblePadding, rect.y + h / 2 - painter.height / 2),
       );
     }
+  }
+
+  /// `provideEditor` (`bubble-cell.tsx:24-26`).
+  @override
+  GlideEditorProvider? provideEditor(GlideGridCell cell, GlideItem location) {
+    return GlideComponentEditor(
+      (props) => GlideBubblesOverlayEditor(
+        bubbles: (props.value as GlideBubbleCell).data,
+      ),
+    );
   }
 
   @override
@@ -253,6 +267,24 @@ class GlideRowIdCellRenderer extends GlideCellRenderer {
     );
   }
 
+  /// `provideEditor` (`row-id-cell.tsx:16-34`). The upstream widget sets
+  /// `disabled={value.readonly !== false}`, so the entry is read-only unless
+  /// `readonly: false` is passed explicitly.
+  @override
+  GlideEditorProvider? provideEditor(GlideGridCell cell, GlideItem location) {
+    return GlideComponentEditor((props) {
+      final value = props.value as GlideRowIdCell;
+      return GlideGrowingEntry(
+        value: value.data,
+        highlight: props.isHighlighted,
+        autoFocus: !value.readonly,
+        disabled: value.readonly != false,
+        validatedSelection: null,
+        onChange: (text) => props.onChange(value.copyWith(data: text)),
+      );
+    });
+  }
+
   @override
   double? measure(
     GlideGridCell cell,
@@ -283,6 +315,23 @@ class GlideMarkdownCellRenderer extends GlideCellRenderer {
   void draw(GlideDrawCellArgs args) {
     final cell = args.cell as GlideMarkdownCell;
     drawTextCell(args, cell.data, contentAlign: cell.contentAlign);
+  }
+
+  /// `provideEditor` (`markdown-cell.tsx:23-44`).
+  @override
+  GlideEditorProvider? provideEditor(GlideGridCell cell, GlideItem location) {
+    return GlideComponentEditor((props) {
+      final value = props.value as GlideMarkdownCell;
+      return GlideMarkdownOverlayEditor(
+        value: value,
+        targetWidth: props.target.width,
+        forceEditMode: props.forceEditMode,
+        validatedSelection: null,
+        onChange: (text) => props.onChange(value.copyWith(data: text)),
+        onFinishedEditing: (newValue) =>
+            props.onFinishedEditing(newValue, null),
+      );
+    });
   }
 
   @override
@@ -355,6 +404,27 @@ class GlideUriCellRenderer extends GlideCellRenderer {
     final uri = cell as GlideUriCell;
     return metrics.width(uri.displayData ?? uri.data, theme.baseTextStyle) +
         theme.cellHorizontalPadding * 2;
+  }
+
+  /// `provideEditor` (`uri-cell.tsx:130-151`).
+  @override
+  GlideEditorProvider? provideEditor(GlideGridCell cell, GlideItem location) {
+    final uriCell = cell as GlideUriCell;
+    return GlideComponentEditor((props) {
+      final value = props.value as GlideUriCell;
+      return GlideUriOverlayEditor(
+        uri: value.data,
+        preview: value.displayData ?? value.data,
+        readonly: value.readonly,
+        forceEditMode: props.forceEditMode ||
+            (uriCell.hoverEffect && uriCell.onClickUri != null),
+        validatedSelection: null,
+        // Upstream writes only `data` (`uri-cell.tsx:146-148`); the preview
+        // comes from `displayData`, so it has to follow the edit.
+        onChange: (text) =>
+            props.onChange(value.copyWith(data: text, displayData: text)),
+      );
+    });
   }
 
   @override

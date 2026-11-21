@@ -1,6 +1,8 @@
 // Port of `packages/core/src/cells/number-cell.tsx`.
+import '../common/glide_utils.dart';
 import '../internal/data_grid/render/glide_draw_text.dart';
 import '../internal/data_grid/render/glide_draw_text.dart' as text;
+import '../internal/data_grid_overlay_editor/private/glide_number_overlay_editor.dart';
 import 'glide_cell_types.dart';
 
 /// `numberCellRenderer` (`cells/number-cell.tsx:11-...`).
@@ -35,6 +37,34 @@ class GlideNumberCellRenderer extends GlideCellRenderer {
         metrics,
       ) +
       theme.cellHorizontalPadding * 2;
+
+  /// `provideEditor` (`number-cell.tsx:33-47`).
+  @override
+  GlideEditorProvider? provideEditor(GlideGridCell cell, GlideItem location) {
+    return GlideComponentEditor((props) {
+      final value = props.value as GlideNumberCell;
+      return GlideNumberOverlayEditor(
+        value: value.data,
+        disabled: value.readonly,
+        highlight: props.isHighlighted,
+        fixedDecimals: value.fixedDecimals,
+        allowNegative: value.allowNegative,
+        // `thousandSeparator ?? getThousandSeprator()`; only an explicit
+        // `false` disables the grouping, which we pass as an empty string.
+        thousandSeparator: value.thousandSeparator == false ? '' : null,
+        decimalSeparator: value.decimalSeparator,
+        // Upstream only writes `data` (`number-cell.tsx:45`); `displayData`
+        // has to follow here or the cell keeps showing the old number, which
+        // is why the text editor does the same pair.
+        onChange: (n) => props.onChange(
+          value.copyWith(
+            data: n,
+            displayData: glideNumberToDisplay(n, value.fixedDecimals),
+          ),
+        ),
+      );
+    });
+  }
 
   /// `onDelete` (`number-cell.tsx`): `{ ...c, data: undefined }`.
   @override
