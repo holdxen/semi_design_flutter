@@ -1,4 +1,5 @@
 import 'package:flutter/gestures.dart';
+
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -59,9 +60,8 @@ void main() {
     });
 
     test('remove subtracts a range', () {
-      final sel = GlideCompactSelection.fromArray([0, 1, 2, 3, 4]).remove(
-        GlideSlice(1, 4),
-      );
+      final sel = GlideCompactSelection.fromArray([0, 1, 2, 3, 4])
+          .remove(GlideSlice(1, 4));
       expect(sel.toArray(), [0, 4]);
       expect(sel.hasIndex(2), isFalse);
       expect(sel.hasIndex(4), isTrue);
@@ -233,17 +233,13 @@ void main() {
 
     setUp(() {
       columns = [
-        for (var i = 0; i < 4; i++)
-          GlideGridColumn(title: 'C$i', width: 100),
+        for (var i = 0; i < 4; i++) GlideGridColumn(title: 'C$i', width: 100),
       ];
       cells = [
         for (var row = 0; row < 10; row++)
           [
             for (var col = 0; col < 4; col++)
-              GlideTextCell(
-                data: 'r$row c$col',
-                displayData: 'r$row c$col',
-              ),
+              GlideTextCell(data: 'r$row c$col', displayData: 'r$row c$col'),
           ],
       ];
     });
@@ -257,9 +253,7 @@ void main() {
       final lookup = GlideDefaultRendererLookup();
       expect(lookup.forCell(cells[0][0]), isA<GlideTextCellRenderer>());
       expect(
-        lookup.forCell(
-          const GlideBooleanCell(data: GlideBooleanValue.checked),
-        ),
+        lookup.forCell(const GlideBooleanCell(data: GlideBooleanValue.checked)),
         isA<GlideBooleanCellRenderer>(),
       );
       expect(
@@ -270,8 +264,14 @@ void main() {
         lookup.forCell(const GlideBubbleCell(data: ['a'])),
         isA<GlideBubbleCellRenderer>(),
       );
-      expect(lookup.forCell(const GlideLoadingCell()), isA<GlideLoadingCellRenderer>());
-      expect(lookup.forCell(const GlideProtectedCell()), isA<GlideProtectedCellRenderer>());
+      expect(
+        lookup.forCell(const GlideLoadingCell()),
+        isA<GlideLoadingCellRenderer>(),
+      );
+      expect(
+        lookup.forCell(const GlideProtectedCell()),
+        isA<GlideProtectedCellRenderer>(),
+      );
       expect(
         lookup.forCell(
           const GlideMarkerCell(
@@ -321,8 +321,14 @@ void main() {
 
   group('cell renderers', () {
     test('boolean toggle follows data-editor-fns', () {
-      expect(toggleBoolean(GlideBooleanValue.checked), GlideBooleanValue.unchecked);
-      expect(toggleBoolean(GlideBooleanValue.unchecked), GlideBooleanValue.checked);
+      expect(
+        toggleBoolean(GlideBooleanValue.checked),
+        GlideBooleanValue.unchecked,
+      );
+      expect(
+        toggleBoolean(GlideBooleanValue.unchecked),
+        GlideBooleanValue.checked,
+      );
       expect(toggleBoolean(GlideBooleanValue.empty), GlideBooleanValue.checked);
       expect(
         toggleBoolean(GlideBooleanValue.indeterminate),
@@ -395,10 +401,7 @@ void main() {
       final contents = glideGetCopyBufferContents(sample(), const []);
       final lines = contents.textPlain.split('\n');
       expect(lines, hasLength(2));
-      expect(
-        lines[0],
-        '"a\tb"\t12.5\tTRUE\tINDETERMINATE\tx,y\thttps://a.b/c',
-      );
+      expect(lines[0], '"a\tb"\t12.5\tTRUE\tINDETERMINATE\tx,y\thttps://a.b/c');
       // A plain text cell is only escaped for tabs/newlines/quotes; commas
       // are escaped solely inside string-array cells (`copy-paste.ts:130`).
       expect(lines[1], '"say ""hi"""\t-3\tFALSE\t\tp,q\t#LOADING');
@@ -430,14 +433,8 @@ void main() {
       // keep them (`copy-paste.ts:155-162`).
       expect((first[0] as GlideBasicCellBuffer).formatted, 'a    b');
       expect((first[1] as GlideBasicCellBuffer).formatted, '12.5');
-      expect(
-        (first[4] as GlideStringArrayCellBuffer).formatted,
-        ['x', 'y'],
-      );
-      expect(
-        (first[5] as GlideBasicCellBuffer).rawValue,
-        'https://a.b/c',
-      );
+      expect((first[4] as GlideStringArrayCellBuffer).formatted, ['x', 'y']);
+      expect((first[5] as GlideBasicCellBuffer).rawValue, 'https://a.b/c');
 
       final second = decoded[1].cast<GlideCellBuffer>();
       expect((second[0] as GlideBasicCellBuffer).formatted, 'say "hi"');
@@ -449,12 +446,9 @@ void main() {
         displayData: 'ignored',
         copyData: 'raw,\tvalue',
       );
-      final buffer = glideCreateBufferFromGridCells(
-        [
-          [cell],
-        ],
-        const [],
-      );
+      final buffer = glideCreateBufferFromGridCells([
+        [cell],
+      ], const []);
       final basic = buffer[0][0] as GlideBasicCellBuffer;
       expect(basic.doNotEscape, isTrue);
       expect(glideCreateTextBuffer(buffer), 'raw,\tvalue');
@@ -522,11 +516,15 @@ void main() {
       expect(glideIsHotkey('ArrowUp|ArrowDown', down), isTrue);
       expect(glideIsHotkey('ArrowUp', down), isFalse);
       expect(glideIsHotkey('alt+ArrowDown', down), isFalse);
-      expect(glideIsHotkey('alt+ArrowDown', key('ArrowDown', 40, alt: true)),
-          isTrue);
+      expect(
+        glideIsHotkey('alt+ArrowDown', key('ArrowDown', 40, alt: true)),
+        isTrue,
+      );
       // `any+Escape` ignores modifiers entirely.
-      expect(glideIsHotkey('any+Escape', key('Escape', 27, ctrl: true, alt: true)),
-          isTrue);
+      expect(
+        glideIsHotkey('any+Escape', key('Escape', 27, ctrl: true, alt: true)),
+        isTrue,
+      );
       // `_68` is the legacy key code for `d`.
       // `primary` still demands Ctrl (or Cmd on macOS) to be held.
       expect(glideIsHotkey('primary+_68', key('d', 68)), isFalse);
@@ -777,7 +775,8 @@ void main() {
       scrolls = [];
       return GlideKeyHandler(
         keys: glideKeysWithDefaults(null),
-        selection: initial ??
+        selection:
+            initial ??
             const GlideGridSelection(
               current: GlideGridSelectionCurrent(
                 cell: GlideItem(2, 3),
@@ -828,10 +827,7 @@ void main() {
 
     test('arrow keys move the current cell', () {
       final h = handler();
-      expect(
-        h.handleFixedKeybindings(key('ArrowDown', 40)),
-        isTrue,
-      );
+      expect(h.handleFixedKeybindings(key('ArrowDown', 40)), isTrue);
       expect(h.selection.current!.cell, const GlideItem(2, 4));
 
       h.handleFixedKeybindings(key('ArrowRight', 39));
@@ -843,13 +839,16 @@ void main() {
     });
 
     test('navigation clamps to the table bounds', () {
-      final h = handler(columnCount: 4, rows: 5, initial:
-          const GlideGridSelection(
-            current: GlideGridSelectionCurrent(
-              cell: GlideItem(3, 4),
-              range: GlideRectangle(x: 3, y: 4, width: 1, height: 1),
-            ),
-          ));
+      final h = handler(
+        columnCount: 4,
+        rows: 5,
+        initial: const GlideGridSelection(
+          current: GlideGridSelectionCurrent(
+            cell: GlideItem(3, 4),
+            range: GlideRectangle(x: 3, y: 4, width: 1, height: 1),
+          ),
+        ),
+      );
       h.handleFixedKeybindings(key('ArrowDown', 40));
       expect(h.selection.current!.cell, const GlideItem(3, 4));
 
@@ -868,20 +867,14 @@ void main() {
 
     test('escape clears the selection', () {
       final h = handler();
-      expect(
-        h.handleFixedKeybindings(key('Escape', 27, ctrl: true)),
-        isTrue,
-      );
+      expect(h.handleFixedKeybindings(key('Escape', 27, ctrl: true)), isTrue);
       expect(h.selection.current, isNull);
       expect(h.selection.columns.length, 0);
     });
 
     test('ctrl+a selects the whole table', () {
       final h = handler(columnCount: 7, rows: 11);
-      expect(
-        h.handleFixedKeybindings(key('a', 65, ctrl: true)),
-        isTrue,
-      );
+      expect(h.handleFixedKeybindings(key('a', 65, ctrl: true)), isTrue);
       final range = h.selection.current!.range;
       expect(range.x, 0);
       expect(range.y, 0);
@@ -912,18 +905,12 @@ void main() {
 
     test('ctrl+space selects a column (exclusive blending)', () {
       final h = handler(columnCount: 10);
-      expect(
-        h.handleFixedKeybindings(key(' ', 32, ctrl: true)),
-        isTrue,
-      );
+      expect(h.handleFixedKeybindings(key(' ', 32, ctrl: true)), isTrue);
       expect(h.selection.columns.toArray(), [2]);
       // `columnBehavior: exclusive` drops `current`, and a missing current
       // range short-circuits the handler — matching `data-editor.tsx:3272`.
       expect(h.selection.current, isNull);
-      expect(
-        h.handleFixedKeybindings(key(' ', 32, ctrl: true)),
-        isFalse,
-      );
+      expect(h.handleFixedKeybindings(key(' ', 32, ctrl: true)), isFalse);
       expect(h.selection.columns.toArray(), [2]);
     });
 
@@ -941,31 +928,20 @@ void main() {
           return true;
         },
       );
-      expect(
-        h.handleFixedKeybindings(key('Delete', 46)),
-        isTrue,
-      );
+      expect(h.handleFixedKeybindings(key('Delete', 46)), isTrue);
       expect(called, 1);
       expect(edits, hasLength(4));
-      expect(
-        edits.map((e) => e.location).toSet(),
-        {
-          const GlideItem(1, 1),
-          const GlideItem(2, 1),
-          const GlideItem(1, 2),
-          const GlideItem(2, 2),
-        },
-      );
+      expect(edits.map((e) => e.location).toSet(), {
+        const GlideItem(1, 1),
+        const GlideItem(2, 1),
+        const GlideItem(1, 2),
+        const GlideItem(2, 2),
+      });
     });
 
     test('delete can be aborted by the owner', () {
-      final h = handler(
-        onDelete: (_) => false,
-      );
-      expect(
-        h.handleFixedKeybindings(key('Delete', 46)),
-        isTrue,
-      );
+      final h = handler(onDelete: (_) => false);
+      expect(h.handleFixedKeybindings(key('Delete', 46)), isTrue);
       expect(edits, isEmpty);
     });
 
@@ -1028,10 +1004,7 @@ void main() {
       final expanded = glideExpandSelection(
         newVal: selection,
         getCellsForSelection: (region) => [
-          [
-            if (region.x.toInt() <= 1 && 1 < region.x + region.width)
-              spanning,
-          ],
+          [if (region.x.toInt() <= 1 && 1 < region.x + region.width) spanning],
         ],
         rowMarkerOffset: 0,
         allowPartial: false,
@@ -1077,22 +1050,23 @@ void main() {
       for (var row = 0; row < 5; row++)
         [
           for (var col = 0; col < 4; col++)
-            GlideTextCell(
-              data: 'r$row c$col',
-              displayData: 'r$row c$col',
-            ),
+            GlideTextCell(data: 'r$row c$col', displayData: 'r$row c$col'),
         ],
     ];
 
     GlideGetCellsForSelection reader(List<List<GlideGridCell>> cells) =>
         (region) => [
-          for (var y = region.y.toInt();
-              y < region.y + region.height && y < cells.length;
-              y++)
+          for (
+            var y = region.y.toInt();
+            y < region.y + region.height && y < cells.length;
+            y++
+          )
             [
-              for (var x = region.x.toInt();
-                  x < region.x + region.width && x < cells[y].length;
-                  x++)
+              for (
+                var x = region.x.toInt();
+                x < region.x + region.width && x < cells[y].length;
+                x++
+              )
                 cells[y][x],
             ],
         ];
@@ -1112,16 +1086,12 @@ void main() {
         rows: 5,
         rowMarkerOffset: 0,
         columns: [
-          for (var i = 0; i < 4; i++)
-            GlideGridColumn(title: 'C$i', width: 100),
+          for (var i = 0; i < 4; i++) GlideGridColumn(title: 'C$i', width: 100),
         ],
         getCellsForSelection: reader(cells),
         clipboard: fake,
       );
-      expect(
-        fake.writtenPlain,
-        'r1 c1\tr1 c2\nr2 c1\tr2 c2',
-      );
+      expect(fake.writtenPlain, 'r1 c1\tr1 c2\nr2 c1\tr2 c2');
       expect(fake.writtenHtml, contains('<table>'));
     });
 
@@ -1139,8 +1109,7 @@ void main() {
         rows: 5,
         rowMarkerOffset: 0,
         columns: [
-          for (var i = 0; i < 4; i++)
-            GlideGridColumn(title: 'C$i', width: 100),
+          for (var i = 0; i < 4; i++) GlideGridColumn(title: 'C$i', width: 100),
         ],
         getCellsForSelection: reader(table()),
         copyHeaders: true,
@@ -1156,14 +1125,11 @@ void main() {
         copyEnabled: true,
         selection: const GlideGridSelection(
           columns: GlideCompactSelection.empty(),
-        ).copyWith(
-          columns: GlideCompactSelection.fromArray([0, 2]),
-        ),
+        ).copyWith(columns: GlideCompactSelection.fromArray([0, 2])),
         rows: 5,
         rowMarkerOffset: 0,
         columns: [
-          for (var i = 0; i < 4; i++)
-            GlideGridColumn(title: 'C$i', width: 100),
+          for (var i = 0; i < 4; i++) GlideGridColumn(title: 'C$i', width: 100),
         ],
         getCellsForSelection: reader(table()),
         clipboard: fake,
@@ -1242,8 +1208,7 @@ void main() {
 
     test('paste with onPaste fills the target rectangle', () async {
       final edits = <GlideEditListItem>[];
-      final fake = FakeClipboard()
-        ..nextText = 'a\tb\nc\td';
+      final fake = FakeClipboard()..nextText = 'a\tb\nc\td';
       List<List<String>>? seen;
       await glidePaste(
         focused: true,
@@ -1256,10 +1221,8 @@ void main() {
         rows: 5,
         columnCount: 4,
         rowMarkerOffset: 0,
-        getCellContent: (item) => GlideTextCell(
-          data: 'old',
-          displayData: 'old',
-        ),
+        getCellContent: (item) =>
+            GlideTextCell(data: 'old', displayData: 'old'),
         getCellRenderer: GlideDefaultRendererLookup().forCell,
         onCellsEdited: edits.addAll,
         onPaste: (location, data) {
@@ -1273,15 +1236,12 @@ void main() {
         ['c', 'd'],
       ]);
       expect(edits, hasLength(4));
-      expect(
-        edits.map((e) => e.location).toSet(),
-        {
-          const GlideItem(1, 1),
-          const GlideItem(2, 1),
-          const GlideItem(1, 2),
-          const GlideItem(2, 2),
-        },
-      );
+      expect(edits.map((e) => e.location).toSet(), {
+        const GlideItem(1, 1),
+        const GlideItem(2, 1),
+        const GlideItem(1, 2),
+        const GlideItem(2, 2),
+      });
     });
 
     test('onPaste returning false aborts the paste', () async {
@@ -1298,10 +1258,8 @@ void main() {
         rows: 5,
         columnCount: 4,
         rowMarkerOffset: 0,
-        getCellContent: (_) => const GlideTextCell(
-          data: 'old',
-          displayData: 'old',
-        ),
+        getCellContent: (_) =>
+            const GlideTextCell(data: 'old', displayData: 'old'),
         getCellRenderer: GlideDefaultRendererLookup().forCell,
         onCellsEdited: edits.addAll,
         onPaste: (_, _) => false,
@@ -1312,8 +1270,7 @@ void main() {
 
     test('paste respects the table bounds', () async {
       final edits = <GlideEditListItem>[];
-      final fake = FakeClipboard()
-        ..nextText = 'a\tb\tc\td\te\tf\tg\th\ti';
+      final fake = FakeClipboard()..nextText = 'a\tb\tc\td\te\tf\tg\th\ti';
       await glidePaste(
         focused: true,
         selection: const GlideGridSelection(
@@ -1325,10 +1282,8 @@ void main() {
         rows: 5,
         columnCount: 4,
         rowMarkerOffset: 0,
-        getCellContent: (_) => const GlideTextCell(
-          data: 'old',
-          displayData: 'old',
-        ),
+        getCellContent: (_) =>
+            const GlideTextCell(data: 'old', displayData: 'old'),
         getCellRenderer: GlideDefaultRendererLookup().forCell,
         onCellsEdited: edits.addAll,
         clipboard: fake,
@@ -1348,19 +1303,12 @@ void main() {
         getCellRenderer: GlideDefaultRendererLookup().forCell,
       );
       expect(edit, isNotNull);
-      expect(
-        (edit!.value as GlideBooleanCell).data,
-        GlideBooleanValue.checked,
-      );
+      expect((edit!.value as GlideBooleanCell).data, GlideBooleanValue.checked);
     });
 
     test('pasteIntoCell leaves read-only cells alone', () {
       final edit = glidePasteToCell(
-        inner: const GlideTextCell(
-          data: 'x',
-          displayData: 'x',
-          readonly: true,
-        ),
+        inner: const GlideTextCell(data: 'x', displayData: 'x', readonly: true),
         target: const GlideItem(0, 0),
         rawValue: 'y',
         getCellRenderer: GlideDefaultRendererLookup().forCell,
@@ -1394,13 +1342,16 @@ void main() {
               fit: StackFit.expand,
               children: [
                 GlideDataGridOverlayEditor(
-                  target: const GlideRectangle(x: 10, y: 10, width: 120, height: 30),
+                  target: const GlideRectangle(
+                    x: 10,
+                    y: 10,
+                    width: 120,
+                    height: 30,
+                  ),
                   cell: const GlideItem(0, 0),
-                  content: content ??
-                      const GlideTextCell(
-                        data: 'hello',
-                        displayData: 'hello',
-                      ),
+                  content:
+                      content ??
+                      const GlideTextCell(data: 'hello', displayData: 'hello'),
                   theme: GlideTheme.light(),
                   onFinishEditing: (cell, movement) {
                     finishedValue = cell;
@@ -1431,8 +1382,9 @@ void main() {
       expect((finishedValue as GlideTextCell).data, 'hello');
     });
 
-    testWidgets('enter without forceEditMode moves without committing',
-        (tester) async {
+    testWidgets('enter without forceEditMode moves without committing', (
+      tester,
+    ) async {
       // `tempValue` is undefined until the user types, so upstream finishes
       // with `undefined` and `data-editor.tsx:3086` skips the write.
       await tester.pumpWidget(buildEditor());
@@ -1515,10 +1467,7 @@ void main() {
       for (var row = 0; row < 200; row++)
         [
           for (var col = 0; col < 6; col++)
-            GlideTextCell(
-              data: 'r$row c$col',
-              displayData: 'r$row c$col',
-            ),
+            GlideTextCell(data: 'r$row c$col', displayData: 'r$row c$col'),
         ],
     ];
 
@@ -1528,14 +1477,26 @@ void main() {
       GlideKeybinds? keybindings,
       GlideFillHandleConfig? fillHandle,
       void Function(GlideFillPatternArgs args)? onFillPattern,
-      void Function(GlideGridColumn column, double newSize, int colIndex,
-              double newSizeWithGrow)?
+      void Function(
+        GlideGridColumn column,
+        double newSize,
+        int colIndex,
+        double newSizeWithGrow,
+      )?
       onColumnResize,
-      void Function(GlideGridColumn column, double newSize, int colIndex,
-              double newSizeWithGrow)?
+      void Function(
+        GlideGridColumn column,
+        double newSize,
+        int colIndex,
+        double newSizeWithGrow,
+      )?
       onColumnResizeStart,
-      void Function(GlideGridColumn column, double newSize, int colIndex,
-              double newSizeWithGrow)?
+      void Function(
+        GlideGridColumn column,
+        double newSize,
+        int colIndex,
+        double newSizeWithGrow,
+      )?
       onColumnResizeEnd,
       void Function(int from, int to)? onColumnMoved,
       bool? Function(int from, int to)? onColumnProposeMove,
@@ -1546,6 +1507,9 @@ void main() {
       bool unsizedColumns = false,
       double minColumnWidth = 50,
       double? scrollOffsetY,
+      double? scrollOffsetX,
+      bool strict = false,
+      int freezeTrailingRows = 0,
       GlideKeybinds? keybindingsOverride,
       String? group,
       void Function(String groupName, String newVal)? onGroupHeaderRenamed,
@@ -1570,97 +1534,105 @@ void main() {
       var currentCols = columnCount;
       return StatefulBuilder(
         builder: (context, setRows) {
-      final p = GlideDataEditorProps(
-        columns: [
-          for (var i = 0; i < currentCols; i++)
-            unsizedColumns
-                ? GlideGridColumn(
-                    title: 'C$i',
-                    id: 'c$i',
-                    group: group,
-                    width: 100,
-                  )
-                : GlideGridColumn(
-                    title: 'C$i',
-                    width: 100,
-                    group: group,
-                  ),
-        ],
-        enableGroups: group != null,
-        groupHeaderHeight: 30,
-        onGroupHeaderRenamed: onGroupHeaderRenamed,
-        rows: currentRows,
-        rowGrouping: rowGrouping,
-        minColumnWidth: minColumnWidth,
-        scrollOffsetY: scrollOffsetY,
-        keybindings: keybindingsOverride ?? keybindings,
-        onCellFocused: onCellFocused,
-        onVisibleRegionChanged: onVisibleRegionChanged,
-        onFinishedEditing: onFinishedEditing,
-        onHeaderContextMenu: onHeaderContextMenu,
-        onMouseMove: onMouseMove,
-        onColumnAppended: onColumnAppended == null
-            ? null
-            : () {
-                setRows(() => currentCols++);
-                return onColumnAppended();
-              },
-        trailingRowOptions: trailingRowOptions,
-        onRowAppended: trailingRowOptions == null
-            ? null
-            : () {
-                setRows(() => currentRows++);
-                onRowAppended?.call();
-              },
-        getCellContent: (item, [_]) {
-          if (content != null) return content(item);
-          if (item.row >= cells.length || item.col >= cells[item.row].length) {
-            return const GlideTextCell(data: 'new', displayData: 'new');
-          }
-          return cells[item.row][item.col];
-        },
-        theme: GlideTheme.light(),
-        rowHeight: const GlideRowHeight.fixed(32),
-        headerHeight: 32,
-        onKeyDown: (_) {},
-        onCellsEdited: (items) {
-          edits.addAll(items);
-          return true;
-        },
-        onGridSelectionChange: selectionLog.add,
-        onCellActivated: (location, activation) {
-          final key = activation is GlideKeyboardCellActivation
-              ? activation.key
-              : 'pointer';
-          activationLog.add('$location:$key');
-        },
-        editOnType: editOnType,
-        fillHandle: fillHandle,
-        onFillPattern: onFillPattern,
-        onColumnResize: onColumnResize,
-        onColumnResizeStart: onColumnResizeStart,
-        onColumnResizeEnd: onColumnResizeEnd,
-        onColumnMoved: onColumnMoved,
-        onColumnProposeMove: onColumnProposeMove,
-        onRowMoved: onRowMoved,
-        rowMarkers: rowMarkers,
-        getCellsForSelection: (region) => [
-          for (var y = region.y.toInt();
-              y < region.y + region.height && y < cells.length;
-              y++)
-            [
-              for (var x = region.x.toInt();
-                  x < region.x + region.width && x < cells[y].length;
-                  x++)
-                cells[y][x],
+          final p = GlideDataEditorProps(
+            columns: [
+              for (var i = 0; i < currentCols; i++)
+                unsizedColumns
+                    ? GlideGridColumn(
+                        title: 'C$i',
+                        id: 'c$i',
+                        group: group,
+                        width: 100,
+                      )
+                    : GlideGridColumn(title: 'C$i', width: 100, group: group),
             ],
-        ],
-      );
-      return MaterialApp(
-        home: Scaffold(
-          body: SizedBox(width: 400, height: 400, child: GlideDataEditor(props: p)),
-        ),
-      );
+            enableGroups: group != null,
+            groupHeaderHeight: 30,
+            onGroupHeaderRenamed: onGroupHeaderRenamed,
+            rows: currentRows,
+            rowGrouping: rowGrouping,
+            minColumnWidth: minColumnWidth,
+            scrollOffsetY: scrollOffsetY,
+            scrollOffsetX: scrollOffsetX,
+            strict: strict,
+            freezeTrailingRows: freezeTrailingRows,
+            keybindings: keybindingsOverride ?? keybindings,
+            onCellFocused: onCellFocused,
+            onVisibleRegionChanged: onVisibleRegionChanged,
+            onFinishedEditing: onFinishedEditing,
+            onHeaderContextMenu: onHeaderContextMenu,
+            onMouseMove: onMouseMove,
+            onColumnAppended: onColumnAppended == null
+                ? null
+                : () {
+                    setRows(() => currentCols++);
+                    return onColumnAppended();
+                  },
+            trailingRowOptions: trailingRowOptions,
+            onRowAppended: trailingRowOptions == null
+                ? null
+                : () {
+                    setRows(() => currentRows++);
+                    onRowAppended?.call();
+                  },
+            getCellContent: (item, [_]) {
+              if (content != null) return content(item);
+              if (item.row >= cells.length ||
+                  item.col >= cells[item.row].length) {
+                return const GlideTextCell(data: 'new', displayData: 'new');
+              }
+              return cells[item.row][item.col];
+            },
+            theme: GlideTheme.light(),
+            rowHeight: const GlideRowHeight.fixed(32),
+            headerHeight: 32,
+            onKeyDown: (_) {},
+            onCellsEdited: (items) {
+              edits.addAll(items);
+              return true;
+            },
+            onGridSelectionChange: selectionLog.add,
+            onCellActivated: (location, activation) {
+              final key = activation is GlideKeyboardCellActivation
+                  ? activation.key
+                  : 'pointer';
+              activationLog.add('$location:$key');
+            },
+            editOnType: editOnType,
+            fillHandle: fillHandle,
+            onFillPattern: onFillPattern,
+            onColumnResize: onColumnResize,
+            onColumnResizeStart: onColumnResizeStart,
+            onColumnResizeEnd: onColumnResizeEnd,
+            onColumnMoved: onColumnMoved,
+            onColumnProposeMove: onColumnProposeMove,
+            onRowMoved: onRowMoved,
+            rowMarkers: rowMarkers,
+            getCellsForSelection: (region) => [
+              for (
+                var y = region.y.toInt();
+                y < region.y + region.height && y < cells.length;
+                y++
+              )
+                [
+                  for (
+                    var x = region.x.toInt();
+                    x < region.x + region.width && x < cells[y].length;
+                    x++
+                  )
+                    cells[y][x],
+                ],
+            ],
+          );
+          return MaterialApp(
+            home: Scaffold(
+              body: SizedBox(
+                width: 400,
+                height: 400,
+                child: GlideDataEditor(props: p),
+              ),
+            ),
+          );
         },
       );
     }
@@ -1682,16 +1654,17 @@ void main() {
       expect(current!.cell, const GlideItem(1, 0));
     });
 
-    testWidgets('a second click on the selected cell opens the editor',
-        (tester) async {
+    testWidgets('a second click on the selected cell opens the editor', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildEditor());
       await tester.pumpAndSettle();
 
       for (var i = 0; i < 2; i++) {
         final gesture = await tester.startGesture(
-        const Offset(150, 45),
-        kind: PointerDeviceKind.mouse,
-      );
+          const Offset(150, 45),
+          kind: PointerDeviceKind.mouse,
+        );
         await gesture.up();
         await tester.pumpAndSettle();
       }
@@ -1759,8 +1732,9 @@ void main() {
       expect(selectionLog.last.current, isNull);
     });
 
-    testWidgets('typing a letter opens the editor with that letter',
-        (tester) async {
+    testWidgets('typing a letter opens the editor with that letter', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildEditor());
       await tester.pumpAndSettle();
 
@@ -1808,8 +1782,9 @@ void main() {
       expect(value.data, 'z');
     });
 
-    testWidgets('navigating to a far cell scrolls it into view',
-        (tester) async {
+    testWidgets('navigating to a far cell scrolls it into view', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildEditor());
       await tester.pumpAndSettle();
 
@@ -1870,10 +1845,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(edits, hasLength(2));
-      expect(
-        edits.map((e) => e.location).toList(),
-        [const GlideItem(0, 1), const GlideItem(0, 2)],
-      );
+      expect(edits.map((e) => e.location).toList(), [
+        const GlideItem(0, 1),
+        const GlideItem(0, 2),
+      ]);
       expect((edits.first.value as GlideTextCell).data, 'r0 c0');
     });
 
@@ -1904,14 +1879,16 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(edits, hasLength(2));
-      expect(
-        edits.map((e) => e.location).toList(),
-        [const GlideItem(1, 0), const GlideItem(2, 0)],
-      );
+      expect(edits.map((e) => e.location).toList(), [
+        const GlideItem(1, 0),
+        const GlideItem(2, 0),
+      ]);
       expect((edits.first.value as GlideTextCell).data, 'r0 c0');
     });
 
-    testWidgets('dragging from a selected cell grows the range', (tester) async {
+    testWidgets('dragging from a selected cell grows the range', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildEditor());
       await tester.pumpAndSettle();
 
@@ -1943,8 +1920,9 @@ void main() {
       expect(selectionLog.last.current!.cell, const GlideItem(0, 0));
     });
 
-    testWidgets('autoscroll ramps up while the pointer sits on an edge',
-        (tester) async {
+    testWidgets('autoscroll ramps up while the pointer sits on an edge', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildEditor());
       await tester.pumpAndSettle();
 
@@ -2146,8 +2124,9 @@ void main() {
       expect(selectionLog.last.columns.toArray(), [1]);
     });
 
-    testWidgets('moving within the same column is not a reorder',
-        (tester) async {
+    testWidgets('moving within the same column is not a reorder', (
+      tester,
+    ) async {
       final moved = <(int, int)>[];
       await tester.pumpWidget(
         buildEditor(onColumnMoved: (from, to) => moved.add((from, to))),
@@ -2188,8 +2167,9 @@ void main() {
       expect(moved, isEmpty);
     });
 
-    testWidgets('row markers add a leading column that selects the row',
-        (tester) async {
+    testWidgets('row markers add a leading column that selects the row', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildEditor(rowMarkers: const GlideRowMarkerOptions()),
       );
@@ -2217,8 +2197,9 @@ void main() {
       expect(selectionLog.last.current!.cell, const GlideItem(1, 0));
     });
 
-    testWidgets('user column coordinates exclude the marker column',
-        (tester) async {
+    testWidgets('user column coordinates exclude the marker column', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildEditor(rowMarkers: const GlideRowMarkerOptions()),
       );
@@ -2236,8 +2217,7 @@ void main() {
       expect(selectionLog.last.current!.cell, const GlideItem(1, 0));
     });
 
-    testWidgets('clicking the header marker selects every row',
-        (tester) async {
+    testWidgets('clicking the header marker selects every row', (tester) async {
       await tester.pumpWidget(
         buildEditor(rowMarkers: const GlideRowMarkerOptions()),
       );
@@ -2263,8 +2243,9 @@ void main() {
       expect(selectionLog.last.rows.length, 0);
     });
 
-    testWidgets('dragging a row by its marker calls onRowMoved',
-        (tester) async {
+    testWidgets('dragging a row by its marker calls onRowMoved', (
+      tester,
+    ) async {
       final moved = <(int, int)>[];
       await tester.pumpWidget(
         buildEditor(
@@ -2288,8 +2269,9 @@ void main() {
       expect(moved, [(0, 3)]);
     });
 
-    testWidgets('row markers of kind number are not clickable rows',
-        (tester) async {
+    testWidgets('row markers of kind number are not clickable rows', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildEditor(
           rowMarkers: const GlideRowMarkerOptions(
@@ -2348,9 +2330,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-
-    testWidgets('number cells open the number editor and commit',
-        (tester) async {
+    testWidgets('number cells open the number editor and commit', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildEditor(
           content: (item) => item == const GlideItem(1, 0)
@@ -2384,8 +2366,9 @@ void main() {
       expect(value.displayData, '42');
     });
 
-    testWidgets('uri cells show the preview until the pencil is tapped',
-        (tester) async {
+    testWidgets('uri cells show the preview until the pencil is tapped', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildEditor(
           content: (item) => item == const GlideItem(1, 0)
@@ -2440,8 +2423,9 @@ void main() {
       expect(find.text('beta'), findsOneWidget);
     });
 
-    testWidgets('a cell without an editor still opens the overlay',
-        (tester) async {
+    testWidgets('a cell without an editor still opens the overlay', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildEditor(
           content: (item) => item == const GlideItem(1, 0)
@@ -2466,8 +2450,9 @@ void main() {
       expect(find.byType(GlideDataGridOverlayEditor), findsOneWidget);
     });
 
-    testWidgets('clicking the trailing row appends and focuses it',
-        (tester) async {
+    testWidgets('clicking the trailing row appends and focuses it', (
+      tester,
+    ) async {
       var appended = 0;
       await tester.pumpWidget(
         buildEditor(
@@ -2494,8 +2479,9 @@ void main() {
       expect(find.text('r3 c0'), findsOneWidget);
     });
 
-    testWidgets('enter on the trailing row appends instead of editing',
-        (tester) async {
+    testWidgets('enter on the trailing row appends instead of editing', (
+      tester,
+    ) async {
       var appended = 0;
       await tester.pumpWidget(
         buildEditor(
@@ -2526,8 +2512,9 @@ void main() {
       expect(appended, 1);
     });
 
-    testWidgets('typing on the trailing row does not open an editor',
-        (tester) async {
+    testWidgets('typing on the trailing row does not open an editor', (
+      tester,
+    ) async {
       var appended = 0;
       await tester.pumpWidget(
         buildEditor(
@@ -2599,8 +2586,9 @@ void main() {
       expect(edits, hasLength(1));
     });
 
-    testWidgets('the appended column can be targeted from the left',
-        (tester) async {
+    testWidgets('the appended column can be targeted from the left', (
+      tester,
+    ) async {
       var appended = 0;
       await tester.pumpWidget(
         buildEditor(
@@ -2657,8 +2645,7 @@ void main() {
       expect(find.text('image failed'), findsOneWidget);
     });
 
-    testWidgets('drilldown cells open a read-only chip editor',
-        (tester) async {
+    testWidgets('drilldown cells open a read-only chip editor', (tester) async {
       await tester.pumpWidget(
         buildEditor(
           content: (item) => item == const GlideItem(1, 0)
@@ -2688,8 +2675,9 @@ void main() {
       expect(find.text('Beta'), findsOneWidget);
     });
 
-    testWidgets('loading and protected cells never open an overlay',
-        (tester) async {
+    testWidgets('loading and protected cells never open an overlay', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildEditor(
           content: (item) => switch (item.row) {
@@ -2740,14 +2728,11 @@ void main() {
       expect(selectionLog.last.current!.cell.row, 1);
     });
 
-    testWidgets('unsized columns are measured and become hit-testable',
-        (tester) async {
+    testWidgets('unsized columns are measured and become hit-testable', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        buildEditor(
-          columnCount: 3,
-          unsizedColumns: true,
-          minColumnWidth: 100,
-        ),
+        buildEditor(columnCount: 3, unsizedColumns: true, minColumnWidth: 100),
       );
       await tester.pumpAndSettle();
 
@@ -2788,12 +2773,11 @@ void main() {
       expect(selectionLog.last.current!.cell.row, 20);
     });
 
-    testWidgets('search opens with the binding, finds matches and closes',
-        (tester) async {
+    testWidgets('search opens with the binding, finds matches and closes', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        buildEditor(
-          keybindingsOverride: const GlideKeybinds(search: true),
-        ),
+        buildEditor(keybindingsOverride: const GlideKeybinds(search: true)),
       );
       await tester.pumpAndSettle();
 
@@ -2829,12 +2813,11 @@ void main() {
       expect(find.text('Type to search'), findsNothing);
     });
 
-    testWidgets('the search bar slides out over 150ms before unmounting',
-        (tester) async {
+    testWidgets('the search bar slides out over 150ms before unmounting', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        buildEditor(
-          keybindingsOverride: const GlideKeybinds(search: true),
-        ),
+        buildEditor(keybindingsOverride: const GlideKeybinds(search: true)),
       );
       await tester.pumpAndSettle();
 
@@ -2883,54 +2866,55 @@ void main() {
       expect(find.byType(GlideSearchBar), findsNothing);
     });
 
-    testWidgets('the bar is hidden from focus and semantics while it slides out',
-        (tester) async {
-      await tester.pumpWidget(
-        buildEditor(
-          keybindingsOverride: const GlideKeybinds(search: true),
-        ),
-      );
-      await tester.pumpAndSettle();
+    testWidgets(
+      'the bar is hidden from focus and semantics while it slides out',
+      (tester) async {
+        await tester.pumpWidget(
+          buildEditor(keybindingsOverride: const GlideKeybinds(search: true)),
+        );
+        await tester.pumpAndSettle();
 
-      final cell = await tester.startGesture(
-        const Offset(150, 45),
-        kind: PointerDeviceKind.mouse,
-      );
-      await cell.up();
-      await tester.pumpAndSettle();
+        final cell = await tester.startGesture(
+          const Offset(150, 45),
+          kind: PointerDeviceKind.mouse,
+        );
+        await cell.up();
+        await tester.pumpAndSettle();
 
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
-      await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
-      await tester.pumpAndSettle();
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+        await tester.pumpAndSettle();
 
-      expect(find.byType(ExcludeFocus, skipOffstage: false), findsWidgets);
-      final shown = tester.widget<ExcludeFocus>(
-        find
-            .descendant(
-              of: find.byType(GlideSearchBar),
-              matching: find.byType(ExcludeFocus),
-            )
-            .first,
-      );
-      expect(shown.excluding, isFalse);
+        expect(find.byType(ExcludeFocus, skipOffstage: false), findsWidgets);
+        final shown = tester.widget<ExcludeFocus>(
+          find
+              .descendant(
+                of: find.byType(GlideSearchBar),
+                matching: find.byType(ExcludeFocus),
+              )
+              .first,
+        );
+        expect(shown.excluding, isFalse);
 
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await tester.pump();
+        await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+        await tester.pump();
 
-      final hidden = tester.widget<ExcludeFocus>(
-        find
-            .descendant(
-              of: find.byType(GlideSearchBar),
-              matching: find.byType(ExcludeFocus),
-            )
-            .first,
-      );
-      expect(hidden.excluding, isTrue);
-    });
+        final hidden = tester.widget<ExcludeFocus>(
+          find
+              .descendant(
+                of: find.byType(GlideSearchBar),
+                matching: find.byType(ExcludeFocus),
+              )
+              .first,
+        );
+        expect(hidden.excluding, isTrue);
+      },
+    );
 
-    testWidgets('a tinted trailing row does not disturb appending',
-        (tester) async {
+    testWidgets('a tinted trailing row does not disturb appending', (
+      tester,
+    ) async {
       var appended = 0;
       await tester.pumpWidget(
         buildEditor(
@@ -2953,6 +2937,145 @@ void main() {
 
       expect(appended, 1);
       expect(selectionLog.last.current!.cell, const GlideItem(0, 3));
+    });
+
+    testWidgets('the reported region is in user coordinates', (tester) async {
+      final regions = <GlideVisibleRegion>[];
+      await tester.pumpWidget(
+        buildEditor(
+          columnCount: 6,
+          rowMarkers: const GlideRowMarkerOptions(),
+          // 100px scrolls past the 36px marker column and all of C0, so the
+          // first visible column is C1 — user index 1, mangled index 2.
+          scrollOffsetX: 100,
+          onVisibleRegionChanged: (region, _) => regions.add(region),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(regions, isNotEmpty);
+      final region = regions.last;
+      // `newRegion.x = region.x - rowMarkerOffset` (`data-editor.tsx:2630`).
+      expect(region.x, 1);
+      // `cellXOffset = visibleRegion.x + rowMarkerOffset` (`:1190`) — the
+      // grid still draws in mangled space, so the two must differ by the
+      // marker offset.
+      expect(region.x + 1, 2);
+      // `tx`/`ty` ride along on the region (`data-editor.tsx:2634-2635`).
+      expect(region.translateX, isNotNull);
+      expect(region.translateY, isNotNull);
+    });
+
+    testWidgets('the reported region drops the trailing blank row', (
+      tester,
+    ) async {
+      final regions = <GlideVisibleRegion>[];
+      await tester.pumpWidget(
+        buildEditor(
+          columnCount: 3,
+          rows: 5,
+          trailingRowOptions: const GlideTrailingRowOptions(hint: 'New row'),
+          onVisibleRegionChanged: (region, _) => regions.add(region),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(regions, isNotEmpty);
+      final region = regions.last;
+      // The window covers all 6 mangled rows (5 data + the trailing row), but
+      // `height: region.height - 1` (`data-editor.tsx:2633`) reports only the
+      // data rows to the consumer.
+      expect(region.height, 5);
+      expect(region.y + region.height, 5);
+    });
+
+    testWidgets('freezeRegions share the region\'s user coordinates', (
+      tester,
+    ) async {
+      final reports = <(GlideVisibleRegion, GlideVisibleRegionExtras)>[];
+      await tester.pumpWidget(
+        buildEditor(
+          columnCount: 6,
+          rows: 200,
+          rowMarkers: const GlideRowMarkerOptions(),
+          freezeTrailingRows: 2,
+          strict: true,
+          // Scrolled so the first visible *user* column is 1 while the
+          // mangled index is 2 — the two spaces the guard mixes.
+          scrollOffsetX: 100,
+          onVisibleRegionChanged: (region, extras) =>
+              reports.add((region, extras)),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(reports, isNotEmpty);
+      final (region, extras) = reports.last;
+
+      // `freezeRegions.push({ x: region.x - rowMarkerOffset, ... })`
+      // (`data-editor.tsx:2613`) uses the *same* strip that becomes
+      // `newRegion.x` (`:2630`), so the two agree by construction. Keeping
+      // `x` in mangled space would shift the rect one column right and the
+      // `pointInRect` rescue in `_isOutsideVisibleArea` would miss.
+      final trailing = extras.freezeRegions;
+      expect(trailing, hasLength(1));
+      expect(trailing.single.x, region.x.toDouble());
+      expect(trailing.single.y, 198);
+      expect(trailing.single.height, 2);
+
+      // The rescue actually works: the pinned rows are outside the scrolled
+      // window but still reach the consumer instead of a loading cell.
+      final seen = <GlideItem>[];
+      await tester.pumpWidget(
+        buildEditor(
+          columnCount: 6,
+          rows: 200,
+          rowMarkers: const GlideRowMarkerOptions(),
+          freezeTrailingRows: 2,
+          strict: true,
+          scrollOffsetX: 100,
+          content: (item) {
+            seen.add(item);
+            return GlideTextCell(
+              data: 'cell-${item.col}-${item.row}',
+              displayData: 'cell-${item.col}-${item.row}',
+            );
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Row 198 sits well below `region.y + region.height`, so without the
+      // freeze rect the guard would hand back a loading cell.
+      expect(seen, contains(const GlideItem(1, 198)));
+      expect(seen, contains(const GlideItem(1, 199)));
+    });
+
+    testWidgets('forceStrict does not blank the first visible column', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        buildEditor(
+          columnCount: 6,
+          rowMarkers: const GlideRowMarkerOptions(),
+          scrollOffsetX: 100,
+          content: (item) => GlideTextCell(
+            data: 'cell-${item.col}-${item.row}',
+            displayData: 'cell-${item.col}-${item.row}',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // The accessibility tree always queries with `forceStrict`
+      // (`_cellSemantics`), so this is where the guard bites. With `x` still
+      // in mangled space the guard read `2 > 1` and replaced C1 with a
+      // loading cell.
+      expect(find.bySemanticsLabel('cell-1-0'), findsOneWidget);
+      // ...and the column just off the left edge stays hidden.
+      expect(find.bySemanticsLabel('cell-0-0'), findsNothing);
+      handle.dispose();
     });
 
     testWidgets('the remaining data-editor callbacks all fire', (tester) async {
@@ -3036,10 +3159,7 @@ void main() {
 
       expect(find.byType(GlideGroupRename), findsOneWidget);
 
-      await tester.enterText(
-        find.byType(TextField),
-        'Team B',
-      );
+      await tester.enterText(find.byType(TextField), 'Team B');
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
 
@@ -3047,8 +3167,9 @@ void main() {
       expect(find.byType(GlideGroupRename), findsNothing);
     });
 
-    testWidgets('exposes an accessibility tree for the visible cells',
-        (tester) async {
+    testWidgets('exposes an accessibility tree for the visible cells', (
+      tester,
+    ) async {
       final handle = tester.ensureSemantics();
 
       await tester.pumpWidget(buildEditor(columnCount: 3));
@@ -3088,8 +3209,7 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('an edit refreshes the accessibility labels',
-        (tester) async {
+    testWidgets('an edit refreshes the accessibility labels', (tester) async {
       final handle = tester.ensureSemantics();
 
       // `content` reads the shared `edits` log, so the label only changes
@@ -3132,8 +3252,9 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('a stale tree is served until a11yRevision moves',
-        (tester) async {
+    testWidgets('a stale tree is served until a11yRevision moves', (
+      tester,
+    ) async {
       final handle = tester.ensureSemantics();
 
       var label = 'first';
@@ -3233,12 +3354,7 @@ void main() {
       expect(width, greaterThanOrEqualTo(50));
       expect(width, lessThanOrEqualTo(500));
       // The header title is part of the measurement too.
-      expect(
-        width,
-        greaterThanOrEqualTo(
-          theme.cellHorizontalPadding * 2 + 8,
-        ),
-      );
+      expect(width, greaterThanOrEqualTo(theme.cellHorizontalPadding * 2 + 8));
     });
 
     test('measureColumn respects the configured bounds', () {
@@ -3280,7 +3396,6 @@ void main() {
     });
   });
 
-
   // -------------------------------------------------------------------------
   // Column sizer (`data-editor/use-column-sizer.ts`)
   // -------------------------------------------------------------------------
@@ -3297,13 +3412,14 @@ void main() {
       columns: columns,
       rows: rows,
       getCellsForSelection: (region) => [
-        for (var y = region.y.toInt(); y < region.y + region.height && y < rows; y++)
+        for (
+          var y = region.y.toInt();
+          y < region.y + region.height && y < rows;
+          y++
+        )
           [
             for (var x = region.x.toInt(); x < region.x + region.width; x++)
-              GlideTextCell(
-                data: 'r$y c$x',
-                displayData: 'r$y c$x',
-              ),
+              GlideTextCell(data: 'r$y c$x', displayData: 'r$y c$x'),
           ],
       ],
       clientWidth: clientWidth,
@@ -3451,7 +3567,7 @@ void main() {
 
       // After the ramp window a frame moves much further.
       auto.advance(1400);
-      final ( _, full) = auto.advance(16);
+      final (_, full) = auto.advance(16);
       expect(full, greaterThan(early / 6));
 
       auto.setDirection(0, 0);
@@ -3459,7 +3575,6 @@ void main() {
       expect(auto.advance(16), (0.0, 0.0));
     });
   });
-
 
   group('number formatting', () {
     test('glideNumberToDisplay drops the .0 of integral doubles', () {
@@ -3470,7 +3585,6 @@ void main() {
       expect(glideNumberToDisplay(-42, null), '-42');
     });
   });
-
 
   // -------------------------------------------------------------------------
   // Image cell + window loader (`cells/image-cell.tsx`,
@@ -3782,19 +3896,17 @@ void main() {
   // -------------------------------------------------------------------------
 
   group('rem adjuster', () {
-    GlideRemAdjustment adjust({
-      bool scaleToRem = true,
-      double remSize = 16,
-    }) => glideRemAdjuster(
-      scaleToRem: scaleToRem,
-      remSize: remSize,
-      rowHeightIn: const GlideRowHeight.fixed(30),
-      headerHeightIn: 36,
-      groupHeaderHeightIn: 36,
-      themeIn: GlideTheme.light(),
-      overscrollXIn: 10,
-      overscrollYIn: 10,
-    );
+    GlideRemAdjustment adjust({bool scaleToRem = true, double remSize = 16}) =>
+        glideRemAdjuster(
+          scaleToRem: scaleToRem,
+          remSize: remSize,
+          rowHeightIn: const GlideRowHeight.fixed(30),
+          headerHeightIn: 36,
+          groupHeaderHeightIn: 36,
+          themeIn: GlideTheme.light(),
+          overscrollXIn: 10,
+          overscrollYIn: 10,
+        );
 
     test('is the identity when scaleToRem is off or remSize is 16', () {
       final off = adjust(scaleToRem: false, remSize: 32);
@@ -3860,13 +3972,13 @@ void main() {
 
     test('glideSearchTestString mirrors the upstream switch', () {
       expect(
-        glideSearchTestString(const GlideTextCell(data: 'x', displayData: 'hi')),
+        glideSearchTestString(
+          const GlideTextCell(data: 'x', displayData: 'hi'),
+        ),
         'hi',
       );
       expect(
-        glideSearchTestString(
-          const GlideNumberCell(data: 5, displayData: '5'),
-        ),
+        glideSearchTestString(const GlideNumberCell(data: 5, displayData: '5')),
         '5',
       );
       expect(
@@ -3906,13 +4018,17 @@ void main() {
         columnCount: 3,
         startY: 0,
         getCells: (region) => [
-          for (var y = region.y.toInt();
-              y < region.y + region.height && y < 5;
-              y++)
+          for (
+            var y = region.y.toInt();
+            y < region.y + region.height && y < 5;
+            y++
+          )
             [
-              for (var x = region.x.toInt();
-                  x < region.x + region.width && x < 3;
-                  x++)
+              for (
+                var x = region.x.toInt();
+                x < region.x + region.width && x < 3;
+                x++
+              )
                 GlideTextCell(data: 'r$y c$x', displayData: 'r$y c$x'),
             ],
         ],
@@ -4026,9 +4142,7 @@ void main() {
       manager.setHovered(null);
       manager.step(20, (values) => emitted = values);
       expect(emitted, hasLength(2));
-      final eased = emitted.firstWhere(
-        (v) => v.item == const GlideItem(2, 1),
-      );
+      final eased = emitted.firstWhere((v) => v.item == const GlideItem(2, 1));
       expect(eased.amount, closeTo(glideEaseOutCubic(0.25), 0.001));
     });
 
@@ -4080,7 +4194,4 @@ void main() {
       expect(glideEaseOutCubic(0.5), closeTo(0.875, 0.001));
     });
   });
-
 }
-
-

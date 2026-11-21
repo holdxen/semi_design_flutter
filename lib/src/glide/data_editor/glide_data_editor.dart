@@ -1192,7 +1192,10 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     if (p.freezeTrailingRows > 0) {
       freezeRegions.add(
         GlideRectangle(
-          x: region.x.toDouble(),
+          // `region.x - rowMarkerOffset` (`data-editor.tsx:2613`): the rects
+          // are matched against user-space `outerCol`, so the marker column
+          // must be stripped here too.
+          x: (region.x - _markerOffset).toDouble(),
           y: (_groupedRows - p.freezeTrailingRows).toDouble(),
           width: region.width.toDouble(),
           height: p.freezeTrailingRows.toDouble(),
@@ -2143,10 +2146,15 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     var col = hovered.col;
     var row = hovered.row;
 
+    // `visible.x` is user space now; `_withLocation`/`_onItemHovered` take
+    // mangled coordinates, so the marker column is added back. Upstream writes
+    // `visible.x` straight into `location`, which is an off-by-`rowMarkerOffset`
+    // latent bug there — kept in grid space here instead (see the comment on
+    // `_applyScroll`).
     if (xDir == -1) {
-      col = visible.x;
+      col = visible.x + _markerOffset;
     } else if (xDir == 1) {
-      col = visible.x + visible.width;
+      col = visible.x + visible.width + _markerOffset;
     }
     if (yDir == -1) {
       row = math.max(0, visible.y);
@@ -2774,15 +2782,31 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       smoothScrollX: widget.props.smoothScrollX,
       smoothScrollY: widget.props.smoothScrollY,
     );
+    // `onVisibleRegionChangedImpl`'s `newRegion` (`data-editor.tsx:2629-2641`):
+    // the region handed to consumers is in *user* space — the marker column
+    // is stripped from `x`, and `height` drops the trailing blank row when the
+    // window reaches the end of the data. `cellXOffset` below converts back
+    // (`:1190`, `visibleRegion.x + rowMarkerOffset`).
+    final newRegion = GlideVisibleRegion(
+      x: region.x - _markerOffset,
+      y: region.y,
+      width: region.width,
+      height: _showTrailingBlankRow && region.y + region.height >= _groupedRows
+          ? region.height - 1
+          : region.height,
+      translateX: region.translateX,
+      translateY: region.translateY,
+    );
+
     setState(() {
-      _visible = region;
+      _visible = newRegion;
       _visibleExtras = _computeVisibleExtras(region);
-      _cellXOffset = region.x;
-      _cellYOffset = region.y;
+      _cellXOffset = newRegion.x + _markerOffset;
+      _cellYOffset = newRegion.y;
       _translateX = region.translateX;
       _translateY = region.translateY;
     });
-    widget.props.onVisibleRegionChanged?.call(region, _visibleExtras!);
+    widget.props.onVisibleRegionChanged?.call(newRegion, _visibleExtras!);
   }
 
   void _handleScroll(PointerSignalEvent event) {
