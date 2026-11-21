@@ -1,16 +1,16 @@
 // Port of the `handleSelect` callback in
 // `packages/core/src/data-editor/data-editor.tsx:1838-2087`.
 //
-// The row-marker and trailing-blank-row branches (`:1853-1914`) are left
-// out: they depend on `rowMarkers`/`showTrailingBlankRow`, which are
-// `data-editor` chrome layered on top of the grid. Everything else — cell
-// range selection, header column selection, group headers and out-of-bounds
-// clearing — is ported line by line.
+// Every branch of the original callback is ported: the marker column
+// (`:1853-1911`), the trailing "new row" (`:1912-1915`), header column
+// selection (`:1994-2047`), group headers (`:2048-2049`) and out-of-bounds
+// clearing (`:2050-2057`).
 import 'package:flutter/foundation.dart';
 
 import '../cells/glide_cell_types.dart';
 import '../internal/data_grid/glide_event_args.dart';
 import '../internal/data_grid/glide_selection_behavior.dart';
+import 'glide_row_grouping.dart';
 
 /// What a `handleSelect` call asked the owner to do after mutating the
 /// selection.
@@ -74,6 +74,8 @@ class GlideDataEditorSelection {
     this.rowSelectionModeMulti = false,
     this.rowDragEnabled = false,
     this.headerRowMarkerDisabled = false,
+    this.rowGroupingNavBehavior,
+    this.isGroupHeaderRow,
     this.showTrailingBlankRow = false,
     this.userRows = 0,
     this.appendRow,
@@ -107,6 +109,12 @@ class GlideDataEditorSelection {
 
   /// `headerRowMarkerDisabled` (`data-editor.tsx:919`).
   final bool headerRowMarkerDisabled;
+
+  /// `navigationBehavior` (`row-grouping.ts:56`).
+  final GlideRowGroupNavigationBehavior? rowGroupingNavBehavior;
+
+  /// `mapper(row).isGroupHeader`.
+  final bool Function(int row)? isGroupHeaderRow;
 
   /// `showTrailingBlankRow` (`data-editor.tsx:955`).
   final bool showTrailingBlankRow;

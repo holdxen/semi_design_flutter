@@ -1540,6 +1540,7 @@ void main() {
       GlideRowMarkerOptions? rowMarkers,
       int rows = 200,
       int columnCount = 6,
+      GlideRowGroupingOptions? rowGrouping,
       GlideTrailingRowOptions? trailingRowOptions,
       void Function()? onRowAppended,
       Object? Function()? onColumnAppended,
@@ -1558,6 +1559,7 @@ void main() {
             GlideGridColumn(title: 'C$i', width: 100),
         ],
         rows: currentRows,
+        rowGrouping: rowGrouping,
         onColumnAppended: onColumnAppended == null
             ? null
             : () {
@@ -2673,6 +2675,32 @@ void main() {
         expect(find.byType(TextField), findsNothing);
       }
     });
+
+    testWidgets('row grouping changes which row a y maps to', (tester) async {
+      await tester.pumpWidget(
+        buildEditor(
+          rowGrouping: const GlideRowGroupingOptions(
+            groups: [
+              GlideRowGroup(headerIndex: 0, isCollapsed: false),
+              GlideRowGroup(headerIndex: 3, isCollapsed: false),
+            ],
+            height: 60,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // y = 120 falls inside the second group header (32 + 60 .. 32 + 120),
+      // which is grid row 1 — without grouping the same y is row 2.
+      final gesture = await tester.startGesture(
+        const Offset(150, 120),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(selectionLog.last.current!.cell.row, 1);
+    });
   });
 
   group('column sizer', () {
@@ -3012,6 +3040,139 @@ void main() {
       );
       expect(loader.cachedCount, 1);
       expect(loader.loadOrGetImage('frozen.png', 0, 0), same(image));
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Row grouping (`data-editor/row-grouping.ts`, `row-grouping-api.ts`)
+  // -------------------------------------------------------------------------
+
+  group('row grouping', () {
+    const options = GlideRowGroupingOptions(
+      groups: [
+        GlideRowGroup(headerIndex: 0, isCollapsed: true),
+        GlideRowGroup(headerIndex: 3, isCollapsed: false),
+      ],
+      height: 60,
+    );
+
+    test('flattenRowGroups computes row and content indices', () {
+      final flattened = flattenRowGroups(options, 6);
+      expect(flattened, hasLength(2));
+
+      expect(flattened[0].rowIndex, 0);
+      expect(flattened[0].isCollapsed, isTrue);
+      expect(flattened[0].rows, 2);
+      expect(flattened[0].contentIndex, 0);
+
+      // The collapsed first group occupies a single grid row, so the second
+      // header lands at grid row 1 while its content starts at index 2.
+      expect(flattened[1].rowIndex, 1);
+      expect(flattened[1].isCollapsed, isFalse);
+      expect(flattened[1].contentIndex, 2);
+      expect(flattened[1].rows, 2);
+    });
+
+    test('effective rows shrink when a group is collapsed', () {
+      final result = useRowGroupingInner(
+        options: options,
+        rows: 6,
+        rowHeightIn: const GlideRowHeight.fixed(32),
+        getRowThemeOverrideIn: null,
+      );
+      // 1 collapsed header + (2 content + 1 header) = 4 grid rows.
+      expect(result.rows, 4);
+    });
+
+    test('rowHeight swaps group headers to the group height', () {
+      final result = useRowGroupingInner(
+        options: options,
+        rows: 6,
+        rowHeightIn: const GlideRowHeight.fixed(32),
+        getRowThemeOverrideIn: null,
+      );
+      final rowHeight = result.rowHeight;
+      expect(rowHeight, isNotNull);
+      expect(rowHeight!(0), 60);
+      expect(rowHeight(1), 60);
+      expect(rowHeight(2), 32);
+      expect(rowHeight(3), 32);
+    });
+
+    test('mapRowIndexToPath distinguishes headers from content', () {
+      final flattened = flattenRowGroups(options, 6);
+
+      final header = mapRowIndexToPath(0, flattened);
+      expect(header.isGroupHeader, isTrue);
+      expect(header.originalIndex, 0);
+
+      final secondHeader = mapRowIndexToPath(1, flattened);
+      expect(secondHeader.isGroupHeader, isTrue);
+      expect(secondHeader.originalIndex, 3);
+
+      final content = mapRowIndexToPath(2, flattened);
+      expect(content.isGroupHeader, isFalse);
+      expect(content.originalIndex, 4);
+      expect(content.groupIndex, 0);
+      expect(content.contentIndex, 2);
+    });
+
+    test('rowNumberMapper numbers content rows and skips headers', () {
+      final result = useRowGroupingInner(
+        options: options,
+        rows: 6,
+        rowHeightIn: const GlideRowHeight.fixed(32),
+        getRowThemeOverrideIn: null,
+      );
+      final mapper = result.rowNumberMapper;
+      expect(mapper, isNotNull);
+      // Grid rows 0 and 1 are group headers.
+      expect(mapper!(0), isNull);
+      expect(mapper(1), isNull);
+      expect(mapper(2), 2);
+      expect(mapper(3), 3);
+    });
+
+    test('without grouping everything is the identity', () {
+      final result = useRowGroupingInner(
+        options: null,
+        rows: 7,
+        rowHeightIn: const GlideRowHeight.fixed(32),
+        getRowThemeOverrideIn: null,
+      );
+      expect(result.rows, 7);
+      expect(result.flattened, isEmpty);
+      expect(result.rowHeight, isNull);
+      expect(result.rowNumberMapper, isNull);
+      expect(result.getRowThemeOverride, isNull);
+    });
+
+    test('block-spanning pins the selection to one group', () {
+      const blockable = GlideRowGroupingOptions(
+        groups: [GlideRowGroup(headerIndex: 0, isCollapsed: false)],
+        height: 60,
+        selectionBehavior: GlideRowGroupSelectionBehavior.blockSpanning,
+      );
+      final flattened = flattenRowGroups(blockable, 6);
+
+      // Row 0 is the header: the selection cannot move at all.
+      expect(
+        getSelectionRowLimits(
+          options: blockable,
+          flattened: flattened,
+          selectedRow: 0,
+        ),
+        (0, 0),
+      );
+
+      // Content rows stay inside their own group (rows 1..5 here).
+      final limits = getSelectionRowLimits(
+        options: blockable,
+        flattened: flattened,
+        selectedRow: 2,
+      );
+      expect(limits?.$1, 1);
+      expect(limits?.$2, 5);
     });
   });
   group('animation manager', () {

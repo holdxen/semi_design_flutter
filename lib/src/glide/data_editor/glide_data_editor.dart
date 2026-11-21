@@ -33,6 +33,7 @@ import 'glide_handle_select.dart';
 import 'glide_column_sizer.dart';
 import 'glide_key_handler.dart';
 import 'glide_keybindings.dart';
+import 'glide_row_grouping.dart';
 
 /// `DataGridProps` subset the editor owns (`data-editor.tsx`).
 @immutable
@@ -63,6 +64,7 @@ class GlideDataEditorProps {
     this.rangeSelectionColumnSpanning = true,
     this.columnSelectionModeMulti = false,
     this.rowMarkers,
+    this.rowGrouping,
     this.trailingRowOptions,
     this.onRowAppended,
     this.onColumnAppended,
@@ -158,6 +160,10 @@ class GlideDataEditorProps {
   /// the right. The editor waits for the column count to grow.
   final Object? Function()? onColumnAppended;
 
+  /// `rowGrouping` (`data-editor.tsx:936`): group headers, collapse state
+  /// and the per-group theme/height overrides.
+  final GlideRowGroupingOptions? rowGrouping;
+
   /// `rowSelectionMode` (`data-editor.tsx:849`).
   final GlideSelectMode rowSelectionMode;
 
@@ -183,7 +189,9 @@ class GlideDataEditorProps {
   final void Function(int col, GlideGridHeaderMouseArgs args)?
   onHeaderClicked;
 
-  final GlideGetRowThemeOverride? getRowThemeOverride;
+  /// `getRowThemeOverride` (`row-grouping.ts:298-310`): the indexed form
+  /// `(row, groupIndex, contentIndex)` upstream exposes.
+  final GlideGetRowThemeOverrideIndexed? getRowThemeOverride;
   final GlideGroupDetails Function(String group)? getGroupDetails;
   final List<GlideHighlight>? highlightRegions;
 
@@ -314,6 +322,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   void initState() {
     super.initState();
     _selection = GlideGridSelection.empty;
+    _rebuildRowGrouping();
     _rebuildMangledColumns();
     _selectionState = _makeSelectionState();
     _autoscrollTicker = createTicker(_onAutoscrollTick);
@@ -330,7 +339,10 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.props.columns != widget.props.columns ||
         oldWidget.props.rows != widget.props.rows ||
-        oldWidget.props.rowMarkers != widget.props.rowMarkers) {
+        oldWidget.props.rowMarkers != widget.props.rowMarkers ||
+        oldWidget.props.rowGrouping != widget.props.rowGrouping ||
+        oldWidget.props.rowHeight != widget.props.rowHeight) {
+      _rebuildRowGrouping();
       _rebuildMangledColumns();
       setState(() => _selectionState = _makeSelectionState());
     }
@@ -346,7 +358,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       columnSelectEnabled: widget.props.columnSelect != GlideSelectMode.none,
       columnSelectionModeMulti: widget.props.columnSelectionModeMulti,
     ),
-    rows: widget.props.rows,
+    rows: _groupedRows,
     rowSelectMulti: widget.props.rowSelect == GlideSelectMode.multi,
     columnSelectMulti: widget.props.columnSelect == GlideSelectMode.multi,
     rowMarkerOffset: _markerOffset,
@@ -359,8 +371,10 @@ class _GlideDataEditorState extends State<GlideDataEditor>
         widget.props.rowSelectionMode == GlideSelectMode.multi,
     rowDragEnabled: widget.props.onRowMoved != null,
     headerRowMarkerDisabled: _headerRowMarkerDisabled,
+    rowGroupingNavBehavior: widget.props.rowGrouping?.navigationBehavior,
+    isGroupHeaderRow: _isGroupHeaderRow,
     showTrailingBlankRow: _showTrailingBlankRow,
-    userRows: widget.props.rows,
+    userRows: _groupedRows,
     appendRow: (col) => _appendRow(col),
     getCustomNewRowTargetColumn: _customNewRowTargetColumn,
     initial: _selection,
@@ -391,7 +405,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   GlideBooleanValue get _headerRowMarkerChecked {
     final selected = _selection.rows.length;
     if (selected == 0) return GlideBooleanValue.unchecked;
-    if (selected == widget.props.rows) return GlideBooleanValue.checked;
+    if (selected == _groupedRows) return GlideBooleanValue.checked;
     return GlideBooleanValue.empty;
   }
 
@@ -403,6 +417,47 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     GlideRowMarkerKind.both => GlideMarkerKind.both,
     GlideRowMarkerKind.none => GlideMarkerKind.checkbox,
   };
+
+  /// `useRowGroupingInner` result (`row-grouping.ts:247-326`).
+  GlideRowGroupingResult _rowGrouping = const GlideRowGroupingResult(
+    rows: 0,
+    flattened: [],
+  );
+  GlideRowGroupingOptions? _rowGroupingOpts;
+  int _rowGroupingRawRows = -1;
+  GlideRowHeight? _rowGroupingBaseHeight;
+
+  /// The row count the grid works in: the raw count, or the grouped count
+  /// when `rowGrouping` is set (`data-editor.tsx:936`).
+  int get _groupedRows => _rowGrouping.rows;
+
+  /// `rowHeight` after `useRowGroupingInner` wrapped it.
+  GlideRowHeight get _effectiveRowHeight =>
+      _rowGrouping.rowHeight == null
+      ? widget.props.rowHeight
+      : GlideRowHeight.variable(_rowGrouping.rowHeight!);
+
+  /// `getRowThemeOverride` adapted to the grid's one-argument signature.
+  GlideGetRowThemeOverride? get _rowThemeOverride =>
+      _rowGrouping.getRowThemeOverride;
+
+  void _rebuildRowGrouping() {
+    final p = widget.props;
+    if (_rowGroupingRawRows == p.rows &&
+        identical(_rowGroupingOpts, p.rowGrouping) &&
+        _rowGroupingBaseHeight == p.rowHeight) {
+      return;
+    }
+    _rowGroupingOpts = p.rowGrouping;
+    _rowGroupingRawRows = p.rows;
+    _rowGroupingBaseHeight = p.rowHeight;
+    _rowGrouping = useRowGroupingInner(
+      options: p.rowGrouping,
+      rows: p.rows,
+      rowHeightIn: p.rowHeight,
+      getRowThemeOverrideIn: p.getRowThemeOverride,
+    );
+  }
 
   /// `mangledCols` (`data-editor.tsx:1141-1169`); rebuilt whenever the
   /// columns or the marker options change.
@@ -437,7 +492,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
 
   /// `mangledRows` (`data-editor.tsx:1205`).
   int get _mangledRows =>
-      _showTrailingBlankRow ? widget.props.rows + 1 : widget.props.rows;
+      _showTrailingBlankRow ? _groupedRows + 1 : _groupedRows;
 
   /// `lockColumns={rowMarkerOffset}` (`data-editor.tsx:4263`; the marker
   /// column is never a drop target.
@@ -450,8 +505,18 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     widget.props.freezeColumns + (_hasRowMarkers ? 1 : 0),
   );
 
-  GlideMarkerCell _markerCellFor(int row) => GlideMarkerCell(
-    row: (_rowMarkerOpts?.startIndex ?? 1) + row,
+  /// `rowNumberMapper(row) === undefined` means the row is a group header,
+  /// which gets a loading placeholder in the marker column
+  /// (`data-editor.tsx:1317-1319`).
+  GlideGridCell _markerCellFor(int row) {
+    final mapper = _rowGrouping.rowNumberMapper;
+    final mappedRow = mapper == null ? row : mapper(row);
+    if (mappedRow == null) return const GlideLoadingCell();
+    return _markerCellAt(mappedRow, row);
+  }
+
+  GlideMarkerCell _markerCellAt(int mappedRow, int row) => GlideMarkerCell(
+    row: (_rowMarkerOpts?.startIndex ?? 1) + mappedRow,
     drawHandle: widget.props.onRowMoved != null,
     checked: _selection.rows.hasIndex(row)
         ? GlideBooleanValue.checked
@@ -459,6 +524,17 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     checkboxStyle: _rowMarkerOpts?.checkboxStyle ??
         GlideMarkerCheckboxStyle.square,
     markerKind: _markerKind,
+  );
+
+  /// `mapper(row).isGroupHeader` (`row-grouping.ts:190-238`).
+  bool _isGroupHeaderRow(int row) =>
+      mapRowIndexToPath(row, _rowGrouping.flattened).isGroupHeader;
+
+  /// `getSelectionRowLimits` (`data-editor.tsx:2708-2725`).
+  (int, int)? _getSelectionRowLimits(int row) => getSelectionRowLimits(
+    options: widget.props.rowGrouping,
+    flattened: _rowGrouping.flattened,
+    selectedRow: row,
   );
 
   /// The `NewRow` cell for the trailing row (`data-editor.tsx:1330-1347`).
@@ -500,7 +576,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     if (col < 0 || col >= _mangledColumns.length) return;
     if (_mangledColumns[col].trailingRowOptions?.disabled == true) return;
 
-    final rowsBefore = p.rows;
+    final rowsBefore = _groupedRows;
     p.onRowAppended?.call();
     _focusAfterAppend(col, rowsBefore, openOverlay, 0);
   }
@@ -512,7 +588,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     int attempt,
   ) {
     if (!mounted) return;
-    if (widget.props.rows > rowsBefore) {
+    if (_groupedRows > rowsBefore) {
       _selectAppendedRow(col, rowsBefore, openOverlay);
       return;
     }
@@ -697,7 +773,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     theme = theme.merge([
       groupOverride?.applyTo(theme),
       column?.themeOverride?.applyTo(theme),
-      p.getRowThemeOverride?.call(location.row)?.applyTo(theme),
+      _rowThemeOverride?.call(location.row)?.applyTo(theme),
       cell.themeOverride?.applyTo(theme),
     ]);
     return theme;
@@ -805,6 +881,9 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     appendRow: (col, openOverlay) =>
         _appendRow(col, openOverlay: openOverlay),
     getCustomNewRowTargetColumn: _customNewRowTargetColumn,
+    rowGroupingNavBehavior: widget.props.rowGrouping?.navigationBehavior,
+    isGroupHeaderRow: _isGroupHeaderRow,
+    getSelectionRowLimits: _getSelectionRowLimits,
     overlayOpen: _overlay != null,
     columnSelect: widget.props.columnSelect,
     rowSelect: widget.props.rowSelect,
@@ -1090,8 +1169,8 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     for (var i = 0; i < widget.props.freezeColumns; i++) {
       frozenWidth += widget.props.columns[i].width ?? 0;
     }
-    final trailingHeight = widget.props.rowHeight.trailingHeight(
-      widget.props.rows,
+    final trailingHeight = _effectiveRowHeight.trailingHeight(
+      _groupedRows,
       widget.props.freezeTrailingRows,
     );
 
@@ -1118,7 +1197,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
         target.col < widget.props.freezeColumns) {
       scrollX = 0;
     } else if (axis == GlideScrollAxis.horizontal ||
-        target.row >= widget.props.rows - widget.props.freezeTrailingRows) {
+        target.row >= _groupedRows - widget.props.freezeTrailingRows) {
       scrollY = 0;
     }
 
@@ -1309,7 +1388,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     final start = _visible?.y ?? 0;
     final height = math.min(
       _visible?.height ?? 1,
-      math.max(1, p.rows - start),
+      math.max(1, _groupedRows - start),
     );
     final cells = getCells(
       GlideRectangle(
@@ -1384,7 +1463,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       // `mouseState.fillHandle === true` (`data-editor.tsx:2765-2769`).
       final prevRange = _previousSelection!.current!.range;
       final hovered = _locationOf(args);
-      final row = math.min(hovered.row, widget.props.rows - 1);
+      final row = math.min(hovered.row, _groupedRows - 1);
       final rect = getClosestRect(
         prevRange,
         hovered.col,
@@ -1501,7 +1580,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     if (yDir == -1) {
       row = math.max(0, visible.y);
     } else if (yDir == 1) {
-      row = math.min(widget.props.rows - 1, visible.y + visible.height);
+      row = math.min(_groupedRows - 1, visible.y + visible.height);
     }
 
     col = clampInt(col, 0, widget.props.columns.length - 1);
@@ -2042,7 +2121,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   int get _visibleRowCount {
     final bodyHeight = _viewportHeight - _headerHeight;
     if (bodyHeight <= 0) return 1;
-    return (bodyHeight / widget.props.rowHeight(0)).ceil() + 1;
+    return (bodyHeight / _effectiveRowHeight(0)).ceil() + 1;
   }
 
   double get _headerHeight => widget.props.enableGroups
@@ -2052,7 +2131,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   double _viewportHeight = 400;
 
   double get _rowsHeight {
-    final rh = widget.props.rowHeight;
+    final rh = _effectiveRowHeight;
     final rows = _mangledRows;
     if (rh.isFixed) return rows * rh(0);
     var total = 0.0;
@@ -2098,7 +2177,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       clientWidth: _viewportWidth,
       clientHeight: math.max(1, _viewportHeight - _headerHeight),
       columns: mapColumns(widget.props.columns, widget.props.freezeColumns),
-      rowHeight: widget.props.rowHeight,
+      rowHeight: _effectiveRowHeight,
       rows: _mangledRows,
       freezeColumns: widget.props.freezeColumns,
       smoothScrollX: widget.props.smoothScrollX,
@@ -2139,6 +2218,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        _rebuildRowGrouping();
         _rebuildMangledColumns();
         _viewportWidth = constraints.maxWidth;
         _viewportHeight = constraints.maxHeight;
@@ -2149,7 +2229,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
           columns: _mangledColumns,
           rows: _mangledRows,
           hasAppendRow: _showTrailingBlankRow,
-          rowHeight: p.rowHeight,
+          rowHeight: _effectiveRowHeight,
           headerHeight: p.headerHeight,
           // `data-editor.tsx:4276` forwards 0 when groups are off, which is
           // what keeps `computeBounds`' `totalHeaderHeight - groupHeaderHeight`
@@ -2188,7 +2268,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
               ? GlideColumnDndState(src: _dragCol!, dest: _dropCol!)
               : null,
           highlightRegions: _highlightRegions(),
-          getRowThemeOverride: p.getRowThemeOverride,
+          getRowThemeOverride: _rowThemeOverride,
           getGroupDetails: p.getGroupDetails,
           metrics: _metrics,
           minimumCellWidth: 10,

@@ -19,6 +19,7 @@ import '../common/glide_utils.dart';
 import '../internal/data_grid/glide_selection_behavior.dart';
 import 'glide_data_editor_fns.dart';
 import 'glide_keybindings.dart';
+import 'glide_row_grouping.dart';
 
 /// `columnSelect` / `rowSelect` (`"none" | "single" | "multi"`) plus the
 /// `rowSelectionMode` value `"auto"` (`data-editor.tsx:849`).
@@ -84,6 +85,7 @@ class GlideKeyHandler {
     this.scrollTo,
     this.rowGroupingNavBehavior,
     this.isGroupHeaderRow,
+    this.getSelectionRowLimits,
     this.trapFocus = false,
   });
 
@@ -136,12 +138,15 @@ class GlideKeyHandler {
   final void Function()? fillRight;
   final void Function(GlideScrollTarget target)? scrollTo;
 
-  /// Row-grouping navigation (`"normal" | "skip-up" | "skip-down" | "skip" |
-  /// "block"`); null disables the restriction.
-  final String? rowGroupingNavBehavior;
+  /// `navigationBehavior` (`row-grouping.ts:56`); null disables the
+  /// restriction entirely.
+  final GlideRowGroupNavigationBehavior? rowGroupingNavBehavior;
 
-  /// `mapper(row).isGroupHeader`.
+  /// `mapper(row).isGroupHeader` (`row-grouping.ts:190-238`).
   final bool Function(int row)? isGroupHeaderRow;
+
+  /// `getSelectionRowLimits` (`data-editor.tsx:2708-2725`).
+  final (int, int)? Function(int row)? getSelectionRowLimits;
   final bool trapFocus;
 
   /// Builds the behavior over [base].
@@ -426,16 +431,20 @@ class GlideKeyHandler {
     }
 
     // Row-grouping navigation (`:3412-3441`).
+    final navBehavior = rowGroupingNavBehavior;
     final mustRestrictRow =
-        rowGroupingNavBehavior != null && rowGroupingNavBehavior != 'normal';
+        navBehavior != null &&
+        navBehavior != GlideRowGroupNavigationBehavior.normal;
     if (mustRestrictRow && row != startRow) {
       final mapper = isGroupHeaderRow;
-      final skipUp = rowGroupingNavBehavior == 'skip-up' ||
-          rowGroupingNavBehavior == 'skip' ||
-          rowGroupingNavBehavior == 'block';
-      final skipDown = rowGroupingNavBehavior == 'skip-down' ||
-          rowGroupingNavBehavior == 'skip' ||
-          rowGroupingNavBehavior == 'block';
+      final skipUp =
+          navBehavior == GlideRowGroupNavigationBehavior.skipUp ||
+          navBehavior == GlideRowGroupNavigationBehavior.skip ||
+          navBehavior == GlideRowGroupNavigationBehavior.block;
+      final skipDown =
+          navBehavior == GlideRowGroupNavigationBehavior.skipDown ||
+          navBehavior == GlideRowGroupNavigationBehavior.skip ||
+          navBehavior == GlideRowGroupNavigationBehavior.block;
       final didMoveUp = row < startRow;
       if (didMoveUp && skipUp) {
         while (row >= 0 && mapper != null && mapper(row)) {
@@ -565,10 +574,11 @@ class GlideKeyHandler {
     var top = old.y.toInt();
     var bottom = (old.y + old.height).toInt();
 
-    // `getSelectionRowLimits` defaults to the full table (`data-editor.tsx:
-    // 2866`), which is the user row count — the trailing row is excluded.
-    const minRow = 0;
-    final maxRowRaw = math.max(0, _userRows - 1);
+    // `getSelectionRowLimits(row) ?? [0, rows - 1]` (`data-editor.tsx:2866`);
+    // the default is the grouped row count without the trailing row.
+    final limits = getSelectionRowLimits?.call(row);
+    final minRow = limits?.$1 ?? 0;
+    final maxRowRaw = limits?.$2 ?? math.max(0, _userRows - 1);
     final maxRow = maxRowRaw + 1; // inclusive
 
     // Vertical first, in case new spans come in.
