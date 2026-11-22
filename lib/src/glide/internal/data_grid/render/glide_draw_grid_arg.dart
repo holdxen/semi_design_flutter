@@ -89,6 +89,16 @@ class GlideHighlight {
   final GlideRectangle range;
   final Color color;
   final GlideHighlightStyle style;
+
+  @override
+  bool operator ==(Object other) =>
+      other is GlideHighlight &&
+      other.range == range &&
+      other.color == color &&
+      other.style == style;
+
+  @override
+  int get hashCode => Object.hash(range, color, style);
 }
 
 /// `Highlight.style` (`"solid-outline" | "dashed-outline" | "no-outline"`).

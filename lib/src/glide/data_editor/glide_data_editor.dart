@@ -2942,10 +2942,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
           width: _viewportWidth,
           height: _viewportHeight,
           // `{ ...sprites, ...p.headerIcons }` (`data-editor-all.tsx:13-15`).
-          headerIcons: {
-            ...glideSprites,
-            ...?widget.props.headerIcons,
-          },
+          headerIcons: _mergedHeaderIcons,
           columns: _mangledColumns,
           rows: _mangledRows,
           hasAppendRow: _showTrailingBlankRow,
@@ -3018,18 +3015,8 @@ class _GlideDataEditorState extends State<GlideDataEditor>
               : null,
           highlightRegions: _highlightRegions(),
           getRowThemeOverride: _rowThemeOverride,
-          drawHeader: widget.props.drawHeader == null
-              ? null
-              : (args, draw) => widget.props.drawHeader!(
-                    args.copyWith(columnIndex: args.columnIndex - _markerOffset),
-                    draw,
-                  ),
-          drawCell: widget.props.drawCell == null
-              ? null
-              : (args, draw) => widget.props.drawCell!(
-                    args.copyWith(col: args.col - _markerOffset),
-                    draw,
-                  ),
+          drawHeader: _wrapDrawHeader(widget.props.drawHeader),
+          drawCell: _wrapDrawCell(widget.props.drawCell),
           getGroupDetails: _groupDetails,
           metrics: _metrics,
           minimumCellWidth: 10,
@@ -3168,6 +3155,66 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   }
 
   final GlideTextMetrics _metrics = GlideTextMetrics();
+
+  /// `{ ...sprites, ...p.headerIcons }` (`data-editor-all.tsx:13-15`).
+  ///
+  /// Memoized on the caller's map: a fresh literal every build made
+  /// `GlideDataGrid.didUpdateWidget`'s identity check think the sprites had
+  /// changed, so it disposed and re-decoded the whole sprite manager on every
+  /// rebuild (and defeated the painter's `spriteManager` equality check).
+  Map<String, GlideSpriteFn>? _headerIconsCache;
+  Map<String, GlideSpriteFn>? _headerIconsCacheSource;
+
+  Map<String, GlideSpriteFn> get _mergedHeaderIcons {
+    final extra = widget.props.headerIcons;
+    if (_headerIconsCache != null && identical(_headerIconsCacheSource, extra)) {
+      return _headerIconsCache!;
+    }
+    _headerIconsCacheSource = extra;
+    return _headerIconsCache = {...glideSprites, ...?extra};
+  }
+
+  /// `drawCellInner` / `drawHeaderInner` (`data-editor.tsx:4250-4270`): the
+  /// marker offset is stripped from the args before the caller sees them.
+  ///
+  /// The wrapper is cached because `GlideDrawGridArg` compares draw callbacks
+  /// by identity; a fresh closure per build would force a repaint on every
+  /// rebuild for every grid that sets `drawCell` or `drawHeader`.
+  GlideDrawCellCallback? _drawCellWrapper;
+  GlideDrawCellCallback? _drawCellWrapperSource;
+  int? _drawCellWrapperOffset;
+
+  GlideDrawCellCallback? _wrapDrawCell(GlideDrawCellCallback? source) {
+    if (source == null) return _drawCellWrapper = _drawCellWrapperSource = null;
+    if (identical(source, _drawCellWrapperSource) &&
+        _drawCellWrapperOffset == _markerOffset) {
+      return _drawCellWrapper;
+    }
+    final offset = _markerOffset;
+    _drawCellWrapperSource = source;
+    _drawCellWrapperOffset = offset;
+    return _drawCellWrapper =
+        (args, draw) => source(args.copyWith(col: args.col - offset), draw);
+  }
+
+  GlideDrawHeaderCallback? _drawHeaderWrapper;
+  GlideDrawHeaderCallback? _drawHeaderWrapperSource;
+  int? _drawHeaderWrapperOffset;
+
+  GlideDrawHeaderCallback? _wrapDrawHeader(GlideDrawHeaderCallback? source) {
+    if (source == null) {
+      return _drawHeaderWrapper = _drawHeaderWrapperSource = null;
+    }
+    if (identical(source, _drawHeaderWrapperSource) &&
+        _drawHeaderWrapperOffset == _markerOffset) {
+      return _drawHeaderWrapper;
+    }
+    final offset = _markerOffset;
+    _drawHeaderWrapperSource = source;
+    _drawHeaderWrapperOffset = offset;
+    return _drawHeaderWrapper = (args, draw) =>
+        source(args.copyWith(columnIndex: args.columnIndex - offset), draw);
+  }
 
   /// Copy/cut/paste live on window-level `copy`/`paste` listeners upstream
   /// (`data-editor.tsx:3877`); Flutter has no such channel for a canvas, so

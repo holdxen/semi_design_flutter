@@ -14,6 +14,7 @@
 // - Damage still short-circuits cells, matching the `damage` fast path.
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../../../cells/glide_cell_types.dart';
@@ -1382,6 +1383,12 @@ class GlideDataGridPainter extends CustomPainter {
 
   /// The Web equivalent is `computeCanBlit` (`data-grid-render.blit.ts:233`):
   /// if none of these change, the frame is identical and can be reused.
+  ///
+  /// Deviation: upstream reuses the *damaged* regions of the previous frame;
+  /// Flutter retains the whole layer, so this is an all-or-nothing version of
+  /// the same idea. It must therefore cover every field of [GlideDrawGridArg]
+  /// — one omission means "that prop changed and the grid never repainted".
+  /// The field list below is in declaration order so the two can be diffed.
   bool _argEquals(GlideDrawGridArg a, GlideDrawGridArg b) {
     if (identical(a, b)) return true;
     return a.width == b.width &&
@@ -1393,6 +1400,9 @@ class GlideDataGridPainter extends CustomPainter {
         a.cellYOffset == b.cellYOffset &&
         a.translateX == b.translateX &&
         a.translateY == b.translateY &&
+        // Identity: the grid memoizes `mapColumns(columns, freezeColumns)`
+        // (`data-grid.tsx:432`), so unchanged columns yield the same list —
+        // which is how upstream compares the array too.
         identical(a.mappedColumns, b.mappedColumns) &&
         a.freezeColumns == b.freezeColumns &&
         a.freezeTrailingRows == b.freezeTrailingRows &&
@@ -1402,25 +1412,44 @@ class GlideDataGridPainter extends CustomPainter {
         a.selection == b.selection &&
         a.isFocused == b.isFocused &&
         a.drawFocus == b.drawFocus &&
+        // Functions compare with `==`, not `identical`. Dart does not
+        // canonicalize instance tear-offs — `identical(state.m, state.m)` is
+        // false — so every method handed to the grid (`_enqueue`,
+        // `_getCellContent`, `_renderers.forCell`, `_groupDetails`) would
+        // otherwise be a new object per build and the check could never
+        // hold. `==` still treats a fresh lambda as different, which is the
+        // same contract React imposes with `useCallback`.
+        a.verticalBorder == b.verticalBorder &&
         a.getCellContent == b.getCellContent &&
+        a.getCellRenderer == b.getCellRenderer &&
+        identical(a.metrics, b.metrics) &&
         a.getRowThemeOverride == b.getRowThemeOverride &&
+        a.getGroupDetails == b.getGroupDetails &&
+        // A fresh map per hover tick, so identity tracks the animation.
         identical(a.hoverValues, b.hoverValues) &&
         a.hoverInfo == b.hoverInfo &&
         a.hoverPosition == b.hoverPosition &&
         identical(a.damage, b.damage) &&
         a.hasAppendRow == b.hasAppendRow &&
-        a.fillHandle?.size == b.fillHandle?.size &&
+        a.touchMode == b.touchMode &&
+        a.fillHandle == b.fillHandle &&
         a.disabledRows == b.disabledRows &&
-        identical(a.prelightCells, b.prelightCells) &&
-        identical(a.highlightRegions, b.highlightRegions) &&
+        // Value lists: the editor derives these per build, so identity would
+        // make the whole check fail whenever a highlight or prelight exists.
+        listEquals(a.prelightCells, b.prelightCells) &&
+        listEquals(a.highlightRegions, b.highlightRegions) &&
+        a.drawHeaderCallback == b.drawHeaderCallback &&
+        a.drawCellCallback == b.drawCellCallback &&
         a.fixedShadowX == b.fixedShadowX &&
         a.fixedShadowY == b.fixedShadowY &&
-        // The grid swaps in a fresh manager whenever `headerIcons` changes
-        // (`data-grid.tsx:427-433`), so identity is what says "the sprites on
-        // screen are stale". Note this never decides today: `mapColumns`
-        // allocates on every build, so the `mappedColumns` identity check
-        // above already makes this function return false. It is load-bearing
-        // the moment that is fixed.
+        a.hyperWrapping == b.hyperWrapping &&
+        a.enqueue == b.enqueue &&
+        a.minimumCellWidth == b.minimumCellWidth &&
+        a.dragAndDropState == b.dragAndDropState &&
+        a.isResizing == b.isResizing &&
+        a.resizeColumn == b.resizeColumn &&
+        a.resizeIndicator == b.resizeIndicator &&
+        identical(a.imageLoader, b.imageLoader) &&
         identical(a.spriteManager, b.spriteManager);
   }
 }

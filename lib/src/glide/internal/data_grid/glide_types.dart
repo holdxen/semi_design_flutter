@@ -1152,6 +1152,18 @@ class GlideFillHandleConfig {
   final double offsetX;
   final double offsetY;
   final double outline;
+
+  @override
+  bool operator ==(Object other) =>
+      other is GlideFillHandleConfig &&
+      other.shape == shape &&
+      other.size == size &&
+      other.offsetX == offsetX &&
+      other.offsetY == offsetY &&
+      other.outline == outline;
+
+  @override
+  int get hashCode => Object.hash(shape, size, offsetX, offsetY, outline);
 }
 
 /// `resizeIndicator: "full" | "header" | "none"` (`data-grid.tsx:311`).

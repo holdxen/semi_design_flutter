@@ -247,6 +247,20 @@ class GlideDataGrid extends StatefulWidget {
   State<GlideDataGrid> createState() => _GlideDataGridState();
 }
 
+/// `[columns, freezeColumns] -> mappedColumns`, mirroring the dependency
+/// array of upstream's `useMemo` (`data-grid.tsx:432`).
+class _MappedColumnsMemo {
+  const _MappedColumnsMemo({
+    this.columns,
+    this.freezeColumns,
+    this.mapped = const [],
+  });
+
+  final List<GlideGridColumn>? columns;
+  final int? freezeColumns;
+  final List<GlideMappedColumn> mapped;
+}
+
 class _GlideDataGridState extends State<GlideDataGrid>
     with TickerProviderStateMixin {
   final FocusNode _focusNode = FocusNode(debugLabel: 'GlideDataGrid');
@@ -310,6 +324,23 @@ class _GlideDataGridState extends State<GlideDataGrid>
   int _lastUpTime = 0;
   bool _cursorIsPointer = false;
 
+  /// `useMemo(() => mapColumns(columns, freezeColumns), [columns,
+  /// freezeColumns])` — the Web version derives the mapped list once per
+  /// column change, but this port re-derived it on every call, so
+  /// `mappedColumns` was a fresh list each build. That alone made
+  /// [GlideDataGridPainter.shouldRepaint]'s identity check always fail, i.e.
+  /// the painter repainted on every rebuild no matter what changed.
+  ///
+  /// Keyed the same way React's dependency array is: by reference. A caller
+  /// that mutates its `columns` list in place and rebuilds without replacing
+  /// it keeps the stale mapping, exactly as upstream does.
+  _MappedColumnsMemo _mappedMemo = const _MappedColumnsMemo();
+
+  /// `arg.metrics` used to be `p.metrics ?? GlideTextMetrics()`, allocating a
+  /// cache per build. One shared instance keeps the text cache warm and lets
+  /// the painter's equality check hold across rebuilds.
+  GlideTextMetrics? _defaultMetrics;
+
   @override
   void initState() {
     super.initState();
@@ -318,6 +349,22 @@ class _GlideDataGridState extends State<GlideDataGrid>
     _resolveImageLoader();
     _resolveSpriteManager();
   }
+
+  List<GlideMappedColumn> _mappedColumnsOf(GlideDataGridProps p) {
+    final memo = _mappedMemo;
+    if (identical(memo.columns, p.columns) &&
+        memo.freezeColumns == p.freezeColumns) {
+      return memo.mapped;
+    }
+    return (_mappedMemo = _MappedColumnsMemo(
+      columns: p.columns,
+      freezeColumns: p.freezeColumns,
+      mapped: mapColumns(p.columns, p.freezeColumns),
+    )).mapped;
+  }
+
+  GlideTextMetrics get _metrics =>
+      widget.props.metrics ?? (_defaultMetrics ??= GlideTextMetrics());
 
   void _resolveSpriteManager() {
     _spriteManager = GlideSpriteManager(
@@ -466,7 +513,7 @@ class _GlideDataGridState extends State<GlideDataGrid>
       return null;
     }
 
-    final mapped = mapColumns(p.columns, p.freezeColumns);
+    final mapped = _mappedColumnsOf(p);
     final totalHeaderHeight = p.enableGroups
         ? p.groupHeaderHeight + p.headerHeight
         : p.headerHeight;
@@ -547,7 +594,7 @@ class _GlideDataGridState extends State<GlideDataGrid>
     final headerBounds = _getBoundsForItem(col, GlideItem.headerRow);
     if (headerBounds == null) return null;
 
-    final mapped = mapColumns(p.columns, p.freezeColumns);
+    final mapped = _mappedColumnsOf(p);
     if (col >= mapped.length) return null;
     final header = mapped[col];
 
@@ -568,7 +615,7 @@ class _GlideDataGridState extends State<GlideDataGrid>
       width: header.width,
       height: headerBounds.height,
       theme: p.theme,
-      metrics: p.metrics ?? GlideTextMetrics(),
+      metrics: _metrics,
     );
 
     if (header.hasMenu && pointInRect(layout.menuBounds, x, y)) {
@@ -604,7 +651,7 @@ class _GlideDataGridState extends State<GlideDataGrid>
     final y = posY;
     const edgeDetectionBuffer = 5;
 
-    final mapped = mapColumns(p.columns, p.freezeColumns);
+    final mapped = _mappedColumnsOf(p);
     final effectiveCols = getEffectiveColumns(
       mapped,
       p.cellXOffset,
@@ -1066,7 +1113,14 @@ class _GlideDataGridState extends State<GlideDataGrid>
     p.onMouseDown(args);
   }
 
-  void _handlePointerMove(PointerMoveEvent event) {
+  /// Shared by [Listener.onPointerMove] and [Listener.onPointerHover].
+  ///
+  /// Upstream has a single `onMouseMove` that fires for hover and drag alike
+  /// (`data-grid.tsx:1337`), and it is what keeps `hoveredOnEdge` — and
+  /// therefore the col-resize cursor — tracking the pointer while no button
+  /// is down. Without the hover arm this port only updated the cursor during
+  /// a drag, so the resize affordance never appeared on plain hover.
+  void _handlePointerMove(PointerEvent event) {
     final p = widget.props;
     p.onPointerMoveRaw?.call(event.localPosition);
     final args = _getMouseArgsForPosition(
@@ -1301,7 +1355,7 @@ class _GlideDataGridState extends State<GlideDataGrid>
   @override
   Widget build(BuildContext context) {
     final p = widget.props;
-    final mapped = mapColumns(p.columns, p.freezeColumns);
+    final mapped = _mappedColumnsOf(p);
     _updateImageWindow(mapped);
 
     final arg = GlideDrawGridArg(
@@ -1326,7 +1380,7 @@ class _GlideDataGridState extends State<GlideDataGrid>
       verticalBorder: p.verticalBorder,
       getCellContent: p.getCellContent,
       getCellRenderer: p.getCellRenderer,
-      metrics: p.metrics ?? GlideTextMetrics(),
+      metrics: _metrics,
       getRowThemeOverride: p.getRowThemeOverride,
       getGroupDetails: p.getGroupDetails,
       hoverValues: _hoverValues,
@@ -1364,6 +1418,7 @@ class _GlideDataGridState extends State<GlideDataGrid>
       child: Listener(
         onPointerDown: _handlePointerDown,
         onPointerMove: _handlePointerMove,
+        onPointerHover: _handlePointerMove,
         onPointerUp: _handlePointerUp,
         behavior: HitTestBehavior.opaque,
         child: GestureDetector(

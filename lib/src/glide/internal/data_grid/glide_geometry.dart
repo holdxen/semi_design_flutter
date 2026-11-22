@@ -45,10 +45,16 @@ class GlideRowHeight {
 
   @override
   bool operator ==(Object other) =>
-      other is GlideRowHeight && other._fixed == _fixed;
+      other is GlideRowHeight &&
+      other._fixed == _fixed &&
+      // The variable form has to compare its function, otherwise every
+      // `GlideRowHeight.variable` instance is "equal" and a grid that swaps
+      // row-height formulas would never repaint.
+      identical(other._variable, _variable);
 
   @override
-  int get hashCode => _fixed?.hashCode ?? 0;
+  int get hashCode =>
+      _fixed?.hashCode ?? identityHashCode(_variable);
 }
 
 /// `MappedGridColumn` (`data-grid-lib.ts:17-20`).
@@ -235,6 +241,13 @@ class GlideColumnDndState {
 
   final int src;
   final int dest;
+
+  @override
+  bool operator ==(Object other) =>
+      other is GlideColumnDndState && other.src == src && other.dest == dest;
+
+  @override
+  int get hashCode => Object.hash(src, dest);
 }
 
 /// `getHeaderMenuBounds` (`data-grid-render.header.ts:289-297`): the box the

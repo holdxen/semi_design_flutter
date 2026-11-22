@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/gestures.dart';
 
@@ -9,6 +10,8 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:semi_design_flutter/semi_design_flutter.dart';
+import 'package:semi_design_flutter/src/glide/internal/data_grid/render/glide_data_grid_painter.dart';
+import 'package:semi_design_flutter/src/glide/internal/data_grid/render/glide_draw_grid_arg.dart';
 
 double _oddHeight(int row) => row.isEven ? 32.0 : 33.0;
 
@@ -40,6 +43,19 @@ class FrameCountingRenderer extends GlideCellRenderer {
   @override
   void draw(GlideDrawCellArgs args) => frameTimes.add(args.frameTime);
 }
+
+/// Stable tear-offs for the repaint fixture: `GlideDrawGridArg` compares
+/// function props by identity, so a closure created per build would force a
+/// repaint and hide the very thing under test.
+GlideGridCell _stableContent(GlideItem item, [bool? getSticky]) =>
+    const GlideTextCell(data: '', displayData: '');
+
+bool _stableBorder(int col) => true;
+
+/// Top-level so `const GlideRowHeight.variable(...)` is a constant: local
+/// function tear-offs are not.
+double _shortRowHeight(int row) => 24;
+double _tallRowHeight(int row) => 48;
 
 class FakeClipboard extends GlideClipboard {
   String? writtenPlain;
@@ -6056,6 +6072,656 @@ void main() {
         reason: 'the frozen, grouped, marked column must report user col 0',
       );
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Repaint gating (`render/data-grid-render.blit.ts:233`)
+  // -------------------------------------------------------------------------
+
+  group('painter equality', () {
+    /// The smallest arg that paints. Every field is overridable so a table can
+    /// flip one at a time.
+    GlideDrawGridArg baseArg() => GlideDrawGridArg(
+      width: 400,
+      height: 300,
+      headerHeight: 30,
+      groupHeaderHeight: 0,
+      enableGroups: false,
+      cellXOffset: 0,
+      cellYOffset: 0,
+      translateX: 0,
+      translateY: 0,
+      mappedColumns: const [
+        GlideMappedColumn(
+          sourceIndex: 0,
+          sticky: false,
+          title: 'C0',
+          width: 100,
+        ),
+      ],
+      freezeColumns: 0,
+      freezeTrailingRows: 0,
+      rows: 10,
+      rowHeight: const GlideRowHeight.fixed(30),
+      theme: GlideTheme.light(),
+      selection: GlideGridSelection.empty,
+      isFocused: false,
+      drawFocus: true,
+      verticalBorder: (_) => true,
+      getCellContent: (item) => const GlideTextCell(data: '', displayData: ''),
+      getCellRenderer: GlideDefaultRendererLookup().forCell,
+      metrics: GlideTextMetrics(),
+      getRowThemeOverride: null,
+      getGroupDetails: null,
+      hoverValues: const {},
+      hoverInfo: null,
+      hoverPosition: null,
+      damage: null,
+      hasAppendRow: false,
+      touchMode: false,
+      fillHandle: null,
+      disabledRows: const GlideCompactSelection.empty(),
+      prelightCells: null,
+      highlightRegions: null,
+      drawHeaderCallback: null,
+      drawCellCallback: null,
+      fixedShadowX: true,
+      fixedShadowY: true,
+      hyperWrapping: false,
+      enqueue: null,
+      minimumCellWidth: 10,
+      dragAndDropState: null,
+      isResizing: false,
+      resizeColumn: null,
+      resizeIndicator: GlideResizeIndicator.full,
+      imageLoader: null,
+      spriteManager: null,
+    );
+
+  GlideDrawGridArg copyArg(
+    GlideDrawGridArg base,
+    {
+    Object? width,
+    Object? height,
+    Object? headerHeight,
+    Object? groupHeaderHeight,
+    Object? enableGroups,
+    Object? cellXOffset,
+    Object? cellYOffset,
+    Object? translateX,
+    Object? translateY,
+    Object? mappedColumns,
+    Object? freezeColumns,
+    Object? freezeTrailingRows,
+    Object? rows,
+    Object? rowHeight,
+    Object? theme,
+    Object? selection,
+    Object? isFocused,
+    Object? drawFocus,
+    Object? verticalBorder,
+    Object? getCellContent,
+    Object? getCellRenderer,
+    Object? metrics,
+    Object? getRowThemeOverride,
+    Object? getGroupDetails,
+    Object? hoverValues,
+    Object? hoverInfo,
+    Object? hoverPosition,
+    Object? damage,
+    Object? hasAppendRow,
+    Object? touchMode,
+    Object? fillHandle,
+    Object? disabledRows,
+    Object? prelightCells,
+    Object? highlightRegions,
+    Object? drawHeaderCallback,
+    Object? drawCellCallback,
+    Object? fixedShadowX,
+    Object? fixedShadowY,
+    Object? hyperWrapping,
+    Object? enqueue,
+    Object? minimumCellWidth,
+    Object? dragAndDropState,
+    Object? isResizing,
+    Object? resizeColumn,
+    Object? resizeIndicator,
+    Object? imageLoader,
+    Object? spriteManager,
+  }
+  ) {
+    return GlideDrawGridArg(
+    width: width as double? ?? base.width,
+    height: height as double? ?? base.height,
+    headerHeight: headerHeight as double? ?? base.headerHeight,
+    groupHeaderHeight: groupHeaderHeight as double? ?? base.groupHeaderHeight,
+    enableGroups: enableGroups as bool? ?? base.enableGroups,
+    cellXOffset: cellXOffset as int? ?? base.cellXOffset,
+    cellYOffset: cellYOffset as int? ?? base.cellYOffset,
+    translateX: translateX as double? ?? base.translateX,
+    translateY: translateY as double? ?? base.translateY,
+    mappedColumns: mappedColumns as List<GlideMappedColumn>? ?? base.mappedColumns,
+    freezeColumns: freezeColumns as int? ?? base.freezeColumns,
+    freezeTrailingRows: freezeTrailingRows as int? ?? base.freezeTrailingRows,
+    rows: rows as int? ?? base.rows,
+    rowHeight: rowHeight as GlideRowHeight? ?? base.rowHeight,
+    theme: theme as GlideTheme? ?? base.theme,
+    selection: selection as GlideGridSelection? ?? base.selection,
+    isFocused: isFocused as bool? ?? base.isFocused,
+    drawFocus: drawFocus as bool? ?? base.drawFocus,
+    verticalBorder: verticalBorder as bool Function(int col)? ?? base.verticalBorder,
+    getCellContent: getCellContent as GlideGridCell Function(GlideItem item)? ?? base.getCellContent,
+    getCellRenderer: getCellRenderer as GlideGetCellRenderer? ?? base.getCellRenderer,
+    metrics: metrics as GlideTextMetrics? ?? base.metrics,
+    getRowThemeOverride: getRowThemeOverride as GlideGetRowThemeOverride? ?? base.getRowThemeOverride,
+    getGroupDetails: getGroupDetails as GlideGroupDetails Function(String group)? ?? base.getGroupDetails,
+    hoverValues: hoverValues as GlideHoverValues? ?? base.hoverValues,
+    hoverInfo: hoverInfo as GlideItem? ?? base.hoverInfo,
+    hoverPosition: hoverPosition as Offset? ?? base.hoverPosition,
+    damage: damage as GlideCellSet? ?? base.damage,
+    hasAppendRow: hasAppendRow as bool? ?? base.hasAppendRow,
+    touchMode: touchMode as bool? ?? base.touchMode,
+    fillHandle: fillHandle as GlideFillHandleConfig? ?? base.fillHandle,
+    disabledRows: disabledRows as GlideCompactSelection? ?? base.disabledRows,
+    prelightCells: prelightCells as List<GlideItem>? ?? base.prelightCells,
+    highlightRegions: highlightRegions as List<GlideHighlight>? ?? base.highlightRegions,
+    drawHeaderCallback: drawHeaderCallback as GlideDrawHeaderCallback? ?? base.drawHeaderCallback,
+    drawCellCallback: drawCellCallback as GlideDrawCellCallback? ?? base.drawCellCallback,
+    fixedShadowX: fixedShadowX as bool? ?? base.fixedShadowX,
+    fixedShadowY: fixedShadowY as bool? ?? base.fixedShadowY,
+    hyperWrapping: hyperWrapping as bool? ?? base.hyperWrapping,
+    enqueue: enqueue as void Function(GlideItem item)? ?? base.enqueue,
+    minimumCellWidth: minimumCellWidth as double? ?? base.minimumCellWidth,
+    dragAndDropState: dragAndDropState as GlideColumnDndState? ?? base.dragAndDropState,
+    isResizing: isResizing as bool? ?? base.isResizing,
+    resizeColumn: resizeColumn as int? ?? base.resizeColumn,
+    resizeIndicator: resizeIndicator as GlideResizeIndicator? ?? base.resizeIndicator,
+    imageLoader: imageLoader as GlideImageWindowLoader? ?? base.imageLoader,
+    spriteManager: spriteManager as GlideSpriteManager? ?? base.spriteManager,
+    );
+  }
+
+    /// One entry per field of [GlideDrawGridArg]: each rebuilds the arg with
+    /// exactly that field changed, which must flip `shouldRepaint`.
+    final changes = <String, GlideDrawGridArg Function(GlideDrawGridArg)>{
+      'width': (base) => copyArg(base, width: base.width + 1),
+      'height': (base) => copyArg(base, height: base.height + 1),
+      'headerHeight': (base) => copyArg(base, headerHeight: base.headerHeight + 1),
+      'groupHeaderHeight': (base) => copyArg(base, groupHeaderHeight: base.groupHeaderHeight + 1),
+      'enableGroups': (base) => copyArg(base, enableGroups: !base.enableGroups),
+      'cellXOffset': (base) => copyArg(base, cellXOffset: base.cellXOffset + 1),
+      'cellYOffset': (base) => copyArg(base, cellYOffset: base.cellYOffset + 1),
+      'translateX': (base) => copyArg(base, translateX: base.translateX + 1),
+      'translateY': (base) => copyArg(base, translateY: base.translateY + 1),
+      // Deliberately a *non*-const list with equal content: `mappedColumns`
+      // is compared by identity (as upstream compares the array), so a fresh
+      // instance has to repaint even though every column matches. A `const`
+      // literal would be canonicalized onto the same instance and prove
+      // nothing.
+      'mappedColumns': (base) => copyArg(base, mappedColumns: [
+        base.mappedColumns.first,
+      ]),
+      'freezeColumns': (base) => copyArg(base, freezeColumns: base.freezeColumns + 1),
+      'freezeTrailingRows': (base) => copyArg(base, freezeTrailingRows: base.freezeTrailingRows + 1),
+      'rows': (base) => copyArg(base, rows: base.rows + 1),
+      'rowHeight': (base) => copyArg(base, rowHeight: const GlideRowHeight.fixed(31)),
+      'theme': (base) => copyArg(base, theme: const GlideThemeOverride(bgCell: Color(0xFF000000)).applyTo(GlideTheme.light())),
+      'selection': (base) => copyArg(base, selection: const GlideGridSelection(
+            current: GlideGridSelectionCurrent(
+              cell: GlideItem(1, 1),
+              range: GlideRectangle(x: 1, y: 1, width: 1, height: 1),
+            ),
+          )),
+      'isFocused': (base) => copyArg(base, isFocused: !base.isFocused),
+      'drawFocus': (base) => copyArg(base, drawFocus: !base.drawFocus),
+      'verticalBorder': (base) => copyArg(base, verticalBorder: (_) => false),
+      'getCellContent': (base) => copyArg(base, getCellContent: (item) => const GlideTextCell(data: 'x', displayData: 'x')),
+      'getCellRenderer': (base) => copyArg(base, getCellRenderer: (_) => null),
+      'metrics': (base) => copyArg(base, metrics: GlideTextMetrics()),
+      'getRowThemeOverride': (base) => copyArg(base, getRowThemeOverride: (_) => null),
+      'getGroupDetails': (base) => copyArg(base, getGroupDetails: (_) => const GlideGroupDetails(name: 'g')),
+      'hoverValues': (base) => copyArg(base, hoverValues: {const GlideItem(0, 0): 1.0}),
+      'hoverInfo': (base) => copyArg(base, hoverInfo: const GlideItem(0, 0)),
+      'hoverPosition': (base) => copyArg(base, hoverPosition: const Offset(1, 1)),
+      'damage': (base) => copyArg(base, damage: GlideCellSet(const [GlideItem(0, 0)])),
+      'hasAppendRow': (base) => copyArg(base, hasAppendRow: !base.hasAppendRow),
+      'touchMode': (base) => copyArg(base, touchMode: !base.touchMode),
+      'fillHandle': (base) => copyArg(base, fillHandle: const GlideFillHandleConfig(shape: GlideFillHandleShape.circle)),
+      'disabledRows': (base) => copyArg(base, disabledRows: const GlideCompactSelection.empty().add(0)),
+      'prelightCells': (base) => copyArg(base, prelightCells: const [GlideItem(0, 0)]),
+      'highlightRegions': (base) => copyArg(base, highlightRegions: const [
+            GlideHighlight(
+              range: GlideRectangle(x: 0, y: 0, width: 1, height: 1),
+              color: Color(0xFFFF0000),
+            ),
+          ]),
+      'drawHeaderCallback': (base) => copyArg(base, drawHeaderCallback: (_, _) {}),
+      'drawCellCallback': (base) => copyArg(base, drawCellCallback: (_, _) {}),
+      'fixedShadowX': (base) => copyArg(base, fixedShadowX: !base.fixedShadowX),
+      'fixedShadowY': (base) => copyArg(base, fixedShadowY: !base.fixedShadowY),
+      'hyperWrapping': (base) => copyArg(base, hyperWrapping: !base.hyperWrapping),
+      'enqueue': (base) => copyArg(base, enqueue: (_) {}),
+      'minimumCellWidth': (base) => copyArg(base, minimumCellWidth: base.minimumCellWidth + 1),
+      'dragAndDropState': (base) => copyArg(base, dragAndDropState: const GlideColumnDndState(src: 0, dest: 1)),
+      'isResizing': (base) => copyArg(base, isResizing: !base.isResizing),
+      'resizeColumn': (base) => copyArg(base, resizeColumn: 0),
+      'resizeIndicator': (base) => copyArg(base, resizeIndicator: GlideResizeIndicator.none),
+      'imageLoader': (base) => copyArg(base, imageLoader: GlideImageWindowLoader()),
+      'spriteManager': (base) => copyArg(base, spriteManager: GlideSpriteManager(icons: const {}, settled: () {})),
+    };
+
+    test('an arg rebuilt from equal values does not repaint', () {
+      final base = baseArg();
+      expect(
+        GlideDataGridPainter(copyArg(base)).shouldRepaint(
+          GlideDataGridPainter(base),
+        ),
+        isFalse,
+        reason: 'value-equal args must reuse the previous frame',
+      );
+      expect(
+        GlideDataGridPainter(base).shouldRepaint(GlideDataGridPainter(base)),
+        isFalse,
+      );
+    });
+
+    test('a variable row height compares its function', () {
+      // `GlideRowHeight.==` used to look only at the fixed branch, so two
+      // different row-height formulas were "equal" and a grid that swapped
+      // them would never repaint.
+      expect(
+        const GlideRowHeight.variable(_shortRowHeight) ==
+            const GlideRowHeight.variable(_tallRowHeight),
+        isFalse,
+      );
+      expect(
+        const GlideRowHeight.variable(_shortRowHeight) ==
+            const GlideRowHeight.variable(_shortRowHeight),
+        isTrue,
+      );
+    });
+
+    test('value types compare by value, not by identity', () {
+      final base = baseArg();
+      // Built without `const` so the two sides are genuinely distinct
+      // instances: without an `==` on these types every drag frame and every
+      // fill-handle tweak would repaint.
+      final withValues = copyArg(
+        base,
+        dragAndDropState: GlideColumnDndState(src: 0, dest: 1),
+        fillHandle: GlideFillHandleConfig(shape: GlideFillHandleShape.circle),
+      );
+      final equalAgain = copyArg(
+        base,
+        dragAndDropState: GlideColumnDndState(src: 0, dest: 1),
+        fillHandle: GlideFillHandleConfig(shape: GlideFillHandleShape.circle),
+      );
+      expect(
+        GlideDataGridPainter(withValues).shouldRepaint(
+          GlideDataGridPainter(equalAgain),
+        ),
+        isFalse,
+      );
+
+      final moved = copyArg(
+        base,
+        dragAndDropState: GlideColumnDndState(src: 0, dest: 2),
+      );
+      expect(
+        GlideDataGridPainter(moved).shouldRepaint(
+          GlideDataGridPainter(withValues),
+        ),
+        isTrue,
+      );
+    });
+
+    test('every field gates a repaint when it changes', () {
+      final base = baseArg();
+      final painter = GlideDataGridPainter(base);
+      for (final entry in changes.entries) {
+        expect(
+          GlideDataGridPainter(entry.value(base)).shouldRepaint(painter),
+          isTrue,
+          reason: 'changing ${entry.key} must repaint',
+        );
+      }
+      expect(changes, hasLength(47));
+    });
+
+    test('the arg declares no field that _argEquals ignores', () {
+      // A source-level guard: the behavioural table above can only cover the
+      // fields someone remembered to list, so the list is checked against the
+      // real declaration. One omission here means "that prop changed and the
+      // grid never repainted".
+      final argSource = File(
+        'lib/src/glide/internal/data_grid/render/glide_draw_grid_arg.dart',
+      ).readAsStringSync();
+      final painterSource = File(
+        'lib/src/glide/internal/data_grid/render/glide_data_grid_painter.dart',
+      ).readAsStringSync();
+
+      final classStart = argSource.indexOf('class GlideDrawGridArg');
+      expect(classStart, greaterThan(0));
+      final declared = RegExp(
+        r'^\s+final\s+(.*?)\s+(\w+);',
+        multiLine: true,
+      )
+          .allMatches(argSource.substring(classStart))
+          .map((m) => m.group(2)!)
+          .toSet();
+
+      final eqStart = painterSource.indexOf('bool _argEquals');
+      expect(eqStart, greaterThan(0));
+      final eqBody = painterSource.substring(
+        eqStart,
+        painterSource.indexOf('\n  }', eqStart),
+      );
+
+      for (final field in declared) {
+        expect(
+          eqBody.contains('a.$field'),
+          isTrue,
+          reason: '$field is declared but never compared in _argEquals',
+        );
+      }
+      expect(changes.keys, unorderedEquals(declared));
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Rebuild cost (`data-grid-render.blit.ts:233`)
+  // -------------------------------------------------------------------------
+
+  group('repaint on rebuild', () {
+    /// Pumps the grid twice — once with the [from] props, once with the
+    /// [to] props — and reports how many cell draws the second pump added.
+    /// Zero means the painter recognised the frame as unchanged and skipped
+    /// it; anything else is a real repaint.
+    Future<int> rebuildCost(
+      WidgetTester tester, {
+      required List<GlideGridColumn> from,
+      required List<GlideGridColumn> to,
+      int fromOffset = 0,
+      int toOffset = 0,
+      GlideTheme? fromTheme,
+      GlideTheme? toTheme,
+    }) async {
+      final draws = <int>[];
+      // Hoisted: a fresh closure per build would make `getCellRenderer`
+      // differ by identity and force a repaint, which is exactly what the
+      // first case here must not do.
+      GlideCellRenderer renderer(GlideGridCell cell) =>
+          FrameCountingRenderer(draws);
+
+      Widget build(List<GlideGridColumn> columns, int offset, GlideTheme theme) =>
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: SizedBox(
+              width: 400,
+              height: 300,
+              child: GlideDataGrid(
+                props: GlideDataGridProps(
+                  width: 400,
+                  height: 300,
+                  columns: columns,
+                  rows: 10,
+                  rowHeight: const GlideRowHeight.fixed(30),
+                  headerHeight: 30,
+                  theme: theme,
+                  verticalBorder: _stableBorder,
+                  cellXOffset: offset,
+                  getCellRenderer: renderer,
+                  getCellContent: _stableContent,
+                  onItemHovered: (_) {},
+                  onMouseMove: (_) {},
+                  onMouseDown: (_) {},
+                  onMouseUp: (_, _) {},
+                  onContextMenu: (_, _) {},
+                  onCanvasFocused: () {},
+                  onCanvasBlur: () {},
+                  onCellFocused: (_) {},
+                  onKeyDown: (_) {},
+                ),
+              ),
+            ),
+          );
+
+      await tester.pumpWidget(
+        build(from, fromOffset, fromTheme ?? GlideTheme.light()),
+      );
+      await tester.pumpAndSettle();
+      final first = draws.length;
+      await tester.pumpWidget(
+        build(to, toOffset, toTheme ?? GlideTheme.light()),
+      );
+      await tester.pumpAndSettle();
+      return draws.length - first;
+    }
+
+    List<GlideGridColumn> columnsOf(double width) => [
+      for (var i = 0; i < 4; i++) GlideGridColumn(title: 'C$i', width: width),
+    ];
+
+    testWidgets('rebuilding with identical props does not repaint', (
+      tester,
+    ) async {
+      final columns = columnsOf(100);
+      expect(
+        await rebuildCost(tester, from: columns, to: columns),
+        0,
+        reason: 'nothing visible changed, so the layer is reused',
+      );
+    });
+
+    testWidgets('a resized column does repaint', (tester) async {
+      expect(
+        await rebuildCost(
+          tester,
+          from: columnsOf(100),
+          to: columnsOf(150),
+        ),
+        greaterThan(0),
+      );
+    });
+
+    testWidgets('a new columns list with equal content does repaint', (
+      tester,
+    ) async {
+      // `mappedColumns` is keyed by reference, exactly as upstream's
+      // `useMemo(..., [columns])`: a caller that rebuilds its list pays for
+      // a redraw even when every value happens to match.
+      expect(
+        await rebuildCost(tester, from: columnsOf(100), to: columnsOf(100)),
+        greaterThan(0),
+      );
+    });
+
+    testWidgets('a different scroll offset does repaint', (tester) async {
+      expect(
+        await rebuildCost(
+          tester,
+          from: columnsOf(100),
+          to: columnsOf(100),
+          toOffset: 1,
+        ),
+        greaterThan(0),
+      );
+    });
+
+    testWidgets('a different theme does repaint', (tester) async {
+      expect(
+        await rebuildCost(
+          tester,
+          from: columnsOf(100),
+          to: columnsOf(100),
+          fromTheme: GlideTheme.light(),
+          toTheme: const GlideThemeOverride(
+            bgCell: Color(0xFF000000),
+          ).applyTo(GlideTheme.light()),
+        ),
+        greaterThan(0),
+      );
+    });
+
+    testWidgets('rebuilding the editor with identical props does not repaint', (
+      tester,
+    ) async {
+      // The editor path, where the per-build allocations live: the merged
+      // `headerIcons` map, the `drawCell` marker-offset wrapper, the derived
+      // highlight list and the `_mangledColumns` list. Each of them used to
+      // be a fresh object per build, so an editor never reused a frame.
+      final draws = <int>[];
+      final lookup = GlideDefaultRendererLookup(
+        extra: {GlideCellKind.text: FrameCountingRenderer(draws)},
+      );
+      final columns = [
+        for (var i = 0; i < 4; i++) GlideGridColumn(title: 'C$i', width: 100),
+      ];
+
+      // Function props hoisted: a closure per build differs by `==` and would
+      // force a repaint for reasons that have nothing to do with the editor.
+      bool border(int col) => true;
+      GlideGridCell content(GlideItem item, [bool? strict]) =>
+          const GlideTextCell(data: '', displayData: '');
+      void drawCell(GlideDrawCellArgs args, VoidCallback draw) => draw();
+      void drawHeader(GlideDrawHeaderArgs args, VoidCallback draw) => draw();
+
+      Widget build() => MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 400,
+            height: 400,
+            child: GlideDataEditor(
+              props: GlideDataEditorProps(
+                columns: columns,
+                rows: 10,
+                getCellContent: content,
+                theme: GlideTheme.light(),
+                verticalBorder: border,
+                rendererLookup: lookup,
+                rowHeight: const GlideRowHeight.fixed(32),
+                headerHeight: 32,
+                enableGroups: true,
+                groupHeaderHeight: 30,
+                freezeColumns: 1,
+                rowMarkers: const GlideRowMarkerOptions(width: 40),
+                drawCell: drawCell,
+                drawHeader: drawHeader,
+                // A non-empty highlight list: the editor derives a fresh
+                // list (and fresh `GlideHighlight`s) on every build, so this
+                // is what forces the value comparison rather than identity.
+                highlightRegions: const [
+                  GlideHighlight(
+                    range: GlideRectangle(x: 0, y: 0, width: 2, height: 2),
+                    color: Color(0xFF4F5DFF),
+                  ),
+                ],
+                onGridSelectionChange: (_) {},
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(build());
+      await tester.pumpAndSettle();
+      final first = draws.length;
+      expect(first, greaterThan(0), reason: 'the fixture must paint cells');
+
+      await tester.pumpWidget(build());
+      await tester.pumpAndSettle();
+      expect(
+        draws.length - first,
+        0,
+        reason: 'nothing visible changed, so the layer is reused',
+      );
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Cursor (`data-grid.tsx:973-985`)
+  // -------------------------------------------------------------------------
+
+  group('cursor', () {
+    /// Hovers [at] and reports the cursor the grid's `MouseRegion` asks for.
+    Future<MouseCursor> cursorAt(
+      WidgetTester tester, {
+      required Offset at,
+      required bool allowResize,
+    }) async {
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: SizedBox(
+            width: 400,
+            height: 300,
+            child: GlideDataGrid(
+              props: GlideDataGridProps(
+                width: 400,
+                height: 300,
+                columns: const [GlideGridColumn(title: 'C0', width: 100)],
+                rows: 10,
+                rowHeight: const GlideRowHeight.fixed(30),
+                headerHeight: 30,
+                theme: GlideTheme.light(),
+                verticalBorder: _stableBorder,
+                allowResize: allowResize,
+                getCellRenderer: GlideDefaultRendererLookup().forCell,
+                getCellContent: _stableContent,
+                onItemHovered: (_) {},
+                onMouseMove: (_) {},
+                onMouseDown: (_) {},
+                onMouseUp: (_, _) {},
+                onContextMenu: (_, _) {},
+                onCanvasFocused: () {},
+                onCanvasBlur: () {},
+                onCellFocused: (_) {},
+                onKeyDown: (_) {},
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await gesture.addPointer(location: Offset.zero);
+      addTearDown(gesture.removePointer);
+      await gesture.moveTo(at);
+      await tester.pump();
+      return tester.widget<MouseRegion>(find.byType(MouseRegion)).cursor;
+    }
+
+    testWidgets('the resize edge of a resizable header shows the resize '
+        'cursor', (tester) async {
+      expect(
+        await cursorAt(
+          tester,
+          at: const Offset(99, 15),
+          allowResize: true,
+        ),
+        SystemMouseCursors.resizeColumn,
+      );
+    });
+
+    testWidgets('a plain cell never shows the resize cursor', (tester) async {
+      // The regression this guards: `_updateCursor` used to read
+      // `cell && allowResize`, so wiring `allowResize` (as the editor does)
+      // painted a resize cursor over every cell.
+      expect(
+        await cursorAt(tester, at: const Offset(50, 45), allowResize: true),
+        MouseCursor.defer,
+      );
+    });
+
+    testWidgets('an edge you cannot resize through is not a resize edge', (
+      tester,
+    ) async {
+      expect(
+        await cursorAt(tester, at: const Offset(99, 15), allowResize: false),
+        MouseCursor.defer,
+      );
     });
   });
 }
