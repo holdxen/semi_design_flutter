@@ -126,6 +126,7 @@ class SemiTabs extends StatefulWidget {
     this.tabPaneMotion = true,
     this.keepDOM = true,
     this.lazyRender = false,
+    this.fillContent = false,
     this.onChange,
     this.onTabClick,
     this.onTabClose,
@@ -166,6 +167,10 @@ class SemiTabs extends StatefulWidget {
 
   /// 只渲染访问过的 pane（`lazyRender`，上游缺省 false）。
   final bool lazyRender;
+
+  /// 让内容区填满 tab bar 之外的可用高度（默认关闭，保持原有 shrink-wrap 行为）。
+  /// 开启后内容拿到有界高度，可安全放置 SingleChildScrollView 等滚动组件。
+  final bool fillContent;
 
   /// 选中变化（仅变化时回调）。
   final ValueChanged<String>? onChange;
@@ -373,9 +378,12 @@ class _SemiTabsState extends State<SemiTabs> {
       );
     }
     return Column(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisSize: widget.fillContent ? MainAxisSize.max : MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [bar, content],
+      children: [
+        bar,
+        if (widget.fillContent) Expanded(child: content) else content,
+      ],
     );
   }
 
@@ -758,17 +766,20 @@ class _SemiTabsState extends State<SemiTabs> {
           child: pane,
         );
       }
+      final offstagePane = Offstage(
+        offstage: !active,
+        child: TickerMode(enabled: active, child: pane),
+      );
       children.add(
-        Offstage(
-          offstage: !active,
-          child: TickerMode(enabled: active, child: pane),
-        ),
+        widget.fillContent && active
+            ? Expanded(child: offstagePane)
+            : offstagePane,
       );
     }
     return Padding(
       padding: padding,
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: widget.fillContent ? MainAxisSize.max : MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: children,
       ),
