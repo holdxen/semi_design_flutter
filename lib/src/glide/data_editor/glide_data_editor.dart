@@ -66,6 +66,8 @@ class GlideDataEditorProps {
     this.columnSelectionBlending = GlideSelectionBlending.exclusive,
     this.rowSelectionBlending = GlideSelectionBlending.exclusive,
     this.rangeSelectionColumnSpanning = true,
+    this.spanRangeBehavior = GlideSpanRangeBehavior.standard,
+    this.scrollToActiveCell = true,
     this.strict = false,
     this.columnSelectionModeMulti = false,
     this.rowMarkers,
@@ -164,6 +166,15 @@ class GlideDataEditorProps {
   final GlideSelectionBlending columnSelectionBlending;
   final GlideSelectionBlending rowSelectionBlending;
   final bool rangeSelectionColumnSpanning;
+
+  /// `spanRangeBehavior` (`data-editor.tsx:368`): `"allowPartial"` stops
+  /// `setGridSelection(..., expand: true)` from growing the range over the
+  /// spans of the cells it touches.
+  final GlideSpanRangeBehavior spanRangeBehavior;
+
+  /// `scrollToActiveCell` (`data-editor.tsx:691`): false keeps the viewport
+  /// put when the selection moves, instead of following it.
+  final bool scrollToActiveCell;
 
   /// `experimental.strict` (`data-grid.ts:249`): every content lookup outside
   /// the visible window resolves to a loading cell, not just the ones the
@@ -556,10 +567,36 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       getCells: _getCellsForSelection,
       onResults: (results) => setState(() => _searchResultsInner = results),
       onStatus: (status) => setState(() => _searchStatus = status),
-      onResultsChanged: (results, navIndex) =>
-          widget.props.onSearchResultsChanged?.call(results, navIndex),
+      onResultsChanged: _onSearchResultsChanged,
       selectedIndex: _searchSelectedIndex,
     );
+  }
+
+  /// `onSearchResultsChanged` (`data-editor.tsx:3910-3928`).
+  ///
+  /// The runner indexes the rows `_getCellsForSelection` hands back, which
+  /// still carry the marker column, so its results are in *mangled* space
+  /// (`glide_data_grid_search.dart:130`). A consumer therefore gets the
+  /// marker stripped (`:3913-3915`); with no consumer the editor moves the
+  /// selection itself, and that is also what scrolls to the match
+  /// (`:3926`).
+  ///
+  /// Upstream's `lastSent` guard (`:3922-3924`, cleared at `:3062-3064`) is
+  /// not ported: it only suppresses a repeat call to `updateSelectedCell`,
+  /// which already returns without scrolling when the cell is unchanged, so
+  /// nothing observable depends on it.
+  void _onSearchResultsChanged(List<GlideItem> results, int navIndex) {
+    final consumer = widget.props.onSearchResultsChanged;
+    if (consumer != null) {
+      consumer([
+        for (final item in results)
+          GlideItem(item.col - _markerOffset, item.row),
+      ], navIndex);
+      return;
+    }
+    if (results.isEmpty || navIndex < 0 || navIndex >= results.length) return;
+    final item = results[navIndex];
+    _updateSelectedCell(item.col, item.row);
   }
 
   /// `onNext` / `onPrev` (`data-grid-search.ts:321-348`).
@@ -578,14 +615,9 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       );
     });
 
-    final results = _searchResults;
-    widget.props.onSearchResultsChanged?.call(results, newIndex);
-    if (newIndex >= 0 && newIndex < results.length) {
-      // Upstream leaves the scroll to `onSearchResultsChanged`'s consumer;
-      // this port has no consumer, so the editor does it itself.
-      final item = results[newIndex];
-      _scrollTo(GlideScrollTarget(item.col - _markerOffset, item.row));
-    }
+    // `onSearchResultsChanged?.(searchResults, newIndex)`
+    // (`data-grid-search.tsx:331`, `:346`).
+    _onSearchResultsChanged(_searchResults, newIndex);
   }
 
   /// `onSearchKeyDown` (`data-grid-search.ts:350-365`).
@@ -1409,7 +1441,9 @@ class _GlideDataEditorState extends State<GlideDataEditor>
         newVal: v,
         getCellsForSelection: _getCellsForSelection,
         rowMarkerOffset: _markerOffset,
-        allowPartial: false,
+        allowPartial:
+            widget.props.spanRangeBehavior ==
+            GlideSpanRangeBehavior.allowPartial,
       );
     }
     // `selectionOutOfBounds` (`data-editor.ts:3951-3957`): a selection that
@@ -1478,6 +1512,8 @@ class _GlideDataEditorState extends State<GlideDataEditor>
           rowBehavior: widget.props.rowSelectionBlending,
           rangeSelectionColumnSpanning:
               widget.props.rangeSelectionColumnSpanning,
+          spanRangeBehavior: widget.props.spanRangeBehavior,
+          scrollToActiveCell: widget.props.scrollToActiveCell,
           getCellsForSelection: _getCellsForSelection,
           onSelectionCleared: widget.props.onSelectionCleared,
           onDelete: widget.props.onDelete,

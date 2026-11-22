@@ -28,11 +28,20 @@ List<int> glideGetSpanStops(GlideCellArray cells) {
   return stops.toList()..sort();
 }
 
+/// `spanRangeBehavior` (`data-editor.tsx:368`): `"default"` grows the range
+/// until it fully covers every span it touches, `"allowPartial"` leaves the
+/// user's range alone.
+///
+/// Dart has no `default` identifier, so upstream's `"default"` is spelled
+/// [GlideSpanRangeBehavior.standard].
+enum GlideSpanRangeBehavior { standard, allowPartial }
+
 /// `expandSelection` (`data-editor-fns.ts:5-98`).
 ///
 /// Grows the current range until it fully covers the spans of the cells it
-/// touches. `getCellsForSelection == null` and `allowPartial` both short
-/// circuit to the input, matching upstream.
+/// touches. `getCellsForSelection == null` and
+/// [GlideSpanRangeBehavior.allowPartial] both short circuit to the input,
+/// matching upstream (`data-editor-fns.ts:13`).
 GlideGridSelection glideExpandSelection({
   required GlideGridSelection newVal,
   required GlideGetCellsForSelection? getCellsForSelection,

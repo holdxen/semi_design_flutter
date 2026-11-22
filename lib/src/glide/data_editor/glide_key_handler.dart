@@ -74,6 +74,8 @@ class GlideKeyHandler {
     this.columnBehavior = GlideSelectionBlending.exclusive,
     this.rowBehavior = GlideSelectionBlending.exclusive,
     this.rangeSelectionColumnSpanning = true,
+    this.spanRangeBehavior = GlideSpanRangeBehavior.standard,
+    this.scrollToActiveCell = true,
     this.getCellsForSelection,
     this.onSelectionCleared,
     this.onSearch,
@@ -127,6 +129,13 @@ class GlideKeyHandler {
   final GlideSelectionBlending rowBehavior;
   final bool rangeSelectionColumnSpanning;
 
+  /// `spanRangeBehavior` (`data-editor.tsx:368`).
+  final GlideSpanRangeBehavior spanRangeBehavior;
+
+  /// `scrollToActiveCell` (`data-editor.tsx:691`): gates the `scrollTo` at
+  /// the end of `updateSelectedCell` (`:3066-3068`).
+  final bool scrollToActiveCell;
+
   final GlideGetCellsForSelection? getCellsForSelection;
   final void Function()? onSelectionCleared;
   final void Function()? onSearch;
@@ -165,7 +174,8 @@ class GlideKeyHandler {
           newVal: v,
           getCellsForSelection: getCellsForSelection,
           rowMarkerOffset: rowMarkerOffset,
-          allowPartial: false,
+          allowPartial:
+              spanRangeBehavior == GlideSpanRangeBehavior.allowPartial,
         );
       }
       selection = v;
@@ -549,9 +559,12 @@ class GlideKeyHandler {
       );
     }
 
-    scrollTo?.call(
-      GlideScrollTarget(col - rowMarkerOffset, row),
-    );
+    // `if (scrollToActiveCellRef.current)` (`data-editor.tsx:3066-3068`).
+    if (scrollToActiveCell) {
+      scrollTo?.call(
+        GlideScrollTarget(col - rowMarkerOffset, row),
+      );
+    }
     return true;
   }
 

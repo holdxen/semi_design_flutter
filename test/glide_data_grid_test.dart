@@ -768,6 +768,9 @@ void main() {
       GlideGridSelection? initial,
       GlideGetCellsForSelection? getCellsForSelection,
       GlideDeleteCallback? onDelete,
+      GlideSpanRangeBehavior spanRangeBehavior =
+          GlideSpanRangeBehavior.standard,
+      bool scrollToActiveCell = true,
       void Function(GlideItem location, GlideCellActivation activation)?
       onCellActivated,
     }) {
@@ -796,6 +799,8 @@ void main() {
             GlideTextCell(data: 'v${item.col}-${item.row}', displayData: 'x'),
         getCellRenderer: GlideDefaultRendererLookup().forCell,
         getCellsForSelection: getCellsForSelection,
+        spanRangeBehavior: spanRangeBehavior,
+        scrollToActiveCell: scrollToActiveCell,
         onCellsEdited: (items) => edits.addAll(items),
         scrollTo: (target) => scrolls.add(target),
         onCellActivated: onCellActivated,
@@ -863,6 +868,53 @@ void main() {
       expect(h.selection.current!.cell, const GlideItem(2, 3));
       expect(range.height, 2);
       expect(scrolls.last.axis, GlideScrollAxis.vertical);
+    });
+
+    test('scrollToActiveCell false keeps the viewport put', () {
+      // A plain arrow moves the cell, so it reaches the `scrollTo` at the
+      // end of `updateSelectedCell` (`data-editor.tsx:3066-3068`).
+      final still = handler(scrollToActiveCell: false);
+      still.handleFixedKeybindings(key('ArrowDown', 40));
+      expect(still.selection.current!.cell, const GlideItem(2, 4));
+      expect(scrolls, isEmpty);
+
+      // The default still follows the selection.
+      final follows = handler();
+      follows.handleFixedKeybindings(key('ArrowDown', 40));
+      expect(follows.selection.current!.cell, const GlideItem(2, 4));
+      expect(scrolls, isNotEmpty);
+      expect(scrolls.last.row, 4);
+    });
+
+    test('spanRangeBehavior allowPartial stops the range growing', () {
+      final spanning = const GlideTextCell(
+        data: 'wide',
+        displayData: 'wide',
+        span: (start: 0, end: 3),
+      );
+      final h = handler(
+        spanRangeBehavior: GlideSpanRangeBehavior.allowPartial,
+        initial: const GlideGridSelection(
+          current: GlideGridSelectionCurrent(
+            cell: GlideItem(1, 0),
+            range: GlideRectangle(x: 1, y: 0, width: 1, height: 1),
+          ),
+        ),
+        getCellsForSelection: (region) => [
+          [
+            for (var x = region.x.toInt(); x < region.x + region.width; x++)
+              if (x == 1)
+                spanning
+              else
+                const GlideTextCell(data: 'x', displayData: 'x'),
+          ],
+        ],
+      );
+      h.handleFixedKeybindings(key('ArrowRight', 39, shift: true));
+      final range = h.selection.current!.range;
+      // Without `allowPartial` the range would have grown to x=0, width=4.
+      expect(range.x, 1);
+      expect(range.width, 2);
     });
 
     test('escape clears the selection', () {
@@ -1525,6 +1577,11 @@ void main() {
       GlideTrailingRowOptions? trailingRowOptions,
       void Function()? onRowAppended,
       Object? Function()? onColumnAppended,
+      GlideGetCellsForSelection? cellsForSelection,
+      GlideSpanRangeBehavior spanRangeBehavior =
+          GlideSpanRangeBehavior.standard,
+      void Function(List<GlideItem> results, int navIndex)?
+      onSearchResultsChanged,
     }) {
       edits = [];
       selectionLog = [];
@@ -1608,21 +1665,25 @@ void main() {
             onColumnProposeMove: onColumnProposeMove,
             onRowMoved: onRowMoved,
             rowMarkers: rowMarkers,
-            getCellsForSelection: (region) => [
-              for (
-                var y = region.y.toInt();
-                y < region.y + region.height && y < cells.length;
-                y++
-              )
-                [
+            spanRangeBehavior: spanRangeBehavior,
+            onSearchResultsChanged: onSearchResultsChanged,
+            getCellsForSelection:
+                cellsForSelection ??
+                (region) => [
                   for (
-                    var x = region.x.toInt();
-                    x < region.x + region.width && x < cells[y].length;
-                    x++
+                    var y = region.y.toInt();
+                    y < region.y + region.height && y < cells.length;
+                    y++
                   )
-                    cells[y][x],
+                    [
+                      for (
+                        var x = region.x.toInt();
+                        x < region.x + region.width && x < cells[y].length;
+                        x++
+                      )
+                        cells[y][x],
+                    ],
                 ],
-            ],
           );
           return MaterialApp(
             home: Scaffold(
@@ -3076,6 +3137,218 @@ void main() {
       // ...and the column just off the left edge stays hidden.
       expect(find.bySemanticsLabel('cell-0-0'), findsNothing);
       handle.dispose();
+    });
+
+    testWidgets('spanRangeBehavior allowPartial stops a keyboard grow', (
+      tester,
+    ) async {
+      final spanning = const GlideTextCell(
+        data: 'wide',
+        displayData: 'wide',
+        span: (start: 0, end: 3),
+      );
+      Future<GlideRectangle> grow(GlideSpanRangeBehavior behavior) async {
+        final log = <GlideRectangle>[];
+        await tester.pumpWidget(
+          buildEditor(
+            columnCount: 6,
+            spanRangeBehavior: behavior,
+            content: (item) => item == const GlideItem(1, 0)
+                ? spanning
+                : const GlideTextCell(data: 'x', displayData: 'x'),
+            cellsForSelection: (region) => [
+              [
+                for (var x = region.x.toInt(); x < region.x + region.width; x++)
+                  if (x == 1)
+                    spanning
+                  else
+                    const GlideTextCell(data: 'x', displayData: 'x'),
+              ],
+            ],
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final start = await tester.startGesture(
+          const Offset(150, 45),
+          kind: PointerDeviceKind.mouse,
+        );
+        await start.up();
+        await tester.pumpAndSettle();
+
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.pumpAndSettle();
+
+        log.add(selectionLog.last.current!.range);
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pumpAndSettle();
+        return log.single;
+      }
+
+      // `"allowPartial"` short-circuits `expandSelection`
+      // (`data-editor-fns.ts:13`), so the drag stops at column 2.
+      final partial = await grow(GlideSpanRangeBehavior.allowPartial);
+      expect(partial.x, 1);
+      expect(partial.width, 2);
+
+      // The default keeps growing until the span is fully covered
+      // (`data-editor-fns.ts:5-98`).
+      final grown = await grow(GlideSpanRangeBehavior.standard);
+      expect(grown.x, 0);
+      expect(grown.width, 4);
+    });
+
+    testWidgets('spanRangeBehavior allowPartial stops a drag growing', (
+      tester,
+    ) async {
+      // The drag path expands in the editor's own `_setGridSelection`
+      // (`_dragSelect` -> `setCurrent(expand: true)`), not through
+      // `GlideKeyHandler`, so it covers the other of the port's two
+      // expansion points.
+      final spanning = const GlideTextCell(
+        data: 'wide',
+        displayData: 'wide',
+        span: (start: 0, end: 3),
+      );
+      Future<GlideRectangle> drag(GlideSpanRangeBehavior behavior) async {
+        await tester.pumpWidget(
+          buildEditor(
+            columnCount: 6,
+            spanRangeBehavior: behavior,
+            content: (item) => item.row == 0 && item.col <= 3
+                ? spanning
+                : const GlideTextCell(data: 'x', displayData: 'x'),
+            cellsForSelection: (region) => [
+              [
+                for (var x = region.x.toInt(); x < region.x + region.width; x++)
+                  if (x <= 3)
+                    spanning
+                  else
+                    const GlideTextCell(data: 'x', displayData: 'x'),
+              ],
+            ],
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Select (0,0)...
+        final first = await tester.startGesture(
+          const Offset(50, 45),
+          kind: PointerDeviceKind.mouse,
+        );
+        await first.up();
+        await tester.pumpAndSettle();
+
+        // ...then drag from it to (1,0), which only half-covers the span.
+        final dragGesture = await tester.startGesture(
+          const Offset(50, 45),
+          kind: PointerDeviceKind.mouse,
+        );
+        await tester.pump();
+        await dragGesture.moveTo(const Offset(150, 45));
+        await tester.pumpAndSettle();
+        await dragGesture.up();
+        await tester.pumpAndSettle();
+
+        final range = selectionLog.last.current!.range;
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pumpAndSettle();
+        return range;
+      }
+
+      // Without the prop the range grows to swallow the whole span.
+      final grown = await drag(GlideSpanRangeBehavior.standard);
+      expect(grown.x, 0);
+      expect(grown.width, 4);
+
+      // `"allowPartial"` stops at the dragged edge.
+      final partial = await drag(GlideSpanRangeBehavior.allowPartial);
+      expect(partial.x, 0);
+      expect(partial.width, 2);
+    });
+
+    testWidgets('search results reach the consumer in user coordinates', (
+      tester,
+    ) async {
+      final reported = <(List<GlideItem>, int)>[];
+      await tester.pumpWidget(
+        buildEditor(
+          columnCount: 6,
+          rowMarkers: const GlideRowMarkerOptions(),
+          keybindingsOverride: const GlideKeybinds(search: true),
+          onSearchResultsChanged: (results, navIndex) =>
+              reported.add((results, navIndex)),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final cell = await tester.startGesture(
+        const Offset(150, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await cell.up();
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), 'r0 c1');
+      await tester.pumpAndSettle();
+
+      // The first run reports `navIndex: -1` and upstream bails out on it
+      // (`data-editor.tsx:3921`); Enter steps to index 0.
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+
+      expect(reported, isNotEmpty);
+      final (results, navIndex) = reported.last;
+      expect(navIndex, 0);
+      // The runner indexes `_getCellsForSelection`'s rows, which still carry
+      // the marker column, so the consumer must see the marker stripped
+      // (`data-editor.tsx:3913-3915`).
+      expect(results, [const GlideItem(1, 0)]);
+      // ...and never a negative column.
+      expect(results.every((r) => r.col >= 0), isTrue);
+    });
+
+    testWidgets('search without a consumer moves the selection to the match', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildEditor(
+          columnCount: 6,
+          rowMarkers: const GlideRowMarkerOptions(),
+          keybindingsOverride: const GlideKeybinds(search: true),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final cell = await tester.startGesture(
+        const Offset(150, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await cell.up();
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), 'r3 c2');
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+
+      // `updateSelectedCell(col, row, false, false)` (`data-editor.tsx:3926`)
+      // selects the match; the old port only scrolled to it. The runner's
+      // column is mangled, and `onGridSelectionChange` reports marker-free
+      // coordinates (`data-editor.tsx:1009`), so `r3 c2` lands on [2, 3].
+      expect(selectionLog.last.current!.cell, const GlideItem(2, 3));
     });
 
     testWidgets('the remaining data-editor callbacks all fire', (tester) async {
