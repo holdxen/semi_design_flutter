@@ -768,8 +768,6 @@ void main() {
       GlideGridSelection? initial,
       GlideGetCellsForSelection? getCellsForSelection,
       GlideDeleteCallback? onDelete,
-      GlideSpanRangeBehavior spanRangeBehavior =
-          GlideSpanRangeBehavior.standard,
       bool scrollToActiveCell = true,
       void Function(GlideItem location, GlideCellActivation activation)?
       onCellActivated,
@@ -799,7 +797,6 @@ void main() {
             GlideTextCell(data: 'v${item.col}-${item.row}', displayData: 'x'),
         getCellRenderer: GlideDefaultRendererLookup().forCell,
         getCellsForSelection: getCellsForSelection,
-        spanRangeBehavior: spanRangeBehavior,
         scrollToActiveCell: scrollToActiveCell,
         onCellsEdited: (items) => edits.addAll(items),
         scrollTo: (target) => scrolls.add(target),
@@ -884,37 +881,6 @@ void main() {
       expect(follows.selection.current!.cell, const GlideItem(2, 4));
       expect(scrolls, isNotEmpty);
       expect(scrolls.last.row, 4);
-    });
-
-    test('spanRangeBehavior allowPartial stops the range growing', () {
-      final spanning = const GlideTextCell(
-        data: 'wide',
-        displayData: 'wide',
-        span: (start: 0, end: 3),
-      );
-      final h = handler(
-        spanRangeBehavior: GlideSpanRangeBehavior.allowPartial,
-        initial: const GlideGridSelection(
-          current: GlideGridSelectionCurrent(
-            cell: GlideItem(1, 0),
-            range: GlideRectangle(x: 1, y: 0, width: 1, height: 1),
-          ),
-        ),
-        getCellsForSelection: (region) => [
-          [
-            for (var x = region.x.toInt(); x < region.x + region.width; x++)
-              if (x == 1)
-                spanning
-              else
-                const GlideTextCell(data: 'x', displayData: 'x'),
-          ],
-        ],
-      );
-      h.handleFixedKeybindings(key('ArrowRight', 39, shift: true));
-      final range = h.selection.current!.range;
-      // Without `allowPartial` the range would have grown to x=0, width=4.
-      expect(range.x, 1);
-      expect(range.width, 2);
     });
 
     test('escape clears the selection', () {
@@ -3455,6 +3421,50 @@ void main() {
       expect(await bloomOf(null), (1.0, 1.0));
       // ...and `editorBloom` overrides both axes.
       expect(await bloomOf((10, 20)), (10.0, 20.0));
+    });
+
+    testWidgets('a keyboard range grow expands exactly once', (tester) async {
+      var calls = 0;
+      await tester.pumpWidget(
+        buildEditor(
+          columnCount: 6,
+          cellsForSelection: (region) {
+            calls++;
+            return [
+              [
+                for (
+                  var x = region.x.toInt();
+                  x < region.x + region.width;
+                  x++
+                )
+                  const GlideTextCell(data: 'x', displayData: 'x'),
+              ],
+            ];
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final start = await tester.startGesture(
+        const Offset(50, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await start.up();
+      await tester.pumpAndSettle();
+
+      // The sizer and the click have already settled; count only the grow.
+      calls = 0;
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.pumpAndSettle();
+
+      expect(selectionLog.last.current!.range.width, 2);
+      // Two calls, both upstream's: the span probe in `adjustSelection`
+      // (`data-editor.tsx:2929`) and the single `expandSelection` inside
+      // `setGridSelection` (`:1000`). Expanding a second time in
+      // `GlideKeyHandler` made this three.
+      expect(calls, 2);
     });
 
     testWidgets('the remaining data-editor callbacks all fire', (tester) async {

@@ -74,7 +74,6 @@ class GlideKeyHandler {
     this.columnBehavior = GlideSelectionBlending.exclusive,
     this.rowBehavior = GlideSelectionBlending.exclusive,
     this.rangeSelectionColumnSpanning = true,
-    this.spanRangeBehavior = GlideSpanRangeBehavior.standard,
     this.scrollToActiveCell = true,
     this.getCellsForSelection,
     this.onSelectionCleared,
@@ -129,9 +128,6 @@ class GlideKeyHandler {
   final GlideSelectionBlending rowBehavior;
   final bool rangeSelectionColumnSpanning;
 
-  /// `spanRangeBehavior` (`data-editor.tsx:368`).
-  final GlideSpanRangeBehavior spanRangeBehavior;
-
   /// `scrollToActiveCell` (`data-editor.tsx:691`): gates the `scrollTo` at
   /// the end of `updateSelectedCell` (`:3066-3068`).
   final bool scrollToActiveCell;
@@ -168,18 +164,13 @@ class GlideKeyHandler {
       GlideSelectionBehavior(
     gridSelection: base,
     setGridSelection: (newVal, expand) {
-      var v = newVal;
-      if (expand) {
-        v = glideExpandSelection(
-          newVal: v,
-          getCellsForSelection: getCellsForSelection,
-          rowMarkerOffset: rowMarkerOffset,
-          allowPartial:
-              spanRangeBehavior == GlideSpanRangeBehavior.allowPartial,
-        );
-      }
-      selection = v;
-      setGridSelection(v, expand);
+      // Upstream `useSelectionBehavior` does not expand
+      // (`use-selection-behavior.ts` has no `expandSelection` call); the
+      // single expansion point is the data editor's `setGridSelection`
+      // (`data-editor.tsx:1000`), which [setGridSelection] is bound to.
+      // Expanding here as well ran `getCellsForSelection` twice per key.
+      selection = newVal;
+      setGridSelection(newVal, expand);
     },
     rangeBehavior: rangeBehavior,
     columnBehavior: columnBehavior,

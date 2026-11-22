@@ -1541,7 +1541,6 @@ class _GlideDataEditorState extends State<GlideDataEditor>
           rowBehavior: widget.props.rowSelectionBlending,
           rangeSelectionColumnSpanning:
               widget.props.rangeSelectionColumnSpanning,
-          spanRangeBehavior: widget.props.spanRangeBehavior,
           scrollToActiveCell: widget.props.scrollToActiveCell,
           getCellsForSelection: _getCellsForSelection,
           onSelectionCleared: widget.props.onSelectionCleared,
@@ -1713,9 +1712,9 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       fromEditingTrailingRow: false,
       freeMove: false,
     );
-    if (handler.selection != _selection) {
-      _setGridSelection(handler.selection, false);
-    }
+    // No write-back: the handler's `setGridSelection` is bound straight to
+    // `_setGridSelection`, so the editor already holds the result. Pushing
+    // `handler.selection` back would re-send the *unexpanded* value.
   }
 
   // -------------------------------------------------------------------------
@@ -2723,9 +2722,6 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       event,
       editOnType: widget.props.editOnType,
     );
-    if (handler.selection != _selection) {
-      _setGridSelection(handler.selection, false);
-    }
     if (!handled) return;
   }
 
