@@ -33,13 +33,28 @@ class _GlideDataGridPageState extends State<GlideDataGridPage> {
     ];
   }
 
+  /// Column 0 carries the disclosure button (and a type icon), column 1 an
+  /// overlay badge, column 2 both a button and a post-title indicator so both
+  /// header callbacks have something to hit.
   List<GlideGridColumn> _buildColumns() => [
     for (var i = 0; i < 12; i++)
       GlideGridColumn(
         title: 'Column ${String.fromCharCode(65 + i)}',
         width: 120 + (i % 3) * 40,
-        hasMenu: i == 0,
+        hasMenu: i == 0 || i == 2,
         group: _groupNames[i ~/ 4],
+        // `GridColumn.icon` / `overlayIcon` / `indicatorIcon`
+        // (`data-grid-types.ts:151-154`), drawn as sprites by the editor's
+        // merged built-in set (`data-editor-all.tsx:13-15`).
+        icon: switch (i) {
+          0 => 'headerString',
+          1 => 'headerNumber',
+          2 => 'headerBoolean',
+          3 => 'headerArray',
+          _ => null,
+        },
+        overlayIcon: i == 1 ? 'rowOwnerOverlay' : null,
+        indicatorIcon: i == 2 ? 'headerDate' : null,
       ),
   ];
 
@@ -110,6 +125,37 @@ class _GlideDataGridPageState extends State<GlideDataGridPage> {
     return true;
   }
 
+  /// `onHeaderMenuClick` (`data-editor.tsx:2569-2574`): the column arrives in
+  /// user space — the row-marker offset has already been stripped.
+  void _onHeaderMenuClick(int col, GlideRectangle bounds) {
+    setState(
+      () => _status =
+          '点击了 ${String.fromCharCode(65 + col)} 列的菜单按钮'
+          '（x=${bounds.x.toInt()}，${bounds.width.toInt()}px 宽）',
+    );
+  }
+
+  /// `onHeaderIndicatorClick` (`data-editor.tsx:2576-2581`).
+  void _onHeaderIndicatorClick(int col, GlideRectangle bounds) {
+    setState(
+      () => _status =
+          '点击了 ${String.fromCharCode(65 + col)} 列的指示图标'
+          '（x=${bounds.x.toInt()}，${bounds.width.toInt()}px 宽）',
+    );
+  }
+
+  /// `drawCell` (`data-grid-types.ts:61-76`): runs the default paint first so
+  /// the accent rail lands on top of the content.
+  void _drawCell(GlideDrawCellArgs args, VoidCallback drawContent) {
+    drawContent();
+    if (args.col != 0) return;
+    final rect = args.rect;
+    args.canvas.drawRect(
+      Rect.fromLTWH(rect.x, rect.y, 3, rect.height),
+      Paint()..color = const Color(0xFF4F5DFF),
+    );
+  }
+
   void _onSelectionChanged(GlideGridSelection selection) {
     final cell = selection.current?.cell;
     setState(() {
@@ -146,13 +192,22 @@ class _GlideDataGridPageState extends State<GlideDataGridPage> {
                   enableGroups: true,
                   groupHeaderHeight: 30,
                   verticalBorder: (_) => true,
+                  // Freezing the first column draws the sticky boundary line
+                  // at its right edge and gives `fixedShadowX` something to
+                  // fade in over: the inset shadow only reaches full opacity
+                  // once content scrolls underneath it, so scroll sideways to
+                  // see it.
+                  freezeColumns: 1,
                   rowMarkers: const GlideRowMarkerOptions(),
                   trailingRowOptions: const GlideTrailingRowOptions(
                     hint: 'New row',
                   ),
+                  drawCell: _drawCell,
                   onGroupHeaderRenamed: _renameGroup,
                   onCellsEdited: _onCellsEdited,
                   onGridSelectionChange: _onSelectionChanged,
+                  onHeaderMenuClick: _onHeaderMenuClick,
+                  onHeaderIndicatorClick: _onHeaderIndicatorClick,
                 ),
               ),
             ),

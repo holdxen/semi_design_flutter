@@ -5927,4 +5927,135 @@ void main() {
       expect(fired.single.$1, 0);
     });
   });
+
+  // -------------------------------------------------------------------------
+  // Gallery configuration (`example/lib/pages/glide_data_grid.dart`)
+  // -------------------------------------------------------------------------
+
+  group('gallery configuration', () {
+    /// The demo page's exact shape: a frozen first column, three column
+    /// groups, row markers, header icons, a disclosure button and `drawCell`.
+    /// `enableGroups` had no widget coverage at all before this.
+    testWidgets('the frozen grouped header still hits its menu button', (
+      tester,
+    ) async {
+      final menuHits = <int>[];
+      var drewCell = false;
+
+      // A mistyped sprite name draws nothing and raises no error — upstream's
+      // `drawSprite` returns early on an unknown key
+      // (`data-grid-sprites.ts:64-66`). These are the names the gallery page
+      // passes, so a typo there fails here instead of silently vanishing.
+      for (final name in [
+        'headerString',
+        'headerNumber',
+        'headerBoolean',
+        'headerArray',
+        'headerDate',
+        'rowOwnerOverlay',
+      ]) {
+        expect(glideSprites, contains(name), reason: 'unknown sprite $name');
+      }
+
+      // Groups are assigned per four columns, as the demo does.
+      final grouped = [
+        for (var i = 0; i < 12; i++)
+          GlideGridColumn(
+            title: 'Column ${String.fromCharCode(65 + i)}',
+            width: 120 + (i % 3) * 40,
+            hasMenu: i == 0 || i == 2,
+            group: 'Group ${String.fromCharCode(65 + i ~/ 4)}',
+            icon: switch (i) {
+              0 => 'headerString',
+              1 => 'headerNumber',
+              2 => 'headerBoolean',
+              _ => null,
+            },
+            overlayIcon: i == 1 ? 'rowOwnerOverlay' : null,
+            indicatorIcon: i == 2 ? 'headerDate' : null,
+          ),
+      ];
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 600,
+              height: 400,
+              child: GlideDataEditor(
+                props: GlideDataEditorProps(
+                  columns: grouped,
+                  rows: 40,
+                  getCellContent: (item, [_]) => GlideTextCell(
+                    data: 'r${item.row}c${item.col}',
+                    displayData: 'r${item.row}c${item.col}',
+                  ),
+                  theme: GlideTheme.light(),
+                  rowHeight: const GlideRowHeight.fixed(34),
+                  headerHeight: 38,
+                  enableGroups: true,
+                  groupHeaderHeight: 30,
+                  verticalBorder: (_) => true,
+                  freezeColumns: 1,
+                  rowMarkers: const GlideRowMarkerOptions(width: 40),
+                  trailingRowOptions: const GlideTrailingRowOptions(
+                    hint: 'New row',
+                  ),
+                  drawCell: (args, draw) {
+                    drewCell = true;
+                    draw();
+                  },
+                  onHeaderMenuClick: (col, bounds) => menuHits.add(col),
+                  onGridSelectionChange: (_) {},
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull, reason: 'the demo must not crash');
+      expect(drewCell, isTrue, reason: 'drawCell must run for visible cells');
+
+      // Column 0's icon plate sits at x = 40 (marker) + 8 (padding) and
+      // y = 30 (group header) + 10, painted `bgIconHeader`. Scanning the
+      // whole header band keeps the assertion independent of that arithmetic.
+      final plate = await tester.runAsync(() async {
+        final boundary = tester
+            .renderObject<RenderRepaintBoundary>(find.byType(RepaintBoundary)
+                .first);
+        final img = await boundary.toImage(pixelRatio: 1);
+        final data =
+            (await img.toByteData(format: ui.ImageByteFormat.rawRgba))!;
+        var found = 0;
+        for (var y = 30; y < 68 && found == 0; y++) {
+          for (var x = 40; x < 160; x++) {
+            final o = (y * img.width + x) * 4;
+            final rgb = data.getUint8(o) << 16 |
+                data.getUint8(o + 1) << 8 |
+                data.getUint8(o + 2);
+            if (rgb == 0x737383) {
+              found = 1;
+              break;
+            }
+          }
+        }
+        return found;
+      });
+      expect(plate, 1, reason: 'the header icon must actually paint');
+
+      // Menu button of the frozen column: marker [0,40), column 0 [40,160),
+      // `menuButtonSize` 30 right-aligned -> [130,160) x [34,64).
+      final gesture = await tester.startGesture(const Offset(145, 49));
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(
+        menuHits,
+        [0],
+        reason: 'the frozen, grouped, marked column must report user col 0',
+      );
+      expect(tester.takeException(), isNull);
+    });
+  });
 }
