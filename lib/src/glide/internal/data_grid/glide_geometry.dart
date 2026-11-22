@@ -237,6 +237,39 @@ class GlideColumnDndState {
   final int dest;
 }
 
+/// `opacityX` (`data-grid.tsx:1878-1880`): how far the frozen-column shadow
+/// has faded in. It is off entirely without frozen columns or when
+/// `fixedShadowX` is disabled, snaps to full once the scroll has moved past
+/// the frozen region, and otherwise ramps in over the first 100px of
+/// horizontal scroll.
+double glideStickyShadowOpacityX({
+  required int freezeColumns,
+  required int cellXOffset,
+  required double translateX,
+  required bool fixedShadowX,
+}) {
+  if (freezeColumns == 0 || !fixedShadowX) return 0;
+  if (cellXOffset > freezeColumns) return 1;
+  return (-translateX / 100).clamp(0.0, 1.0).toDouble();
+}
+
+/// `opacityY` (`data-grid.tsx:1881-1882`).
+///
+/// Deviation: upstream hardcodes a 32px row height
+/// (`-cellYOffset * 32 + translateY`), which only holds for fixed 32px rows;
+/// the grid's own row height is substituted so variable-height rows fade on
+/// the same curve as fixed ones.
+double glideStickyShadowOpacityY({
+  required int cellYOffset,
+  required double translateY,
+  required double rowHeight,
+  required bool fixedShadowY,
+}) {
+  if (!fixedShadowY) return 0;
+  final absoluteOffsetY = -cellYOffset * rowHeight + translateY;
+  return (-absoluteOffsetY / 100).clamp(0.0, 1.0).toDouble();
+}
+
 /// `getStickyWidth` (`data-grid-lib.ts:171-187`).
 double getStickyWidth(
   List<GlideMappedColumn> columns, [

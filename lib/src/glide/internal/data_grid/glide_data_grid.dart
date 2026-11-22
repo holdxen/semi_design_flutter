@@ -86,6 +86,8 @@ class GlideDataGridProps {
     this.onHeaderIndicatorClick,
     this.drawHeader,
     this.drawCell,
+    this.fixedShadowX = true,
+    this.fixedShadowY = true,
     this.imageLoader,
     this.firstColAccessible = true,
     this.disableAccessibilityTree = false,
@@ -140,6 +142,12 @@ class GlideDataGridProps {
   /// strips the row-marker column first.
   final GlideDrawHeaderCallback? drawHeader;
   final GlideDrawCellCallback? drawCell;
+
+  /// `fixedShadowX` / `fixedShadowY` (`data-grid.tsx:84,89`): the soft inset
+  /// shadow that fades in where the frozen columns (or the header) meet the
+  /// scrolling content.
+  final bool fixedShadowX;
+  final bool fixedShadowY;
 
   /// `imageWindowLoader` (`data-grid.tsx`): when null the grid owns one and
   /// disposes it with itself.
@@ -1148,6 +1156,8 @@ class _GlideDataGridState extends State<GlideDataGrid>
       highlightRegions: p.highlightRegions,
       drawHeaderCallback: p.drawHeader,
       drawCellCallback: p.drawCell,
+      fixedShadowX: p.fixedShadowX,
+      fixedShadowY: p.fixedShadowY,
       hyperWrapping: p.hyperWrapping,
       enqueue: p.enqueue ?? _enqueue,
       minimumCellWidth: p.minimumCellWidth,

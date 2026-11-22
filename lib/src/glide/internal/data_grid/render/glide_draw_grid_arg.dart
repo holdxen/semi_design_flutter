@@ -132,6 +132,8 @@ class GlideDrawGridArg {
     this.highlightRegions,
     this.drawHeaderCallback,
     this.drawCellCallback,
+    this.fixedShadowX = true,
+    this.fixedShadowY = true,
     this.hyperWrapping = false,
     this.enqueue,
     this.minimumCellWidth = 10,
@@ -180,6 +182,8 @@ class GlideDrawGridArg {
   /// `drawHeaderCallback` / `drawCellCallback` (`draw-grid-arg.ts:65-66`).
   final GlideDrawHeaderCallback? drawHeaderCallback;
   final GlideDrawCellCallback? drawCellCallback;
+  final bool fixedShadowX;
+  final bool fixedShadowY;
 
   final bool hyperWrapping;
   final void Function(GlideItem item)? enqueue;

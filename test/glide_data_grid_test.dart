@@ -4879,4 +4879,198 @@ void main() {
       expect(glideEaseOutCubic(0.5), closeTo(0.875, 0.001));
     });
   });
+
+  // -------------------------------------------------------------------------
+  // Sticky shadows (`data-grid.tsx:1878-1917`)
+  // -------------------------------------------------------------------------
+
+  group('sticky shadows', () {
+    test('opacityX ramps only while the scroll is inside the frozen region', () {
+      // No frozen columns: nothing to cast a shadow from.
+      expect(
+        glideStickyShadowOpacityX(
+          freezeColumns: 0,
+          cellXOffset: 0,
+          translateX: -50,
+          fixedShadowX: true,
+        ),
+        0,
+      );
+      // `fixedShadowX: false` turns it off outright.
+      expect(
+        glideStickyShadowOpacityX(
+          freezeColumns: 2,
+          cellXOffset: 5,
+          translateX: -50,
+          fixedShadowX: false,
+        ),
+        0,
+      );
+      // Once past the frozen region it snaps to full.
+      expect(
+        glideStickyShadowOpacityX(
+          freezeColumns: 2,
+          cellXOffset: 3,
+          translateX: 0,
+          fixedShadowX: true,
+        ),
+        1,
+      );
+      // Otherwise it ramps over the first 100px of horizontal scroll.
+      expect(
+        glideStickyShadowOpacityX(
+          freezeColumns: 2,
+          cellXOffset: 2,
+          translateX: -50,
+          fixedShadowX: true,
+        ),
+        closeTo(0.5, 0.001),
+      );
+      expect(
+        glideStickyShadowOpacityX(
+          freezeColumns: 2,
+          cellXOffset: 2,
+          translateX: -400,
+          fixedShadowX: true,
+        ),
+        1,
+      );
+    });
+
+    test('opacityY ramps over the first 100px of vertical scroll', () {
+      expect(
+        glideStickyShadowOpacityY(
+          cellYOffset: 0,
+          translateY: 0,
+          rowHeight: 32,
+          fixedShadowY: true,
+        ),
+        0,
+      );
+      expect(
+        glideStickyShadowOpacityY(
+          cellYOffset: 1,
+          translateY: 0,
+          rowHeight: 32,
+          fixedShadowY: false,
+        ),
+        0,
+      );
+      // `-cellYOffset * 32` over100 (`data-grid.tsx:1881-1882`).
+      expect(
+        glideStickyShadowOpacityY(
+          cellYOffset: 1,
+          translateY: 0,
+          rowHeight: 32,
+          fixedShadowY: true,
+        ),
+        closeTo(0.32, 0.001),
+      );
+      expect(
+        glideStickyShadowOpacityY(
+          cellYOffset: 10,
+          translateY: 0,
+          rowHeight: 32,
+          fixedShadowY: true,
+        ),
+        1,
+      );
+    });
+
+    testWidgets('the frozen-column shadow is painted, and skipped when off', (
+      tester,
+    ) async {
+      /// Renders the grid and returns two pixels: one inside the shadow band
+      /// just right of the frozen column, one well inside the shadow's hole.
+      Future<List<int>?> shoot({required bool fixedShadowX}) async {
+        final key = GlobalKey();
+        await tester.pumpWidget(
+          RepaintBoundary(
+            key: key,
+            child: Directionality(
+              textDirection: TextDirection.ltr,
+              child: SizedBox(
+                width: 400,
+                height: 300,
+                child: GlideDataGrid(
+                  props: GlideDataGridProps(
+                    width: 400,
+                    height: 300,
+                    columns: [
+                      for (var i = 0; i < 4; i++)
+                        GlideGridColumn(title: 'C$i', width: 100),
+                    ],
+                    rows: 10,
+                    rowHeight: const GlideRowHeight.fixed(30),
+                    headerHeight: 30,
+                    freezeColumns: 1,
+                    cellXOffset: 2,
+                    fixedShadowX: fixedShadowX,
+                    getCellContent: (item, [_]) =>
+                        const GlideTextCell(data: 'x', displayData: 'x'),
+                    getCellRenderer: GlideDefaultRendererLookup().forCell,
+                    theme: GlideTheme.light(),
+                    verticalBorder: (_) => true,
+                    onItemHovered: (_) {},
+                    onMouseMove: (_) {},
+                    onMouseDown: (_) {},
+                    onMouseUp: (_, _) {},
+                    onContextMenu: (_, _) {},
+                    onCanvasFocused: () {},
+                    onCanvasBlur: () {},
+                    onCellFocused: (_) {},
+                    onKeyDown: (_) {},
+                    isFocused: true,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // `toImage` awaits a real engine frame, which never resolves inside
+        // the fake-async zone a `testWidgets` body runs in.
+        return await tester.runAsync(() async {
+          final boundary = key.currentContext!.findRenderObject()!
+              as RenderRepaintBoundary;
+          final image = await boundary.toImage(pixelRatio: 1);
+          final data = await image.toByteData(
+            format: ui.ImageByteFormat.rawRgba,
+          );
+          if (data == null) return <int>[];
+
+          int at(int x, int y) {
+            final o = (y * 400 + x) * 4;
+            return data.getUint8(o) +
+                data.getUint8(o + 1) +
+                data.getUint8(o + 2);
+          }
+
+          // The frozen column is 100px wide and `cellXOffset > freezeColumns`,
+          // so `opacityX` is 1 and the band starts at x=100 (`box-shadow:
+          // inset 13px ... -13px` reaches ~26px in).
+          return [at(105, 150), at(250, 150)];
+        });
+      }
+
+      final withShadow = await shoot(fixedShadowX: true);
+      final withoutShadow = await shoot(fixedShadowX: false);
+      expect(withShadow, hasLength(2));
+      expect(withoutShadow, hasLength(2));
+      final band = withShadow!;
+      final control = withoutShadow!;
+
+      expect(
+        band[0],
+        lessThan(control[0]),
+        reason: 'the band right of the frozen column must be darkened',
+      );
+      expect(
+        band[1],
+        control[1],
+        reason: 'deep inside the shadow the grid must be untouched',
+      );
+    });
+  });
 }

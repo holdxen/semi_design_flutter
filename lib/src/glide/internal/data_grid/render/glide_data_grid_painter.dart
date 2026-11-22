@@ -94,6 +94,105 @@ class GlideDataGridPainter extends CustomPainter {
     if (a.isResizing && a.resizeIndicator != GlideResizeIndicator.none) {
       _drawColumnResizeIndicator(canvas, effectiveCols, totalHeaderHeight);
     }
+
+    // Stage 18: the frozen-edge shadows. Upstream renders these as two DOM
+    // overlays on top of the canvas (`data-grid.tsx:1884-1917`), so they go
+    // last here too.
+    _drawStickyShadows(canvas, effectiveCols, totalHeaderHeight);
+  }
+
+  /// `stickyShadow` (`data-grid.tsx:1878-1917`): an inset shadow on the
+  /// right of the frozen columns and one under the header, both fading in
+  /// with scroll. Nothing is drawn when both opacities are 0, which is the
+  /// upstream `if (!opacityX && !opacityY) return null`.
+  void _drawStickyShadows(
+    Canvas canvas,
+    List<GlideMappedColumn> effectiveCols,
+    double totalHeaderHeight,
+  ) {
+    final a = arg;
+    final opacityX = glideStickyShadowOpacityX(
+      freezeColumns: a.freezeColumns,
+      cellXOffset: a.cellXOffset,
+      translateX: a.translateX,
+      fixedShadowX: a.fixedShadowX,
+    );
+    final opacityY = glideStickyShadowOpacityY(
+      cellYOffset: a.cellYOffset,
+      translateY: a.translateY,
+      rowHeight: a.rowHeight(a.cellYOffset),
+      fixedShadowY: a.fixedShadowY,
+    );
+    if (opacityX <= 0 && opacityY <= 0) return;
+
+    if (opacityX > 0) {
+      // `left: stickyX; width: width - stickyX; height: height` (`:1890-1894`).
+      final stickyX = getStickyWidth(effectiveCols);
+      _drawInsetShadow(
+        canvas,
+        Rect.fromLTWH(stickyX, 0, a.width - stickyX, a.height),
+        dx: 13,
+        dy: 0,
+        opacity: opacityX,
+      );
+    }
+
+    if (opacityY > 0) {
+      // `top: totalHeaderHeight; height: height` (`:1901-1905`). Upstream's
+      // box runs past the bottom of the grid and is clipped by its container;
+      // clipping to the grid here gives the same visible bands.
+      _drawInsetShadow(
+        canvas,
+        Rect.fromLTWH(
+          0,
+          totalHeaderHeight,
+          a.width,
+          a.height - totalHeaderHeight,
+        ),
+        dx: 0,
+        dy: 13,
+        opacity: opacityY,
+      );
+    }
+  }
+
+  /// `box-shadow: inset 13px 0 10px -13px rgba(0,0,0,0.2)`
+  /// (`data-grid.tsx:1897`, `:1910`), and the vertical twin with the axes
+  /// swapped. The layer keeps the `dstOut` erase from eating the grid that is
+  /// already on the canvas.
+  void _drawInsetShadow(
+    Canvas canvas,
+    Rect box, {
+    required double dx,
+    required double dy,
+    required double opacity,
+  }) {
+    const spread = -13.0;
+    if (box.width <= 0 || box.height <= 0) return;
+    final inner = Rect.fromLTWH(
+      box.left - spread + dx,
+      box.top - spread + dy,
+      box.width + 2 * spread,
+      box.height + 2 * spread,
+    );
+    if (inner.width <= 0 || inner.height <= 0) return;
+
+    canvas.saveLayer(box, Paint());
+    canvas.clipRect(box);
+    canvas.drawRect(
+      box,
+      Paint()..color = const Color(0xFF000000).withValues(alpha: 0.2 * opacity),
+    );
+    canvas.drawRect(
+      inner,
+      Paint()
+        ..color = const Color(0xFF000000)
+        ..blendMode = BlendMode.dstOut
+        // CSS `blur-radius: 10` is a sigma of 5 (the spec defines radius as
+        // twice the standard deviation).
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, 5),
+    );
+    canvas.restore();
   }
 
   // -------------------------------------------------------------------------
@@ -1164,6 +1263,8 @@ class GlideDataGridPainter extends CustomPainter {
         a.fillHandle?.size == b.fillHandle?.size &&
         a.disabledRows == b.disabledRows &&
         identical(a.prelightCells, b.prelightCells) &&
-        identical(a.highlightRegions, b.highlightRegions);
+        identical(a.highlightRegions, b.highlightRegions) &&
+        a.fixedShadowX == b.fixedShadowX &&
+        a.fixedShadowY == b.fixedShadowY;
   }
 }
