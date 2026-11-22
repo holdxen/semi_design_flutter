@@ -13,6 +13,31 @@ import 'package:flutter/widgets.dart';
 import '../../cells/glide_cell_types.dart';
 import '../../common/glide_utils.dart';
 
+/// Text rendered by the built-in text-like editors. Other cell kinds (image,
+/// bubble, drilldown, custom renderers) have no measurable text and keep the
+/// fallback of filling the available width.
+String? _editorText(GlideGridCell value) => switch (value) {
+  GlideTextCell(:final data) => data,
+  GlideNumberCell(:final data) => data == null ? '' : '$data',
+  GlideRowIdCell(:final data) => data,
+  GlideMarkdownCell(:final data) => data,
+  GlideUriCell(:final data) => data,
+  _ => null,
+};
+
+/// CSS `width: max-content` measures the widest line, so do the same here.
+double _measureMaxLineWidth(String text, TextStyle style) {
+  final painter = TextPainter(textDirection: TextDirection.ltr, maxLines: 1);
+  var width = 0.0;
+  for (final line in text.split('\n')) {
+    painter.text = TextSpan(text: line, style: style);
+    painter.layout();
+    width = math.max(width, painter.width);
+  }
+  painter.dispose();
+  return width;
+}
+
 /// `DataGridOverlayEditorProps` (`data-grid-overlay-editor.tsx:27-52`).
 class GlideDataGridOverlayEditor extends StatefulWidget {
   const GlideDataGridOverlayEditor({
@@ -233,6 +258,32 @@ class _GlideDataGridOverlayEditorState
         final maxLeft = math.max(0.0, constraints.maxWidth - minWidth - 10);
         final effectiveLeft = left.clamp(0.0, maxLeft);
 
+        final double maxWidth = math.max(
+          minWidth,
+          math.min(400.0, constraints.maxWidth - effectiveLeft),
+        );
+
+        // Upstream sets `width: max-content` on the box
+        // (`data-grid-overlay-editor-style.tsx:29`): it hugs the text and is
+        // clamped between the cell width and the 400px cap. Loose Flutter
+        // constraints made SemiInput/SemiTextArea fill the cap instead, so
+        // compute the content width explicitly. Editors without measurable
+        // text keep the old fill-the-space behaviour.
+        final text = _editorText(_targetValue);
+        var desiredWidth = maxWidth;
+        if (text != null) {
+          final textWidth = _measureMaxLineWidth(
+            text,
+            theme.baseTextStyle.copyWith(fontSize: theme.editorFontSize),
+          );
+          // Bare inputs carry 8px horizontal padding + 1px border per side;
+          // `gdg-pad` adds another 8.5px per side when enabled.
+          final chrome = 18.0 + ((resolved?.pad ?? true) ? 17.0 : 0.0);
+          desiredWidth = (textWidth + chrome)
+              .clamp(minWidth, maxWidth)
+              .toDouble();
+        }
+
         // `gdg-pad` (`data-grid-overlay-editor-style.tsx:52-54`).
         final padding = (resolved?.pad ?? true)
             ? EdgeInsets.fromLTRB(
@@ -247,13 +298,11 @@ class _GlideDataGridOverlayEditorState
           constraints: BoxConstraints(
             minWidth: minWidth,
             minHeight: minHeight,
-            // CSS lets `min-width` win over `max-width`
-            // (`data-grid-overlay-editor-style.tsx:26-27`); `BoxConstraints`
-            // asserts instead, so the wider of the two has to be chosen here.
-            maxWidth: math.max(
-              minWidth,
-              math.min(400, constraints.maxWidth - effectiveLeft),
-            ),
+            // `maxWidth` is at least `minWidth`: CSS lets `min-width` win
+            // over `max-width` (`data-grid-overlay-editor-style.tsx:26-27`),
+            // while BoxConstraints would assert. `desiredWidth` implements
+            // the same `width: max-content` clamp described above.
+            maxWidth: desiredWidth,
           ),
           child: Container(
             padding: padding,

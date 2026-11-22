@@ -1589,6 +1589,42 @@ void main() {
       );
     }
 
+    testWidgets('overlay width follows content like CSS max-content', (
+      tester,
+    ) async {
+      Rect boxRect() => tester.getRect(
+            find
+                .descendant(
+                  of: find.byType(GlideDataGridOverlayEditor),
+                  matching: find.byType(ConstrainedBox),
+                )
+                .first,
+          );
+
+      // `width: max-content` clamps a short value up to the cell width
+      // (120px + 1px bloom on each side), not to the 400px cap.
+      await tester.pumpWidget(buildEditor(forceEditMode: true));
+      await tester.pumpAndSettle();
+      expect(boxRect().width, 122.0);
+
+      // Longer values grow the box, still capped by the available space.
+      // Tear the old editor down first: `_tempValue` is initialised once in
+      // initState, so reusing the same State would keep the old content.
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+
+      final longText = 'x' * 200;
+      await tester.pumpWidget(
+        buildEditor(
+          forceEditMode: true,
+          content: GlideTextCell(data: longText, displayData: longText),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(boxRect().width, greaterThan(122.0));
+      expect(boxRect().width, lessThanOrEqualTo(391.0));
+    });
+
     testWidgets('enter commits and moves down', (tester) async {
       await tester.pumpWidget(buildEditor(forceEditMode: true));
       await tester.pumpAndSettle();
