@@ -5,7 +5,10 @@
 // `Theme` is split into its numeric parts (`headerFontSize`,
 // `headerFontWeight`, ...) and realized into `TextStyle` by [resolve].
 // Everything else keeps the upstream name and default value 1:1.
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+
+import '../../theme/semi_theme_data.dart';
 
 /// Port of `Theme` (`common/styles.ts:57-101`).
 ///
@@ -58,10 +61,70 @@ class GlideTheme {
     this.horizontalBorderColor,
     this.headerBottomBorderColor,
     this.roundingRadius,
+    this.fontFamilyFallback,
   });
 
   /// `dataEditorBaseTheme` (`common/styles.ts:103-151`).
   factory GlideTheme.light() => _baseLight;
+
+  /// Builds a Glide theme from the surrounding Semi Design theme.
+  ///
+  /// This is the default used by the data editor and grid when no explicit
+  /// `GlideTheme` is supplied, so the grid follows the same light/dark switch,
+  /// palette, typography and radius scale as every other Semi component.
+  /// Passing a theme explicitly still wins.
+  factory GlideTheme.fromSemiTheme(SemiThemeData semi) {
+    final c = semi.colors;
+    final t = semi.typography;
+    final r = semi.radius;
+    final bg = c.colorBg0;
+    Color onBg(Color color) => Color.alphaBlend(color, bg);
+
+    return GlideTheme(
+      accentColor: c.colorPrimary,
+      accentFg: c.colorWhite,
+      accentLight: onBg(c.colorPrimaryLightDefault),
+      textDark: c.colorText0,
+      textMedium: c.colorText2,
+      textLight: c.colorText3,
+      textBubble: c.colorText1,
+      bgIconHeader: c.colorText2,
+      fgIconHeader: c.colorWhite,
+      textHeader: c.colorText1,
+      textGroupHeader: c.colorText1,
+      textHeaderSelected: c.colorWhite,
+      bgCell: bg,
+      bgCellMedium: onBg(c.colorFill0),
+      bgHeader: onBg(c.colorFill0),
+      bgHeaderHasFocus: onBg(c.colorFill1),
+      bgHeaderHovered: onBg(c.colorFill0),
+      bgBubble: onBg(c.colorFill1),
+      bgBubbleSelected: bg,
+      bubbleHeight: 20,
+      bubblePadding: 6,
+      bubbleMargin: 4,
+      bgSearchResult: Color.alphaBlend(
+        c.colorHighlightBg.withValues(alpha: 0.25),
+        bg,
+      ),
+      borderColor: c.colorBorder,
+      drilldownBorder: const Color(0x00000000),
+      linkColor: c.colorLink,
+      cellHorizontalPadding: 8,
+      cellVerticalPadding: 3,
+      headerFontSize: t.fontSizeRegular,
+      headerFontWeight: t.fontWeightBold,
+      headerIconSize: 18,
+      baseFontSize: t.fontSizeRegular,
+      markerFontSize: t.fontSizeSmall,
+      fontFamily: t.fontFamily ?? 'Inter',
+      fontFamilyFallback: t.fontFamilyFallback,
+      editorFontSize: t.fontSizeRegular,
+      lineHeight: t.lineHeightRegular / t.fontSizeRegular,
+      checkboxMaxSize: 18,
+      roundingRadius: r.borderRadiusSmall.resolve(0),
+    );
+  }
 
   final Color accentColor;
   final Color accentFg;
@@ -106,6 +169,11 @@ class GlideTheme {
   /// Upstream `markerFontStyle: "9px"`.
   final double markerFontSize;
   final String fontFamily;
+
+  /// Font fallbacks from the Semi typography tokens. Glide's upstream CSS
+  /// family list is kept in [fontFamily] for compatibility; Flutter needs the
+  /// families split into this list to actually resolve them.
+  final List<String>? fontFamilyFallback;
 
   /// Upstream `editorFontSize` is a CSS length string; kept numeric here.
   final double editorFontSize;
@@ -154,7 +222,8 @@ class GlideTheme {
     headerIconSize: 18,
     baseFontSize: 13,
     markerFontSize: 9,
-    fontFamily: 'Inter, Roboto, -apple-system, BlinkMacSystemFont, '
+    fontFamily:
+        'Inter, Roboto, -apple-system, BlinkMacSystemFont, '
         'avenir next, avenir, segoe ui, helvetica neue, helvetica, Ubuntu, '
         'noto, arial, sans-serif',
     editorFontSize: 13,
@@ -162,18 +231,26 @@ class GlideTheme {
     checkboxMaxSize: 18,
   );
 
-  TextStyle get baseTextStyle =>
-      TextStyle(fontSize: baseFontSize, fontFamily: fontFamily, color: textDark);
+  TextStyle get baseTextStyle => TextStyle(
+    fontSize: baseFontSize,
+    fontFamily: fontFamily,
+    fontFamilyFallback: fontFamilyFallback,
+    color: textDark,
+  );
 
   TextStyle get headerTextStyle => TextStyle(
     fontSize: headerFontSize,
     fontWeight: headerFontWeight,
     fontFamily: fontFamily,
+    fontFamilyFallback: fontFamilyFallback,
     color: textHeader,
   );
 
-  TextStyle get markerTextStyle =>
-      TextStyle(fontSize: markerFontSize, fontFamily: fontFamily);
+  TextStyle get markerTextStyle => TextStyle(
+    fontSize: markerFontSize,
+    fontFamily: fontFamily,
+    fontFamilyFallback: fontFamilyFallback,
+  );
 
   /// `mergeAndRealizeTheme` (`common/styles.ts:171-214`).
   ///
@@ -226,12 +303,14 @@ class GlideTheme {
     baseFontSize: o.baseFontSize,
     markerFontSize: o.markerFontSize,
     fontFamily: o.fontFamily,
+    fontFamilyFallback: o.fontFamilyFallback ?? fontFamilyFallback,
     editorFontSize: o.editorFontSize,
     lineHeight: o.lineHeight,
     checkboxMaxSize: o.checkboxMaxSize,
     resizeIndicatorColor: o.resizeIndicatorColor ?? resizeIndicatorColor,
     horizontalBorderColor: o.horizontalBorderColor ?? horizontalBorderColor,
-    headerBottomBorderColor: o.headerBottomBorderColor ?? headerBottomBorderColor,
+    headerBottomBorderColor:
+        o.headerBottomBorderColor ?? headerBottomBorderColor,
     roundingRadius: o.roundingRadius ?? roundingRadius,
   );
 
@@ -275,6 +354,7 @@ class GlideTheme {
         other.baseFontSize == baseFontSize &&
         other.markerFontSize == markerFontSize &&
         other.fontFamily == fontFamily &&
+        listEquals(other.fontFamilyFallback, fontFamilyFallback) &&
         other.editorFontSize == editorFontSize &&
         other.lineHeight == lineHeight &&
         other.checkboxMaxSize == checkboxMaxSize &&
@@ -322,6 +402,7 @@ class GlideTheme {
     baseFontSize,
     markerFontSize,
     fontFamily,
+    Object.hashAll(fontFamilyFallback ?? const <String>[]),
     editorFontSize,
     lineHeight,
     checkboxMaxSize,
@@ -439,7 +520,9 @@ class GlideThemeOverride {
     bgGroupHeader: bgGroupHeader ?? base.bgGroupHeader,
     bgGroupHeaderHovered: bgGroupHeaderHovered ?? base.bgGroupHeaderHovered,
     textHeaderSelected: textHeaderSelected ?? base.textHeaderSelected,
-    bgCell: bgCell == null ? base.bgCell : Color.alphaBlend(bgCell!, base.bgCell),
+    bgCell: bgCell == null
+        ? base.bgCell
+        : Color.alphaBlend(bgCell!, base.bgCell),
     bgCellMedium: bgCellMedium ?? base.bgCellMedium,
     bgHeader: bgHeader ?? base.bgHeader,
     bgHeaderHasFocus: bgHeaderHasFocus ?? base.bgHeaderHasFocus,
@@ -453,8 +536,7 @@ class GlideThemeOverride {
     borderColor: borderColor ?? base.borderColor,
     drilldownBorder: drilldownBorder ?? base.drilldownBorder,
     linkColor: linkColor ?? base.linkColor,
-    cellHorizontalPadding:
-        cellHorizontalPadding ?? base.cellHorizontalPadding,
+    cellHorizontalPadding: cellHorizontalPadding ?? base.cellHorizontalPadding,
     cellVerticalPadding: cellVerticalPadding ?? base.cellVerticalPadding,
     headerFontSize: headerFontSize ?? base.headerFontSize,
     headerFontWeight: headerFontWeight ?? base.headerFontWeight,
@@ -462,6 +544,7 @@ class GlideThemeOverride {
     baseFontSize: baseFontSize ?? base.baseFontSize,
     markerFontSize: markerFontSize ?? base.markerFontSize,
     fontFamily: fontFamily ?? base.fontFamily,
+    fontFamilyFallback: base.fontFamilyFallback,
     editorFontSize: editorFontSize ?? base.editorFontSize,
     lineHeight: lineHeight ?? base.lineHeight,
     checkboxMaxSize: checkboxMaxSize ?? base.checkboxMaxSize,

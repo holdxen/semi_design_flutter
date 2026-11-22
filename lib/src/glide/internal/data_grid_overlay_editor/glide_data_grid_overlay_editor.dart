@@ -12,6 +12,7 @@ import 'package:flutter/widgets.dart';
 
 import '../../cells/glide_cell_types.dart';
 import '../../common/glide_utils.dart';
+import '../../../theme/semi_theme.dart';
 
 /// Text rendered by the built-in text-like editors. Other cell kinds (image,
 /// bubble, drilldown, custom renderers) have no measurable text and keep the
@@ -117,7 +118,8 @@ class _GlideDataGridOverlayEditorState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _focusNode.requestFocus();
     });
-    if (widget.validateCell != null && glideIsEditableGridCell(widget.content)) {
+    if (widget.validateCell != null &&
+        glideIsEditableGridCell(widget.content)) {
       final result = widget.validateCell!(
         widget.cell,
         widget.content,
@@ -192,7 +194,12 @@ class _GlideDataGridOverlayEditorState
     return KeyEventResult.handled;
   }
 
-  ({GlideEditorBuilder builder, bool pad, bool style, GlideThemeOverride? styleOverride})?
+  ({
+    GlideEditorBuilder builder,
+    bool pad,
+    bool style,
+    GlideThemeOverride? styleOverride,
+  })?
   _resolveEditor() {
     final external = widget.provideEditor;
     if (external != null) {
@@ -294,6 +301,9 @@ class _GlideDataGridOverlayEditorState
               )
             : EdgeInsets.zero;
 
+        final semi = SemiTheme.of(context);
+        final editorRadius =
+            theme.roundingRadius ?? semi.radius.borderRadiusSmall.resolve(0);
         Widget box = ConstrainedBox(
           constraints: BoxConstraints(
             minWidth: minWidth,
@@ -309,28 +319,19 @@ class _GlideDataGridOverlayEditorState
             decoration: (resolved?.style ?? true)
                 ? BoxDecoration(
                     color: theme.bgCell,
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.circular(editorRadius),
                     boxShadow: [
                       BoxShadow(
-                        color: theme.accentColor,
+                        color: semi.colors.colorFocusBorder,
                         blurRadius: 0,
                         spreadRadius: 1,
                       ),
-                      const BoxShadow(
-                        color: Color(0x663E4156),
-                        blurRadius: 1,
-                        offset: Offset(0, 1),
-                      ),
-                      const BoxShadow(
-                        color: Color(0x263E4156),
-                        blurRadius: 12,
-                        offset: Offset(0, 6),
-                      ),
+                      ...semi.shadows.shadowElevated.toDropBoxShadows(),
                     ],
                   )
                 : null,
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: BorderRadius.circular(editorRadius),
               child: editor ?? const SizedBox.shrink(),
             ),
           ),
@@ -339,7 +340,7 @@ class _GlideDataGridOverlayEditorState
         if (!_isValid) {
           box = DecoratedBox(
             decoration: BoxDecoration(
-              border: Border.all(color: theme.accentColor),
+              border: Border.all(color: semi.colors.colorDanger),
             ),
             child: box,
           );

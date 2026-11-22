@@ -116,6 +116,7 @@ class GlideBubbleCellRenderer extends GlideCellRenderer {
     return GlideComponentEditor(
       (props) => GlideBubblesOverlayEditor(
         bubbles: (props.value as GlideBubbleCell).data,
+        theme: props.theme,
       ),
     );
   }

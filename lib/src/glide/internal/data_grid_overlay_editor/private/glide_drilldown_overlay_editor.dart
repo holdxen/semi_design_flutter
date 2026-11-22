@@ -3,6 +3,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../../../cells/glide_cell_types.dart';
+import '../../../../theme/semi_theme.dart';
 
 /// `DrilldownOverlayEditor` (`drilldown-overlay-editor.tsx:35-47`): a
 /// read-only row of chips, mirroring `DrilldownOverlayEditorStyle`.
@@ -18,6 +19,7 @@ class GlideDrilldownOverlayEditor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final semi = SemiTheme.of(context);
     return Wrap(
       spacing: 4,
       runSpacing: 4,
@@ -29,15 +31,11 @@ class GlideDrilldownOverlayEditor extends StatelessWidget {
             margin: const EdgeInsets.all(2),
             decoration: BoxDecoration(
               color: theme.bgCell,
-              borderRadius: BorderRadius.circular(theme.roundingRadius ?? 6),
-              boxShadow: const [
-                BoxShadow(color: Color(0x663E4156), blurRadius: 1),
-                BoxShadow(
-                  color: Color(0x663E4156),
-                  blurRadius: 3,
-                  offset: Offset(0, 1),
-                ),
-              ],
+              borderRadius: BorderRadius.circular(
+                theme.roundingRadius ??
+                    semi.radius.borderRadiusMedium.resolve(0),
+              ),
+              boxShadow: semi.shadows.shadowElevated.toDropBoxShadows(),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -55,7 +53,10 @@ class GlideDrilldownOverlayEditor extends StatelessWidget {
                 ],
                 Text(
                   drilldown.text,
-                  style: TextStyle(color: theme.textDark, fontSize: 13),
+                  style: TextStyle(
+                    color: theme.textDark,
+                    fontSize: theme.baseFontSize,
+                  ),
                 ),
               ],
             ),

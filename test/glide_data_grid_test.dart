@@ -6760,4 +6760,70 @@ void main() {
       );
     });
   });
+
+  group('Semi theming', () {
+    test('GlideTheme.fromSemiTheme maps palette, type and radius', () {
+      const light = SemiThemeData.light();
+      final theme = GlideTheme.fromSemiTheme(light);
+
+      expect(theme.accentColor, light.colors.colorPrimary);
+      expect(theme.bgCell, light.colors.colorBg0);
+      expect(theme.borderColor, light.colors.colorBorder);
+      expect(theme.linkColor, light.colors.colorLink);
+      expect(theme.baseFontSize, light.typography.fontSizeRegular);
+      expect(theme.headerFontWeight, light.typography.fontWeightBold);
+      expect(theme.fontFamily, light.typography.fontFamily);
+      expect(theme.fontFamilyFallback, light.typography.fontFamilyFallback);
+      expect(theme.roundingRadius, 3);
+
+      const dark = SemiThemeData.dark();
+      final darkTheme = GlideTheme.fromSemiTheme(dark);
+      expect(darkTheme.bgCell, dark.colors.colorBg0);
+      expect(darkTheme.textDark, dark.colors.colorText0);
+      expect(darkTheme.accentColor, dark.colors.colorPrimary);
+    });
+
+    testWidgets('the editor follows SemiTheme unless a theme is supplied', (
+      tester,
+    ) async {
+      Widget build(SemiThemeData semi, {GlideTheme? theme}) => MaterialApp(
+        home: SemiTheme(
+          data: semi,
+          child: SizedBox(
+            width: 400,
+            height: 300,
+            child: GlideDataEditor(
+              props: GlideDataEditorProps(
+                columns: const [
+                  GlideGridColumn(title: 'A', width: 100),
+                ],
+                rows: 2,
+                getCellContent: (item, [_]) => const GlideTextCell(
+                  data: 'x',
+                  displayData: 'x',
+                ),
+                theme: theme,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      const light = SemiThemeData.light();
+      await tester.pumpWidget(build(light));
+      GlideTheme resolved() =>
+          tester.widget<GlideDataGrid>(find.byType(GlideDataGrid)).props.theme!;
+      expect(resolved().accentColor, light.colors.colorPrimary);
+      expect(resolved().bgCell, light.colors.colorBg0);
+
+      const dark = SemiThemeData.dark();
+      await tester.pumpWidget(build(dark));
+      expect(resolved().accentColor, dark.colors.colorPrimary);
+      expect(resolved().bgCell, dark.colors.colorBg0);
+
+      final custom = GlideTheme.light();
+      await tester.pumpWidget(build(dark, theme: custom));
+      expect(identical(resolved(), custom), isTrue);
+    });
+  });
 }

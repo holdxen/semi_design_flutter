@@ -36,8 +36,9 @@ enum GlideSpriteVariant { normal, selected, special }
         fg: _cssColor(theme.fgIconHeader),
       );
     case GlideSpriteVariant.selected:
-      // Upstream writes the literal `"white"` here rather than a theme value.
-      return (bg: '#ffffff', fg: _cssColor(theme.accentColor));
+      // Upstream hardcodes `"white"`; Semi needs the cell background so the
+      // selected icon keeps contrast in dark mode too.
+      return (bg: _cssColor(theme.bgCell), fg: _cssColor(theme.accentColor));
     case GlideSpriteVariant.special:
       return (bg: _cssColor(theme.accentColor), fg: _cssColor(theme.bgHeader));
   }

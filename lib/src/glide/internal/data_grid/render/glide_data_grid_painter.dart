@@ -131,6 +131,7 @@ class GlideDataGridPainter extends CustomPainter {
         dx: 13,
         dy: 0,
         opacity: opacityX,
+        color: a.theme.textDark,
       );
     }
 
@@ -149,6 +150,7 @@ class GlideDataGridPainter extends CustomPainter {
         dx: 0,
         dy: 13,
         opacity: opacityY,
+        color: a.theme.textDark,
       );
     }
   }
@@ -163,6 +165,7 @@ class GlideDataGridPainter extends CustomPainter {
     required double dx,
     required double dy,
     required double opacity,
+    required Color color,
   }) {
     const spread = -13.0;
     if (box.width <= 0 || box.height <= 0) return;
@@ -178,12 +181,12 @@ class GlideDataGridPainter extends CustomPainter {
     canvas.clipRect(box);
     canvas.drawRect(
       box,
-      Paint()..color = const Color(0xFF000000).withValues(alpha: 0.2 * opacity),
+      Paint()..color = color.withValues(alpha: 0.2 * opacity),
     );
     canvas.drawRect(
       inner,
       Paint()
-        ..color = const Color(0xFF000000)
+        ..color = color
         ..blendMode = BlendMode.dstOut
         // CSS `blur-radius: 10` is a sigma of 5 (the spec defines radius as
         // twice the standard deviation).
@@ -391,7 +394,7 @@ class GlideDataGridPainter extends CustomPainter {
             if (faded) {
               canvas.saveLayer(
                 Rect.fromLTWH(cellX, drawY, cellWidth, rh),
-                Paint()..color = const Color(0xFFFFFFFF).withValues(alpha: 0.6),
+                Paint()..color = a.theme.bgCell.withValues(alpha: 0.6),
               );
             }
 

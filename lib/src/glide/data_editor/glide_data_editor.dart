@@ -21,6 +21,8 @@ import '../cells/glide_cell_registry.dart';
 import '../cells/glide_cell_types.dart';
 import '../common/glide_math.dart';
 import '../common/glide_utils.dart';
+import '../../theme/semi_theme.dart';
+import '../../theme/semi_theme_data.dart';
 import '../internal/data_grid/glide_data_grid.dart';
 import '../internal/data_grid/glide_event_args.dart';
 import '../internal/data_grid/glide_selection_behavior.dart';
@@ -47,7 +49,7 @@ class GlideDataEditorProps {
     required this.columns,
     required this.rows,
     required this.getCellContent,
-    required this.theme,
+    this.theme,
     this.onKeyDown,
     this.onKeyUp,
     this.onCellsEdited,
@@ -157,7 +159,10 @@ class GlideDataEditorProps {
   final bool Function(List<GlideEditListItem> items)? onCellsEdited;
   final void Function(GlideItem location, GlideGridCell value)? onCellEdited;
 
-  final GlideTheme theme;
+  /// Null derives the theme from the nearest [SemiTheme], so the grid follows
+  /// the host app's palette/typography and dark-mode switch. Set it to a
+  /// concrete theme to opt out.
+  final GlideTheme? theme;
   final GlideRowHeight rowHeight;
   final double headerHeight;
   final double groupHeaderHeight;
@@ -419,6 +424,10 @@ class _GlideDataEditorState extends State<GlideDataEditor>
   double _translateY = 0;
   double _scrollY = 0;
   bool _focused = false;
+
+  /// Resolved from the surrounding SemiTheme in [build]; before the first
+  /// build (initState/didUpdateWidget) the default light Semi theme is used.
+  GlideTheme _semiTheme = GlideTheme.fromSemiTheme(const SemiThemeData.light());
 
   _OverlayState? _overlay;
 
@@ -861,7 +870,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       rowHeightIn: grouped,
       headerHeightIn: p.headerHeight,
       groupHeaderHeightIn: p.groupHeaderHeight,
-      themeIn: p.theme,
+      themeIn: p.theme ?? _semiTheme,
       overscrollXIn: p.overscrollX,
       overscrollYIn: p.overscrollY,
     );
@@ -1401,10 +1410,9 @@ class _GlideDataEditorState extends State<GlideDataEditor>
 
   /// `themeForCell` (`data-editor.tsx`).
   GlideTheme _themeForCell(GlideGridCell cell, GlideItem location) {
-    final p = widget.props;
     final mangled = _mangledColumns;
     final column = location.col < mangled.length ? mangled[location.col] : null;
-    var theme = p.theme;
+    var theme = _theme;
     final group = column?.group;
     final groupOverride = group == null
         ? null
@@ -2071,7 +2079,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     if (cells == null) return;
 
     final newWidth = glideMeasureColumn(
-      theme: p.theme,
+      theme: _theme,
       column: p.columns[col],
       colIndex: col,
       selectedData: cells,
@@ -2657,7 +2665,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
 
   List<GlideHighlight>? _highlightRegions() {
     final p = widget.props;
-    final accent = p.theme.accentColor;
+    final accent = _theme.accentColor;
     final current = _selection.current;
     final highlightRange =
         current != null && current.range.width * current.range.height > 1
@@ -2931,6 +2939,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       builder: (context, constraints) {
         _viewportWidth = constraints.maxWidth;
         _viewportHeight = constraints.maxHeight;
+        _semiTheme = GlideTheme.fromSemiTheme(SemiTheme.of(context));
         _rebuildRowGrouping();
         _rebuildRemAdjustment(
           p.remSize ?? MediaQuery.textScalerOf(context).scale(16),
@@ -2995,10 +3004,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
               ? null
               : (col, bounds) {
                   if (_dragColActive || _dragRowActive) return;
-                  widget.props.onHeaderMenuClick!(
-                    col - _markerOffset,
-                    bounds,
-                  );
+                  widget.props.onHeaderMenuClick!(col - _markerOffset, bounds);
                 },
           onHeaderIndicatorClick: widget.props.onHeaderIndicatorClick == null
               ? null
@@ -3167,7 +3173,8 @@ class _GlideDataEditorState extends State<GlideDataEditor>
 
   Map<String, GlideSpriteFn> get _mergedHeaderIcons {
     final extra = widget.props.headerIcons;
-    if (_headerIconsCache != null && identical(_headerIconsCacheSource, extra)) {
+    if (_headerIconsCache != null &&
+        identical(_headerIconsCacheSource, extra)) {
       return _headerIconsCache!;
     }
     _headerIconsCacheSource = extra;
@@ -3193,8 +3200,8 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     final offset = _markerOffset;
     _drawCellWrapperSource = source;
     _drawCellWrapperOffset = offset;
-    return _drawCellWrapper =
-        (args, draw) => source(args.copyWith(col: args.col - offset), draw);
+    return _drawCellWrapper = (args, draw) =>
+        source(args.copyWith(col: args.col - offset), draw);
   }
 
   GlideDrawHeaderCallback? _drawHeaderWrapper;

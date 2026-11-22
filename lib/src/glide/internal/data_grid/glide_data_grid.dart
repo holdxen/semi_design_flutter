@@ -15,6 +15,7 @@ import 'package:flutter/widgets.dart';
 
 import '../../cells/glide_cell_types.dart';
 import '../../common/glide_image_window_loader.dart';
+import '../../../theme/semi_theme.dart';
 import 'glide_sprite_manager.dart';
 import 'glide_sprites.dart';
 import '../../common/glide_utils.dart';
@@ -38,7 +39,7 @@ class GlideDataGridProps {
     required this.rowHeight,
     required this.getCellContent,
     required this.getCellRenderer,
-    required this.theme,
+    this.theme,
     required this.verticalBorder,
     required this.onItemHovered,
     required this.onMouseMove,
@@ -199,7 +200,8 @@ class GlideDataGridProps {
   final bool Function(int col) verticalBorder;
   final bool drawFocusRing;
 
-  final GlideTheme theme;
+  /// Null derives the theme from the nearest SemiTheme.
+  final GlideTheme? theme;
   final GlideGetCellRenderer getCellRenderer;
 
   final bool smoothScrollX;
@@ -509,7 +511,9 @@ class _GlideDataGridState extends State<GlideDataGrid>
   GlideRectangle? _getBoundsForItem(int col, int row) {
     final p = widget.props;
     if (col >= p.columns.length || row >= p.rows) return null;
-    if (col < 0 && row != GlideItem.headerRow && row != GlideItem.groupHeaderRow) {
+    if (col < 0 &&
+        row != GlideItem.headerRow &&
+        row != GlideItem.groupHeaderRow) {
       return null;
     }
 
@@ -614,7 +618,7 @@ class _GlideDataGridState extends State<GlideDataGrid>
       y: headerBounds.y,
       width: header.width,
       height: headerBounds.height,
-      theme: p.theme,
+      theme: _resolvedTheme,
       metrics: _metrics,
     );
 
@@ -867,16 +871,10 @@ class _GlideDataGridState extends State<GlideDataGrid>
     if (fillBounds == null) return false;
 
     final half = config.size / 2;
-    final centerX = fillBounds.x +
-        fillBounds.width +
-        config.offsetX -
-        half +
-        0.5;
-    final centerY = fillBounds.y +
-        fillBounds.height +
-        config.offsetY -
-        half +
-        0.5;
+    final centerX =
+        fillBounds.x + fillBounds.width + config.offsetX - half + 0.5;
+    final centerY =
+        fillBounds.y + fillBounds.height + config.offsetY - half + 0.5;
     return (centerX - posX).abs() < config.size &&
         (centerY - posY).abs() < config.size;
   }
@@ -945,9 +943,7 @@ class _GlideDataGridState extends State<GlideDataGrid>
       p.getCellContent,
       p.getCellRenderer,
       p.a11yRevision,
-      Object.hashAll([
-        for (final c in effectiveCols) c.sourceIndex,
-      ]),
+      Object.hashAll([for (final c in effectiveCols) c.sourceIndex]),
     );
     final cached = _accessibilityTreeCache;
     if (cached != null && _accessibilityTreeKey?.key == key) return cached;
@@ -1139,9 +1135,7 @@ class _GlideDataGridState extends State<GlideDataGrid>
         ? args.location
         : (args is GlideGridHeaderMouseArgs
               ? args.location
-              : (args is GlideGridGroupHeaderMouseArgs
-                    ? args.location
-                    : null));
+              : (args is GlideGridGroupHeaderMouseArgs ? args.location : null));
 
     final same = glideMouseArgsAreEqual(_hoveredArgs, args);
     _hoveredArgs = args;
@@ -1222,8 +1216,7 @@ class _GlideDataGridState extends State<GlideDataGrid>
     if (_downButton != 0) return;
     final down = _downPosition;
     if (down == null) return;
-    if (down.col != args.location.col ||
-        down.row != GlideItem.headerRow) {
+    if (down.col != args.location.col || down.row != GlideItem.headerRow) {
       return;
     }
 
@@ -1352,6 +1345,10 @@ class _GlideDataGridState extends State<GlideDataGrid>
   // Build
   // -------------------------------------------------------------------------
 
+  /// The grid's theme: an explicit one wins, otherwise follow SemiTheme.
+  GlideTheme get _resolvedTheme =>
+      widget.props.theme ?? GlideTheme.fromSemiTheme(SemiTheme.of(context));
+
   @override
   Widget build(BuildContext context) {
     final p = widget.props;
@@ -1373,7 +1370,7 @@ class _GlideDataGridState extends State<GlideDataGrid>
       freezeTrailingRows: p.freezeTrailingRows,
       rows: p.rows,
       rowHeight: p.rowHeight,
-      theme: p.theme,
+      theme: _resolvedTheme,
       selection: p.selection,
       isFocused: p.isFocused,
       drawFocus: p.drawFocusRing,

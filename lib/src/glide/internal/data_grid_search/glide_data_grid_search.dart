@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import '../../../components/semi_input.dart';
 import '../../cells/glide_cell_types.dart';
 import '../../data_editor/glide_data_editor_fns.dart';
+import '../../../theme/semi_theme.dart';
 
 /// `targetSearchTimeMS` (`data-grid-search.ts:91`).
 const double _targetSearchTimeMs = 10;
@@ -293,6 +294,7 @@ class _GlideSearchBarState extends State<GlideSearchBar>
     final s = widget.status;
     final rows = widget.rows;
     final theme = widget.theme;
+    final semi = SemiTheme.of(context);
     final progress = rows > 0
         ? ((s?.rowsSearched ?? 0) / rows * 100).clamp(0, 100)
         : 0.0;
@@ -320,7 +322,9 @@ class _GlideSearchBarState extends State<GlideSearchBar>
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: theme.bgCell,
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(
+                    semi.radius.borderRadiusMedium.resolve(0),
+                  ),
                   border: Border.all(color: theme.borderColor),
                 ),
                 child: Column(
@@ -376,7 +380,10 @@ class _GlideSearchBarState extends State<GlideSearchBar>
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
                         _resultString,
-                        style: TextStyle(fontSize: 11, color: theme.textDark),
+                        style: TextStyle(
+                          fontSize: semi.typography.fontSizeSmall,
+                          color: theme.textDark,
+                        ),
                       ),
                     ),
                     if (s != null)

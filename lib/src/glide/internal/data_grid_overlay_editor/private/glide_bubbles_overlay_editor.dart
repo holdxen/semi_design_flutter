@@ -2,16 +2,25 @@
 // bubbles-overlay-editor.tsx`.
 import 'package:flutter/widgets.dart';
 
+import '../../../common/glide_theme.dart';
+import '../../../../theme/semi_theme.dart';
+
 /// `BubblesOverlayEditor` (`bubbles-overlay-editor.tsx:12-21`): bubbles are
 /// display-only — upstream mounts an empty `<textarea>` to hold focus, which
 /// has no counterpart here because the overlay owns its own focus.
 class GlideBubblesOverlayEditor extends StatelessWidget {
-  const GlideBubblesOverlayEditor({super.key, required this.bubbles});
+  const GlideBubblesOverlayEditor({
+    super.key,
+    required this.bubbles,
+    this.theme,
+  });
 
   final List<String> bubbles;
+  final GlideTheme? theme;
 
   @override
   Widget build(BuildContext context) {
+    final t = theme ?? GlideTheme.fromSemiTheme(SemiTheme.of(context));
     return Wrap(
       spacing: 4,
       runSpacing: 4,
@@ -20,10 +29,13 @@ class GlideBubblesOverlayEditor extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: const Color(0xFFEDEEF0),
-              borderRadius: BorderRadius.circular(11),
+              color: t.bgBubble,
+              borderRadius: BorderRadius.circular(t.bubbleHeight / 2),
             ),
-            child: Text(bubble, style: const TextStyle(fontSize: 13)),
+            child: Text(
+              bubble,
+              style: TextStyle(fontSize: t.baseFontSize, color: t.textBubble),
+            ),
           ),
       ],
     );

@@ -119,8 +119,7 @@ class _GlideDataGridPageState extends State<GlideDataGridPage> {
         }
       }
       final first = items.first.location;
-      _status =
-          '已提交 ${items.length} 个单元格，最后修改 [${first.col}, ${first.row}]';
+      _status = '已提交 ${items.length} 个单元格，最后修改 [${first.col}, ${first.row}]';
     });
     return true;
   }
@@ -152,7 +151,7 @@ class _GlideDataGridPageState extends State<GlideDataGridPage> {
     final rect = args.rect;
     args.canvas.drawRect(
       Rect.fromLTWH(rect.x, rect.y, 3, rect.height),
-      Paint()..color = const Color(0xFF4F5DFF),
+      Paint()..color = SemiTheme.of(context).colors.colorPrimary,
     );
   }
 
@@ -174,7 +173,13 @@ class _GlideDataGridPageState extends State<GlideDataGridPage> {
       children: [
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
-          child: Text(_status, style: const TextStyle(fontSize: 13)),
+          child: Text(
+            _status,
+            style: TextStyle(
+              fontSize: 13,
+              color: SemiTheme.of(context).colors.colorText1,
+            ),
+          ),
         ),
         Expanded(
           child: LayoutBuilder(
@@ -186,7 +191,8 @@ class _GlideDataGridPageState extends State<GlideDataGridPage> {
                   columns: _columns,
                   rows: _rows,
                   getCellContent: (item, [_]) => _cells[item.row][item.col],
-                  theme: GlideTheme.light(),
+                  // No explicit theme: the grid follows SemiTheme (including
+                  // the light/dark switch in the demo shell).
                   rowHeight: const GlideRowHeight.fixed(34),
                   headerHeight: 38,
                   enableGroups: true,
