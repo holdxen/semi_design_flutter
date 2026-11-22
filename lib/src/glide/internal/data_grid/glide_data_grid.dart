@@ -296,6 +296,17 @@ class _GlideDataGridState extends State<GlideDataGrid>
   bool _hoveredOnEdge = false;
   bool _lastWasTouch = false;
   int _downTime = 0;
+
+  /// `downPosition` (`data-grid.tsx:1074`): where the press landed, so a
+  /// release only counts as a header-menu click when it started on the same
+  /// header row.
+  GlideItem? _downPosition;
+
+  /// The button [_downPosition] was recorded with. Upstream's `click` event
+  /// only fires for the left button (`data-grid.tsx:1236` checks
+  /// `args.button === 0`), but Flutter's `onPointerUp` fires for every button,
+  /// so the press button has to be carried over from the down.
+  int _downButton = 0;
   int _lastUpTime = 0;
   bool _cursorIsPointer = false;
 
@@ -465,7 +476,13 @@ class _GlideDataGridState extends State<GlideDataGrid>
       row: row,
       width: p.width,
       height: p.height,
-      groupHeaderHeight: p.groupHeaderHeight,
+      // `computeBounds` derives the header strip as
+      // `totalHeaderHeight - groupHeaderHeight`, so the two have to be
+      // guarded the same way. Passing the raw prop here (as upstream's
+      // `getBoundsForItem` does) yields a negative header height whenever the
+      // caller leaves `groupHeaderHeight` at its default while groups are off
+      // — which is this port's default combination.
+      groupHeaderHeight: p.enableGroups ? p.groupHeaderHeight : 0,
       totalHeaderHeight: totalHeaderHeight,
       cellXOffset: p.cellXOffset,
       cellYOffset: p.cellYOffset,
@@ -477,6 +494,93 @@ class _GlideDataGridState extends State<GlideDataGrid>
       mappedColumns: mapped,
       rowHeight: p.rowHeight,
     );
+  }
+
+  /// `args.location` — the field lives on each [GlideGridMouseArgs] subclass
+  /// rather than on the base type, so it has to be narrowed by kind first.
+  GlideItem _locationOf(GlideGridMouseArgs args) => switch (args) {
+    GlideGridCellMouseArgs a => a.location,
+    GlideGridHeaderMouseArgs a => a.location,
+    GlideGridGroupHeaderMouseArgs a => a.location,
+    GlideGridOutOfBoundsMouseArgs a => a.location,
+  };
+
+  // -------------------------------------------------------------------------
+  // isOverHeaderElement (`data-grid.tsx:1024-1070`)
+  // ------------------------------------------------------------------------
+
+  /// Whether [args] is a header sitting on its column's resize edge.
+  ///
+  /// Upstream folds this into `hoveredOnEdge` (`data-grid.tsx:1355`:
+  /// `kind === headerKind && isEdge && notRowMarkerCol && allowResize ===
+  /// true`) and reads it from both the menu guard and the cursor, so the two
+  /// sites share this one predicate.
+  bool _onHeaderResizeEdge(GlideGridMouseArgs args) =>
+      args is GlideGridHeaderMouseArgs &&
+      args.isEdge &&
+      widget.props.allowResize == true &&
+      args.location.col >= (widget.props.firstColAccessible ? 0 : 1);
+
+  /// Whether ([x], [y]) lands on [col]'s header menu button or indicator icon.
+  ///
+  /// Upstream compares viewport coordinates against `getBoundsForItem`, which
+  /// adds the canvas's `getBoundingClientRect()` offset; here both sides are
+  /// grid-internal ([_getBoundsForItem] and `PointerEvent.localPosition`), so
+  /// the comparison needs no offset.
+  ({bool menu, GlideRectangle bounds})? _isOverHeaderElement(
+    int col,
+    double x,
+    double y,
+    bool onResizeEdge,
+  ) {
+    final p = widget.props;
+    // `if (!isDragging && !isResizing && !(hoveredOnEdge ?? false))`
+    // (`data-grid.tsx:1044`).
+    //
+    // Upstream derives `hoveredOnEdge` from the header's own resize edge
+    // (`data-grid.tsx:1355`), so that is what is tested here. This port's
+    // [_hoveredOnEdge] tracks the out-of-bounds padding instead — a different
+    // region that never overlaps the menu button — so reading it would leave
+    // this arm silently dead.
+    if (p.isDragging || p.isResizing || onResizeEdge) return null;
+
+    final headerBounds = _getBoundsForItem(col, GlideItem.headerRow);
+    if (headerBounds == null) return null;
+
+    final mapped = mapColumns(p.columns, p.freezeColumns);
+    if (col >= mapped.length) return null;
+    final header = mapped[col];
+
+    // Upstream passes `ctx: undefined` here, which only affects the measured
+    // title width used to place the indicator; see [computeHeaderLayout].
+    //
+    // The width is the column's, not `headerBounds.width`: `computeBounds`
+    // reports `width + 1` so a cell's hit box covers its grid line, but
+    // `drawGridHeaders` paints the header with the raw width
+    // (`data-grid-render.header.ts:114`). Using the inflated width here would
+    // put the menu button's hit box one pixel right of the button that is
+    // actually on screen — upstream has exactly that off-by-one; this port
+    // keeps the two aligned instead.
+    final layout = computeHeaderLayout(
+      c: header,
+      x: headerBounds.x,
+      y: headerBounds.y,
+      width: header.width,
+      height: headerBounds.height,
+      theme: p.theme,
+      metrics: p.metrics ?? GlideTextMetrics(),
+    );
+
+    if (header.hasMenu && pointInRect(layout.menuBounds, x, y)) {
+      return (menu: true, bounds: layout.menuBounds);
+    }
+    final indicator = layout.indicatorIconBounds;
+    if (header.indicatorIcon != null &&
+        indicator != null &&
+        pointInRect(indicator, x, y)) {
+      return (menu: false, bounds: indicator);
+    }
+    return null;
   }
 
   // -------------------------------------------------------------------------
@@ -949,6 +1053,10 @@ class _GlideDataGridState extends State<GlideDataGrid>
       metaKey: false,
       isTouch: _lastWasTouch,
     );
+    // `downPosition.current = args.location` (`data-grid.tsx:1092`), recorded
+    // before the group-header check exactly as upstream does.
+    _downPosition = _locationOf(args);
+    _downButton = event.buttons == kPrimaryButton ? 0 : 1;
     // `groupHeaderActionForEvent` on press (`data-grid.tsx:1105-1111`): the
     // action owns the click, so the editor never sees it.
     if (args is GlideGridGroupHeaderMouseArgs &&
@@ -1037,7 +1145,46 @@ class _GlideDataGridState extends State<GlideDataGrid>
       }
     }
 
+    // Fired before `onMouseUp` on purpose. Upstream clears its drag state in
+    // `onMouseUpImpl` *before* forwarding to the editor's handler
+    // (`data-grid-dnd.tsx:256`), so firing afterwards would find both drag
+    // guards already reset and open a menu on top of a just-dropped column.
+    // Upstream's two `click` listeners also register child-first, which puts
+    // this menu ahead of `onHeaderClicked` — the same order.
+    _maybeFireHeaderElementClick(args, event.localPosition);
+
     p.onMouseUp(args, false);
+  }
+
+  /// `onClickImpl` (`data-grid.tsx:1227-1246`): a release over the header's
+  /// menu button or indicator icon fires the matching callback.
+  ///
+  /// Upstream runs this from a `click` listener, which fires after `pointerup`
+  /// and only for the left button; the press must also have started on the
+  /// same header row (`downPosition.current?.[1] === -1`). Both gates are
+  /// reproduced here with [_downButton] and [_downPosition].
+  void _maybeFireHeaderElementClick(GlideGridMouseArgs args, Offset at) {
+    if (args is! GlideGridHeaderMouseArgs) return;
+    if (_downButton != 0) return;
+    final down = _downPosition;
+    if (down == null) return;
+    if (down.col != args.location.col ||
+        down.row != GlideItem.headerRow) {
+      return;
+    }
+
+    final hit = _isOverHeaderElement(
+      args.location.col,
+      at.dx,
+      at.dy,
+      _onHeaderResizeEdge(args),
+    );
+    if (hit == null) return;
+    if (hit.menu) {
+      widget.props.onHeaderMenuClick?.call(args.location.col, hit.bounds);
+    } else {
+      widget.props.onHeaderIndicatorClick?.call(args.location.col, hit.bounds);
+    }
   }
 
   void _handlePointerExit(PointerExitEvent event) {
@@ -1086,10 +1233,16 @@ class _GlideDataGridState extends State<GlideDataGrid>
 
   void _updateCursor(GlideGridMouseArgs args) {
     final p = widget.props;
-    final wantsPointer = _hoveredOnEdge ||
-        (args is GlideGridCellMouseArgs && p.allowResize == true);
-    if (wantsPointer != _cursorIsPointer) {
-      _cursorIsPointer = wantsPointer;
+    // `canDrag || isResizing ? "col-resize"` (`data-grid.tsx:977-980`), where
+    // `canDrag = hoveredOnEdge` (`:973`). Both edge kinds count: this port's
+    // [_hoveredOnEdge] is the out-of-bounds padding that `_detectResizeStart`
+    // uses to resize the last column, and [_onHeaderResizeEdge] is upstream's.
+    // The old `cell && allowResize` arm showed a resize cursor over every
+    // cell the moment `allowResize` is wired, which upstream never does.
+    final wantsResize =
+        p.isResizing || _hoveredOnEdge || _onHeaderResizeEdge(args);
+    if (wantsResize != _cursorIsPointer) {
+      _cursorIsPointer = wantsResize;
       setState(() {});
     }
   }

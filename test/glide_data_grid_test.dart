@@ -1726,6 +1726,8 @@ void main() {
       onFinishedEditing,
       void Function(int col, GlideHeaderClickedEventArgs args)?
       onHeaderContextMenu,
+      bool hasMenu = false,
+      void Function(int col, GlideRectangle bounds)? onHeaderMenuClick,
       void Function(GlideGridMouseArgs args)? onMouseMove,
       GlideRowGroupingOptions? rowGrouping,
       GlideTrailingRowOptions? trailingRowOptions,
@@ -1759,7 +1761,12 @@ void main() {
                         // No `width`: `useColumnSizer` skips columns that are
                         // already sized (`use-column-sizer.ts:100-107`).
                       )
-                    : GlideGridColumn(title: 'C$i', width: 100, group: group),
+                    : GlideGridColumn(
+                        title: 'C$i',
+                        width: 100,
+                        group: group,
+                        hasMenu: hasMenu,
+                      ),
             ],
             enableGroups: group != null,
             groupHeaderHeight: 30,
@@ -1782,6 +1789,7 @@ void main() {
             onVisibleRegionChanged: onVisibleRegionChanged,
             onFinishedEditing: onFinishedEditing,
             onHeaderContextMenu: onHeaderContextMenu,
+            onHeaderMenuClick: onHeaderMenuClick,
             onMouseMove: onMouseMove,
             onColumnAppended: onColumnAppended == null
                 ? null
@@ -1861,6 +1869,66 @@ void main() {
         },
       );
     }
+
+    testWidgets('the editor strips the row-marker offset from the menu col', (
+      tester,
+    ) async {
+      final fired = <int>[];
+      await tester.pumpWidget(
+        buildEditor(
+          hasMenu: true,
+          rowMarkers: const GlideRowMarkerOptions(width: 40),
+          onHeaderMenuClick: (col, bounds) => fired.add(col),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // The marker column owns x in [0, 40), so user column 0 is mangled
+      // column 1 spanning [40, 140). Its menu button is right-aligned in the
+      // 100px column: x in [110, 140); headerHeight 32 puts y in [1, 31).
+      final gesture = await tester.startGesture(
+        const Offset(125, 16),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(
+        fired,
+        [0],
+        reason: 'the callback must report the user column, not the mangled one',
+      );
+    });
+
+    testWidgets('releasing over the menu mid-drag does not fire it', (
+      tester,
+    ) async {
+      final fired = <int>[];
+      await tester.pumpWidget(
+        buildEditor(
+          hasMenu: true,
+          onColumnMoved: (_, _) {},
+          onHeaderMenuClick: (col, bounds) => fired.add(col),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Press on column 0's header (off its resize edge), travel past the 20px
+      // threshold so `dragColActive` arms, then come back over the menu button
+      // and release. Upstream has two layers here — `isDragging` on the grid
+      // (`data-grid-dnd.tsx:436`) and the guard in the callback wrapper
+      // (`:190`) — and both must hold.
+      final gesture = await tester.startGesture(
+        const Offset(50, 16),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.moveTo(const Offset(150, 16));
+      await gesture.moveTo(const Offset(85, 16));
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(fired, isEmpty, reason: 'an active drag owns the click');
+    });
 
     testWidgets('clicking a cell selects it', (tester) async {
       await tester.pumpWidget(buildEditor());
@@ -5568,6 +5636,295 @@ void main() {
         0xF7F7F8,
         reason: 'the stale sprite must be painted over',
       );
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Header menu / indicator clicks (`internal/data-grid/data-grid.tsx`)
+  // -------------------------------------------------------------------------
+
+  group('header menu clicks', () {
+    /// Pumps a grid wired with both header-element callbacks and performs a
+    /// press at [down] followed by a release at [up] (defaults to [down]).
+    /// Returns every `(col, bounds)` the grid reported.
+    Future<List<(int, GlideRectangle)>> press(
+      WidgetTester tester, {
+      required List<GlideGridColumn> columns,
+      required Offset down,
+      Offset? up,
+      int buttons = kPrimaryButton,
+      bool isDragging = false,
+      bool isResizing = false,
+      // Upstream's dnd layer forwards `allowResize={canResize}`
+      // (`data-grid-dnd.tsx:440`), which is what arms the resize-edge arm of
+      // `isOverHeaderElement`.
+      bool allowResize = false,
+    }) async {
+      final fired = <(int, GlideRectangle)>[];
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: SizedBox(
+            width: 400,
+            height: 300,
+            child: GlideDataGrid(
+              props: GlideDataGridProps(
+                width: 400,
+                height: 300,
+                columns: columns,
+                rows: 10,
+                rowHeight: const GlideRowHeight.fixed(30),
+                headerHeight: 30,
+                theme: GlideTheme.light(),
+                verticalBorder: (_) => true,
+                headerIcons: glideSprites,
+                isDragging: isDragging,
+                isResizing: isResizing,
+                allowResize: allowResize,
+                getCellRenderer: GlideDefaultRendererLookup().forCell,
+                getCellContent: (item, [_]) => const GlideTextCell(
+                  data: '',
+                  displayData: '',
+                ),
+                onHeaderMenuClick: (col, bounds) => fired.add((col, bounds)),
+                onHeaderIndicatorClick: (col, bounds) =>
+                    fired.add((col, bounds)),
+                onItemHovered: (_) {},
+                onMouseMove: (_) {},
+                onMouseDown: (_) {},
+                onMouseUp: (_, _) {},
+                onContextMenu: (_, _) {},
+                onCanvasFocused: () {},
+                onCanvasBlur: () {},
+                onCellFocused: (_) {},
+                onKeyDown: (_) {},
+                isFocused: true,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final gesture = await tester.startGesture(down, buttons: buttons);
+      if (up != null && up != down) await gesture.moveTo(up);
+      await gesture.up();
+      await tester.pump();
+      return fired;
+    }
+
+    /// The menu button of a 100px-wide header: `menuButtonSize` is 30 and it
+    /// is right-aligned, so it spans x in [70, 100) and the full header height.
+    const menuCenter = Offset(85, 15);
+
+    testWidgets('pressing the menu button reports the column and its bounds', (
+      tester,
+    ) async {
+      final fired = await press(
+        tester,
+        columns: [
+          const GlideGridColumn(title: 'C0', width: 100, hasMenu: true),
+          const GlideGridColumn(title: 'C1', width: 100),
+        ],
+        down: menuCenter,
+      );
+
+      expect(fired, hasLength(1));
+      expect(fired.single.$1, 0, reason: 'the mangled column index');
+      final bounds = fired.single.$2;
+      expect(bounds.x, 70, reason: 'right-aligned by menuButtonSize');
+      expect(bounds.y, 0);
+      expect(bounds.width, 30);
+      expect(bounds.height, 30);
+    });
+
+    testWidgets('a press that started on a cell does not fire it', (
+      tester,
+    ) async {
+      final fired = await press(
+        tester,
+        columns: [
+          const GlideGridColumn(title: 'C0', width: 100, hasMenu: true),
+        ],
+        down: const Offset(85, 45), // row 0
+        up: menuCenter,
+      );
+      expect(fired, isEmpty, reason: 'downPosition.row must be the header');
+    });
+
+    testWidgets('a press that started on another header does not fire it', (
+      tester,
+    ) async {
+      final fired = await press(
+        tester,
+        columns: [
+          const GlideGridColumn(title: 'C0', width: 100, hasMenu: true),
+          const GlideGridColumn(title: 'C1', width: 100, hasMenu: true),
+        ],
+        down: const Offset(150, 15), // header of column 1
+        up: menuCenter, // release on column 0's menu
+      );
+      expect(fired, isEmpty, reason: 'downPosition.col must match');
+    });
+
+    testWidgets('a non-left-button release does not fire it', (tester) async {
+      final fired = await press(
+        tester,
+        columns: [
+          const GlideGridColumn(title: 'C0', width: 100, hasMenu: true),
+        ],
+        down: menuCenter,
+        buttons: kSecondaryButton,
+      );
+      // Upstream's `click` event never fires for the right button, but
+      // Flutter's `onPointerUp` does — the press button is what gates it.
+      expect(fired, isEmpty);
+    });
+
+    testWidgets('a header without hasMenu never fires it', (tester) async {
+      final fired = await press(
+        tester,
+        columns: [const GlideGridColumn(title: 'C0', width: 100)],
+        down: menuCenter,
+      );
+      expect(fired, isEmpty);
+    });
+
+    testWidgets('pressing the indicator icon reports the indicator', (
+      tester,
+    ) async {
+      const column = GlideGridColumn(
+        title: 'C0',
+        width: 100,
+        indicatorIcon: 'headerString',
+      );
+      // `computeHeaderLayout`: xPad, then the measured title, then xPad again
+      // before the icon box (`data-grid-render.header.ts:388-404`).
+      final theme = GlideTheme.light();
+      final textWidth = GlideTextMetrics().width(
+        column.title,
+        theme.headerTextStyle,
+      );
+      final iconLeft =
+          theme.cellHorizontalPadding + textWidth + theme.cellHorizontalPadding;
+      final center = Offset(
+        iconLeft + theme.headerIconSize / 2,
+        (30 - theme.headerIconSize) / 2 + theme.headerIconSize / 2,
+      );
+
+      final fired = await press(
+        tester,
+        columns: [column],
+        down: center,
+      );
+
+      expect(fired, hasLength(1));
+      expect(fired.single.$1, 0);
+      final bounds = fired.single.$2;
+      expect(bounds.x, iconLeft);
+      expect(bounds.width, theme.headerIconSize);
+      expect(bounds.height, theme.headerIconSize);
+    });
+
+    testWidgets('an active column drag suppresses the menu click', (
+      tester,
+    ) async {
+      // `isOverHeaderElement` bails on `!isDragging && !isResizing`
+      // (`data-grid.tsx:1044`); the editor wires this from `dragColActive`.
+      final fired = await press(
+        tester,
+        columns: [
+          const GlideGridColumn(title: 'C0', width: 100, hasMenu: true),
+        ],
+        down: menuCenter,
+        isDragging: true,
+      );
+      expect(fired, isEmpty);
+    });
+
+    testWidgets('hovering the resize edge suppresses the menu click', (
+      tester,
+    ) async {
+      // The third arm of the same guard: `!(hoveredOnEdge ?? false)`
+      // (`data-grid.tsx:1044`). Column 0's edge sits at x = 100, so a pointer
+      // at 98 is inside the 5px buffer — and inside the menu button too.
+      final fired = await press(
+        tester,
+        columns: [
+          const GlideGridColumn(title: 'C0', width: 100, hasMenu: true),
+        ],
+        down: menuCenter,
+        up: const Offset(98, 16),
+        allowResize: true,
+      );
+      expect(fired, isEmpty, reason: 'a resize edge is not a menu click');
+    });
+
+    testWidgets('the edge only suppresses when resizing is allowed', (
+      tester,
+    ) async {
+      // Same gesture as the suppression test, but `allowResize` is off:
+      // upstream's `allowResize === true` (`data-grid.tsx:1355`) means an edge
+      // you cannot resize through is just part of the button.
+      final fired = await press(
+        tester,
+        columns: [
+          const GlideGridColumn(title: 'C0', width: 100, hasMenu: true),
+        ],
+        down: menuCenter,
+        up: const Offset(98, 16),
+        allowResize: false,
+      );
+      expect(fired, hasLength(1));
+    });
+
+    testWidgets('the same press away from the edge does fire it', (
+      tester,
+    ) async {
+      // Control for the test above: without the edge under the pointer the
+      // identical gesture reports the menu.
+      final fired = await press(
+        tester,
+        columns: [
+          const GlideGridColumn(title: 'C0', width: 100, hasMenu: true),
+        ],
+        down: menuCenter,
+        up: const Offset(85, 16),
+        allowResize: true,
+      );
+      expect(fired, hasLength(1), reason: 'off the edge the menu still fires');
+    });
+
+    testWidgets('an active resize suppresses the menu click', (tester) async {
+      final fired = await press(
+        tester,
+        columns: [
+          const GlideGridColumn(title: 'C0', width: 100, hasMenu: true),
+        ],
+        down: menuCenter,
+        isResizing: true,
+      );
+      expect(fired, isEmpty);
+    });
+
+    testWidgets('the indicator does not shadow a real menu press', (
+      tester,
+    ) async {
+      // Both set: the menu button wins where they overlap, exactly as
+      // `isOverHeaderElement` checks menu before indicator (`:1050-1063`).
+      final fired = await press(
+        tester,
+        columns: [
+          const GlideGridColumn(
+            title: 'C0',
+            width: 100,
+            hasMenu: true,
+            indicatorIcon: 'headerString',
+          ),
+        ],
+        down: menuCenter,
+      );
+      expect(fired, hasLength(1));
+      expect(fired.single.$1, 0);
     });
   });
 }

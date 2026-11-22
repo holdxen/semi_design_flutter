@@ -136,6 +136,8 @@ class GlideDataEditorProps {
     this.onSearchClose,
     this.rendererLookup,
     this.headerIcons,
+    this.onHeaderMenuClick,
+    this.onHeaderIndicatorClick,
   });
 
   static bool _alwaysTrue(int col) => true;
@@ -373,6 +375,19 @@ class GlideDataEditorProps {
   onSearchResultsChanged;
   final void Function()? onSearchClose;
   final GlideRendererLookup? rendererLookup;
+
+  /// `onHeaderMenuClick` (`data-editor.tsx:2569-2574`): the header's menu
+  /// button was clicked. The column arrives in *user* space; the editor strips
+  /// the row-marker offset on the way out, exactly as upstream's
+  /// `onHeaderMenuClickInner` does.
+  final void Function(int col, GlideRectangle screenPosition)?
+  onHeaderMenuClick;
+
+  /// `onHeaderIndicatorClick` (`data-editor.tsx:2576-2581`): the header's
+  /// indicator icon was clicked. Same offset handling as
+  /// [onHeaderMenuClick].
+  final void Function(int col, GlideRectangle screenPosition)?
+  onHeaderIndicatorClick;
 
   /// `headerIcons` (`data-editor-all.tsx:13-15`): extra sprites layered over
   /// the built-in set, which is what `DataEditorAll` does before handing them
@@ -2970,7 +2985,33 @@ class _GlideDataEditorState extends State<GlideDataEditor>
           fillHandle: p.fillHandle,
           disabledRows: _disabledRows,
           isResizing: _resizeCol != null,
+          // `isDragging={dragColActive}` (`data-grid-dnd.tsx:436`).
+          isDragging: _dragColActive,
+          // `allowResize={canResize}` (`data-grid-dnd.tsx:440`).
+          allowResize: _canResize,
           resizeColumn: _resizeCol,
+          // `onHeaderMenuClickMangled` / `onHeaderIndicatorClickMangled`
+          // (`data-grid-dnd.tsx:188-201`) guard the drag, then
+          // `onHeaderMenuClickInner` (`data-editor.tsx:2569-2581`) strips the
+          // row-marker offset.
+          onHeaderMenuClick: widget.props.onHeaderMenuClick == null
+              ? null
+              : (col, bounds) {
+                  if (_dragColActive || _dragRowActive) return;
+                  widget.props.onHeaderMenuClick!(
+                    col - _markerOffset,
+                    bounds,
+                  );
+                },
+          onHeaderIndicatorClick: widget.props.onHeaderIndicatorClick == null
+              ? null
+              : (col, bounds) {
+                  if (_dragColActive || _dragRowActive) return;
+                  widget.props.onHeaderIndicatorClick!(
+                    col - _markerOffset,
+                    bounds,
+                  );
+                },
           resizeIndicator: p.resizeIndicator,
           dragAndDropState: _dragCol != null && _dropCol != null
               ? GlideColumnDndState(src: _dragCol!, dest: _dropCol!)

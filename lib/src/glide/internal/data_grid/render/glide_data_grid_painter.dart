@@ -1180,7 +1180,9 @@ class GlideDataGridPainter extends CustomPainter {
       row: range.y.toInt(),
       width: a.width,
       height: a.height,
-      groupHeaderHeight: a.groupHeaderHeight,
+      // Guarded the same way as `totalHeaderHeight` below; `computeBounds`
+      // derives the header strip from the difference of the two.
+      groupHeaderHeight: a.enableGroups ? a.groupHeaderHeight : 0,
       totalHeaderHeight: a.enableGroups
           ? a.headerHeight + a.groupHeaderHeight
           : a.headerHeight,
@@ -1199,7 +1201,9 @@ class GlideDataGridPainter extends CustomPainter {
       row: (range.y + range.height - 1).toInt(),
       width: a.width,
       height: a.height,
-      groupHeaderHeight: a.groupHeaderHeight,
+      // Guarded the same way as `totalHeaderHeight` below; `computeBounds`
+      // derives the header strip from the difference of the two.
+      groupHeaderHeight: a.enableGroups ? a.groupHeaderHeight : 0,
       totalHeaderHeight: a.enableGroups
           ? a.headerHeight + a.groupHeaderHeight
           : a.headerHeight,
