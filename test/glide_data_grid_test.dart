@@ -24,6 +24,21 @@ Future<ui.Image> _fakeImage() async {
 // Selection (`internal/data-grid/glide_selection.dart`)
 // ---------------------------------------------------------------------------
 
+/// Records every `draw` and the `frameTime` it was given, so a test can tell
+/// a live clock (`data-grid-render.cells.ts:113`) from the constant `0` this
+/// port used to ship.
+class FrameCountingRenderer extends GlideCellRenderer {
+  FrameCountingRenderer(this.frameTimes);
+
+  final List<int> frameTimes;
+
+  @override
+  GlideCellKind get kind => GlideCellKind.text;
+
+  @override
+  void draw(GlideDrawCellArgs args) => frameTimes.add(args.frameTime);
+}
+
 class FakeClipboard extends GlideClipboard {
   String? writtenPlain;
   String? writtenHtml;
@@ -231,6 +246,55 @@ void main() {
       );
     }
 
+    /// A grid whose cells all carry [lastUpdated], with the paint clock and
+    /// the animation queue exposed so a test can observe both.
+    Widget flashingGrid({
+      required int? lastUpdated,
+      required List<int> frameTimes,
+      void Function(GlideItem item)? enqueue,
+    }) {
+      final renderer = FrameCountingRenderer(frameTimes);
+      return Directionality(
+        textDirection: TextDirection.ltr,
+        child: SizedBox(
+          width: 400,
+          height: 300,
+          child: GlideDataGrid(
+            props: GlideDataGridProps(
+              width: 400,
+              height: 300,
+              columns: [
+                for (var i = 0; i < 4; i++)
+                  GlideGridColumn(title: 'C$i', width: 100),
+              ],
+              rows: 10,
+              rowHeight: const GlideRowHeight.fixed(30),
+              headerHeight: 30,
+              getCellContent: (item, [_]) => GlideTextCell(
+                data: 'r${item.row} c${item.col}',
+                displayData: 'r${item.row} c${item.col}',
+                lastUpdated: lastUpdated,
+              ),
+              getCellRenderer: (cell) => renderer,
+              theme: GlideTheme.light(),
+              verticalBorder: (_) => true,
+              onItemHovered: (_) {},
+              onMouseMove: (_) {},
+              onMouseDown: (_) {},
+              onMouseUp: (_, _) {},
+              onContextMenu: (_, _) {},
+              onCanvasFocused: () {},
+              onCanvasBlur: () {},
+              onCellFocused: (_) {},
+              onKeyDown: (_) {},
+              isFocused: true,
+              enqueue: enqueue,
+            ),
+          ),
+        ),
+      );
+    }
+
     setUp(() {
       columns = [
         for (var i = 0; i < 4; i++) GlideGridColumn(title: 'C$i', width: 100),
@@ -242,6 +306,74 @@ void main() {
               GlideTextCell(data: 'r$row c$col', displayData: 'r$row c$col'),
           ],
       ];
+    });
+
+    testWidgets('a running lastUpdated flash asks for the next frame', (
+      tester,
+    ) async {
+      final frameTimes = <int>[];
+      final enqueued = <GlideItem>[];
+      final now = DateTime.now().millisecondsSinceEpoch;
+
+      await tester.pumpWidget(
+        flashingGrid(
+          lastUpdated: now,
+          frameTimes: frameTimes,
+          enqueue: enqueued.add,
+        ),
+      );
+      await tester.pump();
+
+      expect(frameTimes, isNotEmpty);
+      // `performance.now()` per paint (`data-grid-render.cells.ts:113`),
+      // not the constant `0` this port used to pass in.
+      expect((frameTimes.last - now).abs(), lessThan(5000));
+      // `if (needsAnim || animationFrameRequested) enqueue?.(...)`
+      // (`data-grid-render.cells.ts:561`).
+      expect(enqueued, isNotEmpty);
+    });
+
+    testWidgets('a finished lastUpdated flash stops asking for frames', (
+      tester,
+    ) async {
+      final frameTimes = <int>[];
+      final enqueued = <GlideItem>[];
+
+      await tester.pumpWidget(
+        flashingGrid(
+          lastUpdated: DateTime.now().millisecondsSinceEpoch - 60_000,
+          frameTimes: frameTimes,
+          enqueue: enqueued.add,
+        ),
+      );
+      await tester.pump();
+
+      // The cell still paints, but past `lastUpdateAnimationMs` there is
+      // nothing left to animate, so it must not keep the queue busy.
+      expect(frameTimes, isNotEmpty);
+      expect(enqueued, isEmpty);
+    });
+
+    testWidgets('the grid drives repaints itself when no enqueue is given', (
+      tester,
+    ) async {
+      final frameTimes = <int>[];
+
+      await tester.pumpWidget(
+        flashingGrid(
+          lastUpdated: DateTime.now().millisecondsSinceEpoch,
+          frameTimes: frameTimes,
+        ),
+      );
+      await tester.pump();
+      final afterFirstFrame = frameTimes.length;
+      expect(afterFirstFrame, greaterThan(0));
+
+      // Without the built-in queue (`use-animation-queue.ts`) nothing would
+      // mark the painter dirty, so the flash would freeze on frame one.
+      await tester.pump();
+      await tester.pump();
+      expect(frameTimes.length, greaterThan(afterFirstFrame));
     });
 
     testWidgets('paints headers and cells', (tester) async {

@@ -53,7 +53,11 @@ class GlideDataGridPainter extends CustomPainter {
     );
 
     // Stage 14-16: cells, blanks, grid lines.
-    final spans = _drawCells(canvas, effectiveCols, totalHeaderHeight);
+    // `const frameTime = performance.now()` (`data-grid-render.cells.ts:113`):
+    // a fresh clock per paint, so a `lastUpdated` flash actually advances.
+    // It used to arrive as a prop that nobody ever set, i.e. always 0.
+    final frameTime = DateTime.now().millisecondsSinceEpoch;
+    final spans = _drawCells(canvas, effectiveCols, totalHeaderHeight, frameTime);
     _drawGridLines(canvas, effectiveCols, spans, totalHeaderHeight);
 
     // Stage 9: header (drawn after the body so the sticky header always wins).
@@ -82,6 +86,7 @@ class GlideDataGridPainter extends CustomPainter {
     Canvas canvas,
     List<GlideMappedColumn> effectiveColumns,
     double totalHeaderHeight,
+    int frameTime,
   ) {
     final a = arg;
     final damage = a.damage;
@@ -282,6 +287,7 @@ class GlideDataGridPainter extends CustomPainter {
               final hoverPosition = a.hoverPosition;
               _drawCell(
                 canvas,
+                frameTime: frameTime,
                 cell: cell,
                 col: c.sourceIndex,
                 row: row,
@@ -320,6 +326,7 @@ class GlideDataGridPainter extends CustomPainter {
   /// `drawCell` (`data-grid-render.cells.ts:467-563`).
   void _drawCell(
     Canvas canvas, {
+    required int frameTime,
     required GlideGridCell cell,
     required int col,
     required int row,
@@ -334,11 +341,14 @@ class GlideDataGridPainter extends CustomPainter {
     final renderer = arg.getCellRenderer(cell);
     if (renderer == null) return;
 
-    // `drawLastUpdateUnderlay` (`data-grid-lib.ts:401-428`).
+    // `drawLastUpdateUnderlay` (`data-grid-lib.ts:401-428`), whose return
+    // value is upstream's `needsAnim`.
     final lastUpdated = cell.lastUpdated;
+    var needsAnim = false;
     if (lastUpdated != null) {
-      final progress = arg.frameTime - lastUpdated;
-      if (progress < lastUpdateAnimationMs) {
+      final progress = frameTime - lastUpdated;
+      needsAnim = progress < lastUpdateAnimationMs;
+      if (needsAnim) {
         final fade = 1 - progress / lastUpdateAnimationMs;
         canvas.drawRect(
           Rect.fromLTWH(
@@ -349,12 +359,13 @@ class GlideDataGridPainter extends CustomPainter {
           ),
           Paint()..color = theme.bgSearchResult.withValues(alpha: fade),
         );
-      } else if (arg.enqueue != null) {
-        arg.enqueue!(GlideItem(col, row));
       }
     }
 
     final item = GlideItem(col, row);
+    // `animationFrameRequested` (`data-grid-render.cells.ts:462-465,513`):
+    // set when the renderer asks for another frame, reset per cell.
+    var animationFrameRequested = false;
     final args = GlideDrawCellArgs(
       canvas: canvas,
       theme: theme,
@@ -368,15 +379,21 @@ class GlideDataGridPainter extends CustomPainter {
       hoverY: hoverY,
       cellFillColor: fill,
       hyperWrapping: arg.hyperWrapping,
-      frameTime: arg.frameTime,
+      frameTime: frameTime,
       metrics: arg.metrics,
       imageLoader: arg.imageLoader,
-      requestAnimationFrame: arg.enqueue == null
-          ? null
-          : ([state]) => arg.enqueue!(item),
+      requestAnimationFrame: ([state]) => animationFrameRequested = true,
     );
 
     renderer.draw(args);
+
+    // `if (needsAnim || animationFrameRequested) enqueue?.(allocatedItem)`
+    // (`data-grid-render.cells.ts:561`). Enqueueing only once the flash was
+    // *over* — as this port did — meant the next frame never came and the
+    // animation froze on its first frame.
+    if (needsAnim || animationFrameRequested) {
+      arg.enqueue?.call(item);
+    }
   }
 
   // -------------------------------------------------------------------------

@@ -79,7 +79,6 @@ class GlideDataGridProps {
     this.smoothScrollY = false,
     this.hyperWrapping = false,
     this.touchMode = false,
-    this.frameTime = 0,
     this.metrics,
     this.enqueue,
     this.minimumCellWidth = 10,
@@ -183,11 +182,15 @@ class GlideDataGridProps {
   final bool smoothScrollY;
   final bool hyperWrapping;
   final bool touchMode;
-  final int frameTime;
 
   /// `TextMetrics` cache shared across the grid; when null a private one is
   /// created per paint.
   final GlideTextMetrics? metrics;
+
+  /// Overrides the built-in animation queue (`use-animation-queue.ts`).
+  /// Upstream owns that internally; it is a prop here only so a caller can
+  /// substitute its own damage scheduling. Null keeps the grid's own queue,
+  /// which is what drives the `lastUpdated` flash to completion.
   final void Function(GlideItem item)? enqueue;
   final double minimumCellWidth;
 }
@@ -229,6 +232,30 @@ class _GlideDataGridState extends State<GlideDataGrid>
   Map<GlideItem, double> _hoverValues = const {};
   late final Ticker _hoverTicker;
   Duration _lastHoverTick = Duration.zero;
+
+  /// `useAnimationQueue` (`use-animation-queue.ts`): the Web version batches
+  /// damaged cells and redraws them on the next animation frame. Flutter's
+  /// painter redraws the whole surface anyway, so the queue collapses to
+  /// "request one more frame" — which is what lets a `lastUpdated` flash
+  /// advance to completion instead of freezing on the frame it started on.
+  ///
+  /// Deviation: upstream damages only the enqueued cells; here every request
+  /// repaints the full viewport.
+  bool _enqueueScheduled = false;
+  final GlobalKey _paintKey = GlobalKey(debugLabel: 'GlideDataGridPainter');
+
+  void _enqueue(GlideItem item) {
+    if (_enqueueScheduled) return;
+    _enqueueScheduled = true;
+    // `enqueue` runs from inside `paint`, so the repaint is deferred to the
+    // end of this frame — the Flutter equivalent of `requestAnimationFrame`.
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _enqueueScheduled = false;
+      if (!mounted) return;
+      final render = _paintKey.currentContext?.findRenderObject();
+      if (render != null && render.attached) render.markNeedsPaint();
+    });
+  }
 
   /// `imageWindowLoader` (`data-grid.tsx:157`).
   late GlideImageWindowLoader _imageLoader;
@@ -1111,9 +1138,8 @@ class _GlideDataGridState extends State<GlideDataGrid>
       disabledRows: p.disabledRows ?? const GlideCompactSelection.empty(),
       prelightCells: p.prelightCells,
       highlightRegions: p.highlightRegions,
-      frameTime: p.frameTime,
       hyperWrapping: p.hyperWrapping,
-      enqueue: p.enqueue,
+      enqueue: p.enqueue ?? _enqueue,
       minimumCellWidth: p.minimumCellWidth,
     );
 
@@ -1147,6 +1173,7 @@ class _GlideDataGridState extends State<GlideDataGrid>
                 fit: StackFit.expand,
                 children: [
                   CustomPaint(
+                    key: _paintKey,
                     painter: GlideDataGridPainter(arg),
                     isComplex: true,
                     willChange: true,
