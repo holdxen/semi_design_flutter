@@ -24,6 +24,7 @@ import '../common/glide_utils.dart';
 import '../internal/data_grid/glide_data_grid.dart';
 import '../internal/data_grid/glide_event_args.dart';
 import '../internal/data_grid/glide_selection_behavior.dart';
+import '../internal/data_grid/glide_sprites.dart';
 import '../internal/data_grid/render/glide_draw_grid_arg.dart';
 import '../internal/data_grid_overlay_editor/glide_data_grid_overlay_editor.dart';
 import '../internal/scrolling_data_grid/glide_autoscroll.dart';
@@ -134,6 +135,7 @@ class GlideDataEditorProps {
     this.onSearchResultsChanged,
     this.onSearchClose,
     this.rendererLookup,
+    this.headerIcons,
   });
 
   static bool _alwaysTrue(int col) => true;
@@ -371,6 +373,12 @@ class GlideDataEditorProps {
   onSearchResultsChanged;
   final void Function()? onSearchClose;
   final GlideRendererLookup? rendererLookup;
+
+  /// `headerIcons` (`data-editor-all.tsx:13-15`): extra sprites layered over
+  /// the built-in set, which is what `DataEditorAll` does before handing them
+  /// to the grid. The editor owns that merge because it is the "all renderers"
+  /// entry point of this port, exactly as `DataEditorAll` is upstream.
+  final Map<String, GlideSpriteFn>? headerIcons;
 }
 
 /// `GlideDataEditor`: `DataGrid` + selection + overlay editor + clipboard.
@@ -916,7 +924,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
         title: '',
         width: _rowMarkerWidth.toDouble(),
         hasMenu: false,
-        style: GlideCellStyle.normal,
+        style: GlideColumnStyle.normal,
         themeOverride: opts.theme,
         extension: GlideInnerColumnExtension(
           rowMarker: opts.checkboxStyle,
@@ -2918,6 +2926,11 @@ class _GlideDataEditorState extends State<GlideDataEditor>
         final gridProps = GlideDataGridProps(
           width: _viewportWidth,
           height: _viewportHeight,
+          // `{ ...sprites, ...p.headerIcons }` (`data-editor-all.tsx:13-15`).
+          headerIcons: {
+            ...glideSprites,
+            ...?widget.props.headerIcons,
+          },
           columns: _mangledColumns,
           rows: _mangledRows,
           hasAppendRow: _showTrailingBlankRow,

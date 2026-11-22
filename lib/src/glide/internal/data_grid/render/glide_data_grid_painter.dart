@@ -21,26 +21,10 @@ import '../../../common/glide_math.dart';
 import '../../../common/glide_utils.dart';
 import 'glide_draw_checkbox.dart';
 import 'glide_draw_grid_arg.dart';
+import '../glide_sprite_manager.dart';
 import 'glide_render_walk.dart';
 
 /// `drawGrid` (`data-grid-render.ts:115-797`).
-/// `getHeaderMenuBounds` (`data-grid-render.header.ts:289-297`). The RTL
-/// branch is dropped along with the rest of the port's RTL support.
-GlideRectangle getHeaderMenuBounds(
-  double x,
-  double y,
-  double width,
-  double height,
-) {
-  const size = 30.0; // `menuButtonSize`
-  return GlideRectangle(
-    x: x + width - size,
-    y: math.max(y, y + height / 2 - size / 2),
-    width: size,
-    height: math.min(size, height),
-  );
-}
-
 class GlideDataGridPainter extends CustomPainter {
   GlideDataGridPainter(this.arg, {super.repaint});
 
@@ -69,6 +53,18 @@ class GlideDataGridPainter extends CustomPainter {
       Rect.fromLTWH(0, 0, a.width, a.height),
       Paint()..color = a.theme.bgCell,
     );
+
+    // `ctx.fillStyle = outerTheme.bgHeader; ctx.fillRect(0, 0, width,
+    // totalHeaderHeight)` (`data-grid-render.header.ts:47-48`): the strip
+    // behind every header cell. It goes here rather than inside
+    // `_drawGridHeaders` only because that runs after the grid lines and
+    // would erase them; nothing paints into this band before this point.
+    if (totalHeaderHeight > 0) {
+      canvas.drawRect(
+        Rect.fromLTWH(0, 0, a.width, totalHeaderHeight),
+        Paint()..color = a.theme.bgHeader,
+      );
+    }
 
     // Stage 14-16: cells, blanks, grid lines.
     // `const frameTime = performance.now()` (`data-grid-render.cells.ts:113`):
@@ -751,15 +747,104 @@ class GlideDataGridPainter extends CustomPainter {
             return;
           }
 
-          final style = theme.headerTextStyle.copyWith(
-            color: selected ? theme.textHeader : theme.textHeader,
+          final fill = selected ? theme.textHeaderSelected : theme.textHeader;
+
+          // `computeHeaderLayout` (`data-grid-render.header.ts:342-414`):
+          // where the icon, overlay, title and indicator sit inside this
+          // header. The title starts after the icon when there is one.
+          final layout = computeHeaderLayout(
+            c: c,
+            x: drawX,
+            y: headerTop,
+            width: c.width,
+            height: totalHeaderHeight - headerTop,
+            theme: theme,
+            metrics: a.metrics,
           );
+
+          final sprite = a.spriteManager;
+          // `variant` (`data-grid-render.header.ts:466-469`): a `highlight`
+          // column draws the unselected icon in the `special` colors.
+          final unselectedVariant =
+              c.style == GlideColumnStyle.highlight
+                  ? GlideSpriteVariant.special
+                  : GlideSpriteVariant.normal;
+          final iconVariant = selected
+              ? GlideSpriteVariant.selected
+              : unselectedVariant;
+
+          final iconBounds = layout.iconBounds;
+          if (c.icon != null && iconBounds != null && sprite != null) {
+            sprite.drawSprite(
+              c.icon!,
+              iconVariant,
+              canvas,
+              iconBounds.x,
+              iconBounds.y,
+              iconBounds.width,
+              theme,
+            );
+            final overlayBounds = layout.iconOverlayBounds;
+            if (c.overlayIcon != null && overlayBounds != null) {
+              sprite.drawSprite(
+                c.overlayIcon!,
+                selected ? GlideSpriteVariant.selected : GlideSpriteVariant.special,
+                canvas,
+                overlayBounds.x,
+                overlayBounds.y,
+                overlayBounds.width,
+                theme,
+              );
+            }
+          }
+
+          // The title runs from the layout's `textBounds.x` to the right
+          // padding, minus the menu button when one is reserved.
           final available = math.max(
             1.0,
-            c.width -
-                theme.cellHorizontalPadding * 2 -
+            (drawX + c.width - theme.cellHorizontalPadding) -
+                layout.textBounds.x -
                 (c.hasMenu ? theme.headerIconSize : 0),
           );
+
+          // `shouldDrawMenu` (`data-grid-render.header.ts:462`) plus the
+          // gradient that keeps the title from running under the button
+          // (`:474-493`): opaque until `width - 35`, gone by `width - 24.5`.
+          // The gradient rides on `TextStyle.foreground` because this
+          // Flutter's `TextPainter.paint` takes no `Paint` argument.
+          final shouldDrawMenu =
+              c.hasMenu &&
+              (hovered || (a.touchMode && selected)) &&
+              c.width > 35;
+          final style = shouldDrawMenu
+              ? theme.headerTextStyle.copyWith(
+                  foreground: Paint()
+                    ..shader = LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        fill,
+                        fill,
+                        fill.withValues(alpha: 0),
+                        fill.withValues(alpha: 0),
+                      ],
+                      stops: [
+                        0,
+                        (c.width - 35) / c.width,
+                        (c.width - 24.5) / c.width,
+                        1,
+                      ],
+                    ).createShader(
+                      Rect.fromLTWH(
+                        drawX,
+                        headerTop,
+                        c.width,
+                        totalHeaderHeight - headerTop,
+                      ),
+                    ),
+                )
+              : theme.headerTextStyle.copyWith(color: fill);
+
           final painter = a.metrics.painter(
             c.title,
             style,
@@ -769,12 +854,72 @@ class GlideDataGridPainter extends CustomPainter {
           painter.paint(
             canvas,
             Offset(
-              drawX + theme.cellHorizontalPadding,
+              layout.textBounds.x,
               headerTop +
                   (totalHeaderHeight - headerTop) / 2 -
                   painter.height / 2,
             ),
           );
+
+          // The indicator icon after the title
+          // (`data-grid-render.header.ts:527-555`), hidden when the menu
+          // button would overlap it.
+          final indicatorBounds = layout.indicatorIconBounds;
+          if (c.indicatorIcon != null &&
+              indicatorBounds != null &&
+              sprite != null &&
+              !(shouldDrawMenu &&
+                  intersectRect(
+                    layout.menuBounds.x,
+                    layout.menuBounds.y,
+                    layout.menuBounds.width,
+                    layout.menuBounds.height,
+                    indicatorBounds.x,
+                    indicatorBounds.y,
+                    indicatorBounds.width,
+                    indicatorBounds.height,
+                  ))) {
+            sprite.drawSprite(
+              c.indicatorIcon!,
+              iconVariant,
+              canvas,
+              indicatorBounds.x,
+              indicatorBounds.y,
+              indicatorBounds.width,
+              theme,
+            );
+          }
+
+          // The button itself (`data-grid-render.header.ts:558-590`): the
+          // triangle and the three-dot variant are plain primitives.
+          if (shouldDrawMenu) {
+            final menuBounds = layout.menuBounds;
+            final overMenu =
+                hoverX != null &&
+                hoverY != null &&
+                pointInRect(menuBounds, hoverX, hoverY);
+            // `globalAlpha = 0.7` unless the pointer is over the button.
+            final iconPaint = Paint()
+              ..color = fill.withValues(alpha: overMenu ? 1 : 0.7);
+            final cx = menuBounds.x + menuBounds.width / 2;
+            final cy = menuBounds.y + menuBounds.height / 2;
+            switch (c.menuIcon ?? GlideColumnMenuIcon.triangle) {
+              case GlideColumnMenuIcon.dots:
+                // `drawMenuDots` (`data-grid-lib.ts:657-662`), radius 1.25.
+                for (final dy in const [-4.375, 0.0, 4.375]) {
+                  canvas.drawCircle(Offset(cx, cy + dy), 1.25, iconPaint);
+                }
+              case GlideColumnMenuIcon.triangle:
+                // `roundedPoly(..., 1)` (`data-grid-render.header.ts:571-584`);
+                // the 1px corner rounding is dropped.
+                final path = Path()
+                  ..moveTo(cx - 5.5, cy - 3)
+                  ..lineTo(cx + 5.5, cy - 3)
+                  ..lineTo(cx, cy + 3)
+                  ..close();
+                canvas.drawPath(path, iconPaint);
+            }
+          }
         }
 
         // `if (drawHeaderCallback !== undefined)` (`data-grid-render.header
@@ -1265,6 +1410,13 @@ class GlideDataGridPainter extends CustomPainter {
         identical(a.prelightCells, b.prelightCells) &&
         identical(a.highlightRegions, b.highlightRegions) &&
         a.fixedShadowX == b.fixedShadowX &&
-        a.fixedShadowY == b.fixedShadowY;
+        a.fixedShadowY == b.fixedShadowY &&
+        // The grid swaps in a fresh manager whenever `headerIcons` changes
+        // (`data-grid.tsx:427-433`), so identity is what says "the sprites on
+        // screen are stale". Note this never decides today: `mapColumns`
+        // allocates on every build, so the `mappedColumns` identity check
+        // above already makes this function return false. It is load-bearing
+        // the moment that is fixed.
+        identical(a.spriteManager, b.spriteManager);
   }
 }

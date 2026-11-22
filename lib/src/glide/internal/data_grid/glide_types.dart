@@ -143,8 +143,18 @@ enum GlideCellKind {
   marker,
 }
 
-/// `"normal" | "faded"` (`data-grid-types.ts:314`).
+/// `"normal" | "faded"` (`data-grid-types.ts:314`). The *cell* style.
+///
+/// The column has its own, differently-valued `style`
+/// (`data-grid-types.ts:157`) — see [GlideColumnStyle]. The two were briefly
+/// conflated in this port, which made `"highlight"` unrepresentable.
 enum GlideCellStyle { normal, faded }
+
+/// `GridColumn.style`: `"normal" | "highlight"` (`data-grid-types.ts:157`).
+///
+/// Drives the sprite variant a header icon is drawn with
+/// (`data-grid-render.header.ts:467-469`).
+enum GlideColumnStyle { normal, highlight }
 
 /// `"left" | "right" | "center"` (`data-grid-types.ts:317`).
 enum GlideContentAlign { left, right, center }
@@ -1043,7 +1053,7 @@ class GlideGridColumn {
   final GlideColumnIcon? indicatorIcon;
   final bool hasMenu;
   final int? grow;
-  final GlideCellStyle? style;
+  final GlideColumnStyle? style;
   final GlideThemeOverride? themeOverride;
   final GlideTrailingRowOptions? trailingRowOptions;
 
@@ -1060,7 +1070,7 @@ class GlideGridColumn {
     String? id,
     Object? group = _sentinel,
     Object? icon = _sentinel,
-    GlideCellStyle? style,
+    GlideColumnStyle? style,
     GlideThemeOverride? themeOverride,
     GlideTrailingRowOptions? trailingRowOptions,
     GlideInnerColumnExtension? extension,

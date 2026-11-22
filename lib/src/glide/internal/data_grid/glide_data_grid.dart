@@ -15,6 +15,8 @@ import 'package:flutter/widgets.dart';
 
 import '../../cells/glide_cell_types.dart';
 import '../../common/glide_image_window_loader.dart';
+import 'glide_sprite_manager.dart';
+import 'glide_sprites.dart';
 import '../../common/glide_utils.dart';
 import '../../common/glide_math.dart';
 import '../../common/glide_is_hotkey.dart';
@@ -89,6 +91,7 @@ class GlideDataGridProps {
     this.fixedShadowX = true,
     this.fixedShadowY = true,
     this.imageLoader,
+    this.headerIcons,
     this.firstColAccessible = true,
     this.disableAccessibilityTree = false,
     this.a11yRevision = 0,
@@ -152,6 +155,11 @@ class GlideDataGridProps {
   /// `imageWindowLoader` (`data-grid.tsx`): when null the grid owns one and
   /// disposes it with itself.
   final GlideImageWindowLoader? imageLoader;
+
+  /// `headerIcons` (`data-grid.tsx:282`): extra sprites keyed by name, merged
+  /// over the built-in set by the editor the same way `DataEditorAll` does
+  /// (`data-editor-all.tsx:13-15`). Null means "built-ins only".
+  final Map<String, GlideSpriteFn>? headerIcons;
 
   /// `firstColAccessible` (`data-grid.tsx:1745`): false hides the row-marker
   /// column from the accessibility tree.
@@ -276,6 +284,12 @@ class _GlideDataGridState extends State<GlideDataGrid>
   /// `imageWindowLoader` (`data-grid.tsx:157`).
   late GlideImageWindowLoader _imageLoader;
   bool _ownsImageLoader = false;
+
+  /// `spriteManager` (`data-grid.tsx:427-433`): rebuilt when `headerIcons`
+  /// changes, exactly as upstream's `useMemo(..., [headerIcons])`. Its
+  /// `onSettled` is upstream's `lastDrawRef.current()` — repaint once every
+  /// in-flight sprite has landed.
+  late GlideSpriteManager _spriteManager;
   Offset? _pointer;
   bool _pointerInside = false;
   GlideGridMouseArgs? _hoveredArgs;
@@ -291,6 +305,20 @@ class _GlideDataGridState extends State<GlideDataGrid>
     widget.controller?._state = this;
     _hoverTicker = createTicker(_onHoverTick);
     _resolveImageLoader();
+    _resolveSpriteManager();
+  }
+
+  void _resolveSpriteManager() {
+    _spriteManager = GlideSpriteManager(
+      icons: widget.props.headerIcons ?? const {},
+      settled: _onSpritesSettled,
+    );
+  }
+
+  void _onSpritesSettled() {
+    if (!mounted) return;
+    final render = _paintKey.currentContext?.findRenderObject();
+    if (render != null && render.attached) render.markNeedsPaint();
   }
 
   void _resolveImageLoader() {
@@ -318,11 +346,16 @@ class _GlideDataGridState extends State<GlideDataGrid>
       if (_ownsImageLoader) _imageLoader.dispose();
       _resolveImageLoader();
     }
+    if (!identical(oldWidget.props.headerIcons, widget.props.headerIcons)) {
+      _spriteManager.dispose();
+      _resolveSpriteManager();
+    }
   }
 
   @override
   void dispose() {
     widget.controller?._state = null;
+    _spriteManager.dispose();
     if (_ownsImageLoader) _imageLoader.dispose();
     _imageLoader.onLoaded = null;
     _hoverTicker.dispose();
@@ -1161,6 +1194,7 @@ class _GlideDataGridState extends State<GlideDataGrid>
       hyperWrapping: p.hyperWrapping,
       enqueue: p.enqueue ?? _enqueue,
       minimumCellWidth: p.minimumCellWidth,
+      spriteManager: _spriteManager,
     );
 
     return Focus(

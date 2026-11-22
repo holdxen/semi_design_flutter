@@ -85,7 +85,7 @@ class GlideMappedColumn {
   final GlideColumnIcon? indicatorIcon;
   final bool hasMenu;
   final int? grow;
-  final GlideCellStyle? style;
+  final GlideColumnStyle? style;
   final GlideThemeOverride? themeOverride;
   final GlideTrailingRowOptions? trailingRowOptions;
   final GlideInnerColumnExtension? extension;
@@ -235,6 +235,129 @@ class GlideColumnDndState {
 
   final int src;
   final int dest;
+}
+
+/// `getHeaderMenuBounds` (`data-grid-render.header.ts:289-297`): the box the
+/// header menu button occupies, in grid coordinates. The RTL branch is
+/// dropped along with the rest of the port's RTL support.
+///
+/// Lives here rather than in the painter because the hit test
+/// (`data-grid.tsx:1044-1056`) needs the exact same rectangle the painter
+/// draws into.
+GlideRectangle getHeaderMenuBounds(
+  double x,
+  double y,
+  double width,
+  double height,
+) {
+  const size = 30.0; // `menuButtonSize`
+  return GlideRectangle(
+    x: x + width - size,
+    y: math.max(y, y + height / 2 - size / 2),
+    width: size,
+    height: math.min(size, height),
+  );
+}
+
+/// `HeaderLayout` (`data-grid-render.header.ts:324-330`).
+///
+/// `textBounds` and `menuBounds` are non-nullable because upstream only types
+/// them as optional through `flipHorizontal`, which this port drops along with
+/// RTL — both are always produced.
+@immutable
+class GlideHeaderLayout {
+  const GlideHeaderLayout({
+    required this.textBounds,
+    required this.menuBounds,
+    this.iconBounds,
+    this.iconOverlayBounds,
+    this.indicatorIconBounds,
+  });
+
+  final GlideRectangle textBounds;
+  final GlideRectangle menuBounds;
+  final GlideRectangle? iconBounds;
+  final GlideRectangle? iconOverlayBounds;
+  final GlideRectangle? indicatorIconBounds;
+}
+
+/// `computeHeaderLayout` (`data-grid-render.header.ts:342-414`): where a
+/// header's icon, overlay icon, title and indicator icon sit.
+///
+/// [metrics] is upstream's `ctx`. It is only read when the column has an
+/// `indicatorIcon`, and upstream's hit-test path (`isOverHeaderElement`)
+/// passes `undefined` there to fall back on `getMeasuredTextCache(...)?.width
+/// ?? 0`. Measuring unconditionally is equivalent in practice: that fallback
+/// can only return 0 before the first paint, and a header cannot be hit
+/// before it has been painted.
+GlideHeaderLayout computeHeaderLayout({
+  required GlideMappedColumn c,
+  required double x,
+  required double y,
+  required double width,
+  required double height,
+  required GlideTheme theme,
+  required GlideTextMetrics metrics,
+}) {
+  final xPad = theme.cellHorizontalPadding;
+  final headerIconSize = theme.headerIconSize;
+  final menuBounds = getHeaderMenuBounds(x, y, width, height);
+
+  var drawX = x + xPad;
+  final iconBounds = c.icon == null
+      ? null
+      : GlideRectangle(
+          x: drawX,
+          y: y + (height - headerIconSize) / 2,
+          width: headerIconSize,
+          height: headerIconSize,
+        );
+
+  final iconOverlayBounds =
+      iconBounds == null || c.overlayIcon == null
+          ? null
+          : GlideRectangle(
+              x: iconBounds.x + 9,
+              y: iconBounds.y + 6,
+              width: 18,
+              height: 18,
+            );
+
+  if (iconBounds != null) {
+    drawX += (headerIconSize * 1.3).ceilToDouble();
+  }
+
+  // `width - drawX` mixes the cell width with an absolute x, so this is only
+  // meaningful for `x == 0`. Upstream reads it solely in the RTL branch and
+  // overwrites it with the measured title width when an indicator is present;
+  // both uses are preserved here without the RTL branch.
+  var textBounds = GlideRectangle(
+    x: drawX,
+    y: y,
+    width: width - drawX,
+    height: height,
+  );
+
+  GlideRectangle? indicatorIconBounds;
+  if (c.indicatorIcon != null) {
+    final textWidth = metrics.width(c.title, theme.headerTextStyle);
+    textBounds = textBounds.copyWith(width: textWidth);
+    drawX += textWidth + xPad;
+    indicatorIconBounds = GlideRectangle(
+      x: drawX,
+      y: y + (height - headerIconSize) / 2,
+      width: headerIconSize,
+      height: headerIconSize,
+    );
+  }
+
+  return GlideHeaderLayout(
+    textBounds: textBounds,
+    menuBounds: menuBounds,
+    iconBounds: iconBounds,
+    iconOverlayBounds: iconOverlayBounds,
+    indicatorIconBounds: indicatorIconBounds,
+  );
 }
 
 /// `opacityX` (`data-grid.tsx:1878-1880`): how far the frozen-column shadow

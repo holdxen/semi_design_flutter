@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 
 import '../../../cells/glide_cell_types.dart';
 import '../../../common/glide_image_window_loader.dart';
+import '../glide_sprite_manager.dart';
 import '../glide_cell_set.dart';
 
 /// `GroupDetails`: per-group theme override.
@@ -142,6 +143,7 @@ class GlideDrawGridArg {
     this.resizeColumn,
     this.resizeIndicator = GlideResizeIndicator.full,
     this.imageLoader,
+    this.spriteManager,
   });
 
   final double width;
@@ -196,4 +198,9 @@ class GlideDrawGridArg {
   final int? resizeColumn;
   final GlideResizeIndicator resizeIndicator;
   final GlideImageWindowLoader? imageLoader;
+
+  /// `spriteManager` (`draw-grid-arg.ts:74`). Null makes every sprite draw a
+  /// no-op, which is what upstream gets from `headerIcons: undefined` merged
+  /// with an empty built-in map — see [GlideDataGridProps.headerIcons].
+  final GlideSpriteManager? spriteManager;
 }

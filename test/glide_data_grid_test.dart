@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/gestures.dart';
 
 import 'dart:ui' as ui;
@@ -5070,6 +5072,501 @@ void main() {
         band[1],
         control[1],
         reason: 'deep inside the shadow the grid must be untouched',
+      );
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Sprites (`internal/data-grid/sprites.ts`, `data-grid-sprites.ts`)
+  // -------------------------------------------------------------------------
+
+  group('sprites', () {
+    test('the built-in set has one entry per upstream sprite', () {
+      // `sprites` (`sprites.ts:289-319`).
+      expect(glideSprites.keys, hasLength(29));
+      expect(
+        glideSprites.keys,
+        containsAll([
+          'headerRowID',
+          'headerString',
+          'headerNumber',
+          'renameIcon',
+          'rowOwnerOverlay',
+          'protectedColumnOverlay',
+        ]),
+      );
+      // `headerAudioUri = headerUri` (`sprites.ts:75`).
+      expect(
+        glideSprites['headerAudioUri']!((fgColor: 'f', bgColor: 'b')),
+        glideSprites['headerUri']!((fgColor: 'f', bgColor: 'b')),
+      );
+    });
+
+    test('every sprite interpolates both colors into its markup', () {
+      const props = (fgColor: '#111111', bgColor: '#222222');
+      for (final entry in glideSprites.entries) {
+        final svg = entry.value(props);
+        expect(svg.trimLeft(), startsWith('<svg'), reason: entry.key);
+        expect(svg, contains('#222222'), reason: entry.key);
+        // `renameIcon` only paints with `bgColor` (`sprites.ts:65-73`).
+        if (entry.key != 'renameIcon') {
+          expect(svg, contains('#111111'), reason: entry.key);
+        }
+      }
+    });
+
+    test('glideSpriteColors follows the upstream variant table', () {
+      final theme = GlideTheme.light();
+      // `getColors` (`data-grid-sprites.ts:30-40`).
+      final normal = glideSpriteColors(GlideSpriteVariant.normal, theme);
+      expect(normal.bg, '#737383'); // theme.bgIconHeader
+      expect(normal.fg, '#ffffff'); // theme.fgIconHeader
+
+      final selected = glideSpriteColors(GlideSpriteVariant.selected, theme);
+      expect(selected.bg, '#ffffff'); // upstream's literal "white"
+      expect(selected.fg, '#4f5dff'); // theme.accentColor
+
+      final special = glideSpriteColors(GlideSpriteVariant.special, theme);
+      expect(special.bg, '#4f5dff'); // theme.accentColor
+      expect(special.fg, '#f7f7f8'); // theme.bgHeader
+    });
+
+    testWidgets('a sprite lands on the canvas once its decode settles', (
+      tester,
+    ) async {
+      final theme = GlideTheme.light();
+      final settled = Completer<void>();
+      final manager = GlideSpriteManager(
+        icons: glideSprites,
+        settled: () {
+          if (!settled.isCompleted) settled.complete();
+        },
+      );
+      addTearDown(manager.dispose);
+
+      // The first draw only starts the load: upstream's canvas is still empty
+      // at this point (`data-grid-sprites.ts:64-80`).
+      final cold = ui.PictureRecorder();
+      final coldCanvas = Canvas(cold)
+        ..drawColor(const Color(0xFFFFFFFF), BlendMode.srcOver);
+      manager.drawSprite(
+        'headerString',
+        GlideSpriteVariant.normal,
+        coldCanvas,
+        0,
+        0,
+        20,
+        theme,
+      );
+      final coldPixels = await tester.runAsync(
+        () => cold.endRecording().toImage(20, 20),
+      );
+      final coldData = (await tester.runAsync(
+        () => coldPixels!.toByteData(format: ui.ImageByteFormat.rawRgba),
+      ))!;
+      expect(
+        coldData.getUint32(0),
+        0xFFFFFFFF,
+        reason: 'nothing is painted before the sprite has decoded',
+      );
+
+      // `onSettled` fires when the last in-flight sprite lands.
+      await tester.runAsync(() => settled.future);
+
+      final warm = ui.PictureRecorder();
+      final warmCanvas = Canvas(warm)
+        ..drawColor(const Color(0xFFFFFFFF), BlendMode.srcOver);
+      manager.drawSprite(
+        'headerString',
+        GlideSpriteVariant.normal,
+        warmCanvas,
+        0,
+        0,
+        20,
+        theme,
+      );
+      final img = await tester.runAsync(
+        () => warm.endRecording().toImage(20, 20),
+      );
+      final data = (await tester.runAsync(
+        () => img!.toByteData(format: ui.ImageByteFormat.rawRgba),
+      ))!;
+
+      int at(int x, int y) {
+        final o = (y * 20 + x) * 4;
+        return data.getUint8(o) << 16 |
+            data.getUint8(o + 1) << 8 |
+            data.getUint8(o + 2);
+      }
+
+      // The rounded-rect plate is `bgIconHeader`.
+      expect(at(10, 4), 0x737383, reason: 'the plate must be painted');
+      // The corner falls outside the rounded rect, so it stays untouched.
+      expect(at(1, 1), 0xFFFFFF, reason: 'outside the plate');
+    });
+
+    test('a second draw before the load lands does not start a second load', () {
+      // The reservation (`_cache[key] = null` before awaiting) is what stops
+      // two draws in the same frame from decoding the same sprite twice.
+      var calls = 0;
+      final manager = GlideSpriteManager(
+        icons: {
+          'counted': (props) {
+            calls++;
+            return glideSprites['headerString']!(props);
+          },
+        },
+        settled: () {},
+      );
+      addTearDown(manager.dispose);
+
+      for (var i = 0; i < 3; i++) {
+        manager.drawSprite(
+          'counted',
+          GlideSpriteVariant.normal,
+          Canvas(ui.PictureRecorder()),
+          0,
+          0,
+          20,
+          GlideTheme.light(),
+        );
+      }
+      expect(calls, 1, reason: 'one key, one load');
+    });
+
+    testWidgets('an unknown sprite name draws nothing', (tester) async {
+      final theme = GlideTheme.light();
+      final manager = GlideSpriteManager(
+        icons: glideSprites,
+        settled: () {},
+      );
+      addTearDown(manager.dispose);
+
+      final rec = ui.PictureRecorder();
+      final recCanvas = Canvas(rec)
+        ..drawColor(const Color(0xFFFFFFFF), BlendMode.srcOver);
+      manager.drawSprite(
+        'nope',
+        GlideSpriteVariant.normal,
+        recCanvas,
+        0,
+        0,
+        20,
+        theme,
+      );
+      // No cache slot is reserved, so no load starts and nothing settles.
+      final img = await tester.runAsync(
+        () => rec.endRecording().toImage(20, 20),
+      );
+      final data = (await tester.runAsync(
+        () => img!.toByteData(format: ui.ImageByteFormat.rawRgba),
+      ))!;
+      expect(data.getUint32(0), 0xFFFFFFFF);
+    });
+  });
+
+  group('computeHeaderLayout', () {
+    test('the title starts after the icon when there is one', () {
+      final theme = GlideTheme.light();
+      final metrics = GlideTextMetrics();
+      final plain = computeHeaderLayout(
+        c: mapColumns(const [GlideGridColumn(title: 'A', width: 100)], 0)[0],
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 30,
+        theme: theme,
+        metrics: metrics,
+      );
+      expect(plain.iconBounds, isNull);
+      expect(plain.textBounds.x, theme.cellHorizontalPadding);
+
+      final withIcon = computeHeaderLayout(
+        c: mapColumns(
+          const [GlideGridColumn(title: 'A', width: 100, icon: 'headerString')],
+          0,
+        )[0],
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 30,
+        theme: theme,
+        metrics: metrics,
+      );
+      final icon = withIcon.iconBounds!;
+      // `drawX += Math.ceil(headerIconSize * 1.3)` (`:377-379`).
+      expect(icon.x, theme.cellHorizontalPadding);
+      expect(icon.width, theme.headerIconSize);
+      expect(icon.y, (30 - theme.headerIconSize) / 2);
+      expect(
+        withIcon.textBounds.x,
+        theme.cellHorizontalPadding + (theme.headerIconSize * 1.3).ceil(),
+      );
+    });
+
+    test('the overlay icon hangs off the icon by 9,6 at 18x18', () {
+      final theme = GlideTheme.light();
+      final layout = computeHeaderLayout(
+        c: mapColumns(
+          const [
+            GlideGridColumn(
+              title: 'A',
+              width: 100,
+              icon: 'headerArray',
+              overlayIcon: 'rowOwnerOverlay',
+            ),
+          ],
+          0,
+        )[0],
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 30,
+        theme: theme,
+        metrics: GlideTextMetrics(),
+      );
+      final icon = layout.iconBounds!;
+      final overlay = layout.iconOverlayBounds!;
+      expect(overlay.x, icon.x + 9);
+      expect(overlay.y, icon.y + 6);
+      expect(overlay.width, 18);
+      expect(overlay.height, 18);
+      // No indicator: nothing is measured and the bounds stay null.
+      expect(layout.indicatorIconBounds, isNull);
+    });
+
+    test('the indicator icon sits after the measured title', () {
+      final theme = GlideTheme.light();
+      final metrics = GlideTextMetrics();
+      final layout = computeHeaderLayout(
+        c: mapColumns(
+          const [
+            GlideGridColumn(
+              title: 'Title',
+              width: 200,
+              indicatorIcon: 'headerString',
+            ),
+          ],
+          0,
+        )[0],
+        x: 0,
+        y: 0,
+        width: 200,
+        height: 30,
+        theme: theme,
+        metrics: metrics,
+      );
+      final textWidth = metrics.width('Title', theme.headerTextStyle);
+      expect(layout.textBounds.width, textWidth);
+      final indicator = layout.indicatorIconBounds!;
+      expect(
+        indicator.x,
+        theme.cellHorizontalPadding +
+            textWidth +
+            theme.cellHorizontalPadding,
+      );
+      expect(indicator.width, theme.headerIconSize);
+      // The menu box is always produced, icon or not.
+      expect(layout.menuBounds.width, 30);
+      expect(layout.menuBounds.x, 200 - 30);
+    });
+  });
+
+  group('header icons', () {
+    /// Renders [columns] and returns the pixel at (x, y) of the header.
+    Future<int> shootHeader(
+      WidgetTester tester, {
+      required List<GlideGridColumn> columns,
+      required int x,
+      required int y,
+    }) async {
+      final key = GlobalKey();
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: SizedBox(
+            width: 400,
+            height: 300,
+            child: RepaintBoundary(
+              key: key,
+              child: GlideDataGrid(
+                props: GlideDataGridProps(
+                  width: 400,
+                  height: 300,
+                  columns: columns,
+                  rows: 3,
+                  rowHeight: const GlideRowHeight.fixed(30),
+                  headerHeight: 30,
+                  theme: GlideTheme.light(),
+                  verticalBorder: (_) => true,
+                  // `DataGrid` does not merge the built-in sprites — only
+                  // `DataEditorAll` does (`data-editor-all.tsx:13-15`) — so a
+                  // raw grid needs them handed over explicitly.
+                  headerIcons: glideSprites,
+                  getCellRenderer: GlideDefaultRendererLookup().forCell,
+                  getCellContent: (item, [_]) => const GlideTextCell(
+                    data: '',
+                    displayData: '',
+                  ),
+                  onItemHovered: (_) {},
+                  onMouseMove: (_) {},
+                  onMouseDown: (_) {},
+                  onMouseUp: (_, _) {},
+                  onContextMenu: (_, _) {},
+                  onCanvasFocused: () {},
+                  onCanvasBlur: () {},
+                  onCellFocused: (_) {},
+                  onKeyDown: (_) {},
+                  isFocused: true,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      // Let the sprite decode land, then let `onSettled` repaint.
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
+      await tester.pump();
+      return await tester.runAsync(() async {
+        final boundary = key.currentContext!.findRenderObject()!
+            as RenderRepaintBoundary;
+        final img = await boundary.toImage(pixelRatio: 1);
+        final data = (await img.toByteData(format: ui.ImageByteFormat.rawRgba))!;
+        // The boundary is the 800x600 test surface, not the 400x300 grid, so
+        // the stride has to come from the captured image.
+        final o = (y * img.width + x) * 4;
+        return data.getUint8(o) << 16 |
+            data.getUint8(o + 1) << 8 |
+            data.getUint8(o + 2);
+      }).then((v) => v ?? -1);
+    }
+
+    testWidgets('a column icon is painted in the header', (tester) async {
+      const plain = GlideGridColumn(title: 'A', width: 100);
+      const withIcon = GlideGridColumn(
+        title: 'A',
+        width: 100,
+        icon: 'headerString',
+      );
+      // (22, 9) sits on the icon's plate — inside the 18px box that starts at
+      // x = 8, right of the glyph and above the title — where a header with
+      // no icon is plain `bgHeader`.
+      final withIconPixel = await shootHeader(
+        tester,
+        columns: [withIcon, plain],
+        x: 22,
+        y: 9,
+      );
+      final plainPixel = await shootHeader(
+        tester,
+        columns: [plain, plain],
+        x: 22,
+        y: 9,
+      );
+      expect(
+        withIconPixel,
+        0x737383,
+        reason: 'the sprite plate must be painted in the header',
+      );
+      expect(plainPixel, 0xF7F7F8, reason: 'an empty header is just bgHeader');
+      expect(withIconPixel, isNot(plainPixel));
+    });
+
+    testWidgets('dropping headerIcons repaints the stale sprites away', (
+      tester,
+    ) async {
+      // One key for both pumps: the subtree has to be *updated* so that
+      // `didUpdateWidget` swaps the manager and `shouldRepaint` runs. A fresh
+      // key would tear the grid down and rebuild it from scratch, which
+      // exercises neither.
+      final key = GlobalKey();
+
+      Widget build(Map<String, GlideSpriteFn>? icons) => Directionality(
+        textDirection: TextDirection.ltr,
+        child: SizedBox(
+          width: 400,
+          height: 300,
+          child: RepaintBoundary(
+            key: key,
+            child: GlideDataGrid(
+              props: GlideDataGridProps(
+                width: 400,
+                height: 300,
+                columns: const [
+                  GlideGridColumn(
+                    title: 'A',
+                    width: 100,
+                    icon: 'headerString',
+                  ),
+                ],
+                rows: 3,
+                rowHeight: const GlideRowHeight.fixed(30),
+                headerHeight: 30,
+                theme: GlideTheme.light(),
+                verticalBorder: (_) => true,
+                headerIcons: icons,
+                getCellRenderer: GlideDefaultRendererLookup().forCell,
+                getCellContent: (item, [_]) => const GlideTextCell(
+                  data: '',
+                  displayData: '',
+                ),
+                onItemHovered: (_) {},
+                onMouseMove: (_) {},
+                onMouseDown: (_) {},
+                onMouseUp: (_, _) {},
+                onContextMenu: (_, _) {},
+                onCanvasFocused: () {},
+                onCanvasBlur: () {},
+                onCellFocused: (_) {},
+                onKeyDown: (_) {},
+                isFocused: true,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      Future<int> shoot() => tester.runAsync(() async {
+        final boundary = key.currentContext!.findRenderObject()!
+            as RenderRepaintBoundary;
+        final img = await boundary.toImage(pixelRatio: 1);
+        final data = (await img.toByteData(format: ui.ImageByteFormat.rawRgba))!;
+        final o = (9 * img.width + 22) * 4;
+        return data.getUint8(o) << 16 |
+            data.getUint8(o + 1) << 8 |
+            data.getUint8(o + 2);
+      }).then((v) => v ?? -1);
+
+      Future<void> settle({bool expectDirty = false}) async {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 80)),
+        );
+        if (expectDirty) {
+          // `onSettled` has to mark the grid dirty, or the decoded sprite
+          // never reaches the screen — no widget rebuild is coming.
+          expect(
+            key.currentContext!.findRenderObject()!.debugNeedsPaint,
+            isTrue,
+            reason: 'a landed sprite must schedule a repaint',
+          );
+        }
+        await tester.pump();
+      }
+
+      await tester.pumpWidget(build(glideSprites));
+      await settle(expectDirty: true);
+      expect(await shoot(), 0x737383, reason: 'painted first');
+
+      // Same grid, `headerIcons` withdrawn: `didUpdateWidget` swaps in a fresh
+      // manager and `_argEquals` has to notice, or the plate stays forever.
+      await tester.pumpWidget(build(null));
+      await settle();
+      expect(
+        await shoot(),
+        0xF7F7F8,
+        reason: 'the stale sprite must be painted over',
       );
     });
   });
