@@ -68,6 +68,7 @@ class GlideDataEditorProps {
     this.rangeSelectionColumnSpanning = true,
     this.spanRangeBehavior = GlideSpanRangeBehavior.standard,
     this.scrollToActiveCell = true,
+    this.editorBloom,
     this.strict = false,
     this.columnSelectionModeMulti = false,
     this.rowMarkers,
@@ -115,6 +116,7 @@ class GlideDataEditorProps {
     this.allowedFillDirections = GlideFillHandleDirection.orthogonal,
     this.minColumnWidth = 50,
     this.maxColumnWidth = 500,
+    this.maxColumnAutoWidth,
     this.overscrollY = 0,
     this.overscrollX = 0,
     this.scaleToRem = false,
@@ -175,6 +177,12 @@ class GlideDataEditorProps {
   /// `scrollToActiveCell` (`data-editor.tsx:691`): false keeps the viewport
   /// put when the selection moves, instead of following it.
   final bool scrollToActiveCell;
+
+  /// `editorBloom` (`data-editor.tsx:684`): overrides how far the overlay
+  /// editor grows past the target cell
+  /// (`data-grid-overlay-editor.tsx:231-251`). Null keeps the `[1, 1]`
+  /// default.
+  final (double, double)? editorBloom;
 
   /// `experimental.strict` (`data-grid.ts:249`): every content lookup outside
   /// the visible window resolves to a loading cell, not just the ones the
@@ -298,6 +306,11 @@ class GlideDataEditorProps {
   /// `minColumnWidthIn`/`maxColumnWidthIn` (`data-editor.tsx:862-863`).
   final double minColumnWidth;
   final double maxColumnWidth;
+
+  /// `maxColumnAutoWidthIn` (`data-editor.tsx:450`): the cap on how wide an
+  /// auto-*sized* column may grow. Defaults to [maxColumnWidth] (`:924`).
+  /// Drag-resizing is unaffected — it keeps using [maxColumnWidth].
+  final double? maxColumnAutoWidth;
 
   /// `onColumnMoved` / `onColumnProposeMove` (`data-grid-dnd.tsx:44-57`).
   /// Returning false from [onColumnProposeMove] rejects the move.
@@ -821,6 +834,20 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     );
   }
 
+  /// `minColumnWidth` / `maxColumnWidth` / `maxColumnAutoWidth`
+  /// (`data-editor.tsx:922-924`): the raw props floored so the minimum can
+  /// never exceed the maximum, plus the auto-sizing cap that defaults to
+  /// `maxColumnWidth`.
+  double get _minColumnWidth => math.max(widget.props.minColumnWidth, 20);
+
+  double get _maxColumnWidth =>
+      math.max(widget.props.maxColumnWidth, _minColumnWidth);
+
+  double get _maxColumnAutoWidth => math.max(
+    widget.props.maxColumnAutoWidth ?? _maxColumnWidth,
+    _minColumnWidth,
+  );
+
   void _rebuildSizedColumns() {
     final p = widget.props;
     if (identical(_sizedKeyColumns, p.columns) &&
@@ -836,8 +863,10 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       rows: p.rows,
       getCellsForSelection: _getCellsForSelection,
       clientWidth: _viewportWidth,
-      minColumnWidth: p.minColumnWidth,
-      maxColumnWidth: p.maxColumnWidth,
+      minColumnWidth: _minColumnWidth,
+      // `useColumnSizer`'s `maxColumnWidth` parameter is fed
+      // `maxColumnAutoWidth` upstream (`data-editor.tsx:1118-1126`).
+      maxColumnWidth: _maxColumnAutoWidth,
       theme: _theme,
       getCellRenderer: _renderers.forCell,
       metrics: _metrics,
@@ -1832,8 +1861,8 @@ class _GlideDataEditorState extends State<GlideDataEditor>
     final column = widget.props.columns[col];
     return clampDouble(
       (width - (column.extension?.growOffset ?? 0)).roundToDouble(),
-      widget.props.minColumnWidth.ceilToDouble(),
-      widget.props.maxColumnWidth.floorToDouble(),
+      _minColumnWidth.ceilToDouble(),
+      _maxColumnWidth.floorToDouble(),
     );
   }
 
@@ -2014,8 +2043,8 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       column: p.columns[col],
       colIndex: col,
       selectedData: cells,
-      minColumnWidth: p.minColumnWidth,
-      maxColumnWidth: p.maxColumnWidth,
+      minColumnWidth: _minColumnWidth,
+      maxColumnWidth: _maxColumnWidth,
       removeOutliers: false,
       getCellRenderer: _renderers.forCell,
       metrics: _metrics,
@@ -3098,6 +3127,7 @@ class _GlideDataEditorState extends State<GlideDataEditor>
       highlight: overlay.highlight,
       getCellRenderer: _renderers.forCell,
       initialValue: overlay.initialValue,
+      bloom: widget.props.editorBloom,
       validateCell: null,
       activation: overlay.activation is GlideKeyboardCellActivation
           ? null

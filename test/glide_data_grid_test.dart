@@ -1558,6 +1558,9 @@ void main() {
       int columnCount = 6,
       bool unsizedColumns = false,
       double minColumnWidth = 50,
+      double maxColumnWidth = 500,
+      double? maxColumnAutoWidth,
+      (double, double)? editorBloom,
       double? scrollOffsetY,
       double? scrollOffsetX,
       bool strict = false,
@@ -1599,7 +1602,8 @@ void main() {
                         title: 'C$i',
                         id: 'c$i',
                         group: group,
-                        width: 100,
+                        // No `width`: `useColumnSizer` skips columns that are
+                        // already sized (`use-column-sizer.ts:100-107`).
                       )
                     : GlideGridColumn(title: 'C$i', width: 100, group: group),
             ],
@@ -1609,6 +1613,9 @@ void main() {
             rows: currentRows,
             rowGrouping: rowGrouping,
             minColumnWidth: minColumnWidth,
+            maxColumnWidth: maxColumnWidth,
+            maxColumnAutoWidth: maxColumnAutoWidth,
+            editorBloom: editorBloom,
             scrollOffsetY: scrollOffsetY,
             scrollOffsetX: scrollOffsetX,
             strict: strict,
@@ -3349,6 +3356,105 @@ void main() {
       // column is mangled, and `onGridSelectionChange` reports marker-free
       // coordinates (`data-editor.tsx:1009`), so `r3 c2` lands on [2, 3].
       expect(selectionLog.last.current!.cell, const GlideItem(2, 3));
+    });
+
+    testWidgets('maxColumnAutoWidth caps auto-sized columns', (tester) async {
+      // One very long cell so the measurement wants to run away; only the
+      // auto-sizing cap keeps the column narrow.
+      Future<double> widthWith(double? autoCap) async {
+        await tester.pumpWidget(
+          buildEditor(
+            columnCount: 1,
+            unsizedColumns: true,
+            minColumnWidth: 10,
+            maxColumnWidth: 500,
+            maxColumnAutoWidth: autoCap,
+            cellsForSelection: (region) => [
+              [
+                for (
+                  var x = region.x.toInt();
+                  x < region.x + region.width;
+                  x++
+                )
+                  const GlideTextCell(
+                    data: 'a very long piece of text that will not fit at all',
+                    displayData:
+                        'a very long piece of text that will not fit at all',
+                  ),
+              ],
+            ],
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Click at x=150: lands in the column while it is wide, and falls
+        // out of bounds entirely once the cap narrows it to 60px (which
+        // logs nothing at all, hence the `isNotEmpty` guard).
+        final past = await tester.startGesture(
+          const Offset(150, 45),
+          kind: PointerDeviceKind.mouse,
+        );
+        await past.up();
+        await tester.pumpAndSettle();
+        final reached =
+            selectionLog.isNotEmpty && selectionLog.last.current != null;
+
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pumpAndSettle();
+        return reached ? 200.0 : 60.0;
+      }
+
+      // No cap: `maxColumnAutoWidth` falls back to `maxColumnWidth` and the
+      // long text is measured all the way out (`data-editor.tsx:924`).
+      expect(await widthWith(null), 200.0);
+
+      // With the cap the column stops at 60px, so the same click misses.
+      expect(await widthWith(60), 60.0);
+    });
+
+    testWidgets('editorBloom grows the overlay past the cell', (tester) async {
+      Future<(double, double)> bloomOf((double, double)? bloom) async {
+        await tester.pumpWidget(
+          buildEditor(columnCount: 3, editorBloom: bloom),
+        );
+        await tester.pumpAndSettle();
+
+        // Two clicks on the same cell open the overlay.
+        for (var i = 0; i < 2; i++) {
+          final gesture = await tester.startGesture(
+            const Offset(150, 45),
+            kind: PointerDeviceKind.mouse,
+          );
+          await gesture.up();
+          await tester.pumpAndSettle();
+        }
+        expect(find.byType(GlideDataGridOverlayEditor), findsOneWidget);
+
+        final overlay = tester.widget<GlideDataGridOverlayEditor>(
+          find.byType(GlideDataGridOverlayEditor),
+        );
+        final positioned = tester.widget<Positioned>(
+          find
+              .descendant(
+                of: find.byType(GlideDataGridOverlayEditor),
+                matching: find.byType(Positioned),
+              )
+              .first,
+        );
+        // `left = target.x - bloomX` (`data-grid-overlay-editor.tsx:231-251`).
+        final result = (
+          overlay.target.x - (positioned.left ?? 0),
+          overlay.target.y - (positioned.top ?? 0),
+        );
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pumpAndSettle();
+        return result;
+      }
+
+      // The default bloom is [1, 1].
+      expect(await bloomOf(null), (1.0, 1.0));
+      // ...and `editorBloom` overrides both axes.
+      expect(await bloomOf((10, 20)), (10.0, 20.0));
     });
 
     testWidgets('the remaining data-editor callbacks all fire', (tester) async {
