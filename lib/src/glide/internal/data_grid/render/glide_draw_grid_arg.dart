@@ -130,6 +130,8 @@ class GlideDrawGridArg {
     this.disabledRows = const GlideCompactSelection.empty(),
     this.prelightCells,
     this.highlightRegions,
+    this.drawHeaderCallback,
+    this.drawCellCallback,
     this.hyperWrapping = false,
     this.enqueue,
     this.minimumCellWidth = 10,
@@ -174,6 +176,11 @@ class GlideDrawGridArg {
   final GlideCompactSelection disabledRows;
   final List<GlideItem>? prelightCells;
   final List<GlideHighlight>? highlightRegions;
+
+  /// `drawHeaderCallback` / `drawCellCallback` (`draw-grid-arg.ts:65-66`).
+  final GlideDrawHeaderCallback? drawHeaderCallback;
+  final GlideDrawCellCallback? drawCellCallback;
+
   final bool hyperWrapping;
   final void Function(GlideItem item)? enqueue;
   final double minimumCellWidth;

@@ -84,6 +84,8 @@ class GlideDataGridProps {
     this.minimumCellWidth = 10,
     this.onHeaderMenuClick,
     this.onHeaderIndicatorClick,
+    this.drawHeader,
+    this.drawCell,
     this.imageLoader,
     this.firstColAccessible = true,
     this.disableAccessibilityTree = false,
@@ -132,6 +134,12 @@ class GlideDataGridProps {
   onHeaderMenuClick;
   final void Function(int col, GlideRectangle screenPosition)?
   onHeaderIndicatorClick;
+
+  /// `drawHeader` / `drawCell` (`data-grid.tsx:223,225`): take over the paint
+  /// of a header or a cell. Indices are *mangled*; `GlideDataEditorProps`
+  /// strips the row-marker column first.
+  final GlideDrawHeaderCallback? drawHeader;
+  final GlideDrawCellCallback? drawCell;
 
   /// `imageWindowLoader` (`data-grid.tsx`): when null the grid owns one and
   /// disposes it with itself.
@@ -1138,6 +1146,8 @@ class _GlideDataGridState extends State<GlideDataGrid>
       disabledRows: p.disabledRows ?? const GlideCompactSelection.empty(),
       prelightCells: p.prelightCells,
       highlightRegions: p.highlightRegions,
+      drawHeaderCallback: p.drawHeader,
+      drawCellCallback: p.drawCell,
       hyperWrapping: p.hyperWrapping,
       enqueue: p.enqueue ?? _enqueue,
       minimumCellWidth: p.minimumCellWidth,

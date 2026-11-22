@@ -65,6 +65,7 @@ class GlideDrawCellArgs {
   final GlideImageWindowLoader? imageLoader;
 
   GlideDrawCellArgs copyWith({
+    int? col,
     GlideRectangle? rect,
     GlideGridCell? cell,
     bool? highlighted,
@@ -72,7 +73,7 @@ class GlideDrawCellArgs {
   }) => GlideDrawCellArgs(
     canvas: canvas,
     theme: theme,
-    col: col,
+    col: col ?? this.col,
     row: row,
     rect: rect ?? this.rect,
     cell: cell ?? this.cell,
@@ -85,6 +86,71 @@ class GlideDrawCellArgs {
     frameTime: frameTime,
     metrics: metrics,
     requestAnimationFrame: requestAnimationFrame,
+  );
+}
+
+/// `DrawHeaderCallback` (`data-grid-types.ts:41-60`): replaces the default
+/// header paint. Call [drawContent] to run it, or do not and take over.
+typedef GlideDrawHeaderCallback =
+    void Function(GlideDrawHeaderArgs args, VoidCallback drawContent);
+
+/// `DrawCellCallback` (`data-grid-types.ts:61-76`): same contract for cells.
+typedef GlideDrawCellCallback =
+    void Function(GlideDrawCellArgs args, VoidCallback drawContent);
+
+/// The `args` half of [GlideDrawHeaderCallback]
+/// (`data-grid-types.ts:42-59`).
+@immutable
+class GlideDrawHeaderArgs {
+  const GlideDrawHeaderArgs({
+    required this.canvas,
+    required this.theme,
+    required this.rect,
+    required this.column,
+    required this.columnIndex,
+    required this.isSelected,
+    required this.hoverAmount,
+    required this.isHovered,
+    required this.hasSelectedCell,
+    required this.menuBounds,
+    this.hoverX,
+    this.hoverY,
+  });
+
+  final Canvas canvas;
+  final GlideTheme theme;
+
+  /// The header cell's box, in grid coordinates.
+  final GlideRectangle rect;
+  final GlideMappedColumn column;
+
+  /// `columnIndex` is the *mangled* index; `GlideDataEditorProps.drawHeader`
+  /// strips the row-marker column before handing it to a consumer.
+  final int columnIndex;
+  final bool isSelected;
+  final double hoverAmount;
+  final bool isHovered;
+  final bool hasSelectedCell;
+
+  /// `menuBounds` (`data-grid-types.ts:53`): where the header menu button
+  /// sits, for a consumer that wants to draw it.
+  final GlideRectangle menuBounds;
+  final double? hoverX;
+  final double? hoverY;
+
+  GlideDrawHeaderArgs copyWith({int? columnIndex}) => GlideDrawHeaderArgs(
+    canvas: canvas,
+    theme: theme,
+    rect: rect,
+    column: column,
+    columnIndex: columnIndex ?? this.columnIndex,
+    isSelected: isSelected,
+    hoverAmount: hoverAmount,
+    isHovered: isHovered,
+    hasSelectedCell: hasSelectedCell,
+    menuBounds: menuBounds,
+    hoverX: hoverX,
+    hoverY: hoverY,
   );
 }
 

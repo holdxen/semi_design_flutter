@@ -204,7 +204,11 @@ void main() {
     late List<List<GlideGridCell>> cells;
     late List<GlideItem> locationLog;
 
-    Widget buildGrid({bool groups = false}) {
+    Widget buildGrid({
+      bool groups = false,
+      GlideDrawCellCallback? drawCell,
+      GlideGetCellRenderer? getCellRenderer,
+    }) {
       locationLog = [];
       return Directionality(
         textDirection: TextDirection.ltr,
@@ -221,7 +225,9 @@ void main() {
               headerHeight: 30,
               enableGroups: groups,
               getCellContent: (item, [_]) => cells[item.row][item.col],
-              getCellRenderer: GlideDefaultRendererLookup().forCell,
+              getCellRenderer:
+                  getCellRenderer ?? GlideDefaultRendererLookup().forCell,
+              drawCell: drawCell,
               theme: GlideTheme.light(),
               verticalBorder: (_) => true,
               onItemHovered: (_) {},
@@ -374,6 +380,51 @@ void main() {
       await tester.pump();
       await tester.pump();
       expect(frameTimes.length, greaterThan(afterFirstFrame));
+    });
+
+    testWidgets('drawCell can take over a cell and skip the default paint', (
+      tester,
+    ) async {
+      final seen = <GlideItem>[];
+      final draws = <int>[];
+
+      // A consumer that never calls `drawContent` owns the paint entirely
+      // (`data-grid-render.cells.ts:545-547`).
+      await tester.pumpWidget(
+        buildGrid(
+          drawCell: (args, draw) => seen.add(GlideItem(args.col, args.row)),
+          getCellRenderer: (cell) => FrameCountingRenderer(draws),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(seen, isNotEmpty);
+      expect(
+        draws,
+        isEmpty,
+        reason: 'skipping drawContent must skip the renderer too',
+      );
+    });
+
+    testWidgets('drawContent runs the default renderer paint', (tester) async {
+      final seen = <GlideItem>[];
+      final draws = <int>[];
+
+      await tester.pumpWidget(
+        buildGrid(
+          drawCell: (args, draw) {
+            seen.add(GlideItem(args.col, args.row));
+            draw();
+          },
+          getCellRenderer: (cell) => FrameCountingRenderer(draws),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(seen, isNotEmpty);
+      // Marker/new-row cells are inner-only and paint through the `else`
+      // branch, so the renderer is called at least as often as the consumer.
+      expect(draws.length, greaterThanOrEqualTo(seen.length));
     });
 
     testWidgets('paints headers and cells', (tester) async {
@@ -1683,6 +1734,9 @@ void main() {
           GlideSpanRangeBehavior.standard,
       void Function(List<GlideItem> results, int navIndex)?
       onSearchResultsChanged,
+      GlideDrawCellCallback? drawCell,
+      GlideDrawHeaderCallback? drawHeader,
+      GlideRendererLookup? rendererLookup,
     }) {
       edits = [];
       selectionLog = [];
@@ -1718,6 +1772,9 @@ void main() {
             scrollOffsetX: scrollOffsetX,
             strict: strict,
             freezeTrailingRows: freezeTrailingRows,
+            rendererLookup: rendererLookup,
+            drawCell: drawCell,
+            drawHeader: drawHeader,
             keybindings: keybindingsOverride ?? keybindings,
             onCellFocused: onCellFocused,
             onVisibleRegionChanged: onVisibleRegionChanged,
@@ -3663,6 +3720,47 @@ void main() {
 
       expect(tester.takeException(), isNull);
       expect(find.byType(GlideDataGridOverlayEditor), findsOneWidget);
+    });
+
+    testWidgets('drawCell and drawHeader strip the row-marker column', (
+      tester,
+    ) async {
+      final cells = <GlideItem>[];
+      final headers = <GlideDrawHeaderArgs>[];
+
+      // 3 columns + the marker = 4 mangled columns, all inside the 400px
+      // viewport, so nothing is clipped away and the indices are exact.
+      await tester.pumpWidget(
+        buildEditor(
+          columnCount: 3,
+          rowMarkers: const GlideRowMarkerOptions(),
+          drawCell: (args, draw) {
+            cells.add(GlideItem(args.col, args.row));
+            draw();
+          },
+          drawHeader: (args, draw) {
+            headers.add(args);
+            draw();
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(cells, isNotEmpty);
+      // `col - rowMarkerOffset` (`data-editor.tsx:1062`): mangled 1..3 must
+      // arrive as 0..2. Without the strip the set would be {1,2,3}.
+      expect(cells.map((i) => i.col).toSet(), {0, 1, 2});
+      // The marker column is inner-only and never reaches a consumer
+      // (`data-grid-render.cells.ts:545`), so -1 never shows up.
+      expect(cells.any((i) => i.col < 0), isFalse);
+
+      expect(headers, isNotEmpty);
+      // `columnIndex - rowMarkerOffset` (`data-editor.tsx:1052`). The marker
+      // column's own header lands on -1, exactly as upstream does.
+      expect(headers.map((h) => h.columnIndex).toSet(), {-1, 0, 1, 2});
+      // `getHeaderMenuBounds` (`data-grid-render.header.ts:289-297`).
+      expect(headers.first.menuBounds.width, 30);
+      expect(headers.first.rect.width, greaterThan(0));
     });
 
     testWidgets('the remaining data-editor callbacks all fire', (tester) async {

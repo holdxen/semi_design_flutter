@@ -110,6 +110,8 @@ class GlideDataEditorProps {
     this.onGroupHeaderRenamed,
     this.onMouseMove,
     this.getRowThemeOverride,
+    this.drawHeader,
+    this.drawCell,
     this.getGroupDetails,
     this.highlightRegions,
     this.fillHandle,
@@ -271,6 +273,14 @@ class GlideDataEditorProps {
   /// `getRowThemeOverride` (`row-grouping.ts:298-310`): the indexed form
   /// `(row, groupIndex, contentIndex)` upstream exposes.
   final GlideGetRowThemeOverrideIndexed? getRowThemeOverride;
+
+  /// `drawHeader` / `drawCell` (`data-grid.tsx:223,225`, re-exported on
+  /// `DataEditorProps` by `data-editor.tsx:1048-1065`): take over the paint
+  /// of a header or a cell. The indices are *mangled* here too; the
+  /// row-marker column is stripped before the consumer sees them, matching
+  /// `columnIndex - rowMarkerOffset` / `col - rowMarkerOffset` upstream.
+  final GlideDrawHeaderCallback? drawHeader;
+  final GlideDrawCellCallback? drawCell;
   final GlideGroupDetails Function(String group)? getGroupDetails;
   final List<GlideHighlight>? highlightRegions;
 
@@ -2954,6 +2964,18 @@ class _GlideDataEditorState extends State<GlideDataEditor>
               : null,
           highlightRegions: _highlightRegions(),
           getRowThemeOverride: _rowThemeOverride,
+          drawHeader: widget.props.drawHeader == null
+              ? null
+              : (args, draw) => widget.props.drawHeader!(
+                    args.copyWith(columnIndex: args.columnIndex - _markerOffset),
+                    draw,
+                  ),
+          drawCell: widget.props.drawCell == null
+              ? null
+              : (args, draw) => widget.props.drawCell!(
+                    args.copyWith(col: args.col - _markerOffset),
+                    draw,
+                  ),
           getGroupDetails: _groupDetails,
           metrics: _metrics,
           minimumCellWidth: 10,

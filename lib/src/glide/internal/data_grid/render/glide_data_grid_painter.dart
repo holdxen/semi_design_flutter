@@ -18,11 +18,29 @@ import 'package:flutter/widgets.dart';
 
 import '../../../cells/glide_cell_types.dart';
 import '../../../common/glide_math.dart';
+import '../../../common/glide_utils.dart';
 import 'glide_draw_checkbox.dart';
 import 'glide_draw_grid_arg.dart';
 import 'glide_render_walk.dart';
 
 /// `drawGrid` (`data-grid-render.ts:115-797`).
+/// `getHeaderMenuBounds` (`data-grid-render.header.ts:289-297`). The RTL
+/// branch is dropped along with the rest of the port's RTL support.
+GlideRectangle getHeaderMenuBounds(
+  double x,
+  double y,
+  double width,
+  double height,
+) {
+  const size = 30.0; // `menuButtonSize`
+  return GlideRectangle(
+    x: x + width - size,
+    y: math.max(y, y + height / 2 - size / 2),
+    width: size,
+    height: math.min(size, height),
+  );
+}
+
 class GlideDataGridPainter extends CustomPainter {
   GlideDataGridPainter(this.arg, {super.repaint});
 
@@ -385,7 +403,16 @@ class GlideDataGridPainter extends CustomPainter {
       requestAnimationFrame: ([state]) => animationFrameRequested = true,
     );
 
-    renderer.draw(args);
+    // `if (drawCellCallback !== undefined && !isInnerOnlyCell(...))`
+    // (`data-grid-render.cells.ts:545-547`): marker and new-row cells are
+    // inner-only and never reach a consumer.
+    void drawContent() => renderer.draw(args);
+    final cellCallback = arg.drawCellCallback;
+    if (cellCallback != null && !glideIsInnerOnlyCell(cell)) {
+      cellCallback(args, drawContent);
+    } else {
+      drawContent();
+    }
 
     // `if (needsAnim || animationFrameRequested) enqueue?.(allocatedItem)`
     // (`data-grid-render.cells.ts:561`). Enqueueing only once the flash was
@@ -548,6 +575,10 @@ class GlideDataGridPainter extends CustomPainter {
         final hasSelectedCell = a.selection.current?.cell.col == c.sourceIndex;
         final noHover = a.dragAndDropState != null || a.isResizing;
         final hover = noHover ? 0.0 : (a.hoverValues[headerItem] ?? 0);
+        // `hoveredBoolean` (`data-grid-render.header.ts:95`).
+        final hovered = !noHover && a.hoverInfo == headerItem;
+        final hoverX = hovered ? a.hoverPosition?.dx : null;
+        final hoverY = hovered ? a.hoverPosition?.dy : null;
 
         // `data-grid-render.header.ts:86-109`: the fill starts one pixel in
         // so the grid line of column 0 survives, and a selected column is
@@ -576,71 +607,112 @@ class GlideDataGridPainter extends CustomPainter {
           }
         }
 
-        // `drawHeaderInner`'s marker branch (`data-grid-render.header.ts:
-        // 433-459`): the marker column shows a checkbox instead of a title.
-        final ext = c.extension;
-        if (ext?.rowMarker != null && ext!.headerRowMarkerDisabled != true) {
-          final checked = ext.rowMarkerChecked ?? GlideBooleanValue.empty;
-          final alwaysVisible = ext.headerRowMarkerAlwaysVisible;
-          // `globalAlpha = hoverAmount` unless the marker is always visible
-          // (`data-grid-render.header.ts:435-457`).
-          final alpha = checked == GlideBooleanValue.checked || alwaysVisible
-              ? 1.0
-              : hover;
-          if (alpha > 0) {
-            final markerTheme =
-                ext.headerRowMarkerTheme?.applyTo(theme) ?? theme;
-            final markerRect = Rect.fromLTWH(
-              drawX,
-              headerTop,
-              c.width,
-              totalHeaderHeight - headerTop,
-            );
-            canvas.saveLayer(
-              markerRect,
-              Paint()..color = const Color(0xFFFFFFFF).withValues(alpha: alpha),
-            );
-            drawCheckbox(
-              canvas,
-              markerTheme,
-              checked,
-              drawX,
-              headerTop,
-              c.width,
-              totalHeaderHeight - headerTop,
-              maxSize: theme.checkboxMaxSize,
-              alignment: GlideContentAlign.center,
-              style: ext.rowMarker!,
-            );
-            canvas.restore();
+        // Everything below is upstream's `drawHeaderInner`
+        // (`data-grid-render.header.ts:415-...`): the marker column shows a
+        // checkbox instead of a title, then the title is painted.
+        void drawContent() {
+          // `drawHeaderInner`'s marker branch (`data-grid-render.header.ts:
+          // 433-459`): the marker column shows a checkbox instead of a title.
+          final ext = c.extension;
+          if (ext?.rowMarker != null && ext!.headerRowMarkerDisabled != true) {
+            final checked = ext.rowMarkerChecked ?? GlideBooleanValue.empty;
+            final alwaysVisible = ext.headerRowMarkerAlwaysVisible;
+            // `globalAlpha = hoverAmount` unless the marker is always visible
+            // (`data-grid-render.header.ts:435-457`).
+            final alpha = checked == GlideBooleanValue.checked || alwaysVisible
+                ? 1.0
+                : hover;
+            if (alpha > 0) {
+              final markerTheme =
+                  ext.headerRowMarkerTheme?.applyTo(theme) ?? theme;
+              final markerRect = Rect.fromLTWH(
+                drawX,
+                headerTop,
+                c.width,
+                totalHeaderHeight - headerTop,
+              );
+              canvas.saveLayer(
+                markerRect,
+                Paint()..color = const Color(0xFFFFFFFF).withValues(alpha: alpha),
+              );
+              drawCheckbox(
+                canvas,
+                markerTheme,
+                checked,
+                drawX,
+                headerTop,
+                c.width,
+                totalHeaderHeight - headerTop,
+                maxSize: theme.checkboxMaxSize,
+                alignment: GlideContentAlign.center,
+                style: ext.rowMarker!,
+              );
+              canvas.restore();
+            }
+            return;
           }
-          return null;
+
+          final style = theme.headerTextStyle.copyWith(
+            color: selected ? theme.textHeader : theme.textHeader,
+          );
+          final available = math.max(
+            1.0,
+            c.width -
+                theme.cellHorizontalPadding * 2 -
+                (c.hasMenu ? theme.headerIconSize : 0),
+          );
+          final painter = a.metrics.painter(
+            c.title,
+            style,
+            maxWidth: available,
+            ellipsis: true,
+          );
+          painter.paint(
+            canvas,
+            Offset(
+              drawX + theme.cellHorizontalPadding,
+              headerTop +
+                  (totalHeaderHeight - headerTop) / 2 -
+                  painter.height / 2,
+            ),
+          );
         }
 
-        final style = theme.headerTextStyle.copyWith(
-          color: selected ? theme.textHeader : theme.textHeader,
-        );
-        final available = math.max(
-          1.0,
-          c.width -
-              theme.cellHorizontalPadding * 2 -
-              (c.hasMenu ? theme.headerIconSize : 0),
-        );
-        final painter = a.metrics.painter(
-          c.title,
-          style,
-          maxWidth: available,
-          ellipsis: true,
-        );
-        painter.paint(
-          canvas,
-          Offset(
-            drawX + theme.cellHorizontalPadding,
-            headerTop +
-                (totalHeaderHeight - headerTop) / 2 -
-                painter.height / 2,
-          ),
-        );
+        // `if (drawHeaderCallback !== undefined)` (`data-grid-render.header
+        // .ts:634-672`): the consumer gets `drawContent` and decides whether
+        // the default header paint runs.
+        final headerCallback = a.drawHeaderCallback;
+        if (headerCallback != null) {
+          headerCallback(
+            GlideDrawHeaderArgs(
+              canvas: canvas,
+              theme: theme,
+              rect: GlideRectangle(
+                x: drawX,
+                y: headerTop,
+                width: c.width,
+                height: totalHeaderHeight - headerTop,
+              ),
+              column: c,
+              columnIndex: c.sourceIndex,
+              isSelected: selected,
+              hoverAmount: hover,
+              isHovered: hovered,
+              hasSelectedCell: hasSelectedCell,
+              menuBounds: getHeaderMenuBounds(
+                drawX,
+                headerTop,
+                c.width,
+                totalHeaderHeight - headerTop,
+              ),
+              hoverX: hoverX,
+              hoverY: hoverY,
+            ),
+            drawContent,
+          );
+        } else {
+          drawContent();
+        }
 
         return null;
       },
