@@ -3599,6 +3599,72 @@ void main() {
       expect(calls, 2);
     });
 
+    testWidgets('the overlay is pulled back inside when the cell is at the '
+        'right edge', (tester) async {
+      await tester.pumpWidget(buildEditor(columnCount: 4));
+      await tester.pumpAndSettle();
+
+      // Column 3 spans x=300..400 in the 400px-wide grid, so the overlay's
+      // `minWidth` (cell width + bloom) no longer fits in the space to its
+      // right. `useStayOnScreen` (`use-stay-on-screen.ts:40`) is what pulls
+      // the box back until its far edge is 10px inside the viewport.
+      for (var i = 0; i < 2; i++) {
+        final gesture = await tester.startGesture(
+          const Offset(350, 45),
+          kind: PointerDeviceKind.mouse,
+        );
+        await gesture.up();
+        await tester.pumpAndSettle();
+      }
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(GlideDataGridOverlayEditor), findsOneWidget);
+
+      // The box must be *inside* the grid, not merely built: the Stack clips,
+      // so an overflowing editor would be cut off rather than crash.
+      final overlay = tester.getRect(find.byType(GlideDataGridOverlayEditor));
+      final box = tester.getRect(
+        find
+            .descendant(
+              of: find.byType(GlideDataGridOverlayEditor),
+              matching: find.byType(ConstrainedBox),
+            )
+            .first,
+      );
+      expect(box.left, greaterThanOrEqualTo(overlay.left));
+      expect(box.right, lessThanOrEqualTo(overlay.right));
+    });
+
+    testWidgets('a column wider than the overlay cap does not blow up the '
+        'constraints', (tester) async {
+      // `maxColumnWidth` defaults to 500, so a column may legitimately be
+      // wider than the overlay's own `max-width: 400px`. CSS lets
+      // `min-width` win over `max-width` (`data-grid-overlay-editor-style.tsx`);
+      // `BoxConstraints` asserts instead. Such a box cannot fit in the grid,
+      // so only the assert is in scope here.
+      await tester.pumpWidget(
+        buildEditor(
+          columnCount: 3,
+          unsizedColumns: true,
+          minColumnWidth: 450,
+          maxColumnWidth: 500,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      for (var i = 0; i < 2; i++) {
+        final gesture = await tester.startGesture(
+          const Offset(50, 45),
+          kind: PointerDeviceKind.mouse,
+        );
+        await gesture.up();
+        await tester.pumpAndSettle();
+      }
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(GlideDataGridOverlayEditor), findsOneWidget);
+    });
+
     testWidgets('the remaining data-editor callbacks all fire', (tester) async {
       final log = <String>[];
       await tester.pumpWidget(

@@ -227,6 +227,11 @@ class _GlideDataGridOverlayEditorState
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxTop = math.max(0.0, constraints.maxHeight - minHeight - 10);
+        // `useStayOnScreen` (`use-stay-on-screen.ts:40`) pulls the box back
+        // until its far edge is `10`px inside the viewport; `maxTop` spends
+        // the same budget on the bottom edge, this does it on the right.
+        final maxLeft = math.max(0.0, constraints.maxWidth - minWidth - 10);
+        final effectiveLeft = left.clamp(0.0, maxLeft);
 
         // `gdg-pad` (`data-grid-overlay-editor-style.tsx:52-54`).
         final padding = (resolved?.pad ?? true)
@@ -242,7 +247,13 @@ class _GlideDataGridOverlayEditorState
           constraints: BoxConstraints(
             minWidth: minWidth,
             minHeight: minHeight,
-            maxWidth: math.min(400, constraints.maxWidth - left),
+            // CSS lets `min-width` win over `max-width`
+            // (`data-grid-overlay-editor-style.tsx:26-27`); `BoxConstraints`
+            // asserts instead, so the wider of the two has to be chosen here.
+            maxWidth: math.max(
+              minWidth,
+              math.min(400, constraints.maxWidth - effectiveLeft),
+            ),
           ),
           child: Container(
             padding: padding,
@@ -296,7 +307,7 @@ class _GlideDataGridOverlayEditorState
               child: const ColoredBox(color: Color(0x00FFFFFF)),
             ),
             Positioned(
-              left: left,
+              left: effectiveLeft,
               top: top.clamp(0.0, maxTop),
               child: Focus(
                 focusNode: _focusNode,
