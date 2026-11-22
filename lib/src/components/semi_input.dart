@@ -121,6 +121,8 @@ class SemiInput extends StatefulWidget {
     this.hideSuffix = false,
     this.clearIcon,
     this.maxLength,
+    this.keyboardType,
+    this.inputFormatters,
     this.onChanged,
     this.onEnterPress,
     this.onFocusChange,
@@ -198,6 +200,13 @@ class SemiInput extends StatefulWidget {
 
   /// Maximum length in UTF-16 code units; `0` forces the value empty.
   final int? maxLength;
+
+  /// Keyboard exposed to the soft keyboard. Defaults to [TextInputType.text];
+  /// glide's number editor uses [TextInputType.number].
+  final TextInputType? keyboardType;
+
+  /// Extra formatters applied before [maxLength] truncation.
+  final List<TextInputFormatter>? inputFormatters;
 
   /// Fires on every edit, also during IME composition (the upstream
   /// `composition` switch and the composition callbacks are documented-only
@@ -723,11 +732,13 @@ class _SemiInputState extends State<SemiInput> {
                                     widget.mode == SemiInputMode.password &&
                                     _eyeClosed,
                                 maxLines: 1,
-                                keyboardType: TextInputType.text,
+                                keyboardType:
+                                    widget.keyboardType ?? TextInputType.text,
                                 textInputAction: TextInputAction.done,
                                 onChanged: _handleChanged,
                                 onSubmitted: _handleSubmitted,
                                 inputFormatters: [
+                                  ...?widget.inputFormatters,
                                   if (widget.maxLength != null)
                                     _CodeUnitTruncateFormatter(
                                       widget.maxLength!,

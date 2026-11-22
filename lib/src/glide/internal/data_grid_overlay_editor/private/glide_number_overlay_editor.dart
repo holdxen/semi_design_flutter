@@ -5,10 +5,11 @@
 // keystroke and keeps the caret anchored to the digit count. This is the same
 // contract: [GlideNumberOverlayEditor] regroups on change and restores the
 // caret by counting digits, not characters.
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 
 import '../../../cells/glide_cell_types.dart';
+import '../../../../components/semi_input.dart';
 
 /// `NumberOverlayEditor` (`number-overlay-editor.tsx:32-76`).
 class GlideNumberOverlayEditor extends StatefulWidget {
@@ -182,28 +183,20 @@ class _GlideNumberOverlayEditorState extends State<GlideNumberOverlayEditor> {
   @override
   Widget build(BuildContext context) {
     final theme = widget.theme ?? GlideTheme.light();
-    return TextField(
+    return SemiInput(
       controller: _controller,
       focusNode: _focusNode,
-      enabled: !widget.disabled,
-      autofocus: true,
+      disabled: widget.disabled,
+      bare: true,
+      size: SemiInputSize.small,
       keyboardType: TextInputType.number,
-      maxLines: 1,
-      style: theme.baseTextStyle.copyWith(fontSize: theme.editorFontSize),
-      onChanged: _onChanged,
       inputFormatters: [
-        widget.allowNegative
-            ? FilteringTextInputFormatter.allow(RegExp(r'[0-9.,-]'))
-            : FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-      ],
-      decoration: InputDecoration(
-        isDense: true,
-        border: InputBorder.none,
-        contentPadding: EdgeInsets.symmetric(
-          horizontal: theme.cellHorizontalPadding - 1.5,
-          vertical: theme.cellVerticalPadding,
+        FilteringTextInputFormatter.allow(
+          RegExp(widget.allowNegative ? r'[0-9.,-]' : r'[0-9.,]'),
         ),
-      ),
+      ],
+      inputStyle: theme.baseTextStyle.copyWith(fontSize: theme.editorFontSize),
+      onChanged: _onChanged,
     );
   }
 }

@@ -1,7 +1,8 @@
 // Port of `packages/core/src/data-editor/group-rename.tsx`.
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 
+import '../../components/semi_input.dart';
 import '../common/glide_theme.dart';
 import '../internal/data_grid/glide_types.dart';
 
@@ -30,7 +31,13 @@ class GlideGroupRename extends StatefulWidget {
 
 class _GlideGroupRenameState extends State<GlideGroupRename> {
   late final TextEditingController _controller;
+
+  /// Key-event scope for Enter/Escape.
   final FocusNode _focusNode = FocusNode();
+
+  /// The actual EditableText node; separate because a FocusNode can only
+  /// belong to one Focus widget (the wrapper above owns [_focusNode]).
+  final FocusNode _inputFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -39,6 +46,7 @@ class _GlideGroupRenameState extends State<GlideGroupRename> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _focusNode.requestFocus();
+      _inputFocusNode.requestFocus();
       _controller.selection = TextSelection(
         baseOffset: 0,
         extentOffset: _controller.text.length,
@@ -50,6 +58,7 @@ class _GlideGroupRenameState extends State<GlideGroupRename> {
   void dispose() {
     _controller.dispose();
     _focusNode.dispose();
+    _inputFocusNode.dispose();
     super.dispose();
   }
 
@@ -81,22 +90,16 @@ class _GlideGroupRenameState extends State<GlideGroupRename> {
             }
             return KeyEventResult.ignored;
           },
-          child: TextField(
+          child: SemiInput(
             controller: _controller,
-            autofocus: true,
-            style: TextStyle(
+            focusNode: _inputFocusNode,
+            bare: true,
+            size: SemiInputSize.small,
+            inputStyle: TextStyle(
               color: theme.textGroupHeader ?? theme.textHeader,
               fontSize: theme.headerFontSize,
               fontWeight: theme.headerFontWeight,
             ),
-            decoration: InputDecoration(
-              isDense: true,
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.zero,
-              fillColor: theme.bgHeaderHasFocus,
-              filled: true,
-            ),
-            onSubmitted: widget.onFinish,
           ),
         ),
       ),

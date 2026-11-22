@@ -1592,7 +1592,7 @@ void main() {
     testWidgets('enter commits and moves down', (tester) async {
       await tester.pumpWidget(buildEditor(forceEditMode: true));
       await tester.pumpAndSettle();
-      expect(find.byType(TextField), findsOneWidget);
+      expect(find.byType(EditableText), findsOneWidget);
 
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pump();
@@ -1978,7 +1978,7 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      expect(find.byType(TextField), findsOneWidget);
+      expect(find.byType(EditableText), findsOneWidget);
     });
 
     testWidgets('arrow keys move the selection', (tester) async {
@@ -2057,7 +2057,7 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.keyZ);
       await tester.pumpAndSettle();
 
-      expect(find.byType(TextField), findsOneWidget);
+      expect(find.byType(EditableText), findsOneWidget);
       expect(find.text('z'), findsOneWidget);
       expect(activationLog, contains('[1, 0]:z'));
     });
@@ -2085,7 +2085,7 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
 
-      expect(find.byType(TextField), findsNothing);
+      expect(find.byType(EditableText), findsNothing);
       expect(edits, hasLength(1));
       final value = edits.single.value as GlideTextCell;
       expect(value.data, 'z');
@@ -2661,10 +2661,10 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      expect(find.byType(TextField), findsOneWidget);
+      expect(find.byType(EditableText), findsOneWidget);
       expect(find.text('1,234.5'), findsOneWidget);
 
-      await tester.enterText(find.byType(TextField), '42');
+      await tester.enterText(find.byType(EditableText), '42');
       await tester.pump();
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
@@ -2699,12 +2699,12 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      expect(find.byType(TextField), findsNothing);
+      expect(find.byType(EditableText), findsNothing);
       expect(find.text('example.com/a'), findsOneWidget);
 
       await tester.tap(find.byIcon(Icons.edit));
       await tester.pumpAndSettle();
-      expect(find.byType(TextField), findsOneWidget);
+      expect(find.byType(EditableText), findsOneWidget);
       expect(find.text('https://example.com/a'), findsOneWidget);
     });
 
@@ -2727,7 +2727,7 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      expect(find.byType(TextField), findsNothing);
+      expect(find.byType(EditableText), findsNothing);
       expect(find.text('alpha'), findsOneWidget);
       expect(find.text('beta'), findsOneWidget);
     });
@@ -2784,7 +2784,7 @@ void main() {
       expect(appended, 1);
       expect(selectionLog.last.current!.cell, const GlideItem(0, 3));
       // `focusOnRowFromTrailingBlankRow` opens the editor in force-edit mode.
-      expect(find.byType(TextField), findsOneWidget);
+      expect(find.byType(EditableText), findsOneWidget);
       expect(find.text('r3 c0'), findsOneWidget);
     });
 
@@ -2849,7 +2849,7 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.keyZ);
       await tester.pumpAndSettle();
 
-      expect(find.byType(TextField), findsNothing);
+      expect(find.byType(EditableText), findsNothing);
       expect(activationLog, isEmpty);
       expect(appended, 0);
     });
@@ -2883,14 +2883,14 @@ void main() {
 
       await tester.sendKeyEvent(LogicalKeyboardKey.keyQ);
       await tester.pumpAndSettle();
-      expect(find.byType(TextField), findsOneWidget);
+      expect(find.byType(EditableText), findsOneWidget);
 
       await tester.sendKeyEvent(LogicalKeyboardKey.tab);
       await tester.pumpAndSettle();
 
       expect(appended, 1);
       // The editor closed and the new column is selected.
-      expect(find.byType(TextField), findsNothing);
+      expect(find.byType(EditableText), findsNothing);
       expect(selectionLog.last.current!.cell, const GlideItem(3, 0));
       expect(edits, hasLength(1));
     });
@@ -2979,7 +2979,7 @@ void main() {
       }
 
       // Read-only: no input, just the chips.
-      expect(find.byType(TextField), findsNothing);
+      expect(find.byType(EditableText), findsNothing);
       expect(find.text('Alpha'), findsOneWidget);
       expect(find.text('Beta'), findsOneWidget);
     });
@@ -3007,7 +3007,7 @@ void main() {
           await gesture.up();
           await tester.pumpAndSettle();
         }
-        expect(find.byType(TextField), findsNothing);
+        expect(find.byType(EditableText), findsNothing);
       }
     });
 
@@ -3103,10 +3103,10 @@ void main() {
       await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
       await tester.pumpAndSettle();
 
-      expect(find.byType(TextField), findsOneWidget);
+      expect(find.byType(EditableText), findsOneWidget);
       expect(find.text('Type to search'), findsOneWidget);
 
-      await tester.enterText(find.byType(TextField), 'r1 c2');
+      await tester.enterText(find.byType(EditableText), 'r1 c2');
       await tester.pumpAndSettle();
 
       expect(find.text('1 result'), findsOneWidget);
@@ -3544,7 +3544,7 @@ void main() {
       await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), 'r0 c1');
+      await tester.enterText(find.byType(EditableText), 'r0 c1');
       await tester.pumpAndSettle();
 
       // The first run reports `navIndex: -1` and upstream bails out on it
@@ -3587,7 +3587,7 @@ void main() {
       await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), 'r3 c2');
+      await tester.enterText(find.byType(EditableText), 'r3 c2');
       await tester.pumpAndSettle();
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
@@ -3894,7 +3894,7 @@ void main() {
         await second.up();
         await tester.pumpAndSettle();
       }
-      expect(find.byType(TextField), findsOneWidget);
+      expect(find.byType(EditableText), findsOneWidget);
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       await tester.pumpAndSettle();
       expect(log, contains('done'));
@@ -3930,7 +3930,7 @@ void main() {
 
       expect(find.byType(GlideGroupRename), findsOneWidget);
 
-      await tester.enterText(find.byType(TextField), 'Team B');
+      await tester.enterText(find.byType(EditableText), 'Team B');
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
 

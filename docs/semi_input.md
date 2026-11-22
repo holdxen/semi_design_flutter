@@ -4,13 +4,14 @@
 
 ## API
 
-`SemiInput({key, value, initialValue, mode, size, validateStatus, disabled, readonly, borderless, placeholder, prefix, suffix, insetLabel, addonBefore, addonAfter, showClear, hideSuffix, clearIcon, maxLength, onChanged, onEnterPress, onFocusChange, onBlur, onClear, controller, focusNode, inputStyle, semanticsLabel})`。
+`SemiInput({key, value, initialValue, mode, size, validateStatus, disabled, readonly, borderless, bare, placeholder, prefix, suffix, insetLabel, addonBefore, addonAfter, showClear, hideSuffix, clearIcon, maxLength, keyboardType, inputFormatters, onChanged, onEnterPress, onFocusChange, onBlur, onClear, controller, focusNode, inputStyle, semanticsLabel})`。
 
 - `value: String?` 非空即受控（SemiTag.visible / SemiCheckbox 惯例）；`initialValue` 为非受控初值；`controller`/`focusNode` 外传不自释放（与 `initialValue` 互斥）。
 - `mode`: normal（默认）/password；`size`: small/normal/large（wrapper 24/32/40，字号 14/14/16）；`validateStatus`: normal/error/warning/success。
 - `prefix`/`suffix`/`insetLabel`/`addonBefore`/`addonAfter` 为 Object? 双态（String 或 Widget）。String 槽渲染 w600 粗体（`$font-input_prefix_suffix-fontWeight`）、颜色 prefix-text、水平外边距 12；`SemiIcon` 槽边距 8×`$spacing-input_prefix_icon-marginX`；其他 Widget 原样。insetLabel 与 prefix 同槽（prefix 优先）。addon 为独立 1px 描边块：addonBefore 右描边、addonAfter 左描边（颜色 default-border，透明），外侧圆角 3，内容 padding 0/12。
 - 事件均为裁剪签名（无 DOM 事件对象）：`onChanged: ValueChanged<String>`、`onEnterPress/onBlur/onClear: VoidCallback`、`onFocusChange: ValueChanged<bool>`。
 - `inputStyle` 合并覆盖内置编辑文本样式；`semanticsLabel` 进 Semantics。Semantics 携带 `textField: true` 与 `validationResult`（error → invalid，success → valid，其余 none）。
+- `keyboardType` / `inputFormatters` 透传给内置 `EditableText`（默认 `text` / 无额外 formatter）；`maxLength` 的 UTF-16 截断始终最后生效。glide 数字编辑器通过这两个参数保留数字键盘与输入过滤。
 
 `SemiTextArea({key, value, initialValue, rows = 4, autosize, maxCount, showCounter, showClear, disabledEnterStartNewLine, validateStatus, disabled, readonly, borderless, placeholder, maxLength, onChanged, onEnterPress, onFocusChange, onBlur, onClear, controller, focusNode, inputStyle, semanticsLabel})`。
 

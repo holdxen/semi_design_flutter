@@ -10,6 +10,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../../components/semi_input.dart';
 import '../../cells/glide_cell_types.dart';
 import '../../data_editor/glide_data_editor_fns.dart';
 
@@ -241,6 +242,10 @@ class _GlideSearchBarState extends State<GlideSearchBar>
   /// 1.0 = parked at `translateX(0)`, 0.0 = parked at `translateX(400px)`.
   late final AnimationController _fade;
 
+  /// [widget.focusNode] scopes Enter/Escape on the wrapper; this node is the
+  /// one the SemiInput's EditableText actually types into.
+  final FocusNode _inputFocusNode = FocusNode();
+
   @override
   void initState() {
     super.initState();
@@ -251,7 +256,12 @@ class _GlideSearchBarState extends State<GlideSearchBar>
     );
     // `animation: gdg-search-fadein 0.15s forwards` runs unconditionally on
     // mount (`data-grid-search-style.tsx:15`).
-    if (widget.show) _fade.forward(from: 0);
+    if (widget.show) {
+      _fade.forward(from: 0);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _inputFocusNode.requestFocus();
+      });
+    }
   }
 
   @override
@@ -260,6 +270,9 @@ class _GlideSearchBarState extends State<GlideSearchBar>
     if (oldWidget.show == widget.show) return;
     if (widget.show) {
       _fade.forward(from: 0);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _inputFocusNode.requestFocus();
+      });
     } else {
       // `gdg-search-fadeout` declares `from { translateX(0) }`, so the outro
       // restarts from the parked position rather than continuing from
@@ -272,6 +285,7 @@ class _GlideSearchBarState extends State<GlideSearchBar>
   @override
   void dispose() {
     _fade.dispose();
+    _inputFocusNode.dispose();
     super.dispose();
   }
 
@@ -321,17 +335,14 @@ class _GlideSearchBarState extends State<GlideSearchBar>
                           child: Focus(
                             focusNode: widget.focusNode,
                             onKeyEvent: widget.onKeyDown,
-                            child: TextField(
-                              autofocus: true,
+                            child: SemiInput(
                               controller: widget.textController,
-                              style: TextStyle(
+                              focusNode: _inputFocusNode,
+                              bare: true,
+                              size: SemiInputSize.small,
+                              inputStyle: TextStyle(
                                 fontSize: theme.editorFontSize,
                                 color: theme.textDark,
-                              ),
-                              decoration: const InputDecoration(
-                                isDense: true,
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.zero,
                               ),
                               onChanged: widget.onChanged,
                             ),

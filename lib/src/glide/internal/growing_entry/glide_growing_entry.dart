@@ -1,11 +1,12 @@
 // Port of `packages/core/src/internal/growing-entry/growing-entry.tsx`.
 //
-// Web uses a contenteditable `<textarea>` wrapper. Flutter's `TextField` with
-// `maxLines: null` grows the same way; the caret/selection APIs differ, so
-// `validatedSelection` is applied once after the first frame.
-import 'package:flutter/material.dart';
+// Web uses a contenteditable `<textarea>` wrapper. Flutter's `SemiTextArea`
+// (a bare, autosizing EditableText) grows the same way; the caret/selection
+// APIs differ, so `validatedSelection` is applied once after the first frame.
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 
+import '../../../components/semi_input.dart';
 import '../../common/glide_theme.dart';
 import '../data_grid/glide_types.dart';
 
@@ -37,7 +38,10 @@ class GlideGrowingEntry extends StatefulWidget {
 
   /// `SelectionRange = number | [number, number]`.
   final GlideSelectionRange? validatedSelection;
+
+  /// Retained for API parity. [SemiTextArea] owns its own content padding.
   final EdgeInsets? padding;
+
   final KeyEventResult Function(KeyEvent event, String value)? onKeyEvent;
 
   @override
@@ -52,20 +56,21 @@ class _GlideGrowingEntryState extends State<GlideGrowingEntry> {
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.value);
-    if (widget.validatedSelection != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        final sel = widget.validatedSelection;
-        if (sel is int) {
-          _controller.selection = TextSelection.collapsed(offset: sel);
-        } else if (sel is List && sel.length >= 2) {
-          _controller.selection = TextSelection(
-            baseOffset: sel[0] as int,
-            extentOffset: sel[1] as int,
-          );
-        }
-      });
-    }
+    // The old TextField's `autofocus` did this. SemiTextArea takes an
+    // external focus node and leaves the timing to its owner.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (widget.autoFocus && !widget.disabled) _focusNode.requestFocus();
+      final sel = widget.validatedSelection;
+      if (sel is int) {
+        _controller.selection = TextSelection.collapsed(offset: sel);
+      } else if (sel is List && sel.length >= 2) {
+        _controller.selection = TextSelection(
+          baseOffset: sel[0] as int,
+          extentOffset: sel[1] as int,
+        );
+      }
+    });
   }
 
   @override
@@ -114,27 +119,16 @@ class _GlideGrowingEntryState extends State<GlideGrowingEntry> {
           onKeyEvent: (node, event) =>
               widget.onKeyEvent?.call(event, _controller.text) ??
               KeyEventResult.ignored,
-          child: TextField(
+          child: SemiTextArea(
             controller: _controller,
             focusNode: _focusNode,
-            autofocus: widget.autoFocus,
-            enabled: !widget.disabled,
-            maxLines: null,
-            expands: false,
-            cursorColor: theme.accentColor,
-            style: theme.baseTextStyle.copyWith(fontSize: theme.editorFontSize),
-            decoration: InputDecoration(
-              isDense: true,
-              border: InputBorder.none,
-              contentPadding:
-                  widget.padding ??
-                  EdgeInsets.symmetric(
-                    horizontal: theme.cellHorizontalPadding -
-                        1.5, // upstream 8.5px vs 8px cell padding
-                    vertical: theme.cellVerticalPadding,
-                  ),
+            rows: 1,
+            autosize: true,
+            bare: true,
+            disabled: widget.disabled,
+            inputStyle: theme.baseTextStyle.copyWith(
+              fontSize: theme.editorFontSize,
             ),
-            textAlignVertical: TextAlignVertical.center,
             onChanged: widget.onChange,
           ),
         ),
