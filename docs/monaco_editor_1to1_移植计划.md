@@ -270,3 +270,21 @@ semi_design_flutter/
 - [x] `lib/src/monaco/editor/common/core/position.dart`：首个 1:1 样板，`dart analyze` 零 error/warning，行为自检通过（`tool/ts2dart/_check_position.dart`）。记录两处**语言级适配**（非算法改动）：TS 默认参数 → Dart 命名可选参数；TS 允许的 static/instance 同名在 Dart 不允许，static 方法后缀 `Static` 并在注释标注源名。
 
 > 从 T1 起，每个文件按此样板推进：转译器生成骨架 → 人工校准 → `dart analyze` → 行为自检 → 更新 `PORT_PROGRESS.md` 状态。
+
+### T1 执行记录（2026-11-23，进行中：19/78 文件 tested）
+
+按源码依赖拓扑从叶子向前推进，每个文件：人工 1:1 翻译 → `dart analyze` 零 error/warning → 行为断言 → `PORT_PROGRESS.md` 标 `tested`。累计 19 个文件 `tested`（含 base 依赖提前翻 4 个）。
+
+- [x] `core/2d/{dimension,point,size,rect}.dart`、`core/{position,range,selection,editOperation}.dart`
+- [x] `core/ranges/{offsetRange,columnRange,rangeSingleLine}.dart`、`core/misc/{rgba,textModelDefaults,eolCounter}.dart`、`core/characterClassifier.dart`
+- [x] base 依赖提前翻（core 直接依赖，属 T3 闭包）：`base/common/{errors,charCode,uint,arraysFind}.dart`
+- [x] `test/monaco_port_test.dart`：正式回归测试 17 个 case 全绿（`flutter test`）；替代早期临时 `_check_*.dart` 脚本。
+
+**本阶段新增的 Dart 适配规则**（均不改算法/结构，文件头注明）：
+- JS `Error` 体系 → Dart `implements Exception` + `_MonacoRuntimeError` 承载可变 `name/message/stack/code/cause`；`setTimeout` 重抛 → 直接抛。
+- TS `const enum` → `class` + `static const`（调用点 `CharCode.X`/`StringEOL.X` 不变）。
+- TS tuple 返回 → Dart record（如 `countEOL`）；对象字面量接口 → Dart 值类（`ISingleEditOperation`/`Dimension`/`SerializedError`）。
+- `Uint8Array` → `Uint8List`；`Array.splice` → `insert`/`replaceRange`；JS `||` 取默认 → Dart `??`。
+- 重载（如 `Rect.withMargin`、`OffsetRange.withMargin`）→ Dart 位置可选参数，保留源码调用形式。
+
+**当前阻塞 / 下一步**：`core/ranges/{lineRange,rangeMapping}` 及 `core/edits/**`、`core/text/**` 依赖 `base/common/{arrays,strings,buffer,assert,equals}` 与更深的 `event.ts`(1991 行)/`lifecycle.ts`(974 行) 链。该链是 base 基础设施，按计划属 T3；为解锁 T1 剩余文件需作为独立大批次系统推进。T1 余 59 文件未翻。
