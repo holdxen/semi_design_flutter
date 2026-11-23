@@ -183,7 +183,7 @@
 | 174 | editor | `editor/common/core/editOperation.ts` | `lib/src/monaco/editor/common/core/editOperation.dart` | tested |
 | 175 | editor | `editor/common/core/editorColorRegistry.ts` | `lib/src/monaco/editor/common/core/editorColorRegistry.dart` | pending |
 | 176 | editor | `editor/common/core/edits/arrayEdit.ts` | `lib/src/monaco/editor/common/core/edits/arrayEdit.dart` | pending |
-| 177 | editor | `editor/common/core/edits/edit.ts` | `lib/src/monaco/editor/common/core/edits/edit.dart` | pending |
+| 177 | editor | `editor/common/core/edits/edit.ts` | `lib/src/monaco/editor/common/core/edits/edit.dart` | tested |
 | 178 | editor | `editor/common/core/edits/lengthEdit.ts` | `lib/src/monaco/editor/common/core/edits/lengthEdit.dart` | pending |
 | 179 | editor | `editor/common/core/edits/lineEdit.ts` | `lib/src/monaco/editor/common/core/edits/lineEdit.dart` | pending |
 | 180 | editor | `editor/common/core/edits/stringEdit.ts` | `lib/src/monaco/editor/common/core/edits/stringEdit.dart` | pending |
@@ -197,7 +197,7 @@
 | 188 | editor | `editor/common/core/ranges/columnRange.ts` | `lib/src/monaco/editor/common/core/ranges/columnRange.dart` | tested |
 | 189 | editor | `editor/common/core/ranges/lineRange.ts` | `lib/src/monaco/editor/common/core/ranges/lineRange.dart` | tested |
 | 190 | editor | `editor/common/core/ranges/offsetRange.ts` | `lib/src/monaco/editor/common/core/ranges/offsetRange.dart` | tested |
-| 191 | editor | `editor/common/core/ranges/rangeMapping.ts` | `lib/src/monaco/editor/common/core/ranges/rangeMapping.dart` | pending |
+| 191 | editor | `editor/common/core/ranges/rangeMapping.ts` | `lib/src/monaco/editor/common/core/ranges/rangeMapping.dart` | tested |
 | 192 | editor | `editor/common/core/ranges/rangeSingleLine.ts` | `lib/src/monaco/editor/common/core/ranges/rangeSingleLine.dart` | tested |
 | 193 | editor | `editor/common/core/selection.ts` | `lib/src/monaco/editor/common/core/selection.dart` | tested |
 | 194 | editor | `editor/common/core/stringBuilder.ts` | `lib/src/monaco/editor/common/core/stringBuilder.dart` | tested |
@@ -208,7 +208,7 @@
 | 199 | editor | `editor/common/core/text/textLength.ts` | `lib/src/monaco/editor/common/core/text/textLength.dart` | tested |
 | 200 | editor | `editor/common/core/textChange.ts` | `lib/src/monaco/editor/common/core/textChange.dart` | tested |
 | 201 | editor | `editor/common/core/wordCharacterClassifier.ts` | `lib/src/monaco/editor/common/core/wordCharacterClassifier.dart` | tested |
-| 202 | editor | `editor/common/core/wordHelper.ts` | `lib/src/monaco/editor/common/core/wordHelper.dart` | pending |
+| 202 | editor | `editor/common/core/wordHelper.ts` | `lib/src/monaco/editor/common/core/wordHelper.dart` | tested |
 | 203 | editor | `editor/common/cursor/cursor.ts` | `lib/src/monaco/editor/common/cursor/cursor.dart` | pending |
 | 204 | editor | `editor/common/cursor/cursorAtomicMoveOperations.ts` | `lib/src/monaco/editor/common/cursor/cursorAtomicMoveOperations.dart` | pending |
 | 205 | editor | `editor/common/cursor/cursorCollection.ts` | `lib/src/monaco/editor/common/cursor/cursorCollection.dart` | pending |
@@ -222,7 +222,7 @@
 | 213 | editor | `editor/common/cursor/cursorWordOperations.ts` | `lib/src/monaco/editor/common/cursor/cursorWordOperations.dart` | pending |
 | 214 | editor | `editor/common/cursor/oneCursor.ts` | `lib/src/monaco/editor/common/cursor/oneCursor.dart` | pending |
 | 215 | editor | `editor/common/cursorCommon.ts` | `lib/src/monaco/editor/common/cursorCommon.dart` | pending |
-| 216 | editor | `editor/common/cursorEvents.ts` | `lib/src/monaco/editor/common/cursorEvents.dart` | pending |
+| 216 | editor | `editor/common/cursorEvents.ts` | `lib/src/monaco/editor/common/cursorEvents.dart` | tested |
 | 217 | editor | `editor/common/diff/defaultLinesDiffComputer/algorithms/diffAlgorithm.ts` | `lib/src/monaco/editor/common/diff/defaultLinesDiffComputer/algorithms/diffAlgorithm.dart` | pending |
 | 218 | editor | `editor/common/diff/defaultLinesDiffComputer/algorithms/dynamicProgrammingDiffing.ts` | `lib/src/monaco/editor/common/diff/defaultLinesDiffComputer/algorithms/dynamicProgrammingDiffing.dart` | pending |
 | 219 | editor | `editor/common/diff/defaultLinesDiffComputer/algorithms/myersDiffAlgorithm.ts` | `lib/src/monaco/editor/common/diff/defaultLinesDiffComputer/algorithms/myersDiffAlgorithm.dart` | pending |

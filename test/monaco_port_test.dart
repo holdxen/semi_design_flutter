@@ -2,6 +2,8 @@
 // Each group targets a translated source file; assertions mirror the semantics
 // of the TypeScript original. Extend as more files are translated.
 
+import 'dart:math' as math;
+
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:semi_design_flutter/src/monaco/base/common/arraysFind.dart';
@@ -14,6 +16,7 @@ import 'package:semi_design_flutter/src/monaco/editor/common/core/2d/rect.dart';
 import 'package:semi_design_flutter/src/monaco/editor/common/core/2d/size.dart';
 import 'package:semi_design_flutter/src/monaco/editor/common/core/characterClassifier.dart';
 import 'package:semi_design_flutter/src/monaco/editor/common/core/editOperation.dart';
+import 'package:semi_design_flutter/src/monaco/editor/common/core/edits/edit.dart' as ed;
 import 'package:semi_design_flutter/src/monaco/editor/common/core/misc/eolCounter.dart';
 import 'package:semi_design_flutter/src/monaco/editor/common/core/misc/indentation.dart' as indentation;
 import 'package:semi_design_flutter/src/monaco/editor/common/core/misc/rgba.dart';
@@ -22,6 +25,7 @@ import 'package:semi_design_flutter/src/monaco/editor/common/core/position.dart'
 import 'package:semi_design_flutter/src/monaco/editor/common/core/range.dart';
 import 'package:semi_design_flutter/src/monaco/editor/common/core/ranges/columnRange.dart';
 import 'package:semi_design_flutter/src/monaco/editor/common/core/ranges/offsetRange.dart';
+import 'package:semi_design_flutter/src/monaco/editor/common/core/ranges/rangeMapping.dart' as rm;
 import 'package:semi_design_flutter/src/monaco/editor/common/core/ranges/rangeSingleLine.dart';
 import 'package:semi_design_flutter/src/monaco/editor/common/core/selection.dart';
 import 'package:semi_design_flutter/src/monaco/editor/common/encodedTokenAttributes.dart' as eta;
@@ -540,6 +544,203 @@ void main() {
       expect(norm(' \ta'), '    a');
     });
   });
+
+  group('edits/edit.ts (1:1)', () {
+    // A minimal concrete replacement: replaces `replaceRange` with `text`.
+    // Mirrors how StringReplacement/TextRepletion specialize BaseReplacement.
+    String _apply(String s, ed.Edit<_R> edit) {
+      final List<_R> reps = edit.replacements;
+      // Apply from the end so offsets stay valid.
+      for (int i = reps.length - 1; i >= 0; i--) {
+        final _R r = reps[i];
+        s = s.substring(0, r.replaceRange.start) + r.text + s.substring(r.replaceRange.endExclusive);
+      }
+      return s;
+    }
+
+    ed.Edit<_R> _edit(List<_R> reps) => ed.Edit<_R>(reps);
+
+    test('normalize removes no-ops and joins touching replacements', () {
+      // [1,1)->'x' and [1,2)->'y' touch -> joined to [1,2)->'xy'
+      final e = _edit(<_R>[
+        _R(OffsetRange(0, 0), ''), // no-op
+        _R(OffsetRange(1, 1), 'x'),
+        _R(OffsetRange(1, 2), 'y'),
+      ]);
+      final norm = e.normalize();
+      expect(norm.replacements.length, 1);
+      expect(norm.replacements.first.replaceRange.start, 1);
+      expect(norm.replacements.first.replaceRange.endExclusive, 2);
+      expect(norm.replacements.first.text, 'xy');
+    });
+
+    test('equals is structural', () {
+      final a = _edit(<_R>[_R(OffsetRange(1, 2), 'x')]);
+      final b = _edit(<_R>[_R(OffsetRange(1, 2), 'x')]);
+      final c = _edit(<_R>[_R(OffsetRange(1, 2), 'y')]);
+      expect(a.equals(b), isTrue);
+      expect(a.equals(c), isFalse);
+    });
+
+    test('apply + getLengthDelta + getNewRanges', () {
+      final e = _edit(<_R>[
+        _R(OffsetRange(1, 3), 'XY'), // delta 0
+        _R(OffsetRange(5, 5), 'ZZ'), // insert, delta +2
+      ]);
+      expect(_apply('abcdef', e), 'aXYdeZZf');
+      expect(e.getLengthDelta(), 2);
+      expect(e.getNewDataLength(6), 8);
+      final ranges = e.getNewRanges();
+      expect(ranges[0].start, 1);
+      expect(ranges[0].length, 2);
+      expect(ranges[1].start, 5); // 5 + delta 0 (first replacement is length-neutral)
+      expect(ranges[1].length, 2);
+    });
+
+    test('applyToOffset / applyInverseToOffset / applyToOffsetOrUndefined', () {
+      final e = _edit(<_R>[_R(OffsetRange(2, 4), 'XY')]); // delta 0
+      expect(e.applyToOffset(0), 0);
+      expect(e.applyToOffset(2), 2); // inside replaced range -> start
+      expect(e.applyToOffset(3), 2);
+      expect(e.applyToOffset(10), 10);
+      expect(e.applyToOffsetOrUndefined(3), isNull); // inside -> undefined
+      expect(e.applyToOffsetOrUndefined(1), 1);
+
+      final ins = _edit(<_R>[_R(OffsetRange(2, 2), 'ZZ')]); // +2
+      expect(ins.applyToOffset(2), 4); // offset == insert start maps after inserted text
+      expect(ins.applyToOffset(3), 5);
+      expect(ins.applyInverseToOffset(4), 2);
+      expect(ins.applyInverseToOffset(5), 3);
+    });
+
+    test('compose invariant: other.apply(this.apply(s0)) == this.compose(other).apply(s0)', () {
+      // e1: [1,3)->'A', e2 (on s1): [0,1)->'B'
+      final e1 = _edit(<_R>[_R(OffsetRange(1, 3), 'A')]);
+      final s1 = _apply('abcdef', e1); // aAdef
+      final e2 = _edit(<_R>[_R(OffsetRange(0, 1), 'B')]);
+      final expected = _apply(s1, e2); // BaAdef
+      final composed = e1.compose(e2);
+      expect(_apply('abcdef', composed), expected);
+    });
+
+    test('compose fuzz (fixed seed, 100 cases)', () {
+      final rand = math.Random(42);
+      for (int i = 0; i < 100; i++) {
+        final String s0 = List<String>.generate(12, (_) => String.fromCharCode(97 + rand.nextInt(6))).join();
+        final ed.Edit<_R> e1 = _randomEdit(s0, rand);
+        final String s1 = _apply(s0, e1);
+        final ed.Edit<_R> e2 = _randomEdit(s1, rand);
+        final String expected = _apply(s1, e2);
+        final ed.Edit<_R> composed = e1.compose(e2);
+        final String actual = _apply(s0, composed);
+        expect(actual, expected, reason: 'compose fuzz case $i: s0=$s0 e1=$e1 e2=$e2 composed=$composed');
+      }
+    });
+
+    test('decomposeSplit partitions replacements', () {
+      final e = _edit(<_R>[
+        _R(OffsetRange(0, 1), 'a'),
+        _R(OffsetRange(2, 3), 'b'),
+        _R(OffsetRange(4, 5), 'c'),
+      ]);
+      final parts = e.decomposeSplit((r) => r.text == 'b');
+      expect(parts.e1.replacements.length, 1);
+      expect(parts.e2.replacements.length, 2);
+    });
+
+    test('AnnotationReplacement join + slice', () {
+      final a = ed.AnnotationReplacement<String>(OffsetRange(1, 2), 3, 'note');
+      final b = ed.AnnotationReplacement<String>(OffsetRange(2, 4), 2, 'note');
+      final joined = a.tryJoinTouching(b);
+      expect(joined, isNotNull);
+      expect(joined!.replaceRange.start, 1);
+      expect(joined.replaceRange.endExclusive, 4);
+      expect(joined.newLength, 5);
+      expect(a.tryJoinTouching(ed.AnnotationReplacement<String>(OffsetRange(2, 4), 2, 'other')), isNull);
+      expect(a.equals(ed.AnnotationReplacement<String>(OffsetRange(1, 2), 3, 'note')), isTrue);
+    });
+  });
+
+  group('ranges/rangeMapping.ts (1:1)', () {
+    // Single mapping: original [2:4..2:6) -> modified [2:4..2:7) (net +1 col on same line).
+    final mapping = rm.SingleRangeMapping(Range(2, 4, 2, 6), Range(2, 4, 2, 7));
+    final rangeMapping = rm.RangeMapping(<rm.SingleRangeMapping>[mapping]);
+
+    test('mapPosition before all mappings -> identity', () {
+      final res = rangeMapping.mapPosition(Position(1, 1));
+      expect(res.range, isNull);
+      expect(res.position!.lineNumber, 1);
+      expect(res.position!.column, 1);
+    });
+
+    test('mapPosition inside original -> modified range', () {
+      final res = rangeMapping.mapPosition(Position(2, 5));
+      expect(res.position, isNull);
+      expect(res.range!.toString(), '[2,4 -> 2,7]');
+    });
+
+    test('mapPosition after original -> shifted by text length delta', () {
+      // position 2:8 is 2 columns past original end (2:6); modified end is 2:7.
+      final res = rangeMapping.mapPosition(Position(2, 8));
+      expect(res.range, isNull);
+      expect(res.position!.lineNumber, 2);
+      expect(res.position!.column, 9); // 7 + (8 - 6) = 9
+    });
+
+    test('mapRange + reverse', () {
+      final mapped = rangeMapping.mapRange(Range(2, 5, 2, 8));
+      expect(mapped.startLineNumber, 2);
+      expect(mapped.startColumn, 4); // start inside -> range start
+      expect(mapped.endColumn, 9); // end after -> shifted
+      final rev = rangeMapping.reverse();
+      expect(rev.mappings.single.original.toString(), '[2,4 -> 2,7]');
+      expect(rev.mappings.single.modified.toString(), '[2,4 -> 2,6]');
+      expect(mapping.toString(), '[2,4 -> 2,6] -> [2,4 -> 2,7]');
+    });
+  });
+}
+
+// Test helper: a concrete BaseReplacement that stores replacement text.
+class _R extends ed.BaseReplacement<_R> {
+  final String text;
+  _R(OffsetRange range, this.text) : super(range);
+
+  @override
+  int getNewLength() => text.length;
+
+  @override
+  _R? tryJoinTouching(_R other) {
+    final joined = replaceRange.joinRightTouching(other.replaceRange);
+    return _R(joined, text + other.text);
+  }
+
+  @override
+  _R slice(OffsetRange newReplaceRange, [OffsetRange? rangeInReplacement]) {
+    final r = rangeInReplacement ?? OffsetRange(0, getNewLength());
+    return _R(newReplaceRange, text.substring(r.start, r.endExclusive));
+  }
+
+  @override
+  bool equals(_R other) => replaceRange.equals(other.replaceRange) && text == other.text;
+
+  @override
+  String toString() => '[$replaceRange->$text]';
+}
+
+ed.Edit<_R> _randomEdit(String s, math.Random rand) {
+  final List<_R> reps = <_R>[];
+  int pos = 0;
+  while (pos <= s.length) {
+    final int start = pos + rand.nextInt(s.length - pos + 1);
+    final int end = start + rand.nextInt(s.length - start + 1);
+    final String text = String.fromCharCode(65 + rand.nextInt(6)); // 'A'..'F'
+    reps.add(_R(OffsetRange(start, end), text));
+    if (end >= s.length) {
+      break;
+    }
+    pos = end + rand.nextInt(s.length - end + 1);
+  }
+  return ed.Edit<_R>(reps);
 }
 
 

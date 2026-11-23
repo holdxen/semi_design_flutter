@@ -65,6 +65,7 @@ import 'package:semi_design_flutter/src/monaco/base/common/keyCodes.dart' as kc;
 import 'package:semi_design_flutter/src/monaco/base/common/color.dart' as clr;
 import 'package:semi_design_flutter/src/monaco/base/common/json.dart' as js;
 import 'package:semi_design_flutter/src/monaco/base/common/uri.dart';
+import 'package:semi_design_flutter/src/monaco/editor/common/core/wordHelper.dart' as wh;
 import 'package:semi_design_flutter/src/monaco/base/common/path.dart' as path;
 import 'package:semi_design_flutter/src/monaco/base/common/charCode.dart' as cc;
 import 'package:semi_design_flutter/src/monaco/base/common/extpath.dart' as extpath;
@@ -5726,6 +5727,54 @@ void main() {
       expect(severity.Severity.toStringStatic(severity.Severity.Info), 'info');
       expect(severity.Severity.toStringStatic(severity.Severity.Ignore), 'ignore');
       expect(severity.Severity.toStringStatic(42), 'ignore');
+    });
+  });
+
+  group('wordHelper.ts (1:1)', () {
+    test('USUAL_WORD_SEPARATORS runtime value', () {
+      expect(wh.USUAL_WORD_SEPARATORS, '`~!@#\$%^&*()-=+[{]}\\|;:\'",.<>/?');
+    });
+
+    test('getWordAtText: simple identifier', () {
+      // "  hello world"  column of the 'h' is 3.
+      final res = wh.getWordAtText(3, wh.DEFAULT_WORD_REGEXP, '  hello world', 0)!;
+      expect(res.word, 'hello');
+      expect(res.startColumn, 3);
+      expect(res.endColumn, 8);
+    });
+
+    test('getWordAtText: word at middle', () {
+      // "hello world"  column 8 -> 'world'
+      final res = wh.getWordAtText(8, wh.DEFAULT_WORD_REGEXP, 'hello world', 0)!;
+      expect(res.word, 'world');
+      expect(res.startColumn, 7);
+      expect(res.endColumn, 12);
+    });
+
+    test('getWordAtText: number (floating) matched by first group', () {
+      final res = wh.getWordAtText(3, wh.DEFAULT_WORD_REGEXP, 'x 1.5 y', 0)!;
+      expect(res.word, '1.5');
+    });
+
+    test('getWordAtText: with textOffset', () {
+      // text = "world" located at document offset 10; cursor at 1-based
+      // document column 11 => pos = 11 - 1 - 10 = 0 inside "world".
+      final res = wh.getWordAtText(11, wh.DEFAULT_WORD_REGEXP, 'world', 10)!;
+      expect(res.word, 'world');
+      expect(res.startColumn, 11);
+      expect(res.endColumn, 16);
+    });
+
+    test('getWordAtText: no word -> null', () {
+      expect(wh.getWordAtText(1, wh.DEFAULT_WORD_REGEXP, '   ', 0), isNull);
+    });
+
+    test('ensureValidWordDefinition resets lastIndex', () {
+      final def = wh.WordDefinition(RegExp(r'\w+', caseSensitive: false));
+      def.lastIndex = 5;
+      final ensured = wh.ensureValidWordDefinition(def);
+      expect(identical(ensured, def), isTrue);
+      expect(ensured.lastIndex, 0);
     });
   });
 
