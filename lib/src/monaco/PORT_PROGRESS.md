@@ -52,9 +52,9 @@
 | 43 | editor | `editor/browser/gpu/gpu.ts` | `lib/src/monaco/editor/browser/gpu/gpu.dart` | pending |
 | 44 | editor | `editor/browser/gpu/gpuDisposable.ts` | `lib/src/monaco/editor/browser/gpu/gpuDisposable.dart` | pending |
 | 45 | editor | `editor/browser/gpu/gpuUtils.ts` | `lib/src/monaco/editor/browser/gpu/gpuUtils.dart` | tested |
-| 46 | editor | `editor/browser/gpu/objectCollectionBuffer.ts` | `lib/src/monaco/editor/browser/gpu/objectCollectionBuffer.dart` | pending |
+| 46 | editor | `editor/browser/gpu/objectCollectionBuffer.ts` | `lib/src/monaco/editor/browser/gpu/objectCollectionBuffer.dart` | tested |
 | 47 | editor | `editor/browser/gpu/raster/glyphRasterizer.ts` | `lib/src/monaco/editor/browser/gpu/raster/glyphRasterizer.dart` | pending |
-| 48 | editor | `editor/browser/gpu/raster/raster.ts` | `lib/src/monaco/editor/browser/gpu/raster/raster.dart` | pending |
+| 48 | editor | `editor/browser/gpu/raster/raster.ts` | `lib/src/monaco/editor/browser/gpu/raster/raster.dart` | tested |
 | 49 | editor | `editor/browser/gpu/rectangleRenderer.ts` | `lib/src/monaco/editor/browser/gpu/rectangleRenderer.dart` | pending |
 | 50 | editor | `editor/browser/gpu/rectangleRenderer.wgsl.ts` | `lib/src/monaco/editor/browser/gpu/rectangleRenderer.wgsl.dart` | pending |
 | 51 | editor | `editor/browser/gpu/renderStrategy/baseRenderStrategy.ts` | `lib/src/monaco/editor/browser/gpu/renderStrategy/baseRenderStrategy.dart` | pending |
@@ -248,7 +248,7 @@
 | 239 | editor | `editor/common/encodedTokenAttributes.ts` | `lib/src/monaco/editor/common/encodedTokenAttributes.dart` | tested |
 | 240 | editor | `editor/common/inputMode.ts` | `lib/src/monaco/editor/common/inputMode.dart` | tested |
 | 241 | editor | `editor/common/languageFeatureRegistry.ts` | `lib/src/monaco/editor/common/languageFeatureRegistry.dart` | pending |
-| 242 | editor | `editor/common/languageSelector.ts` | `lib/src/monaco/editor/common/languageSelector.dart` | pending |
+| 242 | editor | `editor/common/languageSelector.ts` | `lib/src/monaco/editor/common/languageSelector.dart` | tested |
 | 243 | editor | `editor/common/languages/autoIndent.ts` | `lib/src/monaco/editor/common/languages/autoIndent.dart` | pending |
 | 244 | editor | `editor/common/languages/defaultDocumentColorsComputer.ts` | `lib/src/monaco/editor/common/languages/defaultDocumentColorsComputer.dart` | pending |
 | 245 | editor | `editor/common/languages/enterAction.ts` | `lib/src/monaco/editor/common/languages/enterAction.dart` | pending |
@@ -347,7 +347,7 @@
 | 338 | editor | `editor/common/services/textResourceConfigurationService.ts` | `lib/src/monaco/editor/common/services/textResourceConfigurationService.dart` | pending |
 | 339 | editor | `editor/common/services/treeSitter/treeSitterLibraryService.ts` | `lib/src/monaco/editor/common/services/treeSitter/treeSitterLibraryService.dart` | pending |
 | 340 | editor | `editor/common/services/treeSitter/treeSitterThemeService.ts` | `lib/src/monaco/editor/common/services/treeSitter/treeSitterThemeService.dart` | pending |
-| 341 | editor | `editor/common/services/treeViewsDnd.ts` | `lib/src/monaco/editor/common/services/treeViewsDnd.dart` | pending |
+| 341 | editor | `editor/common/services/treeViewsDnd.ts` | `lib/src/monaco/editor/common/services/treeViewsDnd.dart` | tested |
 | 342 | editor | `editor/common/services/treeViewsDndService.ts` | `lib/src/monaco/editor/common/services/treeViewsDndService.dart` | pending |
 | 343 | editor | `editor/common/services/unicodeTextModelHighlighter.ts` | `lib/src/monaco/editor/common/services/unicodeTextModelHighlighter.dart` | pending |
 | 344 | editor | `editor/common/standalone/standaloneEnums.ts` | `lib/src/monaco/editor/common/standalone/standaloneEnums.dart` | pending |
@@ -524,7 +524,7 @@
 | 515 | editor | `editor/contrib/hover/browser/glyphHoverController.ts` | `lib/src/monaco/editor/contrib/hover/browser/glyphHoverController.dart` | pending |
 | 516 | editor | `editor/contrib/hover/browser/glyphHoverWidget.ts` | `lib/src/monaco/editor/contrib/hover/browser/glyphHoverWidget.dart` | pending |
 | 517 | editor | `editor/contrib/hover/browser/hoverAccessibleViews.ts` | `lib/src/monaco/editor/contrib/hover/browser/hoverAccessibleViews.dart` | pending |
-| 518 | editor | `editor/contrib/hover/browser/hoverActionIds.ts` | `lib/src/monaco/editor/contrib/hover/browser/hoverActionIds.dart` | pending |
+| 518 | editor | `editor/contrib/hover/browser/hoverActionIds.ts` | `lib/src/monaco/editor/contrib/hover/browser/hoverActionIds.dart` | tested |
 | 519 | editor | `editor/contrib/hover/browser/hoverActions.ts` | `lib/src/monaco/editor/contrib/hover/browser/hoverActions.dart` | pending |
 | 520 | editor | `editor/contrib/hover/browser/hoverContribution.ts` | `lib/src/monaco/editor/contrib/hover/browser/hoverContribution.dart` | pending |
 | 521 | editor | `editor/contrib/hover/browser/hoverCopyButton.ts` | `lib/src/monaco/editor/contrib/hover/browser/hoverCopyButton.dart` | pending |
