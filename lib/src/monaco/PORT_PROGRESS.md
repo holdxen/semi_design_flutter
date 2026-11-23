@@ -48,7 +48,7 @@
 | 39 | editor | `editor/browser/gpu/bufferDirtyTracker.ts` | `lib/src/monaco/editor/browser/gpu/bufferDirtyTracker.dart` | tested |
 | 40 | editor | `editor/browser/gpu/contentSegmenter.ts` | `lib/src/monaco/editor/browser/gpu/contentSegmenter.dart` | pending |
 | 41 | editor | `editor/browser/gpu/css/decorationCssRuleExtractor.ts` | `lib/src/monaco/editor/browser/gpu/css/decorationCssRuleExtractor.dart` | pending |
-| 42 | editor | `editor/browser/gpu/css/decorationStyleCache.ts` | `lib/src/monaco/editor/browser/gpu/css/decorationStyleCache.dart` | pending |
+| 42 | editor | `editor/browser/gpu/css/decorationStyleCache.ts` | `lib/src/monaco/editor/browser/gpu/css/decorationStyleCache.dart` | tested |
 | 43 | editor | `editor/browser/gpu/gpu.ts` | `lib/src/monaco/editor/browser/gpu/gpu.dart` | pending |
 | 44 | editor | `editor/browser/gpu/gpuDisposable.ts` | `lib/src/monaco/editor/browser/gpu/gpuDisposable.dart` | pending |
 | 45 | editor | `editor/browser/gpu/gpuUtils.ts` | `lib/src/monaco/editor/browser/gpu/gpuUtils.dart` | pending |
@@ -1140,7 +1140,7 @@
 | 1131 | base | `base/test/common/virtualScheduling/processor.ts` | `lib/src/monaco/base/test/common/virtualScheduling/processor.dart` | pending |
 | 1132 | base | `base/test/common/virtualScheduling/recordingTimeApi.ts` | `lib/src/monaco/base/test/common/virtualScheduling/recordingTimeApi.dart` | pending |
 | 1133 | base | `base/test/common/virtualScheduling/runWithFakedTimers.ts` | `lib/src/monaco/base/test/common/virtualScheduling/runWithFakedTimers.dart` | pending |
-| 1134 | base | `base/test/common/virtualScheduling/timeApi.ts` | `lib/src/monaco/base/test/common/virtualScheduling/timeApi.dart` | pending |
+| 1134 | base | `base/test/common/virtualScheduling/timeApi.ts` | `lib/src/monaco/base/test/common/virtualScheduling/timeApi.dart` | tested |
 | 1135 | base | `base/test/common/virtualScheduling/trace.ts` | `lib/src/monaco/base/test/common/virtualScheduling/trace.dart` | pending |
 | 1136 | base | `base/test/common/virtualScheduling/traceLogger.ts` | `lib/src/monaco/base/test/common/virtualScheduling/traceLogger.dart` | pending |
 | 1137 | base | `base/test/common/virtualScheduling/virtualClock.ts` | `lib/src/monaco/base/test/common/virtualScheduling/virtualClock.dart` | pending |
@@ -1210,7 +1210,7 @@
 | 1201 | platform | `platform/instantiation/common/instantiationService.ts` | `lib/src/monaco/platform/instantiation/common/instantiationService.dart` | pending |
 | 1202 | platform | `platform/instantiation/common/serviceCollection.ts` | `lib/src/monaco/platform/instantiation/common/serviceCollection.dart` | pending |
 | 1203 | platform | `platform/instantiation/test/common/instantiationServiceMock.ts` | `lib/src/monaco/platform/instantiation/test/common/instantiationServiceMock.dart` | pending |
-| 1204 | platform | `platform/jsonschemas/common/jsonContributionRegistry.ts` | `lib/src/monaco/platform/jsonschemas/common/jsonContributionRegistry.dart` | pending |
+| 1204 | platform | `platform/jsonschemas/common/jsonContributionRegistry.ts` | `lib/src/monaco/platform/jsonschemas/common/jsonContributionRegistry.dart` | tested |
 | 1205 | platform | `platform/keybinding/common/abstractKeybindingService.ts` | `lib/src/monaco/platform/keybinding/common/abstractKeybindingService.dart` | pending |
 | 1206 | platform | `platform/keybinding/common/baseResolvedKeybinding.ts` | `lib/src/monaco/platform/keybinding/common/baseResolvedKeybinding.dart` | tested |
 | 1207 | platform | `platform/keybinding/common/keybinding.ts` | `lib/src/monaco/platform/keybinding/common/keybinding.dart` | pending |
@@ -1228,7 +1228,7 @@
 | 1219 | platform | `platform/markers/common/markerService.ts` | `lib/src/monaco/platform/markers/common/markerService.dart` | pending |
 | 1220 | platform | `platform/markers/common/markers.ts` | `lib/src/monaco/platform/markers/common/markers.dart` | pending |
 | 1221 | platform | `platform/notification/common/notification.ts` | `lib/src/monaco/platform/notification/common/notification.dart` | pending |
-| 1222 | platform | `platform/notification/common/notificationLegacy.ts` | `lib/src/monaco/platform/notification/common/notificationLegacy.dart` | pending |
+| 1222 | platform | `platform/notification/common/notificationLegacy.ts` | `lib/src/monaco/platform/notification/common/notificationLegacy.dart` | tested |
 | 1223 | platform | `platform/notification/common/notificationMessage.ts` | `lib/src/monaco/platform/notification/common/notificationMessage.dart` | tested |
 | 1224 | platform | `platform/notification/common/notificationTelemetry.ts` | `lib/src/monaco/platform/notification/common/notificationTelemetry.dart` | pending |
 | 1225 | platform | `platform/notification/test/common/testNotificationService.ts` | `lib/src/monaco/platform/notification/test/common/testNotificationService.dart` | pending |
@@ -1268,7 +1268,7 @@
 | 1259 | platform | `platform/remote/common/remoteHosts.ts` | `lib/src/monaco/platform/remote/common/remoteHosts.dart` | tested |
 | 1260 | platform | `platform/storage/common/storage.ts` | `lib/src/monaco/platform/storage/common/storage.dart` | pending |
 | 1261 | platform | `platform/telemetry/common/commonProperties.ts` | `lib/src/monaco/platform/telemetry/common/commonProperties.dart` | pending |
-| 1262 | platform | `platform/telemetry/common/gdprTypings.ts` | `lib/src/monaco/platform/telemetry/common/gdprTypings.dart` | pending |
+| 1262 | platform | `platform/telemetry/common/gdprTypings.ts` | `lib/src/monaco/platform/telemetry/common/gdprTypings.dart` | tested |
 | 1263 | platform | `platform/telemetry/common/telemetry.ts` | `lib/src/monaco/platform/telemetry/common/telemetry.dart` | pending |
 | 1264 | platform | `platform/telemetry/common/telemetryUtils.ts` | `lib/src/monaco/platform/telemetry/common/telemetryUtils.dart` | pending |
 | 1265 | platform | `platform/theme/browser/defaultStyles.ts` | `lib/src/monaco/platform/theme/browser/defaultStyles.dart` | pending |
