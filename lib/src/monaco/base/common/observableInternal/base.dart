@@ -15,7 +15,11 @@ void Function(Object message, Object error) consoleError = (message, error) {
 };
 
 /// 1:1: `interface IObservable<T> extends IObservableWithChange<T, unknown>`
-abstract class IObservable<T> implements IObservableWithChange<T, Object?> {}
+/// TS declares this as an empty structural extension, so it is type-equivalent
+/// to `IObservableWithChange<T, unknown>`. A Dart typedef alias preserves that
+/// equivalence (a nominal subclass would reject `ObservableValue` instances,
+/// which TS freely passes as `IObservable<T>`).
+typedef IObservable<T> = IObservableWithChange<T, Object?>;
 
 /// 1:1: `interface IObservableWithChange<T, TChange = unknown>`
 abstract class IObservableWithChange<T, TChange> {
@@ -34,9 +38,9 @@ abstract class IObservableWithChange<T, TChange> {
 
 /// 1:1: `interface IObserver`
 abstract class IObserver {
-  void beginUpdate<T>(IObservable<T> observable);
-  void endUpdate<T>(IObservable<T> observable);
-  void handlePossibleChange<T>(IObservable<T> observable);
+  void beginUpdate<T>(IObservableWithChange<T, Object?> observable);
+  void endUpdate<T>(IObservableWithChange<T, Object?> observable);
+  void handlePossibleChange<T>(IObservableWithChange<T, Object?> observable);
   void handleChange<T, TChange>(IObservableWithChange<T, TChange> observable, TChange change);
 }
 
