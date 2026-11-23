@@ -49,6 +49,9 @@ import 'package:semi_design_flutter/src/monaco/platform/instantiation/common/gra
 import 'package:semi_design_flutter/src/monaco/editor/contrib/inlineCompletions/browser/model/graph.dart' as dgraph;
 import 'package:semi_design_flutter/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/smallImmutableSet.dart' as sis;
 import 'package:semi_design_flutter/src/monaco/base/browser/ui/list/rangeMap.dart' as rmap;
+import 'package:semi_design_flutter/src/monaco/editor/browser/gpu/bufferDirtyTracker.dart' as bdt;
+import 'package:semi_design_flutter/src/monaco/editor/browser/viewParts/minimap/minimapDirtyRows.dart' as mdr;
+import 'package:semi_design_flutter/src/monaco/editor/common/viewModel/overviewZoneManager.dart' as ozm;
 import 'package:semi_design_flutter/src/monaco/base/common/naturalLanguage/korean.dart' as korean;
 import 'package:semi_design_flutter/src/monaco/base/common/stopwatch.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/symbols.dart';
@@ -2584,6 +2587,145 @@ void main() {
       final m4 = rmap.RangeMap(10); m4.splice(0,0,[one]);
       expect(m4.indexAt(0),0); expect(m4.indexAt(1),0); expect(m4.indexAt(10),0); expect(m4.indexAt(11),1);
       expect(m4.positionAt(0),10); expect(m4.positionAt(1),-1);
+    });
+  });
+
+  group('editor/browser/gpu/bufferDirtyTracker.ts', () {
+    // Mirrors bufferDirtyTracker.test.ts exactly.
+    void assertState(bdt.BufferDirtyTracker b, int? dataOffset, int? dirtySize) {
+      expect(b.dataOffset, dataOffset);
+      expect(b.dirtySize, dirtySize);
+      expect(b.isDirty, dataOffset != null);
+    }
+
+    test('flag(index)', () {
+      final b = bdt.BufferDirtyTracker();
+      expect(b.flag(0), 0);
+      assertState(b, 0, 1);
+      expect(b.flag(31), 31);
+      assertState(b, 0, 32);
+      b.clear();
+      assertState(b, null, null);
+      expect(b.flag(10), 10);
+      assertState(b, 10, 1);
+      expect(b.flag(15), 15);
+      assertState(b, 10, 6);
+    });
+
+    test('flag(index, length)', () {
+      final b = bdt.BufferDirtyTracker();
+      b.flag(0, 32);
+      assertState(b, 0, 32);
+      b.clear();
+      assertState(b, null, null);
+      b.flag(10, 6);
+      assertState(b, 10, 6);
+    });
+  });
+
+  group('editor/browser/viewParts/minimap/minimapDirtyRows.ts', () {
+    // Mirrors minimapDirtyRows.test.ts RowSignatures.diff cases.
+    mdr.RowSignatures rows(List<List<dynamic>> drawings, [int height = 10]) {
+      final result = mdr.RowSignatures(height);
+      for (final d in drawings) {
+        result.add(d[0] as num, d[1] as num, d[2] as String, d[3] as bool);
+      }
+      return result;
+    }
+    void expectRows(mdr.IDirtyRows? a, mdr.IDirtyRows? b) {
+      if (b == null) { expect(a, isNull); return; }
+      expect(a, isNotNull);
+      expect(a!.start, b.start);
+      expect(a.end, b.end);
+    }
+
+    test('finds the band of rows drawn differently', () {
+      final List<dynamic> cursor = <dynamic>[2, 2, 'red', true];
+      final List<dynamic> label = <dynamic>[5, 3, 'Header', false];
+      final mdr.RowSignatures empty10 = rows(<List<dynamic>>[]);
+      final mdr.RowSignatures empty8 = rows(<List<dynamic>>[], 8);
+      final actual = <mdr.IDirtyRows?>[
+        mdr.RowSignatures.diff(null, rows(<List<dynamic>>[])),
+        mdr.RowSignatures.diff(empty10, rows(<List<dynamic>>[])),
+        mdr.RowSignatures.diff(rows(<List<dynamic>>[cursor, label]), rows(<List<dynamic>>[cursor, label])),
+        mdr.RowSignatures.diff(rows(<List<dynamic>>[cursor]), rows(<List<dynamic>>[<dynamic>[3, 2, 'red', true]])),
+        mdr.RowSignatures.diff(rows(<List<dynamic>>[cursor]), rows(<List<dynamic>>[<dynamic>[2, 2, 'blue', true]])),
+        mdr.RowSignatures.diff(rows(<List<dynamic>>[cursor]), rows(<List<dynamic>>[<dynamic>[2, 2.5, 'red', true]])),
+        mdr.RowSignatures.diff(rows(<List<dynamic>>[<dynamic>[1, 4, 'red', true]]), rows(<List<dynamic>>[<dynamic>[1, 2, 'red', true], <dynamic>[3, 2, 'red', true]])),
+        mdr.RowSignatures.diff(rows(<List<dynamic>>[label]), rows(<List<dynamic>>[<dynamic>[6, 3, 'Header', false]])),
+        mdr.RowSignatures.diff(rows(<List<dynamic>>[cursor, <dynamic>[3, 3, 'Header', false]]), rows(<List<dynamic>>[<dynamic>[3, 3, 'Header', false], cursor])),
+        mdr.RowSignatures.diff(rows(<List<dynamic>>[<dynamic>[0, 1, 'a', true], <dynamic>[9, 1, 'a', true]]), rows(<List<dynamic>>[<dynamic>[0, 1, 'b', true], <dynamic>[9, 1, 'b', true]])),
+        mdr.RowSignatures.diff(empty10, empty8),
+      ];
+      final expected = <mdr.IDirtyRows?>[
+        const mdr.IDirtyRows(0, 10),
+        null,
+        null,
+        const mdr.IDirtyRows(2, 5),
+        const mdr.IDirtyRows(2, 4),
+        const mdr.IDirtyRows(4, 5),
+        null,
+        const mdr.IDirtyRows(5, 9),
+        const mdr.IDirtyRows(3, 4),
+        const mdr.IDirtyRows(0, 10),
+        const mdr.IDirtyRows(0, 8),
+      ];
+      expect(actual.length, expected.length);
+      for (int i = 0; i < expected.length; i++) {
+        expectRows(actual[i], expected[i]);
+      }
+    });
+  });
+
+  group('editor/common/viewModel/overviewZoneManager.ts', () {
+    // Mirrors overviewZoneManager.test.ts exactly.
+    void expectZones(List<ozm.ColorZone> a, List<ozm.ColorZone> b) {
+      expect(a.length, b.length);
+      for (int i = 0; i < b.length; i++) {
+        expect(a[i].from, b[i].from, reason: '$i from');
+        expect(a[i].to, b[i].to, reason: '$i to');
+        expect(a[i].colorId, b[i].colorId, reason: '$i colorId');
+      }
+    }
+    ozm.OverviewZoneManager makeManager(int lineCount, int lineHeight, int domHeight, num pixelRatio) {
+      final m = ozm.OverviewZoneManager((lineNumber) => lineHeight * lineNumber);
+      m.setDOMWidth(30);
+      m.setDOMHeight(domHeight);
+      m.setOuterHeight(lineCount * lineHeight);
+      m.setLineHeight(lineHeight);
+      m.setPixelRatio(pixelRatio);
+      m.setZones(<ozm.OverviewRulerZone>[
+        ozm.OverviewRulerZone(1, 1, 0, '1'),
+        ozm.OverviewRulerZone(10, 10, 0, '2'),
+        ozm.OverviewRulerZone(30, 31, 0, '3'),
+        ozm.OverviewRulerZone(50, 50, 0, '4'),
+      ]);
+      return m;
+    }
+
+    test('pixel ratio 1, dom height 600', () {
+      expectZones(makeManager(50, 20, 600, 1).resolveColorZones(), <ozm.ColorZone>[
+        ozm.ColorZone(12, 24, 1),
+        ozm.ColorZone(120, 132, 2),
+        ozm.ColorZone(360, 384, 3),
+        ozm.ColorZone(588, 600, 4),
+      ]);
+    });
+    test('pixel ratio 1, dom height 300', () {
+      expectZones(makeManager(50, 20, 300, 1).resolveColorZones(), <ozm.ColorZone>[
+        ozm.ColorZone(6, 12, 1),
+        ozm.ColorZone(60, 66, 2),
+        ozm.ColorZone(180, 192, 3),
+        ozm.ColorZone(294, 300, 4),
+      ]);
+    });
+    test('pixel ratio 2, dom height 300', () {
+      expectZones(makeManager(50, 20, 300, 2).resolveColorZones(), <ozm.ColorZone>[
+        ozm.ColorZone(12, 24, 1),
+        ozm.ColorZone(120, 132, 2),
+        ozm.ColorZone(360, 384, 3),
+        ozm.ColorZone(588, 600, 4),
+      ]);
     });
   });
 

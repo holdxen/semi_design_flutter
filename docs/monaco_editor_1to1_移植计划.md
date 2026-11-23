@@ -443,3 +443,13 @@ semi_design_flutter/
 - [x] **依赖闭包核对**：确认 `graph.test.ts` 导入的是 `../../browser/model/graph.js`（inlineCompletions 的 graph），非 `platform/instantiation/common/graph.ts`——避免按文件名误配测试。
 
 **下一批**：继续消费依赖闭合且有独立 test 的文件（`scrollbarState.ts` 244 行、`compressedVirtualizedScrollLayout.ts` 239 行、`overviewZoneManager.ts` 248 行、`bufferDirtyTracker.ts` 73 行、`mock.ts` 48 行等），择机啃核心环。
+
+### editor 渲染/视口逻辑批次续十六（2026-11-23，累计 69/1690 文件 tested）
+
+- [x] `editor/browser/gpu/bufferDirtyTracker.dart`：1:1 翻译 `bufferDirtyTracker.ts`（73 行），`IBufferDirtyTrackerReader` + `BufferDirtyTracker`（dataOffset/dirtySize/isDirty/flag/clear）。纯逻辑，`number | undefined` → `int?`。`bufferDirtyTracker.test.ts` 2 case 精确搬运。
+- [x] `editor/browser/viewParts/minimap/minimapDirtyRows.dart`：1:1 翻译 `minimapDirtyRows.ts`（117 行），`IDirtyRows`/`RowSignatures`/`IRecordedDrawing`/`RecordedFrame`。**关键适配**：(1) 源码 `add(y: number, height: number)` 允许小数（测试有 `height=2.5`）→ 参数用 `num`，`Math.floor(y)`/`Math.ceil(bottom)` 用 `.floor()`/`.ceil()`，coverage 字符串走 JS number 字符串化 helper `_n`（integer-valued double 去 `.0`）；(2) `CanvasRenderingContext2D` 用 `typedef DrawCallback = void Function(Object)` 承载（Dart 无 DOM 类型），draw 闭包内 `dynamic` 访问 fillStyle/fillRect。`minimapDirtyRows.test.ts` 11 个子断言精确搬运（含 2.5 小数高度、partial coverage）。
+- [x] `editor/common/viewModel/overviewZoneManager.dart`：1:1 翻译 `overviewZoneManager.ts`（248 行），`Constants`/`ColorZone`/`OverviewRulerZone`/`OverviewZoneManager`。`const enum MINIMUM_HEIGHT` → class static const；`Object.create(null)` → `Map<String,int>`；稀疏 `string[]` → `List<String?>` + 扩展写；`a.color < b.color ? -1 : 1` → `compareTo`。`overviewZoneManager.test.ts` 3 case 精确搬运（pixelRatio 1/1/2，含 halfMinimumHeight clamp）。
+- [x] 测试追加 6 case（bufferDirtyTracker 2 + minimapDirtyRows 1 + overviewZoneManager 3）；base 测试文件 150 → **156 case 全绿**；三文件 `dart analyze` 零 error/warning（仅文件名/常量名 info，刻意保留源码风格）。
+- [x] **候选测试核对**：本批先用脚本核对 13 个候选中测试的真实 import 路径，剔除 4 个文件名碰撞误配（`monaco/editor.ts`、`editor/common/model/utils.ts`、`lsp/utils.ts`、`base/test/common/mock.ts`），确认 7 个真实对应。
+
+**下一批**：继续消费依赖闭合且有独立 test 的文件（`scrollbarState.ts` 244 行、`compressedVirtualizedScrollLayout.ts` 239 行、`windowControlsOverlay.ts` 121 行、`executionGraph.ts` 544 行等），择机啃核心环。

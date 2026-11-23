@@ -7,7 +7,7 @@
 
 | # | 层 | 源文件 | 目标 Dart | 状态 |
 |---|---|---|---|---|
-> 进度：66 / 1690 tested（2026-11-23，含两个 graph + smallImmutableSet + rangeMap）。
+> 进度：69 / 1690 tested（2026-11-23，含 bufferDirtyTracker / minimapDirtyRows / overviewZoneManager）。
 
 | 1 | editor | `editor/browser/config/charWidthReader.ts` | `lib/src/monaco/editor/browser/config/charWidthReader.dart` | pending |
 | 2 | editor | `editor/browser/config/domFontInfo.ts` | `lib/src/monaco/editor/browser/config/domFontInfo.dart` | pending |
@@ -47,7 +47,7 @@
 | 36 | editor | `editor/browser/gpu/atlas/textureAtlasPage.ts` | `lib/src/monaco/editor/browser/gpu/atlas/textureAtlasPage.dart` | pending |
 | 37 | editor | `editor/browser/gpu/atlas/textureAtlasShelfAllocator.ts` | `lib/src/monaco/editor/browser/gpu/atlas/textureAtlasShelfAllocator.dart` | pending |
 | 38 | editor | `editor/browser/gpu/atlas/textureAtlasSlabAllocator.ts` | `lib/src/monaco/editor/browser/gpu/atlas/textureAtlasSlabAllocator.dart` | pending |
-| 39 | editor | `editor/browser/gpu/bufferDirtyTracker.ts` | `lib/src/monaco/editor/browser/gpu/bufferDirtyTracker.dart` | pending |
+| 39 | editor | `editor/browser/gpu/bufferDirtyTracker.ts` | `lib/src/monaco/editor/browser/gpu/bufferDirtyTracker.dart` | tested |
 | 40 | editor | `editor/browser/gpu/contentSegmenter.ts` | `lib/src/monaco/editor/browser/gpu/contentSegmenter.dart` | pending |
 | 41 | editor | `editor/browser/gpu/css/decorationCssRuleExtractor.ts` | `lib/src/monaco/editor/browser/gpu/css/decorationCssRuleExtractor.dart` | pending |
 | 42 | editor | `editor/browser/gpu/css/decorationStyleCache.ts` | `lib/src/monaco/editor/browser/gpu/css/decorationStyleCache.dart` | pending |
@@ -102,7 +102,7 @@
 | 91 | editor | `editor/browser/viewParts/minimap/minimapCharRenderer.ts` | `lib/src/monaco/editor/browser/viewParts/minimap/minimapCharRenderer.dart` | pending |
 | 92 | editor | `editor/browser/viewParts/minimap/minimapCharRendererFactory.ts` | `lib/src/monaco/editor/browser/viewParts/minimap/minimapCharRendererFactory.dart` | pending |
 | 93 | editor | `editor/browser/viewParts/minimap/minimapCharSheet.ts` | `lib/src/monaco/editor/browser/viewParts/minimap/minimapCharSheet.dart` | pending |
-| 94 | editor | `editor/browser/viewParts/minimap/minimapDirtyRows.ts` | `lib/src/monaco/editor/browser/viewParts/minimap/minimapDirtyRows.dart` | pending |
+| 94 | editor | `editor/browser/viewParts/minimap/minimapDirtyRows.ts` | `lib/src/monaco/editor/browser/viewParts/minimap/minimapDirtyRows.dart` | tested |
 | 95 | editor | `editor/browser/viewParts/minimap/minimapPreBaked.ts` | `lib/src/monaco/editor/browser/viewParts/minimap/minimapPreBaked.dart` | pending |
 | 96 | editor | `editor/browser/viewParts/overlayWidgets/overlayWidgets.ts` | `lib/src/monaco/editor/browser/viewParts/overlayWidgets/overlayWidgets.dart` | pending |
 | 97 | editor | `editor/browser/viewParts/overviewRuler/decorationsOverviewRuler.ts` | `lib/src/monaco/editor/browser/viewParts/overviewRuler/decorationsOverviewRuler.dart` | pending |
@@ -383,7 +383,7 @@
 | 372 | editor | `editor/common/viewModel/minimapTokensColorTracker.ts` | `lib/src/monaco/editor/common/viewModel/minimapTokensColorTracker.dart` | pending |
 | 373 | editor | `editor/common/viewModel/modelLineProjection.ts` | `lib/src/monaco/editor/common/viewModel/modelLineProjection.dart` | pending |
 | 374 | editor | `editor/common/viewModel/monospaceLineBreaksComputer.ts` | `lib/src/monaco/editor/common/viewModel/monospaceLineBreaksComputer.dart` | pending |
-| 375 | editor | `editor/common/viewModel/overviewZoneManager.ts` | `lib/src/monaco/editor/common/viewModel/overviewZoneManager.dart` | pending |
+| 375 | editor | `editor/common/viewModel/overviewZoneManager.ts` | `lib/src/monaco/editor/common/viewModel/overviewZoneManager.dart` | tested |
 | 376 | editor | `editor/common/viewModel/screenReaderSimpleModel.ts` | `lib/src/monaco/editor/common/viewModel/screenReaderSimpleModel.dart` | pending |
 | 377 | editor | `editor/common/viewModel/viewContext.ts` | `lib/src/monaco/editor/common/viewModel/viewContext.dart` | pending |
 | 378 | editor | `editor/common/viewModel/viewModelDecoration.ts` | `lib/src/monaco/editor/common/viewModel/viewModelDecoration.dart` | pending |
