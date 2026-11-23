@@ -51,7 +51,7 @@
 | 42 | editor | `editor/browser/gpu/css/decorationStyleCache.ts` | `lib/src/monaco/editor/browser/gpu/css/decorationStyleCache.dart` | tested |
 | 43 | editor | `editor/browser/gpu/gpu.ts` | `lib/src/monaco/editor/browser/gpu/gpu.dart` | pending |
 | 44 | editor | `editor/browser/gpu/gpuDisposable.ts` | `lib/src/monaco/editor/browser/gpu/gpuDisposable.dart` | pending |
-| 45 | editor | `editor/browser/gpu/gpuUtils.ts` | `lib/src/monaco/editor/browser/gpu/gpuUtils.dart` | pending |
+| 45 | editor | `editor/browser/gpu/gpuUtils.ts` | `lib/src/monaco/editor/browser/gpu/gpuUtils.dart` | tested |
 | 46 | editor | `editor/browser/gpu/objectCollectionBuffer.ts` | `lib/src/monaco/editor/browser/gpu/objectCollectionBuffer.dart` | pending |
 | 47 | editor | `editor/browser/gpu/raster/glyphRasterizer.ts` | `lib/src/monaco/editor/browser/gpu/raster/glyphRasterizer.dart` | pending |
 | 48 | editor | `editor/browser/gpu/raster/raster.ts` | `lib/src/monaco/editor/browser/gpu/raster/raster.dart` | pending |
@@ -358,7 +358,7 @@
 | 349 | editor | `editor/common/textModelGuides.ts` | `lib/src/monaco/editor/common/textModelGuides.dart` | pending |
 | 350 | editor | `editor/common/tokenizationRegistry.ts` | `lib/src/monaco/editor/common/tokenizationRegistry.dart` | pending |
 | 351 | editor | `editor/common/tokenizationTextModelPart.ts` | `lib/src/monaco/editor/common/tokenizationTextModelPart.dart` | pending |
-| 352 | editor | `editor/common/tokens/common.ts` | `lib/src/monaco/editor/common/tokens/common.dart` | pending |
+| 352 | editor | `editor/common/tokens/common.ts` | `lib/src/monaco/editor/common/tokens/common.dart` | tested |
 | 353 | editor | `editor/common/tokens/contiguousMultilineTokens.ts` | `lib/src/monaco/editor/common/tokens/contiguousMultilineTokens.dart` | pending |
 | 354 | editor | `editor/common/tokens/contiguousMultilineTokensBuilder.ts` | `lib/src/monaco/editor/common/tokens/contiguousMultilineTokensBuilder.dart` | pending |
 | 355 | editor | `editor/common/tokens/contiguousTokensEditing.ts` | `lib/src/monaco/editor/common/tokens/contiguousTokensEditing.dart` | pending |
@@ -371,7 +371,7 @@
 | 362 | editor | `editor/common/viewEvents.ts` | `lib/src/monaco/editor/common/viewEvents.dart` | pending |
 | 363 | editor | `editor/common/viewLayout/lineDecorations.ts` | `lib/src/monaco/editor/common/viewLayout/lineDecorations.dart` | pending |
 | 364 | editor | `editor/common/viewLayout/lineHeights.ts` | `lib/src/monaco/editor/common/viewLayout/lineHeights.dart` | pending |
-| 365 | editor | `editor/common/viewLayout/linePart.ts` | `lib/src/monaco/editor/common/viewLayout/linePart.dart` | pending |
+| 365 | editor | `editor/common/viewLayout/linePart.ts` | `lib/src/monaco/editor/common/viewLayout/linePart.dart` | tested |
 | 366 | editor | `editor/common/viewLayout/linesLayout.ts` | `lib/src/monaco/editor/common/viewLayout/linesLayout.dart` | pending |
 | 367 | editor | `editor/common/viewLayout/viewLayout.ts` | `lib/src/monaco/editor/common/viewLayout/viewLayout.dart` | pending |
 | 368 | editor | `editor/common/viewLayout/viewLineRenderer.ts` | `lib/src/monaco/editor/common/viewLayout/viewLineRenderer.dart` | pending |
@@ -1076,7 +1076,7 @@
 | 1067 | base | `base/common/observableInternal/logging/debugger/debuggerRpc.ts` | `lib/src/monaco/base/common/observableInternal/logging/debugger/debuggerRpc.dart` | tested |
 | 1068 | base | `base/common/observableInternal/logging/debugger/devToolsLogger.ts` | `lib/src/monaco/base/common/observableInternal/logging/debugger/devToolsLogger.dart` | pending |
 | 1069 | base | `base/common/observableInternal/logging/debugger/rpc.ts` | `lib/src/monaco/base/common/observableInternal/logging/debugger/rpc.dart` | tested |
-| 1070 | base | `base/common/observableInternal/logging/debugger/utils.ts` | `lib/src/monaco/base/common/observableInternal/logging/debugger/utils.dart` | pending |
+| 1070 | base | `base/common/observableInternal/logging/debugger/utils.ts` | `lib/src/monaco/base/common/observableInternal/logging/debugger/utils.dart` | tested |
 | 1071 | base | `base/common/observableInternal/logging/logging.ts` | `lib/src/monaco/base/common/observableInternal/logging/logging.dart` | pending |
 | 1072 | base | `base/common/observableInternal/map.ts` | `lib/src/monaco/base/common/observableInternal/map.dart` | pending |
 | 1073 | base | `base/common/observableInternal/observables/baseObservable.ts` | `lib/src/monaco/base/common/observableInternal/observables/baseObservable.dart` | pending |
@@ -1134,7 +1134,7 @@
 | 1125 | base | `base/test/common/timeTravelScheduler.ts` | `lib/src/monaco/base/test/common/timeTravelScheduler.dart` | pending |
 | 1126 | base | `base/test/common/utils.ts` | `lib/src/monaco/base/test/common/utils.dart` | pending |
 | 1127 | base | `base/test/common/virtualScheduling/embedding.ts` | `lib/src/monaco/base/test/common/virtualScheduling/embedding.dart` | pending |
-| 1128 | base | `base/test/common/virtualScheduling/globalTimeApi.ts` | `lib/src/monaco/base/test/common/virtualScheduling/globalTimeApi.dart` | pending |
+| 1128 | base | `base/test/common/virtualScheduling/globalTimeApi.ts` | `lib/src/monaco/base/test/common/virtualScheduling/globalTimeApi.dart` | tested |
 | 1129 | base | `base/test/common/virtualScheduling/index.ts` | `lib/src/monaco/base/test/common/virtualScheduling/index.dart` | pending |
 | 1130 | base | `base/test/common/virtualScheduling/loggingTimeApi.ts` | `lib/src/monaco/base/test/common/virtualScheduling/loggingTimeApi.dart` | pending |
 | 1131 | base | `base/test/common/virtualScheduling/processor.ts` | `lib/src/monaco/base/test/common/virtualScheduling/processor.dart` | pending |

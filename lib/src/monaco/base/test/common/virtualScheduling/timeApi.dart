@@ -90,12 +90,36 @@ class HostTimeApi {
 /// [HostTimeApi]; tests may replace it with a virtual implementation.
 HostTimeApi? _hostTimeApi;
 
+/// The active "global" host time API bridge (Dart has no `globalThis`):
+/// [pushGlobalTimeApi] swaps this value; [captureGlobalTimeApi] reads it.
+/// Null means "use the default dart:async-backed bridge".
+HostTimeApi? get activeHostTimeApi => _hostTimeApi;
+set activeHostTimeApi(HostTimeApi? value) => _hostTimeApi = value;
+
 /// 1:1: `export function captureGlobalTimeApi(): TimeApi`
 /// Captures a snapshot of the host time API into a [TimeApi] value.
 TimeApi captureGlobalTimeApi([HostTimeApi? host]) {
   final HostTimeApi h = host ?? _hostTimeApi ?? _defaultHostTimeApi;
   return _CapturedTimeApi(h);
 }
+
+/// Materializes a [TimeApi] value into a concrete [HostTimeApi] snapshot so it
+/// can be installed as the active global bridge by `pushGlobalTimeApi`.
+/// (In TS the `TimeApi` value *is* the set of global functions; in the Dart
+/// port the equivalent single swappable unit is [HostTimeApi].)
+HostTimeApi hostFromTimeApi(TimeApi api) => HostTimeApi(
+      setTimeout: api.setTimeout,
+      clearTimeout: api.clearTimeout,
+      setInterval: api.setInterval,
+      clearInterval: api.clearInterval,
+      setImmediate: api.setImmediate,
+      clearImmediate: api.clearImmediate,
+      requestAnimationFrame: api.requestAnimationFrame,
+      cancelAnimationFrame: api.cancelAnimationFrame,
+      Date: api.Date,
+      performanceNow: api.performanceNow,
+      performanceTimeOrigin: api.performanceTimeOrigin,
+    );
 
 /// A snapshot of the real host time API at module-load time.
 /// 1:1: `export const realTimeApi: TimeApi = captureGlobalTimeApi();`
