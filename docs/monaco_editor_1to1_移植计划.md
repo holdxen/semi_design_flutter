@@ -461,3 +461,16 @@ semi_design_flutter/
 - [x] 测试追加 6 case（scrollbarState 2 + compressed 4）；base 测试文件 156 → **162 case 全绿**；两文件 `dart analyze` 零 error/warning（仅文件名/常量名 info）。新增 `import 'dart:math' as math` 供 property test 的 Random。
 
 **下一批**：消费 `base/test/common/executionGraph.ts`（544 行，有完整 test，纯逻辑测试辅助类），之后 base/editor 依赖闭合小文件基本耗尽，需转向啃核心环 `arrays↔cancellation↔event↔lifecycle↔async`。
+
+### base 逻辑批次续十八 + 核心环分析（2026-11-23，累计 72/1690 文件 tested）
+
+- [x] `base/test/common/executionGraph.dart`：1:1 翻译 `executionGraph.ts`（544 行，纯逻辑渲染器），`ExecutionRoot`/`ExecutionEvent`/`ExecutionHistory`/`buildHistoryFromTasks`/`extractCallerFrame`/`renderSwimlanes`/`renderLaneGraph` + `TraceLike`/`ScheduledTaskLike`/`LogEntryLike`。**关键适配**：(1) JS 对象引用作 Map key → Dart 默认类即身份语义（不重写 ==/hashCode）；(2) `[].slice(1)` 空数组不抛 → `frames.length > 1 ? sublist(1) : []`；(3) `new Array(n).fill('   ')` 可增长 → `List.filled(..., growable: true)`（源码后续 `chars.push`）；(4) `_skipFramePatterns` 正则用 raw string；(5) `padStart/End`→`padLeft/Right`、`Math.max(...spread)`→fold、`_jsRound`/`_jsNum`。源码 test 5 case（含跨双 root 复杂分叉树的 swimlane/lane-graph 精确输出）+ buildHistoryFromTasks 自建 1 case，共 7 case 全绿。
+- [x] 测试追加 7 case；base 测试文件 156 → **169 case 全绿**；executionGraph.dart `dart analyze` 零 error/warning（仅 info）。
+- [x] **依赖闭合小文件已全部消费完毕**：重新扫描确认——所有"依赖闭合 + 有真实源码 test + ≤600 行"的 pending 文件均已翻译。剩余仅核心环。
+
+**核心环分析（下一阶段）**：`arrays/cancellation/event/lifecycle/async`（7 个入口，含 observable/resources）共享一个 **68 文件强连通闭包，其中 47 个未翻译，总计约 15267 行 TS**。构成：
+  - 小文件（8~180 行）约 30 个，主要是 `observableInternal/*`（observables/、reactions/、logging/、utils/、commonFacade/）+ `observable.ts`(9)/`sequence.ts`(35)/`set.ts`(77)/`map.ts`(80)/`cache.ts`(154)/`equals.ts`(207)。
+  - 巨型文件：`arrays.ts`(950)/`lifecycle.ts`(975)/`strings.ts`(1435)/`event.ts`(1992)/`async.ts`(2753)/`resources.ts`(459)/`network.ts`(484)。
+  - 这些文件彼此成环，无法逐个闭包翻译；需**整组推进**：先按拓扑顺序翻 observableInternal 内部叶子（commonFacade/utils/valueWithChangeEvent 等），再翻 observable 核心（base/derivedImpl/observableValue 等），最后翻 arrays/cancellation/lifecycle/event/async。由于 analyze 在 Dart 中按文件逐一检查，可以边翻边 analyze（只要有 import 的文件存在即可，不强求先全部闭合）。
+
+**下一批**：开始核心环 observableInternal 子族，从最小叶子起（`commonFacade/cancellation.ts` 8 行、`observable.ts` 9 行、`commonFacade/deps.ts` 11 行、`valueWithChangeEvent.ts` 30 行、`sequence.ts` 35 行），逐步建立可 analyze 的子图。

@@ -7,7 +7,7 @@
 
 | # | 层 | 源文件 | 目标 Dart | 状态 |
 |---|---|---|---|---|
-> 进度：71 / 1690 tested（2026-11-23，含 scrollbarState / compressedVirtualizedScrollLayout）。
+> 进度：72 / 1690 tested（2026-11-23，含 executionGraph）。
 
 | 1 | editor | `editor/browser/config/charWidthReader.ts` | `lib/src/monaco/editor/browser/config/charWidthReader.dart` | pending |
 | 2 | editor | `editor/browser/config/domFontInfo.ts` | `lib/src/monaco/editor/browser/config/domFontInfo.dart` | pending |
@@ -1127,7 +1127,7 @@
 | 1116 | base | `base/parts/sandbox/common/sandboxTypes.ts` | `lib/src/monaco/base/parts/sandbox/common/sandboxTypes.dart` | pending |
 | 1117 | base | `base/parts/storage/common/storage.ts` | `lib/src/monaco/base/parts/storage/common/storage.dart` | pending |
 | 1118 | base | `base/test/browser/testWindow.ts` | `lib/src/monaco/base/test/browser/testWindow.dart` | pending |
-| 1119 | base | `base/test/common/executionGraph.ts` | `lib/src/monaco/base/test/common/executionGraph.dart` | pending |
+| 1119 | base | `base/test/common/executionGraph.ts` | `lib/src/monaco/base/test/common/executionGraph.dart` | tested |
 | 1120 | base | `base/test/common/mock.ts` | `lib/src/monaco/base/test/common/mock.dart` | pending |
 | 1121 | base | `base/test/common/snapshot.ts` | `lib/src/monaco/base/test/common/snapshot.dart` | pending |
 | 1122 | base | `base/test/common/timeTravelScheduler.ts` | `lib/src/monaco/base/test/common/timeTravelScheduler.dart` | pending |

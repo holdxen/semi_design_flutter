@@ -55,10 +55,33 @@ import 'package:semi_design_flutter/src/monaco/editor/browser/viewParts/minimap/
 import 'package:semi_design_flutter/src/monaco/editor/common/viewModel/overviewZoneManager.dart' as ozm;
 import 'package:semi_design_flutter/src/monaco/base/browser/ui/scrollbar/scrollbarState.dart' as sb;
 import 'package:semi_design_flutter/src/monaco/editor/browser/widget/multiDiffEditor/compressedVirtualizedScrollLayout.dart' as cvsl;
+import 'package:semi_design_flutter/src/monaco/base/test/common/executionGraph.dart' as eg;
 import 'package:semi_design_flutter/src/monaco/base/common/naturalLanguage/korean.dart' as korean;
 import 'package:semi_design_flutter/src/monaco/base/common/stopwatch.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/symbols.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/types.dart';
+
+class _EGHistoryBuilder {
+  final List<eg.ExecutionRoot> roots = <eg.ExecutionRoot>[];
+  final List<eg.ExecutionEvent> events = <eg.ExecutionEvent>[];
+
+  eg.ExecutionRoot root(String label) {
+    final r = eg.ExecutionRoot(label);
+    roots.add(r);
+    return r;
+  }
+
+  eg.ExecutionEvent fire(num time, String label, Object parent) {
+    final bool isRoot = parent is eg.ExecutionRoot;
+    final eg.ExecutionRoot root = isRoot ? parent as eg.ExecutionRoot : (parent as eg.ExecutionEvent).root;
+    final eg.ExecutionEvent? parentEvent = isRoot ? null : parent as eg.ExecutionEvent;
+    final e = eg.ExecutionEvent(time: time, label: label, root: root, parent: parentEvent);
+    events.add(e);
+    return e;
+  }
+
+  eg.ExecutionHistory build() => eg.ExecutionHistory(roots: roots, events: events);
+}
 
 class _TestSide extends rpc.Side {
   final Map<String, Function> requests = <String, Function>{
@@ -2871,6 +2894,135 @@ void main() {
       final afterAll = cvsl.mapLogicalPosition(
           const cvsl.ILogicalPosition(3, 1420), edit);
       expect(afterAll.offset, 860);
+    });
+  });
+
+  group('base/test/common/executionGraph.ts', () {
+    // Mirrors executionGraph.test.ts exactly (renderSwimlanes / renderLaneGraph).
+
+    test('renderSwimlanes: empty history', () {
+      expect(eg.renderSwimlanes(eg.ExecutionHistory(roots: <eg.ExecutionRoot>[], events: <eg.ExecutionEvent>[])),
+          '(empty history)');
+    });
+
+    test('renderSwimlanes: single root, linear chain', () {
+      final h = _EGHistoryBuilder();
+      final A = h.root('A');
+      final t0 = h.fire(0, 'setTimeout', A);
+      final t1 = h.fire(16, 'rAF', t0);
+      h.fire(32, 'rAF', t1);
+      expect(eg.renderSwimlanes(h.build()), <String>[
+        '            A',
+        ' +0ms ├─ setTimeout',
+        '+16ms    └─ rAF',
+        '+32ms       └─ rAF',
+      ].join('\n'));
+    });
+
+    test('renderSwimlanes: forest with forks across two roots', () {
+      final h = _EGHistoryBuilder();
+      final A = h.root('A');
+      final B = h.root('B');
+      final aT0 = h.fire(0, 'setTimeout', A);
+      final bT10 = h.fire(10, 'setTimeout', B);
+      final aRaf16 = h.fire(16, 'requestAnimationFrame', aT0);
+      final bRaf26 = h.fire(26, 'requestAnimationFrame', bT10);
+      h.fire(32, 'requestAnimationFrame', aRaf16);
+      h.fire(46, 'setTimeout', bRaf26);
+      h.fire(50, 'setTimeout', aT0);
+      expect(eg.renderSwimlanes(h.build()), <String>[
+        '                     A                             B',
+        ' +0ms ├─ setTimeout',
+        '+10ms │  |                            ├─ setTimeout',
+        '+16ms │  ├─ requestAnimationFrame     │',
+        '+26ms │  │                               └─ requestAnimationFrame',
+        '+32ms │     └─ requestAnimationFrame     │',
+        '+46ms │                                     └─ setTimeout',
+        '+50ms    └─ setTimeout',
+      ].join('\n'));
+    });
+
+    test('renderSwimlanes: degenerate linked-list tree (5 nodes)', () {
+      final h = _EGHistoryBuilder();
+      final A = h.root('A');
+      final e1 = h.fire(0, 'n1', A);
+      final e2 = h.fire(10, 'n2', e1);
+      final e3 = h.fire(20, 'n3', e2);
+      h.fire(30, 'n4', e3);
+      expect(eg.renderSwimlanes(h.build()), <String>[
+        '             A',
+        ' +0ms ├─ n1',
+        '+10ms    └─ n2',
+        '+20ms       └─ n3',
+        '+30ms          └─ n4',
+      ].join('\n'));
+    });
+
+    test('renderLaneGraph: degenerate linked-list tree (5 nodes)', () {
+      final h = _EGHistoryBuilder();
+      final A = h.root('A');
+      final e1 = h.fire(0, 'n1', A);
+      final e2 = h.fire(10, 'n2', e1);
+      final e3 = h.fire(20, 'n3', e2);
+      h.fire(30, 'n4', e3);
+      expect(eg.renderLaneGraph(h.build()), <String>[
+        '+A',
+        '└─╷─    [   +0ms] n1',
+        '  └─╷─  [  +10ms] n2',
+        '    └─╷─[  +20ms] n3',
+        '      └─[  +30ms] n4',
+      ].join('\n'));
+    });
+
+    test('renderLaneGraph: forest with forks across two roots', () {
+      final h = _EGHistoryBuilder();
+      final A = h.root('A');
+      final B = h.root('B');
+      final aT0 = h.fire(0, 'setTimeout', A);
+      final bT10 = h.fire(10, 'setTimeout', B);
+      final aRaf16 = h.fire(16, 'requestAnimationFrame', aT0);
+      final bRaf26 = h.fire(26, 'requestAnimationFrame', bT10);
+      h.fire(32, 'requestAnimationFrame', aRaf16);
+      h.fire(46, 'setTimeout', bRaf26);
+      h.fire(50, 'setTimeout', aT0);
+      expect(eg.renderLaneGraph(h.build()), <String>[
+        '+A',
+        '└─╷─        [   +0ms] setTimeout',
+        '  │ +B',
+        '  │ └─╷─    [  +10ms] setTimeout',
+        '  ├───┼─╷─  [  +16ms] requestAnimationFrame',
+        '  │   └─┼─╷─[  +26ms] requestAnimationFrame',
+        '  │     └─┼─[  +32ms] requestAnimationFrame',
+        '  │       └─[  +46ms] setTimeout',
+        '  └─────────[  +50ms] setTimeout',
+      ].join('\n'));
+    });
+
+    test('buildHistoryFromTasks / extractCallerFrame', () {
+      // Trace object identity drives root/parent grouping.
+      final rootObj = eg.TraceRootLike('A');
+      final traceA = eg.TraceLike(null, rootObj);
+      final traceB = eg.TraceLike(traceA, rootObj);
+      final hist = eg.buildHistoryFromTasks(
+        <eg.ScheduledTaskLike>[
+          eg.ScheduledTaskLike(time: 100, source: 'taskA', trace: traceA),
+          eg.ScheduledTaskLike(time: 116, source: 'taskB', trace: traceB),
+        ],
+        100,
+        <eg.LogEntryLike>[
+          eg.LogEntryLike(trace: traceB, message: 'hi'),
+        ],
+      );
+      expect(hist.roots.map((r) => r.label).toList(), <String>['A']);
+      expect(hist.events.length, 3);
+      expect(hist.events[0].time, 0);
+      expect(hist.events[0].label, 'taskA');
+      expect(hist.events[1].parent, same(hist.events[0]));
+      expect(hist.events[2].label, 'log: hi');
+      expect(hist.events[2].time, 16);
+      expect(eg.extractCallerFrame('  at foo.ts:1\n  at /virtualScheduling/x\n  at bar.ts:2'),
+          'foo.ts:1\nbar.ts:2');
+      expect(eg.extractCallerFrame(null), isNull);
     });
   });
 
