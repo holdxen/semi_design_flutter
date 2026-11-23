@@ -69,6 +69,8 @@ import 'package:semi_design_flutter/src/monaco/base/common/validation.dart' as v
 import 'package:semi_design_flutter/src/monaco/base/common/diff/diff.dart' as diff;
 import 'package:semi_design_flutter/src/monaco/base/common/filters.dart' as filters;
 import 'package:semi_design_flutter/src/monaco/base/common/network.dart' as net;
+import 'package:semi_design_flutter/src/monaco/base/common/resources.dart' as resources;
+import 'package:semi_design_flutter/src/monaco/platform/remote/common/remoteHosts.dart' as remoteHosts;
 import 'package:semi_design_flutter/src/monaco/editor/common/core/wordHelper.dart' as wh;
 import 'package:semi_design_flutter/src/monaco/base/common/path.dart' as path;
 import 'package:semi_design_flutter/src/monaco/base/common/charCode.dart' as cc;
@@ -6307,6 +6309,198 @@ void main() {
       expect(filters.FuzzyScoreNS.isDefault(filters.FuzzyScoreNS.Default), isTrue);
       expect(filters.nextTypoPermutation('cnoso', 1), 'conso');
       expect(filters.anyScore('ab', 'ab', 0, 'ab', 'ab', 0)[0] > 0, isTrue);
+    });
+  });
+
+  group('resources.ts', () {
+    test('distinctParents', () {
+      List<URI> uris = <URI>[
+        URI.file('/some/folderA/file.txt'),
+        URI.file('/some/folderB/file.txt'),
+        URI.file('/some/folderC/file.txt'),
+      ];
+      List<URI> distinct = resources.distinctParents<URI>(uris, (URI r) => r);
+      expect(distinct.length, 3);
+      expect(distinct[0].toString(), uris[0].toString());
+      expect(distinct[1].toString(), uris[1].toString());
+      expect(distinct[2].toString(), uris[2].toString());
+
+      uris = <URI>[
+        URI.file('/some/folderA'),
+        URI.file('/some/folderA/file.txt'),
+        URI.file('/some/folderA/child/file.txt'),
+        URI.file('/some/folderA2/file.txt'),
+        URI.file('/some/file.txt'),
+      ];
+      distinct = resources.distinctParents<URI>(uris, (URI r) => r);
+      expect(distinct.length, 3);
+      expect(distinct[0].toString(), uris[0].toString());
+      expect(distinct[1].toString(), uris[3].toString());
+      expect(distinct[2].toString(), uris[4].toString());
+    });
+
+    test('dirname / basename / extname', () {
+      if (!pf.isWindows) {
+        expect(resources.dirname(URI.file('/some/file/test.txt')).toString(),
+            'file:///some/file');
+        expect(resources.dirname(URI.file('/some/file/')).toString(),
+            'file:///some');
+        expect(resources.dirname(URI.file('/some/file')).toString(),
+            'file:///some');
+        expect(resources.basename(URI.file('/some/file/test.txt')), 'test.txt');
+        expect(resources.basename(URI.file('/some/file/')), 'file');
+        expect(resources.basename(URI.file('/some')), 'some');
+      }
+      expect(resources.dirname(URI.parse('foo://a/some/file/test.txt')).toString(),
+          'foo://a/some/file');
+      expect(resources.dirname(URI.parse('foo://a/some')).toString(), 'foo://a/');
+      expect(resources.dirname(URI.parse('foo://a')).toString(), 'foo://a');
+      expect(resources.dirname(URI.parse('foo://a/b/c?q')).toString(),
+          'foo://a/b?q');
+      expect(resources.basename(URI.parse('foo://a/some/file/')), 'file');
+      expect(resources.basename(URI.parse('foo://a/')), '');
+      expect(resources.extname(URI.parse('foo://a/file.txt')), '.txt');
+      expect(resources.basenameOrAuthority(URI.parse('foo://a')), 'a');
+    });
+
+    test('joinPath / normalizePath / relativePath / resolvePath', () {
+      if (!pf.isWindows) {
+        expect(resources.joinPath(URI.file('/foo/bar'), <String>['/file.js'])
+            .toString(), 'file:///foo/bar/file.js');
+        expect(resources.joinPath(URI.file('/foo/bar'), <String>['../file.js'])
+            .toString(), 'file:///foo/file.js');
+      }
+      expect(resources.joinPath(URI.parse('foo://a/foo/bar'), <String>[])
+          .toString(), 'foo://a/foo/bar');
+      expect(resources.joinPath(URI.parse('foo://a/foo/bar/'), <String>['/file.js'])
+          .toString(), 'foo://a/foo/bar/file.js');
+      expect(
+          resources
+              .joinPath(
+                  URI.parse(
+                      'myScheme://authority/path?query#fragment'),
+                  <String>['/file.js'])
+              .toString(),
+          'myScheme://authority/path/file.js?query#fragment');
+
+      expect(resources.normalizePath(URI.parse('foo://a/b/../c')).toString(),
+          'foo://a/c');
+      expect(resources.relativePath(URI.parse('foo://a/b/c'), URI.parse('foo://a/b/d/e')),
+          '../d/e');
+      expect(resources.relativePath(URI.parse('foo://a/b'), URI.parse('bar://a/b')),
+          isNull);
+      expect(resources.resolvePath(URI.parse('foo://a/b/c'), '../d').toString(),
+          'foo://a/b/d');
+    });
+
+    test('comparison / trailing separators', () {
+      expect(resources.extUri.isEqual(URI.parse('foo://a/b'), URI.parse('foo://a/b')),
+          isTrue);
+      expect(resources.extUri.isEqual(URI.parse('foo://a/b'), URI.parse('foo://a/B')),
+          isFalse);
+      expect(
+          resources.extUriIgnorePathCase
+              .isEqual(URI.parse('foo://a/b'), URI.parse('foo://a/B')),
+          isTrue);
+      expect(
+          resources.extUri.isEqualOrParent(
+              URI.parse('foo://a/b/c'), URI.parse('foo://a/b')),
+          isTrue);
+      expect(resources.extUri.getComparisonKey(URI.parse('foo://a/b'), true),
+          'foo://a/b');
+      expect(resources.extUri.ignorePathCasing(URI.parse('foo://a/b')), isFalse);
+      expect(resources.extUri.compare(URI.parse('foo://a/a'), URI.parse('foo://a/b')) < 0,
+          isTrue);
+      expect(resources.isAbsolutePath(URI.parse('foo://a/b')), isTrue);
+      expect(resources.isAbsolutePath(URI.parse('foo://a')), isFalse);
+      expect(resources.isEqualAuthority('AUTH', 'auth'), isTrue);
+
+      final URI withSep = URI.parse('foo://a/b/');
+      expect(resources.hasTrailingPathSeparator(withSep), isTrue);
+      expect(resources.removeTrailingPathSeparator(withSep).path, '/b');
+      expect(
+          resources.addTrailingPathSeparator(URI.parse('foo://a/b')).path, '/b/');
+      expect(resources.addTrailingPathSeparator(URI.parse('foo://a/')).path, '/');
+    });
+
+    test('DataUri / toLocalResource / originalFSPath', () {
+      final Map<String, String> meta = resources.DataUri.parseMetaData(
+          URI.parse(
+              'data:image/png;size:2313;label:SomeLabel;description:SomeDescription;base64,77+9UE5'));
+      expect(meta[resources.DataUri.META_DATA_MIME], 'image/png');
+      expect(meta[resources.DataUri.META_DATA_SIZE], '2313');
+      expect(meta[resources.DataUri.META_DATA_LABEL], 'SomeLabel');
+      expect(meta[resources.DataUri.META_DATA_DESCRIPTION], 'SomeDescription');
+
+      expect(
+          resources
+              .toLocalResource(URI.parse('foo://authority/path'), 'remote', 'vscode-remote')
+              .toString(),
+          'vscode-remote://remote/path');
+      expect(
+          resources
+              .toLocalResource(URI.parse('foo://authority/path'), null, 'vscode-remote')
+              .toString(),
+          'vscode-remote://authority/path');
+      if (!pf.isWindows) {
+        expect(resources.originalFSPath(URI.file('/some/file')), '/some/file');
+      }
+    });
+  });
+
+  group('remoteHosts.ts', () {
+    test('getRemoteAuthority / getRemoteName / getRemoteServerRootPath', () {
+      expect(
+          remoteHosts.getRemoteAuthority(URI.parse('vscode-remote://ssh+host/path')),
+          'ssh+host');
+      expect(remoteHosts.getRemoteAuthority(URI.file('/path')), isNull);
+      expect(remoteHosts.getRemoteName(null), isNull);
+      expect(remoteHosts.getRemoteName(''), isNull);
+      expect(remoteHosts.getRemoteName('localhost:8000'), 'localhost:8000');
+      expect(remoteHosts.getRemoteName('ssh+host'), 'ssh');
+      expect(remoteHosts.getRemoteServerRootPath(null), isNull);
+      expect(remoteHosts.getRemoteServerRootPath('localhost:8000'), isNull);
+      expect(remoteHosts.getRemoteServerRootPath('tunnel+myTunnel'), 'myTunnel');
+    });
+
+    test('parseAuthorityWithPort / WithOptionalPort', () {
+      final a = remoteHosts.parseAuthorityWithPort('localhost:8080');
+      expect(a.host, 'localhost');
+      expect(a.port, 8080);
+      final b = remoteHosts.parseAuthorityWithPort('127.0.0.1:8080');
+      expect(b.host, '127.0.0.1');
+      expect(b.port, 8080);
+      final c = remoteHosts.parseAuthorityWithPort(
+          '[2001:0db8:85a3:0000:0000:8a2e:0370:7334]:8080');
+      expect(c.host, '[2001:0db8:85a3:0000:0000:8a2e:0370:7334]');
+      expect(c.port, 8080);
+
+      final d = remoteHosts.parseAuthorityWithOptionalPort('localhost', 123);
+      expect(d.host, 'localhost');
+      expect(d.port, 123);
+      final e = remoteHosts.parseAuthorityWithOptionalPort(
+          '[2001:0db8:85a3:0000:0000:8a2e:0370:7334]', 123);
+      expect(e.host, '[2001:0db8:85a3:0000:0000:8a2e:0370:7334]');
+      expect(e.port, 123);
+      final f = remoteHosts.parseAuthorityWithOptionalPort(
+          'codespaces+aaaaa-aaaaa-aaaa-aaaaa-a111aa111', 123);
+      expect(f.host, 'codespaces+aaaaa-aaaaa-aaaa-aaaaa-a111aa111');
+      expect(f.port, 123);
+      expect(() => remoteHosts.parseAuthorityWithPort('localhost'), throwsA(isA<StateError>()));
+    });
+
+    test('isLoopbackHost', () {
+      for (final String host in <String>[
+        'localhost', 'LOCALHOST', '127.0.0.1', '::1', '[::1]'
+      ]) {
+        expect(remoteHosts.isLoopbackHost(host), isTrue, reason: host);
+      }
+      for (final String host in <String>[
+        'evil.com', '192.168.0.1', '10.0.0.1',
+        '[2001:0db8:85a3:0000:0000:8a2e:0370:7334]'
+      ]) {
+        expect(remoteHosts.isLoopbackHost(host), isFalse, reason: host);
+      }
     });
   });
 

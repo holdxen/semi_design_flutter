@@ -210,7 +210,7 @@
 | 201 | editor | `editor/common/core/wordCharacterClassifier.ts` | `lib/src/monaco/editor/common/core/wordCharacterClassifier.dart` | tested |
 | 202 | editor | `editor/common/core/wordHelper.ts` | `lib/src/monaco/editor/common/core/wordHelper.dart` | tested |
 | 203 | editor | `editor/common/cursor/cursor.ts` | `lib/src/monaco/editor/common/cursor/cursor.dart` | pending |
-| 204 | editor | `editor/common/cursor/cursorAtomicMoveOperations.ts` | `lib/src/monaco/editor/common/cursor/cursorAtomicMoveOperations.dart` | pending |
+| 204 | editor | `editor/common/cursor/cursorAtomicMoveOperations.ts` | `lib/src/monaco/editor/common/cursor/cursorAtomicMoveOperations.dart` | tested |
 | 205 | editor | `editor/common/cursor/cursorCollection.ts` | `lib/src/monaco/editor/common/cursor/cursorCollection.dart` | pending |
 | 206 | editor | `editor/common/cursor/cursorColumnSelection.ts` | `lib/src/monaco/editor/common/cursor/cursorColumnSelection.dart` | pending |
 | 207 | editor | `editor/common/cursor/cursorContext.ts` | `lib/src/monaco/editor/common/cursor/cursorContext.dart` | pending |
@@ -290,7 +290,7 @@
 | 281 | editor | `editor/common/model/guidesTextModelPart.ts` | `lib/src/monaco/editor/common/model/guidesTextModelPart.dart` | pending |
 | 282 | editor | `editor/common/model/indentationGuesser.ts` | `lib/src/monaco/editor/common/model/indentationGuesser.dart` | pending |
 | 283 | editor | `editor/common/model/intervalTree.ts` | `lib/src/monaco/editor/common/model/intervalTree.dart` | pending |
-| 284 | editor | `editor/common/model/mirrorTextModel.ts` | `lib/src/monaco/editor/common/model/mirrorTextModel.dart` | pending |
+| 284 | editor | `editor/common/model/mirrorTextModel.ts` | `lib/src/monaco/editor/common/model/mirrorTextModel.dart` | tested |
 | 285 | editor | `editor/common/model/pieceTreeTextBuffer/pieceTreeBase.ts` | `lib/src/monaco/editor/common/model/pieceTreeTextBuffer/pieceTreeBase.dart` | pending |
 | 286 | editor | `editor/common/model/pieceTreeTextBuffer/pieceTreeTextBuffer.ts` | `lib/src/monaco/editor/common/model/pieceTreeTextBuffer/pieceTreeTextBuffer.dart` | pending |
 | 287 | editor | `editor/common/model/pieceTreeTextBuffer/pieceTreeTextBufferBuilder.ts` | `lib/src/monaco/editor/common/model/pieceTreeTextBuffer/pieceTreeTextBufferBuilder.dart` | pending |
@@ -312,7 +312,7 @@
 | 303 | editor | `editor/common/model/tokens/treeSitter/treeSitterSyntaxTokenBackend.ts` | `lib/src/monaco/editor/common/model/tokens/treeSitter/treeSitterSyntaxTokenBackend.dart` | pending |
 | 304 | editor | `editor/common/model/tokens/treeSitter/treeSitterTokenizationImpl.ts` | `lib/src/monaco/editor/common/model/tokens/treeSitter/treeSitterTokenizationImpl.dart` | pending |
 | 305 | editor | `editor/common/model/tokens/treeSitter/treeSitterTree.ts` | `lib/src/monaco/editor/common/model/tokens/treeSitter/treeSitterTree.dart` | pending |
-| 306 | editor | `editor/common/model/utils.ts` | `lib/src/monaco/editor/common/model/utils.dart` | pending |
+| 306 | editor | `editor/common/model/utils.ts` | `lib/src/monaco/editor/common/model/utils.dart` | tested |
 | 307 | editor | `editor/common/model.ts` | `lib/src/monaco/editor/common/model.dart` | pending |
 | 308 | editor | `editor/common/modelLineProjectionData.ts` | `lib/src/monaco/editor/common/modelLineProjectionData.dart` | pending |
 | 309 | editor | `editor/common/multiDiffEditor.ts` | `lib/src/monaco/editor/common/multiDiffEditor.dart` | pending |
@@ -1106,7 +1106,7 @@
 | 1097 | base | `base/common/process.ts` | `lib/src/monaco/base/common/process.dart` | tested |
 | 1098 | base | `base/common/product.ts` | `lib/src/monaco/base/common/product.dart` | pending |
 | 1099 | base | `base/common/range.ts` | `lib/src/monaco/base/common/range.dart` | tested |
-| 1100 | base | `base/common/resources.ts` | `lib/src/monaco/base/common/resources.dart` | pending |
+| 1100 | base | `base/common/resources.ts` | `lib/src/monaco/base/common/resources.dart` | tested |
 | 1101 | base | `base/common/scrollable.ts` | `lib/src/monaco/base/common/scrollable.dart` | tested |
 | 1102 | base | `base/common/search.ts` | `lib/src/monaco/base/common/search.dart` | tested |
 | 1103 | base | `base/common/sequence.ts` | `lib/src/monaco/base/common/sequence.dart` | tested |
@@ -1265,7 +1265,7 @@
 | 1256 | platform | `platform/quickinput/common/quickAccess.ts` | `lib/src/monaco/platform/quickinput/common/quickAccess.dart` | pending |
 | 1257 | platform | `platform/quickinput/common/quickInput.ts` | `lib/src/monaco/platform/quickinput/common/quickInput.dart` | pending |
 | 1258 | platform | `platform/registry/common/platform.ts` | `lib/src/monaco/platform/registry/common/platform.dart` | tested |
-| 1259 | platform | `platform/remote/common/remoteHosts.ts` | `lib/src/monaco/platform/remote/common/remoteHosts.dart` | pending |
+| 1259 | platform | `platform/remote/common/remoteHosts.ts` | `lib/src/monaco/platform/remote/common/remoteHosts.dart` | tested |
 | 1260 | platform | `platform/storage/common/storage.ts` | `lib/src/monaco/platform/storage/common/storage.dart` | pending |
 | 1261 | platform | `platform/telemetry/common/commonProperties.ts` | `lib/src/monaco/platform/telemetry/common/commonProperties.dart` | pending |
 | 1262 | platform | `platform/telemetry/common/gdprTypings.ts` | `lib/src/monaco/platform/telemetry/common/gdprTypings.dart` | pending |

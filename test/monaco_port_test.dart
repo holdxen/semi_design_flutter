@@ -47,6 +47,10 @@ import 'package:semi_design_flutter/src/monaco/platform/keybinding/common/baseRe
 import 'package:semi_design_flutter/src/monaco/base/common/keybindings.dart' as kb;
 import 'package:semi_design_flutter/src/monaco/base/common/keyCodes.dart' as kc;
 import 'package:semi_design_flutter/src/monaco/base/common/platform.dart' as pf;
+import 'package:semi_design_flutter/src/monaco/base/common/uri.dart' show URI;
+import 'package:semi_design_flutter/src/monaco/editor/common/cursor/cursorAtomicMoveOperations.dart' as atomic;
+import 'package:semi_design_flutter/src/monaco/editor/common/model/utils.dart' as modelUtils;
+import 'package:semi_design_flutter/src/monaco/editor/common/model/mirrorTextModel.dart' as mirror;
 
 void main() {
   group('position.ts', () {
@@ -1325,6 +1329,203 @@ void main() {
     });
   });
 
+  group('model/utils.ts', () {
+    test('computeIndentLevel', () {
+      expect(modelUtils.computeIndentLevel('    abc', 4), 4);
+      expect(modelUtils.computeIndentLevel('\t\tabc', 4), 8);
+      expect(modelUtils.computeIndentLevel(' \tabc', 4), 4);
+      expect(modelUtils.computeIndentLevel('abc', 4), 0);
+      expect(modelUtils.computeIndentLevel('   ', 4), -1);
+      expect(modelUtils.computeIndentLevel('', 4), -1);
+      expect(modelUtils.computeIndentLevel('\t \t', 2), -1);
+      expect(modelUtils.computeIndentLevel('\t \tX', 2), 4);
+    });
+  });
+
+  group('cursorAtomicMoveOperations.ts', () {
+    test('whitespaceVisibleColumn', () {
+      final List<_WhitespaceCase> testCases = <_WhitespaceCase>[
+        _WhitespaceCase('        ', 4, <int>[-1, 0, 0, 0, 0, 4, 4, 4, 4, -1],
+            <int>[-1, 0, 0, 0, 0, 4, 4, 4, 4, -1],
+            <int>[0, 1, 2, 3, 4, 5, 6, 7, 8, -1]),
+        _WhitespaceCase('  ', 4, <int>[-1, 0, 0, -1], <int>[-1, 0, 0, -1],
+            <int>[0, 1, 2, -1]),
+        _WhitespaceCase('\t', 4, <int>[-1, 0, -1], <int>[-1, 0, -1],
+            <int>[0, 4, -1]),
+        _WhitespaceCase('\t ', 4, <int>[-1, 0, 1, -1], <int>[-1, 0, 4, -1],
+            <int>[0, 4, 5, -1]),
+        _WhitespaceCase(' \t\t ', 4, <int>[-1, 0, 0, 2, 3, -1],
+            <int>[-1, 0, 0, 4, 8, -1], <int>[0, 1, 4, 8, 9, -1]),
+        _WhitespaceCase(' \tA', 4, <int>[-1, 0, 0, -1, -1],
+            <int>[-1, 0, 0, -1, -1], <int>[0, 1, 4, -1, -1]),
+        _WhitespaceCase('A', 4, <int>[-1, -1, -1], <int>[-1, -1, -1],
+            <int>[0, -1, -1]),
+        _WhitespaceCase('', 4, <int>[-1, -1], <int>[-1, -1], <int>[0, -1]),
+      ];
+
+      for (final _WhitespaceCase testCase in testCases) {
+        final int maxPosition = testCase.visibleColumn.length;
+        for (int position = 0; position < maxPosition; position++) {
+          final List<int> actual =
+              atomic.AtomicTabMoveOperations.whitespaceVisibleColumn(
+                  testCase.lineContent, position, testCase.tabSize);
+          expect(
+            actual,
+            <int>[
+              testCase.prevTabStopPosition[position],
+              testCase.prevTabStopVisibleColumn[position],
+              testCase.visibleColumn[position],
+            ],
+            reason: '${testCase.lineContent} @ $position',
+          );
+        }
+      }
+    });
+
+    test('atomicPosition', () {
+      final List<_AtomicPositionCase> testCases = <_AtomicPositionCase>[
+        _AtomicPositionCase(
+          '        ',
+          4,
+          <int>[-1, 0, 0, 0, 0, 4, 4, 4, 4, -1],
+          <int>[4, 4, 4, 4, 8, 8, 8, 8, -1, -1],
+          <int>[0, 0, 0, 4, 4, 4, 4, 8, 8, -1],
+        ),
+        _AtomicPositionCase(' \t', 4, <int>[-1, 0, 0, -1],
+            <int>[2, 2, -1, -1], <int>[0, 0, 2, -1]),
+        _AtomicPositionCase('\t ', 4, <int>[-1, 0, -1, -1],
+            <int>[1, -1, -1, -1], <int>[0, 1, -1, -1]),
+        _AtomicPositionCase(' \t ', 4, <int>[-1, 0, 0, -1, -1],
+            <int>[2, 2, -1, -1, -1], <int>[0, 0, 2, -1, -1]),
+        _AtomicPositionCase(
+          '        A',
+          4,
+          <int>[-1, 0, 0, 0, 0, 4, 4, 4, 4, -1, -1],
+          <int>[4, 4, 4, 4, 8, 8, 8, 8, -1, -1, -1],
+          <int>[0, 0, 0, 4, 4, 4, 4, 8, 8, -1, -1],
+        ),
+        _AtomicPositionCase(
+          '      foo',
+          4,
+          <int>[-1, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1],
+          <int>[4, 4, 4, 4, -1, -1, -1, -1, -1, -1, -1],
+          <int>[0, 0, 0, 4, 4, -1, -1, -1, -1, -1, -1],
+        ),
+      ];
+
+      for (final _AtomicPositionCase testCase in testCases) {
+        void check(int direction, List<int> expected) {
+          final List<int> actual = List<int>.generate(
+              expected.length,
+              (int i) => atomic.AtomicTabMoveOperations.atomicPosition(
+                  testCase.lineContent, i, testCase.tabSize, direction));
+          expect(actual, expected,
+              reason: '${testCase.lineContent}, direction=$direction');
+        }
+
+        check(atomic.Direction.Left, testCase.expectedLeft);
+        check(atomic.Direction.Right, testCase.expectedRight);
+        check(atomic.Direction.Nearest, testCase.expectedNearest);
+      }
+    });
+  });
+
+  group('mirrorTextModel.ts', () {
+    test('onEvents: delete / insert / multi-line / eol / version', () {
+      final mirror.MirrorTextModel model = mirror.MirrorTextModel(
+          URI.parse('file:///test'), <String>['Hello world', 'second', 'third'],
+          '\n', 1);
+      expect(model.version, 1);
+      expect(model.getText(), 'Hello world\nsecond\nthird');
+
+      model.onEvents(_MirrorChangedEvent(<mirror.IModelContentChange>[
+        _MirrorChange(Range(1, 7, 1, 12), 6, 5, 'World'),
+      ], '\n', 2, false, false));
+      expect(model.version, 2);
+      expect(model.getText(), 'Hello World\nsecond\nthird');
+
+      model.onEvents(_MirrorChangedEvent(<mirror.IModelContentChange>[
+        _MirrorChange(Range(2, 1, 2, 1), 0, 0, 'line2a\nline2b'),
+      ], '\n', 3, false, false));
+      expect(model.version, 3);
+      expect(model.getText(), 'Hello World\nline2a\nline2bsecond\nthird');
+
+      model.onEvents(_MirrorChangedEvent(<mirror.IModelContentChange>[
+        _MirrorChange(Range(2, 1, 3, 1), 0, 6, ''),
+      ], '\r\n', 4, true, false));
+      expect(model.version, 4);
+      expect(model.getText(), 'Hello World\r\nline2bsecond\r\nthird');
+    });
+
+    test('dispose clears lines', () {
+      final mirror.MirrorTextModel model = mirror.MirrorTextModel(
+          URI.parse('file:///test'), <String>['a', 'b'], '\n', 1);
+      model.dispose();
+      expect(model.getText(), '');
+      // Source dispose only clears `_lines`; an already cached text is kept.
+      final mirror.MirrorTextModel cached = mirror.MirrorTextModel(
+          URI.parse('file:///test'), <String>['a', 'b'], '\n', 1);
+      expect(cached.getText(), 'a\nb');
+      cached.dispose();
+      expect(cached.getText(), 'a\nb');
+    });
+  });
+
+}
+
+// Test helper: whitespaceVisibleColumn table from the TypeScript test.
+class _WhitespaceCase {
+  final String lineContent;
+  final int tabSize;
+  final List<int> prevTabStopPosition;
+  final List<int> prevTabStopVisibleColumn;
+  final List<int> visibleColumn;
+
+  _WhitespaceCase(this.lineContent, this.tabSize, this.prevTabStopPosition,
+      this.prevTabStopVisibleColumn, this.visibleColumn);
+}
+
+// Test helper: atomicPosition table from the TypeScript test.
+class _AtomicPositionCase {
+  final String lineContent;
+  final int tabSize;
+  final List<int> expectedLeft;
+  final List<int> expectedRight;
+  final List<int> expectedNearest;
+
+  _AtomicPositionCase(this.lineContent, this.tabSize, this.expectedLeft,
+      this.expectedRight, this.expectedNearest);
+}
+
+// Test helper: a concrete IModelContentChange.
+class _MirrorChange implements mirror.IModelContentChange {
+  @override
+  final Range range;
+  @override
+  final int rangeOffset;
+  @override
+  final int rangeLength;
+  @override
+  final String text;
+
+  _MirrorChange(this.range, this.rangeOffset, this.rangeLength, this.text);
+}
+
+// Test helper: a concrete IModelChangedEvent.
+class _MirrorChangedEvent implements mirror.IModelChangedEvent {
+  @override
+  final List<mirror.IModelContentChange> changes;
+  @override
+  final String eol;
+  @override
+  final int versionId;
+  @override
+  final bool isUndoing;
+  @override
+  final bool isRedoing;
+
+  _MirrorChangedEvent(this.changes, this.eol, this.versionId, this.isUndoing,
+      this.isRedoing);
 }
 
 // Test helper: a snippet variable resolver.
