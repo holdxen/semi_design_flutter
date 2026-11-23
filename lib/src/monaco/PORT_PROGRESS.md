@@ -40,7 +40,7 @@
 | 31 | editor | `editor/browser/editorDom.ts` | `lib/src/monaco/editor/browser/editorDom.dart` | pending |
 | 32 | editor | `editor/browser/editorExtensions.ts` | `lib/src/monaco/editor/browser/editorExtensions.dart` | pending |
 | 33 | editor | `editor/browser/editorMarkdownSanitizer.ts` | `lib/src/monaco/editor/browser/editorMarkdownSanitizer.dart` | pending |
-| 34 | editor | `editor/browser/gpu/atlas/atlas.ts` | `lib/src/monaco/editor/browser/gpu/atlas/atlas.dart` | pending |
+| 34 | editor | `editor/browser/gpu/atlas/atlas.ts` | `lib/src/monaco/editor/browser/gpu/atlas/atlas.dart` | tested |
 | 35 | editor | `editor/browser/gpu/atlas/textureAtlas.ts` | `lib/src/monaco/editor/browser/gpu/atlas/textureAtlas.dart` | pending |
 | 36 | editor | `editor/browser/gpu/atlas/textureAtlasPage.ts` | `lib/src/monaco/editor/browser/gpu/atlas/textureAtlasPage.dart` | pending |
 | 37 | editor | `editor/browser/gpu/atlas/textureAtlasShelfAllocator.ts` | `lib/src/monaco/editor/browser/gpu/atlas/textureAtlasShelfAllocator.dart` | pending |
@@ -56,7 +56,7 @@
 | 47 | editor | `editor/browser/gpu/raster/glyphRasterizer.ts` | `lib/src/monaco/editor/browser/gpu/raster/glyphRasterizer.dart` | pending |
 | 48 | editor | `editor/browser/gpu/raster/raster.ts` | `lib/src/monaco/editor/browser/gpu/raster/raster.dart` | tested |
 | 49 | editor | `editor/browser/gpu/rectangleRenderer.ts` | `lib/src/monaco/editor/browser/gpu/rectangleRenderer.dart` | pending |
-| 50 | editor | `editor/browser/gpu/rectangleRenderer.wgsl.ts` | `lib/src/monaco/editor/browser/gpu/rectangleRenderer.wgsl.dart` | pending |
+| 50 | editor | `editor/browser/gpu/rectangleRenderer.wgsl.ts` | `lib/src/monaco/editor/browser/gpu/rectangleRenderer.wgsl.dart` | tested |
 | 51 | editor | `editor/browser/gpu/renderStrategy/baseRenderStrategy.ts` | `lib/src/monaco/editor/browser/gpu/renderStrategy/baseRenderStrategy.dart` | pending |
 | 52 | editor | `editor/browser/gpu/renderStrategy/fullFileRenderStrategy.ts` | `lib/src/monaco/editor/browser/gpu/renderStrategy/fullFileRenderStrategy.dart` | pending |
 | 53 | editor | `editor/browser/gpu/renderStrategy/fullFileRenderStrategy.wgsl.ts` | `lib/src/monaco/editor/browser/gpu/renderStrategy/fullFileRenderStrategy.wgsl.dart` | pending |
@@ -351,7 +351,7 @@
 | 342 | editor | `editor/common/services/treeViewsDndService.ts` | `lib/src/monaco/editor/common/services/treeViewsDndService.dart` | pending |
 | 343 | editor | `editor/common/services/unicodeTextModelHighlighter.ts` | `lib/src/monaco/editor/common/services/unicodeTextModelHighlighter.dart` | pending |
 | 344 | editor | `editor/common/standalone/standaloneEnums.ts` | `lib/src/monaco/editor/common/standalone/standaloneEnums.dart` | pending |
-| 345 | editor | `editor/common/standaloneStrings.ts` | `lib/src/monaco/editor/common/standaloneStrings.dart` | pending |
+| 345 | editor | `editor/common/standaloneStrings.ts` | `lib/src/monaco/editor/common/standaloneStrings.dart` | tested |
 | 346 | editor | `editor/common/textModelBracketPairs.ts` | `lib/src/monaco/editor/common/textModelBracketPairs.dart` | pending |
 | 347 | editor | `editor/common/textModelEditSource.ts` | `lib/src/monaco/editor/common/textModelEditSource.dart` | pending |
 | 348 | editor | `editor/common/textModelEvents.ts` | `lib/src/monaco/editor/common/textModelEvents.dart` | pending |
@@ -1136,12 +1136,12 @@
 | 1127 | base | `base/test/common/virtualScheduling/embedding.ts` | `lib/src/monaco/base/test/common/virtualScheduling/embedding.dart` | pending |
 | 1128 | base | `base/test/common/virtualScheduling/globalTimeApi.ts` | `lib/src/monaco/base/test/common/virtualScheduling/globalTimeApi.dart` | tested |
 | 1129 | base | `base/test/common/virtualScheduling/index.ts` | `lib/src/monaco/base/test/common/virtualScheduling/index.dart` | pending |
-| 1130 | base | `base/test/common/virtualScheduling/loggingTimeApi.ts` | `lib/src/monaco/base/test/common/virtualScheduling/loggingTimeApi.dart` | pending |
+| 1130 | base | `base/test/common/virtualScheduling/loggingTimeApi.ts` | `lib/src/monaco/base/test/common/virtualScheduling/loggingTimeApi.dart` | tested |
 | 1131 | base | `base/test/common/virtualScheduling/processor.ts` | `lib/src/monaco/base/test/common/virtualScheduling/processor.dart` | pending |
 | 1132 | base | `base/test/common/virtualScheduling/recordingTimeApi.ts` | `lib/src/monaco/base/test/common/virtualScheduling/recordingTimeApi.dart` | pending |
 | 1133 | base | `base/test/common/virtualScheduling/runWithFakedTimers.ts` | `lib/src/monaco/base/test/common/virtualScheduling/runWithFakedTimers.dart` | pending |
 | 1134 | base | `base/test/common/virtualScheduling/timeApi.ts` | `lib/src/monaco/base/test/common/virtualScheduling/timeApi.dart` | tested |
-| 1135 | base | `base/test/common/virtualScheduling/trace.ts` | `lib/src/monaco/base/test/common/virtualScheduling/trace.dart` | pending |
+| 1135 | base | `base/test/common/virtualScheduling/trace.ts` | `lib/src/monaco/base/test/common/virtualScheduling/trace.dart` | tested |
 | 1136 | base | `base/test/common/virtualScheduling/traceLogger.ts` | `lib/src/monaco/base/test/common/virtualScheduling/traceLogger.dart` | pending |
 | 1137 | base | `base/test/common/virtualScheduling/virtualClock.ts` | `lib/src/monaco/base/test/common/virtualScheduling/virtualClock.dart` | pending |
 | 1138 | base | `base/test/common/virtualScheduling/virtualTimeApi.ts` | `lib/src/monaco/base/test/common/virtualScheduling/virtualTimeApi.dart` | pending |
