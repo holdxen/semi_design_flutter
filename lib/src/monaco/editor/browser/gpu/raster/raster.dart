@@ -13,6 +13,8 @@ class TextMetrics {
   final num fontBoundingBoxDescent;
   final num actualBoundingBoxAscent;
   final num actualBoundingBoxDescent;
+  /// DOM `TextMetrics.alphabeticBaseline`.
+  final num alphabeticBaseline;
 
   const TextMetrics({
     this.width = 0,
@@ -20,6 +22,7 @@ class TextMetrics {
     this.fontBoundingBoxDescent = 0,
     this.actualBoundingBoxAscent = 0,
     this.actualBoundingBoxDescent = 0,
+    this.alphabeticBaseline = 0,
   });
 }
 
