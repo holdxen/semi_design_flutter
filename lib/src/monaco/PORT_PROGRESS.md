@@ -7,7 +7,7 @@
 
 | # | 层 | 源文件 | 目标 Dart | 状态 |
 |---|---|---|---|---|
-> 进度：69 / 1690 tested（2026-11-23，含 bufferDirtyTracker / minimapDirtyRows / overviewZoneManager）。
+> 进度：71 / 1690 tested（2026-11-23，含 scrollbarState / compressedVirtualizedScrollLayout）。
 
 | 1 | editor | `editor/browser/config/charWidthReader.ts` | `lib/src/monaco/editor/browser/config/charWidthReader.dart` | pending |
 | 2 | editor | `editor/browser/config/domFontInfo.ts` | `lib/src/monaco/editor/browser/config/domFontInfo.dart` | pending |
@@ -151,7 +151,7 @@
 | 140 | editor | `editor/browser/widget/diffEditor/utils.ts` | `lib/src/monaco/editor/browser/widget/diffEditor/utils.dart` | pending |
 | 141 | editor | `editor/browser/widget/markdownRenderer/browser/editorMarkdownCodeBlockRenderer.ts` | `lib/src/monaco/editor/browser/widget/markdownRenderer/browser/editorMarkdownCodeBlockRenderer.dart` | pending |
 | 142 | editor | `editor/browser/widget/multiDiffEditor/colors.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/colors.dart` | pending |
-| 143 | editor | `editor/browser/widget/multiDiffEditor/compressedVirtualizedScrollLayout.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/compressedVirtualizedScrollLayout.dart` | pending |
+| 143 | editor | `editor/browser/widget/multiDiffEditor/compressedVirtualizedScrollLayout.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/compressedVirtualizedScrollLayout.dart` | tested |
 | 144 | editor | `editor/browser/widget/multiDiffEditor/compressedVirtualizedScrollView.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/compressedVirtualizedScrollView.dart` | pending |
 | 145 | editor | `editor/browser/widget/multiDiffEditor/diffEditorItemTemplate.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/diffEditorItemTemplate.dart` | pending |
 | 146 | editor | `editor/browser/widget/multiDiffEditor/model.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/model.dart` | pending |
@@ -972,7 +972,7 @@
 | 961 | base | `base/browser/ui/scrollbar/scrollableElement.ts` | `lib/src/monaco/base/browser/ui/scrollbar/scrollableElement.dart` | pending |
 | 962 | base | `base/browser/ui/scrollbar/scrollableElementOptions.ts` | `lib/src/monaco/base/browser/ui/scrollbar/scrollableElementOptions.dart` | pending |
 | 963 | base | `base/browser/ui/scrollbar/scrollbarArrow.ts` | `lib/src/monaco/base/browser/ui/scrollbar/scrollbarArrow.dart` | pending |
-| 964 | base | `base/browser/ui/scrollbar/scrollbarState.ts` | `lib/src/monaco/base/browser/ui/scrollbar/scrollbarState.dart` | pending |
+| 964 | base | `base/browser/ui/scrollbar/scrollbarState.ts` | `lib/src/monaco/base/browser/ui/scrollbar/scrollbarState.dart` | tested |
 | 965 | base | `base/browser/ui/scrollbar/scrollbarVisibilityController.ts` | `lib/src/monaco/base/browser/ui/scrollbar/scrollbarVisibilityController.dart` | pending |
 | 966 | base | `base/browser/ui/scrollbar/verticalScrollbar.ts` | `lib/src/monaco/base/browser/ui/scrollbar/verticalScrollbar.dart` | pending |
 | 967 | base | `base/browser/ui/selectBox/selectBox.ts` | `lib/src/monaco/base/browser/ui/selectBox/selectBox.dart` | pending |

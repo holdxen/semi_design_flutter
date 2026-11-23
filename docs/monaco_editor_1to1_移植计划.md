@@ -453,3 +453,11 @@ semi_design_flutter/
 - [x] **候选测试核对**：本批先用脚本核对 13 个候选中测试的真实 import 路径，剔除 4 个文件名碰撞误配（`monaco/editor.ts`、`editor/common/model/utils.ts`、`lsp/utils.ts`、`base/test/common/mock.ts`），确认 7 个真实对应。
 
 **下一批**：继续消费依赖闭合且有独立 test 的文件（`scrollbarState.ts` 244 行、`compressedVirtualizedScrollLayout.ts` 239 行、`windowControlsOverlay.ts` 121 行、`executionGraph.ts` 544 行等），择机啃核心环。
+
+### base/editor 布局逻辑批次续十七（2026-11-23，累计 71/1690 文件 tested）
+
+- [x] `base/browser/ui/scrollbar/scrollbarState.dart`：1:1 翻译 `scrollbarState.ts`（244 行），`ScrollbarState` 全套（clone/setVisibleSize/setScrollSize/setScrollPosition/setScrollbarSize/setOppositeScrollbarSize/_computeValues/_refreshComputedValues/各 getter/getDesiredScrollPositionFromOffset{,Paged,Delta}）。`computed*` 私有结构 → `_ComputedValues` 值类。**关键适配**：JS `Math.round` 对 .5 向 +∞，Dart `.round()` 是 away-from-zero → 加 `_jsRound(v) = (v+0.5).floor()` 并全局替换；`Math.max/min` → 三元。源码 test 2 case 精确搬运（inflates slider size ±arrows）。
+- [x] `editor/browser/widget/multiDiffEditor/compressedVirtualizedScrollLayout.dart`：1:1 翻译 `compressedVirtualizedScrollLayout.ts`（239 行），`computeCompressedVirtualizedScrollLayout`/`computeItemRanges`/`createAnchoredSizeEditBatch`/`mapLogicalPosition`/`computeCompressedVirtualizedScrollHeight`/`assertNonNegative` + 全部接口值类。`LayoutRevision` brand → typedef int；`CompressedVirtualizedItemVisibility`/`RemovedPositionAffinity` 字符串联合 → class static const；`??`→`??`；`Number.isFinite`→`.isFinite`；`reduce(...,0)`→`fold`。源码 test 的 **4 个纯函数 case** 精确搬运（含 2000 次随机位移守恒 property test，全绿）；其余 8 个 case 依赖未翻译的 DOM `CompressedVirtualizedScrollView`，暂不可测。
+- [x] 测试追加 6 case（scrollbarState 2 + compressed 4）；base 测试文件 156 → **162 case 全绿**；两文件 `dart analyze` 零 error/warning（仅文件名/常量名 info）。新增 `import 'dart:math' as math` 供 property test 的 Random。
+
+**下一批**：消费 `base/test/common/executionGraph.ts`（544 行，有完整 test，纯逻辑测试辅助类），之后 base/editor 依赖闭合小文件基本耗尽，需转向啃核心环 `arrays↔cancellation↔event↔lifecycle↔async`。

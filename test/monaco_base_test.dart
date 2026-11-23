@@ -1,6 +1,7 @@
 // Regression tests for base/common files in the 1:1 Monaco port.
 // Assertions mirror the semantics of the TypeScript originals.
 
+import 'dart:math' as math;
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -52,6 +53,8 @@ import 'package:semi_design_flutter/src/monaco/base/browser/ui/list/rangeMap.dar
 import 'package:semi_design_flutter/src/monaco/editor/browser/gpu/bufferDirtyTracker.dart' as bdt;
 import 'package:semi_design_flutter/src/monaco/editor/browser/viewParts/minimap/minimapDirtyRows.dart' as mdr;
 import 'package:semi_design_flutter/src/monaco/editor/common/viewModel/overviewZoneManager.dart' as ozm;
+import 'package:semi_design_flutter/src/monaco/base/browser/ui/scrollbar/scrollbarState.dart' as sb;
+import 'package:semi_design_flutter/src/monaco/editor/browser/widget/multiDiffEditor/compressedVirtualizedScrollLayout.dart' as cvsl;
 import 'package:semi_design_flutter/src/monaco/base/common/naturalLanguage/korean.dart' as korean;
 import 'package:semi_design_flutter/src/monaco/base/common/stopwatch.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/symbols.dart';
@@ -2726,6 +2729,148 @@ void main() {
         ozm.ColorZone(360, 384, 3),
         ozm.ColorZone(588, 600, 4),
       ]);
+    });
+  });
+
+  group('base/browser/ui/scrollbar/scrollbarState.ts', () {
+    // Mirrors scrollbarState.test.ts exactly.
+    void assertState(sb.ScrollbarState a, num arrow, num pos, num large, num small,
+        bool needed, num sliderSize, num sliderPos) {
+      expect(a.getArrowSize(), arrow);
+      expect(a.getScrollPosition(), pos);
+      expect(a.getRectangleLargeSize(), large);
+      expect(a.getRectangleSmallSize(), small);
+      expect(a.isNeeded(), needed);
+      expect(a.getSliderSize(), sliderSize);
+      expect(a.getSliderPosition(), sliderPos);
+    }
+
+    test('inflates slider size', () {
+      final a = sb.ScrollbarState(0, 14, 0, 339, 42423, 32787);
+      assertState(a, 0, 32787, 339, 14, true, 20, 249);
+      expect(a.getDesiredScrollPositionFromOffset(259), 32849);
+      // 259 is greater than 230 so page down, 32787 + 339 = 33126
+      expect(a.getDesiredScrollPositionFromOffsetPaged(259), 33126);
+      a.setScrollPosition(32849);
+      assertState(a, 0, 32849, 339, 14, true, 20, 249);
+    });
+
+    test('inflates slider size with arrows', () {
+      final a = sb.ScrollbarState(12, 14, 0, 339, 42423, 32787);
+      assertState(a, 12, 32787, 339, 14, true, 20, 230);
+      expect(a.getDesiredScrollPositionFromOffset(240 + 12), 32811);
+      // 240 + 12 = 252; greater than 230 so page down, 32787 + 339 = 33126
+      expect(a.getDesiredScrollPositionFromOffsetPaged(240 + 12), 33126);
+      a.setScrollPosition(32811);
+      assertState(a, 12, 32811, 339, 14, true, 20, 230);
+    });
+  });
+
+  group('editor/browser/widget/multiDiffEditor/compressedVirtualizedScrollLayout.ts', () {
+    // Mirrors the 4 pure-function cases of compressedVirtualizedScrollLayout.test.ts.
+    // (The other cases exercise DOM/CSS view code not in this port.)
+    test('describes mixed-height content in complete and rendered coordinates', () {
+      final layout = cvsl.computeCompressedVirtualizedScrollLayout(
+          const cvsl.ICompressedVirtualizedScrollLayoutInput(
+              scrollTop: 500, viewportHeight: 400, itemGap: 10,
+              itemHeights: <int>[200, 900, 300]));
+      expect(layout.scrollTop, 500);
+      expect(layout.scrollHeight, 1420);
+      expect(layout.renderedHeight, 920);
+      expect(layout.renderedViewport.start, 210);
+      expect(layout.hiddenContentHeightAboveViewport, 290);
+      expect(layout.items.map((i) => i.contentRange.toString()).toList(),
+          <String>['[0, 200)', '[210, 1110)', '[1120, 1420)']);
+      expect(layout.items.map((i) => i.renderedRange.toString()).toList(),
+          <String>['[0, 200)', '[210, 610)', '[620, 920)']);
+      expect(layout.items.map((i) => i.maxScrollOffset).toList(), <int>[0, 500, 0]);
+      expect(layout.items.map((i) => i.scrollOffset).toList(), <int>[0, 290, 0]);
+      expect(layout.items.map((i) => i.visibility).toList(),
+          <String>['before', 'visible', 'after']);
+    });
+
+    test('conserves vertical displacement', () {
+      // Property-based: verify displacement conservation over random layouts.
+      final rnd = math.Random(873245);
+      int nextIntRange(int min, int max) => min + rnd.nextInt(max - min + 1);
+      final failures = <String>[];
+      for (int caseIndex = 0; caseIndex < 2000; caseIndex++) {
+        final int viewportHeight = nextIntRange(1, 1000);
+        final int itemGap = nextIntRange(0, 41);
+        final List<int> itemHeights = List<int>.generate(
+            nextIntRange(0, 31), (_) => nextIntRange(0, 2501));
+        final initial = cvsl.computeCompressedVirtualizedScrollLayout(
+            cvsl.ICompressedVirtualizedScrollLayoutInput(
+                scrollTop: nextIntRange(0, 50001),
+                viewportHeight: viewportHeight,
+                itemGap: itemGap,
+                itemHeights: itemHeights));
+        final next = cvsl.computeCompressedVirtualizedScrollLayout(
+            cvsl.ICompressedVirtualizedScrollLayoutInput(
+                scrollTop: initial.scrollTop + nextIntRange(-2000, 2001),
+                viewportHeight: viewportHeight,
+                itemGap: itemGap,
+                itemHeights: itemHeights));
+        final int scrollDelta = next.scrollTop - initial.scrollTop;
+        final int renderedDelta = next.renderedViewport.start - initial.renderedViewport.start;
+        final int hiddenDelta =
+            next.hiddenContentHeightAboveViewport - initial.hiddenContentHeightAboveViewport;
+        final int residual = scrollDelta - renderedDelta - hiddenDelta;
+        final invalidItem = next.items.any((item) =>
+            item.scrollOffset < 0 ||
+            item.scrollOffset > item.maxScrollOffset ||
+            item.maxScrollOffset !=
+                (item.contentRange.length - item.renderedRange.length > 0
+                    ? item.contentRange.length - item.renderedRange.length
+                    : 0));
+        if (residual.abs() > 0.0001 || invalidItem) {
+          failures.add('case $caseIndex: residual=$residual, invalidItem=$invalidItem');
+          if (failures.length == 10) break;
+        }
+      }
+      expect(failures, isEmpty);
+    });
+
+    test('keeps transient scroll slack outside logical item ranges', () {
+      final layout = cvsl.computeCompressedVirtualizedScrollLayout(
+          const cvsl.ICompressedVirtualizedScrollLayoutInput(
+              revision: 7,
+              scrollTop: 0,
+              viewportHeight: 400,
+              itemGap: 10,
+              itemHeights: <int>[200, 300],
+              leadingScrollSlack: 100,
+              trailingScrollSlack: 150));
+      expect(layout.revision, 7);
+      expect(layout.logicalScrollHeight, 510);
+      expect(layout.scrollHeight, 760);
+      expect(layout.renderedHeight, 760);
+      expect(layout.contentViewport.toString(), '[-100, 300)');
+      expect(layout.items.map((i) => i.contentRange.toString()).toList(),
+          <String>['[0, 200)', '[210, 510)']);
+      expect(layout.items.map((i) => i.renderedRange.toString()).toList(),
+          <String>['[100, 300)', '[310, 610)']);
+    });
+
+    test('maps a revisioned viewport anchor through simultaneous size edits', () {
+      final edit = cvsl.createAnchoredSizeEditBatch(
+          cvsl.asLayoutRevision(3), cvsl.asLayoutRevision(4),
+          <int>[200, 900, 300], <int>[300, 40, 500], 10, 10, 750);
+      expect(edit.edits.map((e) => e.oldRange.toString()).toList(),
+          <String>['[0, 200)', '[210, 1110)', '[1120, 1420)']);
+      expect(edit.edits.map((e) => e.newRange.toString()).toList(),
+          <String>['[0, 300)', '[310, 350)', '[360, 860)']);
+      expect(edit.anchor.revision, 3);
+      expect(edit.anchor.offset, 750);
+      final mapped = cvsl.mapLogicalPosition(edit.anchor, edit);
+      expect(mapped.revision, 4);
+      expect(mapped.offset, 310);
+      final mappedEnd = cvsl.mapLogicalPosition(
+          edit.anchor, edit, cvsl.RemovedPositionAffinity.itemEnd);
+      expect(mappedEnd.offset, 350);
+      final afterAll = cvsl.mapLogicalPosition(
+          const cvsl.ILogicalPosition(3, 1420), edit);
+      expect(afterAll.offset, 860);
     });
   });
 
