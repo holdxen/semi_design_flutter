@@ -23,6 +23,9 @@ import 'package:semi_design_flutter/src/monaco/base/common/actions.dart' as acti
 import 'package:semi_design_flutter/src/monaco/base/common/stream.dart' as streams;
 import 'package:semi_design_flutter/src/monaco/base/common/scrollable.dart' as scroll;
 import 'package:semi_design_flutter/src/monaco/base/common/decorators/cancelPreviousCalls.dart' as canceldec;
+import 'package:semi_design_flutter/src/monaco/base/common/paging.dart' as paging;
+import 'package:semi_design_flutter/src/monaco/base/common/decorators.dart' as decorators;
+import 'package:semi_design_flutter/src/monaco/base/common/buffer.dart' as buffer;
 import 'package:semi_design_flutter/src/monaco/base/common/collections.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/functional.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/idGenerator.dart';
@@ -4213,6 +4216,254 @@ void main() {
     });
   });
 
+  group('paging.ts (1:1)', () {
+    test('PagedModel resolves pages and dedups in-flight requests', () async {
+      final pager = _TestPager([1, 2, 3, 4, 5, 6], 2);
+      final paging.PagedModel<int> model = paging.PagedModel<int>(pager);
+      expect(model.length, 6);
+      expect(model.isResolved(0), isTrue);
+      expect(model.get(0), 1);
+      expect(model.isResolved(4), isFalse);
+
+      final cancellation.CancellationTokenSource cts =
+          cancellation.CancellationTokenSource();
+      // index 4 is page 2 -> fetch second page (indices 2..3 in pager page index 1? page size 2 -> page 2 = values[4..5])
+      final int v4 = await model.resolve(4, cts.token);
+      expect(v4, 5);
+      expect(model.isResolved(5), isTrue);
+      expect(model.get(5), 6);
+      expect(pager.getPageCalls, 1); // single fetch served the whole page
+
+      // resolved page returns synchronously without another fetch
+      expect(await model.resolve(4, cts.token), 5);
+      expect(pager.getPageCalls, 1);
+    });
+
+    test('PagedModel rejects already-cancelled token', () async {
+      final paging.PagedModel<int> model =
+          paging.PagedModel<int>(<int>[1, 2]);
+      final cancellation.CancellationTokenSource cts =
+          cancellation.CancellationTokenSource();
+      cts.cancel();
+      await expectLater(model.resolve(0, cts.token),
+          throwsA(isA<CancellationError>()));
+    });
+
+    test('DelayedPagedModel delays then delegates', () async {
+      final paging.PagedModel<int> model =
+          paging.PagedModel<int>(<int>[10, 20]);
+      final paging.DelayedPagedModel<int> delayed =
+          paging.DelayedPagedModel<int>(model, 1);
+      final cancellation.CancellationTokenSource cts =
+          cancellation.CancellationTokenSource();
+      expect(await delayed.resolve(1, cts.token), 20);
+      expect(delayed.length, 2);
+    });
+
+    test('mapPager maps across pages', () async {
+      final pager = _TestPager([1, 2, 3, 4], 2);
+      final paging.IPager<String> mapped =
+          paging.mapPager<int, String>(pager, (int x) => 'v$x');
+      expect(mapped.firstPage, <String>['v1', 'v2']);
+      expect(mapped.total, 4);
+      final cancellation.CancellationTokenSource cts =
+          cancellation.CancellationTokenSource();
+      expect(await mapped.getPage(1, cts.token), <String>['v3', 'v4']);
+    });
+
+    test('IterativePagedModel sentinel loads next page and fires event', () async {
+      final iterative = _TestIterativePager();
+      final paging.IterativePagedModel<int> model =
+          paging.IterativePagedModel<int>(iterative);
+      expect(model.length, 3); // 2 items + sentinel
+      expect(model.isResolved(2), isFalse);
+      final List<num> lengths = <num>[];
+      model.onDidIncrementLength((dynamic n) => lengths.add(n as num));
+      final cancellation.CancellationTokenSource cts =
+          cancellation.CancellationTokenSource();
+      expect(await model.resolve(2, cts.token), 3);
+      expect(model.length, 3); // 3 items, no more pages
+      expect(lengths, <num>[3]);
+      expect(iterative.getNextPageCalls, 1);
+      model.dispose();
+    });
+  });
+
+  group('decorators.ts (1:1)', () {
+    test('memoize caches per instance', () {
+      final counter = _MemoTarget();
+      final decorators.DecoratedMethod wrapped =
+          decorators.memoize(counter, 'value', counter.compute);
+      expect(wrapped([]), 1);
+      expect(wrapped([]), 1);
+      expect(counter.calls, 1);
+    });
+
+    test('debounce coalesces with reducer and resets after fire', () async {
+      final target = _SumTarget();
+      final decorators.DecoratorFactory factory = decorators.debounce<int>(
+        5,
+        reducer: (int prev, List<Object?> args) =>
+            prev + (args[0] as int),
+        initialValueProvider: () => 0,
+      );
+      final decorators.DecoratedMethod wrapped =
+          factory(target, 'add', target.add);
+      wrapped([1]);
+      wrapped([2]);
+      wrapped([3]);
+      expect(target.sum, 0); // not fired yet
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+      expect(target.sum, 6);
+      expect(target.lastArg, 6); // reducer result forwarded
+    });
+  });
+
+  group('buffer.ts (1:1)', () {
+    test('fromString/toString round trips UTF-8 incl BOM', () {
+      const String s = '\uFEFFc.txt';
+      final buffer.VSBuffer b = buffer.VSBuffer.fromString(s);
+      expect(b.toString(), s);
+      expect(b.toString().codeUnitAt(0), 0xFEFF);
+      expect(buffer.VSBuffer.fromString('hi').toString(), 'hi');
+    });
+
+    test('wrap slice preserves bytes; concat/clone/equals', () {
+      final buffer.VSBuffer b =
+          buffer.VSBuffer.fromByteArray([1, 2, 104, 105, 4, 5]);
+      expect(b.slice(2, 4).toString(), 'hi');
+      final buffer.VSBuffer a = buffer.VSBuffer.fromByteArray([1, 2]);
+      final buffer.VSBuffer c = buffer.VSBuffer.fromByteArray([3, 4]);
+      expect(buffer.VSBuffer.concat([a, c]).buffer, <int>[1, 2, 3, 4]);
+      expect(a.clone().equals(a), isTrue);
+      expect(a.equals(c), isFalse);
+      expect(a.indexOf(c), -1);
+      expect(b.indexOf(buffer.VSBuffer.fromByteArray([104, 105])), 2);
+    });
+
+    test('read/write UInt32 BE/LE and UInt8', () {
+      final buffer.VSBuffer b = buffer.VSBuffer.alloc(8);
+      b.writeUInt32BE(0x12345678, 0);
+      expect(buffer.readUInt32BE_(b.buffer, 0), 0x12345678);
+      b.writeUInt32LE(0x12345678, 4);
+      expect(buffer.readUInt32LE_(b.buffer, 4), 0x12345678);
+      b.writeUInt8(200, 7);
+      expect(buffer.readUInt8_(b.buffer, 7), 200);
+    });
+
+    test('base64 and hex encode/decode match source vectors', () {
+      final cases = <List<Object>>[
+        <Object>[<int>[1, 2, 3], 'AQID', '010203'],
+        <Object>[
+          <int>[184, 227, 214, 171, 244, 175, 141, 53],
+          'uOPWq/SvjTU=',
+          'b8e3d6abf4af8d35'
+        ],
+        <Object>[
+          <int>[53, 98, 93, 130, 71, 117, 191, 137, 156],
+          'NWJdgkd1v4mc',
+          '35625d824775bf899c'
+        ],
+      ];
+      for (final c in cases) {
+        final buffer.VSBuffer b = buffer.VSBuffer.fromByteArray(c[0] as List<int>);
+        expect(buffer.encodeBase64(b), c[1]);
+        expect(buffer.encodeHex(b), c[2]);
+        expect(buffer.decodeBase64(c[1] as String).buffer, c[0]);
+        expect(buffer.decodeHex(c[2] as String).buffer, c[0]);
+      }
+      // padded/url-safe variants
+      final buffer.VSBuffer payload =
+          buffer.VSBuffer.fromByteArray(<int>[251, 255, 254]);
+      expect(buffer.encodeBase64(payload, true, false), '+//+');
+      expect(buffer.encodeBase64(payload, true, true), '-__-');
+      expect(buffer.decodeBase64('+//+').buffer, <int>[251, 255, 254]);
+      expect(buffer.decodeBase64('-__-').buffer, <int>[251, 255, 254]);
+      expect(() => buffer.decodeBase64('invalid!'), throwsA(isA<FormatException>()));
+      expect(() => buffer.decodeHex('abc'), throwsA(isA<FormatException>()));
+    });
+
+    test('binaryIndexOf boyer-moore-horspool', () {
+      final buffer.VSBuffer hay = buffer.VSBuffer.fromString('hello world');
+      final buffer.VSBuffer needle = buffer.VSBuffer.fromString('world');
+      expect(hay.indexOf(needle), 6);
+      expect(hay.indexOf(buffer.VSBuffer.fromString('xyz')), -1);
+      expect(hay.indexOf(buffer.VSBuffer.fromString(''), 0), 0);
+    });
+
+    test('bufferToReadable/readableToBuffer and bufferToStream/streamToBuffer',
+        () async {
+      final buffer.VSBuffer b = buffer.VSBuffer.fromString('Hello World');
+      expect(buffer.readableToBuffer(buffer.bufferToReadable(b)).toString(),
+          'Hello World');
+      expect((await buffer.streamToBuffer(buffer.bufferToStream(b))).toString(),
+          'Hello World');
+    });
+  });
+
+}
+
+class _TestPager implements paging.IPager<int> {
+  final List<int> all;
+  final int pageSize;
+  int getPageCalls = 0;
+
+  _TestPager(this.all, this.pageSize);
+
+  @override
+  List<int> get firstPage => all.take(pageSize).toList();
+
+  @override
+  int get total => all.length;
+
+  @override
+  Future<List<int>> getPage(int pageIndex, cancellation.CancellationToken token) async {
+    getPageCalls++;
+    final int start = pageIndex * pageSize;
+    return all.skip(start).take(pageSize).toList();
+  }
+}
+
+class _TestIterativePage implements paging.IIterativePage<int> {
+  final List<int> items;
+  final bool hasMore;
+  _TestIterativePage(this.items, this.hasMore);
+}
+
+class _TestIterativePager implements paging.IIterativePager<int> {
+  int getNextPageCalls = 0;
+  final List<List<int>> pages = <List<int>>[
+    <int>[1, 2],
+    <int>[3],
+  ];
+
+  @override
+  paging.IIterativePage<int> get firstPage =>
+      _TestIterativePage(pages[0], true);
+
+  @override
+  Future<paging.IIterativePage<int>> getNextPage(
+      cancellation.CancellationToken token) async {
+    final int idx = ++getNextPageCalls;
+    return _TestIterativePage(pages[idx], false);
+  }
+}
+
+class _MemoTarget {
+  int calls = 0;
+  int compute() {
+    calls++;
+    return calls;
+  }
+}
+
+class _SumTarget {
+  int sum = 0;
+  int? lastArg;
+  void add(int value) {
+    sum = value;
+    lastArg = value;
+  }
 }
 
 class _TestHistory implements hist.IHistory<String> {

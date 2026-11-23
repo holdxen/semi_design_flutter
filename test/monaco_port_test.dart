@@ -24,6 +24,8 @@ import 'package:semi_design_flutter/src/monaco/editor/common/core/ranges/offsetR
 import 'package:semi_design_flutter/src/monaco/editor/common/core/ranges/rangeSingleLine.dart';
 import 'package:semi_design_flutter/src/monaco/editor/common/core/selection.dart';
 import 'package:semi_design_flutter/src/monaco/editor/common/encodedTokenAttributes.dart' as eta;
+import 'package:semi_design_flutter/src/monaco/editor/common/model/prefixSumComputer.dart' as psc;
+import 'package:semi_design_flutter/src/monaco/editor/common/core/ranges/lineRange.dart' as lr;
 import 'package:semi_design_flutter/src/monaco/editor/common/core/wordCharacterClassifier.dart' as wcc;
 import 'package:semi_design_flutter/src/monaco/platform/keybinding/common/baseResolvedKeybinding.dart' as brk;
 import 'package:semi_design_flutter/src/monaco/base/common/keybindings.dart' as kb;
@@ -277,6 +279,178 @@ void main() {
       expect(
           () => _TestKeybinding(pf.OperatingSystem.Windows, <kb.KeyCodeChord>[]),
           throwsA(isA<Error>()));
+    });
+  });
+
+  group('prefixSumComputer.ts (1:1)', () {
+    // Mirrors prefixSumComputer.test.ts; both implementations must agree.
+    void forBoth(List<int> values,
+        void Function(int total, int Function(int count) prefix,
+            psc.PrefixSumIndexOfResult Function(int sum) index) cb) {
+      final a = psc.PrefixSumComputer(values);
+      final b = psc.ConstantTimePrefixSumComputer(values);
+      for (final impl in <int>[0, 1]) {
+        if (impl == 0) {
+          cb(a.getTotalSum(), (int count) => count == 0 ? 0 : a.getPrefixSum(count - 1),
+              (int sum) => a.getIndexOf(sum));
+        } else {
+          cb(b.getTotalSum(), (int count) => b.getPrefixSum(count),
+              (int sum) => b.getIndexOf(sum));
+        }
+      }
+    }
+
+    test('typical values: total, prefix sums, indexes', () {
+      forBoth(<int>[1, 1, 2, 1, 3], (total, prefix, index) {
+        expect(total, 8);
+        expect(<int>[
+          prefix(0), prefix(1), prefix(2), prefix(3), prefix(4), prefix(5)
+        ], <int>[0, 1, 2, 4, 5, 8]);
+        expect(index(0), const psc.PrefixSumIndexOfResult(0, 0));
+        expect(index(1), const psc.PrefixSumIndexOfResult(1, 0));
+        expect(index(2), const psc.PrefixSumIndexOfResult(2, 0));
+        expect(index(3), const psc.PrefixSumIndexOfResult(2, 1));
+        expect(index(4), const psc.PrefixSumIndexOfResult(3, 0));
+        expect(index(8), const psc.PrefixSumIndexOfResult(4, 3));
+      });
+    });
+
+    test('all zeroes / empty / single element', () {
+      forBoth(<int>[0, 0, 0], (total, prefix, index) {
+        expect(total, 0);
+        expect(index(0), const psc.PrefixSumIndexOfResult(2, 0));
+      });
+      forBoth(<int>[], (total, prefix, index) {
+        expect(total, 0);
+        expect(prefix(0), 0);
+      });
+      forBoth(<int>[5], (total, prefix, index) {
+        expect(total, 5);
+        expect(index(0), const psc.PrefixSumIndexOfResult(0, 0));
+        expect(index(4), const psc.PrefixSumIndexOfResult(0, 4));
+      });
+    });
+
+    test('setValue increase/decrease/to-zero/from-zero', () {
+      forBoth(<int>[1, 2, 3], (total, prefix, index) {
+        // mutate through fresh impls below
+      });
+      final a = psc.PrefixSumComputer(<int>[1, 2, 3]);
+      final b = psc.ConstantTimePrefixSumComputer(<int>[1, 2, 3]);
+      for (final impl in <Object>[a, b]) {
+        if (impl is psc.PrefixSumComputer) {
+          impl.setValue(1, 5);
+          expect(impl.getTotalSum(), 9);
+          expect(impl.getIndexOf(5), const psc.PrefixSumIndexOfResult(1, 4));
+        } else if (impl is psc.ConstantTimePrefixSumComputer) {
+          impl.setValue(1, 5);
+          expect(impl.getTotalSum(), 9);
+          expect(impl.getIndexOf(5), const psc.PrefixSumIndexOfResult(1, 4));
+        }
+      }
+      b.setValue(1, 0);
+      expect(b.getTotalSum(), 4);
+      expect(b.getIndexOf(1), const psc.PrefixSumIndexOfResult(2, 0));
+      b.setValue(0, 0);
+      b.setValue(2, 0);
+      expect(b.getTotalSum(), 0);
+      b.setValue(0, 4);
+      expect(b.getIndexOf(3), const psc.PrefixSumIndexOfResult(0, 3));
+    });
+
+    test('insertValues and removeValues across both impls', () {
+      final a = psc.PrefixSumComputer(<int>[1, 1, 1]);
+      final b = psc.ConstantTimePrefixSumComputer(<int>[1, 1, 1]);
+      for (final impl in <Object>[a, b]) {
+        if (impl is psc.PrefixSumComputer) {
+          impl.setValue(0, 5);
+          impl.insertValues(1, <int>[10]);
+          impl.removeValues(3, 1);
+          expect(impl.getTotalSum(), 16);
+          expect(impl.getIndexOf(4), const psc.PrefixSumIndexOfResult(0, 4));
+        } else if (impl is psc.ConstantTimePrefixSumComputer) {
+          impl.setValue(0, 5);
+          impl.insertValues(1, <int>[10]);
+          impl.removeValues(3, 1);
+          expect(impl.getTotalSum(), 16);
+          expect(impl.getIndexOf(4), const psc.PrefixSumIndexOfResult(0, 4));
+        }
+      }
+      // empty -> insert
+      final e = psc.ConstantTimePrefixSumComputer(<int>[]);
+      e.insertValues(0, <int>[5, 3]);
+      expect(e.getTotalSum(), 8);
+      expect(e.getIndexOf(5), const psc.PrefixSumIndexOfResult(1, 0));
+    });
+  });
+
+  group('lineRange.ts (1:1)', () {
+    test('LineRange basics, contains, intersects, distance', () {
+      final r = lr.LineRange(3, 8);
+      expect(r.length, 5);
+      expect(r.isEmpty, isFalse);
+      expect(r.contains(3), isTrue);
+      expect(r.contains(8), isFalse);
+      expect(r.containsRange(lr.LineRange(4, 7)), isTrue);
+      expect(r.delta(2).equals(lr.LineRange(5, 10)), isTrue);
+      expect(r.deltaLength(-1).equals(lr.LineRange(3, 7)), isTrue);
+      expect(r.addMargin(1, 2).equals(lr.LineRange(2, 10)), isTrue);
+      expect(r.toString(), '[3,8)');
+      expect(r.intersect(lr.LineRange(6, 12))?.equals(lr.LineRange(6, 8)), isTrue);
+      expect(r.intersect(lr.LineRange(9, 12)), isNull);
+      expect(r.intersectsStrict(lr.LineRange(8, 10)), isFalse);
+      expect(r.intersectsOrTouches(lr.LineRange(8, 10)), isTrue);
+      expect(r.distanceToRange(lr.LineRange(10, 12)), 2);
+      expect(r.distanceToLine(1), 2);
+      expect(r.distanceToLine(5), 0);
+      expect(r.distanceToLine(11), 3);
+      expect(r.toInclusiveRange(), isNotNull);
+      expect(lr.LineRange.ofLength(3, 5).equals(r), isTrue);
+      expect(lr.LineRange.fromRange(Range(3, 1, 7, 9)).equals(lr.LineRange(3, 7)), isTrue);
+      expect(lr.LineRange.fromRangeInclusive(Range(3, 1, 7, 9)).equals(r), isTrue);
+      expect(r.serialize(), (startLineNumber: 3, endLineNumberExclusive: 8));
+      expect(lr.LineRange.deserialize(r.serialize()).equals(r), isTrue);
+      expect(r.mapToLineArray<int>((int n) => n), <int>[3, 4, 5, 6, 7]);
+      expect(r.toOffsetRange().start, 2);
+    });
+
+    test('LineRange.subtract covers all four branches', () {
+      final a = lr.LineRange(1, 10);
+      // b fully inside -> two pieces
+      expect(lr.LineRange.subtract(a, lr.LineRange(4, 6)).map((x) => x.toString()).toList(),
+          <String>['[1,4)', '[6,10)']);
+      // b covers a -> empty
+      expect(lr.LineRange.subtract(a, lr.LineRange(0, 12)), isEmpty);
+      // b overlaps right
+      expect(lr.LineRange.subtract(a, lr.LineRange(8, 12)).map((x) => x.toString()).toList(), <String>['[1,8)']);
+      // b overlaps left
+      expect(lr.LineRange.subtract(a, lr.LineRange(0, 4)).map((x) => x.toString()).toList(), <String>['[4,10)']);
+      expect(lr.LineRange.subtract(a, null).map((x) => x.toString()).toList(), <String>['[1,10)']);
+      expect(lr.LineRange.joinStatic(<lr.LineRange>[
+        lr.LineRange(1, 3),
+        lr.LineRange(5, 9)
+      ]).equals(lr.LineRange(1, 9)), isTrue);
+      expect(() => lr.LineRange.joinStatic(<lr.LineRange>[]), throwsA(isA<BugIndicatingError>()));
+    });
+
+    test('LineRangeSet add/union/subtract/intersection', () {
+      final set = lr.LineRangeSet();
+      set.addRange(lr.LineRange(1, 3));
+      set.addRange(lr.LineRange(5, 8));
+      set.addRange(lr.LineRange(3, 5)); // touches both -> merges all
+      expect(set.ranges.length, 1);
+      expect(set.ranges.single.equals(lr.LineRange(1, 8)), isTrue);
+      expect(set.contains(1), isTrue);
+      expect(set.contains(8), isFalse);
+      expect(set.intersects(lr.LineRange(7, 10)), isTrue);
+      expect(set.toString(), '[1,8)');
+
+      final other = lr.LineRangeSet(<lr.LineRange>[lr.LineRange(4, 12)]);
+      expect(set.getUnion(other).ranges.single.equals(lr.LineRange(1, 12)), isTrue);
+      expect(set.getIntersection(other).ranges.single.equals(lr.LineRange(4, 8)), isTrue);
+      expect(set.subtractFrom(lr.LineRange(2, 6)).ranges
+          .map((x) => x.toString()).toList(), isEmpty);
+      expect(set.getWithDelta(2).ranges.single.equals(lr.LineRange(3, 10)), isTrue);
     });
   });
 

@@ -195,7 +195,7 @@
 | 186 | editor | `editor/common/core/position.ts` | `lib/src/monaco/editor/common/core/position.dart` | tested |
 | 187 | editor | `editor/common/core/range.ts` | `lib/src/monaco/editor/common/core/range.dart` | tested |
 | 188 | editor | `editor/common/core/ranges/columnRange.ts` | `lib/src/monaco/editor/common/core/ranges/columnRange.dart` | tested |
-| 189 | editor | `editor/common/core/ranges/lineRange.ts` | `lib/src/monaco/editor/common/core/ranges/lineRange.dart` | pending |
+| 189 | editor | `editor/common/core/ranges/lineRange.ts` | `lib/src/monaco/editor/common/core/ranges/lineRange.dart` | tested |
 | 190 | editor | `editor/common/core/ranges/offsetRange.ts` | `lib/src/monaco/editor/common/core/ranges/offsetRange.dart` | tested |
 | 191 | editor | `editor/common/core/ranges/rangeMapping.ts` | `lib/src/monaco/editor/common/core/ranges/rangeMapping.dart` | pending |
 | 192 | editor | `editor/common/core/ranges/rangeSingleLine.ts` | `lib/src/monaco/editor/common/core/ranges/rangeSingleLine.dart` | tested |
@@ -295,7 +295,7 @@
 | 286 | editor | `editor/common/model/pieceTreeTextBuffer/pieceTreeTextBuffer.ts` | `lib/src/monaco/editor/common/model/pieceTreeTextBuffer/pieceTreeTextBuffer.dart` | pending |
 | 287 | editor | `editor/common/model/pieceTreeTextBuffer/pieceTreeTextBufferBuilder.ts` | `lib/src/monaco/editor/common/model/pieceTreeTextBuffer/pieceTreeTextBufferBuilder.dart` | pending |
 | 288 | editor | `editor/common/model/pieceTreeTextBuffer/rbTreeBase.ts` | `lib/src/monaco/editor/common/model/pieceTreeTextBuffer/rbTreeBase.dart` | pending |
-| 289 | editor | `editor/common/model/prefixSumComputer.ts` | `lib/src/monaco/editor/common/model/prefixSumComputer.dart` | pending |
+| 289 | editor | `editor/common/model/prefixSumComputer.ts` | `lib/src/monaco/editor/common/model/prefixSumComputer.dart` | tested |
 | 290 | editor | `editor/common/model/textModel.ts` | `lib/src/monaco/editor/common/model/textModel.dart` | pending |
 | 291 | editor | `editor/common/model/textModelPart.ts` | `lib/src/monaco/editor/common/model/textModelPart.dart` | pending |
 | 292 | editor | `editor/common/model/textModelSearch.ts` | `lib/src/monaco/editor/common/model/textModelSearch.dart` | pending |
@@ -999,7 +999,7 @@
 | 990 | base | `base/common/arraysFind.ts` | `lib/src/monaco/base/common/arraysFind.dart` | tested |
 | 991 | base | `base/common/assert.ts` | `lib/src/monaco/base/common/assert.dart` | tested |
 | 992 | base | `base/common/async.ts` | `lib/src/monaco/base/common/async.dart` | pending |
-| 993 | base | `base/common/buffer.ts` | `lib/src/monaco/base/common/buffer.dart` | pending |
+| 993 | base | `base/common/buffer.ts` | `lib/src/monaco/base/common/buffer.dart` | tested |
 | 994 | base | `base/common/cache.ts` | `lib/src/monaco/base/common/cache.dart` | tested |
 | 995 | base | `base/common/cancellation.ts` | `lib/src/monaco/base/common/cancellation.dart` | tested |
 | 996 | base | `base/common/charCode.ts` | `lib/src/monaco/base/common/charCode.dart` | tested |
@@ -1012,7 +1012,7 @@
 | 1003 | base | `base/common/dataTransfer.ts` | `lib/src/monaco/base/common/dataTransfer.dart` | pending |
 | 1004 | base | `base/common/date.ts` | `lib/src/monaco/base/common/date.dart` | tested |
 | 1005 | base | `base/common/decorators/cancelPreviousCalls.ts` | `lib/src/monaco/base/common/decorators/cancelPreviousCalls.dart` | tested |
-| 1006 | base | `base/common/decorators.ts` | `lib/src/monaco/base/common/decorators.dart` | pending |
+| 1006 | base | `base/common/decorators.ts` | `lib/src/monaco/base/common/decorators.dart` | tested |
 | 1007 | base | `base/common/defaultAccount.ts` | `lib/src/monaco/base/common/defaultAccount.dart` | pending |
 | 1008 | base | `base/common/diff/diff.ts` | `lib/src/monaco/base/common/diff/diff.dart` | pending |
 | 1009 | base | `base/common/diff/diffChange.ts` | `lib/src/monaco/base/common/diff/diffChange.dart` | tested |
@@ -1098,7 +1098,7 @@
 | 1089 | base | `base/common/observableInternal/utils/utils.ts` | `lib/src/monaco/base/common/observableInternal/utils/utils.dart` | pending |
 | 1090 | base | `base/common/observableInternal/utils/utilsCancellation.ts` | `lib/src/monaco/base/common/observableInternal/utils/utilsCancellation.dart` | pending |
 | 1091 | base | `base/common/observableInternal/utils/valueWithChangeEvent.ts` | `lib/src/monaco/base/common/observableInternal/utils/valueWithChangeEvent.dart` | pending |
-| 1092 | base | `base/common/paging.ts` | `lib/src/monaco/base/common/paging.dart` | pending |
+| 1092 | base | `base/common/paging.ts` | `lib/src/monaco/base/common/paging.dart` | tested |
 | 1093 | base | `base/common/path.ts` | `lib/src/monaco/base/common/path.dart` | tested |
 | 1094 | base | `base/common/performance.ts` | `lib/src/monaco/base/common/performance.dart` | tested |
 | 1095 | base | `base/common/platform.ts` | `lib/src/monaco/base/common/platform.dart` | tested |
