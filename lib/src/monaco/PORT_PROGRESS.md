@@ -50,7 +50,7 @@
 | 41 | editor | `editor/browser/gpu/css/decorationCssRuleExtractor.ts` | `lib/src/monaco/editor/browser/gpu/css/decorationCssRuleExtractor.dart` | pending |
 | 42 | editor | `editor/browser/gpu/css/decorationStyleCache.ts` | `lib/src/monaco/editor/browser/gpu/css/decorationStyleCache.dart` | tested |
 | 43 | editor | `editor/browser/gpu/gpu.ts` | `lib/src/monaco/editor/browser/gpu/gpu.dart` | pending |
-| 44 | editor | `editor/browser/gpu/gpuDisposable.ts` | `lib/src/monaco/editor/browser/gpu/gpuDisposable.dart` | pending |
+| 44 | editor | `editor/browser/gpu/gpuDisposable.ts` | `lib/src/monaco/editor/browser/gpu/gpuDisposable.dart` | tested |
 | 45 | editor | `editor/browser/gpu/gpuUtils.ts` | `lib/src/monaco/editor/browser/gpu/gpuUtils.dart` | tested |
 | 46 | editor | `editor/browser/gpu/objectCollectionBuffer.ts` | `lib/src/monaco/editor/browser/gpu/objectCollectionBuffer.dart` | tested |
 | 47 | editor | `editor/browser/gpu/raster/glyphRasterizer.ts` | `lib/src/monaco/editor/browser/gpu/raster/glyphRasterizer.dart` | pending |
@@ -307,7 +307,7 @@
 | 298 | editor | `editor/common/model/tokens/tokenizationFontDecorationsProvider.ts` | `lib/src/monaco/editor/common/model/tokens/tokenizationFontDecorationsProvider.dart` | pending |
 | 299 | editor | `editor/common/model/tokens/tokenizationTextModelPart.ts` | `lib/src/monaco/editor/common/model/tokens/tokenizationTextModelPart.dart` | pending |
 | 300 | editor | `editor/common/model/tokens/tokenizerSyntaxTokenBackend.ts` | `lib/src/monaco/editor/common/model/tokens/tokenizerSyntaxTokenBackend.dart` | pending |
-| 301 | editor | `editor/common/model/tokens/treeSitter/cursorUtils.ts` | `lib/src/monaco/editor/common/model/tokens/treeSitter/cursorUtils.dart` | pending |
+| 301 | editor | `editor/common/model/tokens/treeSitter/cursorUtils.ts` | `lib/src/monaco/editor/common/model/tokens/treeSitter/cursorUtils.dart` | tested |
 | 302 | editor | `editor/common/model/tokens/treeSitter/tokenStore.ts` | `lib/src/monaco/editor/common/model/tokens/treeSitter/tokenStore.dart` | pending |
 | 303 | editor | `editor/common/model/tokens/treeSitter/treeSitterSyntaxTokenBackend.ts` | `lib/src/monaco/editor/common/model/tokens/treeSitter/treeSitterSyntaxTokenBackend.dart` | pending |
 | 304 | editor | `editor/common/model/tokens/treeSitter/treeSitterTokenizationImpl.ts` | `lib/src/monaco/editor/common/model/tokens/treeSitter/treeSitterTokenizationImpl.dart` | pending |
@@ -602,7 +602,7 @@
 | 593 | editor | `editor/contrib/inlineCompletions/browser/view/inlineEdits/inlineEditsViews/longDistanceHint/longDistnaceWidgetPlacement.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/view/inlineEdits/inlineEditsViews/longDistanceHint/longDistnaceWidgetPlacement.dart` | pending |
 | 594 | editor | `editor/contrib/inlineCompletions/browser/view/inlineEdits/inlineEditsViews/originalEditorInlineDiffView.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/view/inlineEdits/inlineEditsViews/originalEditorInlineDiffView.dart` | pending |
 | 595 | editor | `editor/contrib/inlineCompletions/browser/view/inlineEdits/theme.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/view/inlineEdits/theme.dart` | pending |
-| 596 | editor | `editor/contrib/inlineCompletions/browser/view/inlineEdits/utils/flexBoxLayout.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/view/inlineEdits/utils/flexBoxLayout.dart` | pending |
+| 596 | editor | `editor/contrib/inlineCompletions/browser/view/inlineEdits/utils/flexBoxLayout.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/view/inlineEdits/utils/flexBoxLayout.dart` | tested |
 | 597 | editor | `editor/contrib/inlineCompletions/browser/view/inlineEdits/utils/towersLayout.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/view/inlineEdits/utils/towersLayout.dart` | tested |
 | 598 | editor | `editor/contrib/inlineCompletions/browser/view/inlineEdits/utils/utils.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/view/inlineEdits/utils/utils.dart` | pending |
 | 599 | editor | `editor/contrib/inlineCompletions/browser/view/inlineSuggestionsView.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/view/inlineSuggestionsView.dart` | pending |
@@ -757,7 +757,7 @@
 | 748 | editor | `editor/standalone/browser/standaloneWebWorker.ts` | `lib/src/monaco/editor/standalone/browser/standaloneWebWorker.dart` | pending |
 | 749 | editor | `editor/standalone/browser/toggleHighContrast/toggleHighContrast.ts` | `lib/src/monaco/editor/standalone/browser/toggleHighContrast/toggleHighContrast.dart` | pending |
 | 750 | editor | `editor/standalone/common/monarch/monarchCommon.ts` | `lib/src/monaco/editor/standalone/common/monarch/monarchCommon.dart` | tested |
-| 751 | editor | `editor/standalone/common/monarch/monarchCompile.ts` | `lib/src/monaco/editor/standalone/common/monarch/monarchCompile.dart` | pending |
+| 751 | editor | `editor/standalone/common/monarch/monarchCompile.ts` | `lib/src/monaco/editor/standalone/common/monarch/monarchCompile.dart` | tested |
 | 752 | editor | `editor/standalone/common/monarch/monarchLexer.ts` | `lib/src/monaco/editor/standalone/common/monarch/monarchLexer.dart` | pending |
 | 753 | editor | `editor/standalone/common/monarch/monarchTypes.ts` | `lib/src/monaco/editor/standalone/common/monarch/monarchTypes.dart` | tested |
 | 754 | editor | `editor/standalone/common/standaloneTheme.ts` | `lib/src/monaco/editor/standalone/common/standaloneTheme.dart` | pending |
@@ -1137,7 +1137,7 @@
 | 1128 | base | `base/test/common/virtualScheduling/globalTimeApi.ts` | `lib/src/monaco/base/test/common/virtualScheduling/globalTimeApi.dart` | tested |
 | 1129 | base | `base/test/common/virtualScheduling/index.ts` | `lib/src/monaco/base/test/common/virtualScheduling/index.dart` | pending |
 | 1130 | base | `base/test/common/virtualScheduling/loggingTimeApi.ts` | `lib/src/monaco/base/test/common/virtualScheduling/loggingTimeApi.dart` | tested |
-| 1131 | base | `base/test/common/virtualScheduling/processor.ts` | `lib/src/monaco/base/test/common/virtualScheduling/processor.dart` | pending |
+| 1131 | base | `base/test/common/virtualScheduling/processor.ts` | `lib/src/monaco/base/test/common/virtualScheduling/processor.dart` | tested |
 | 1132 | base | `base/test/common/virtualScheduling/recordingTimeApi.ts` | `lib/src/monaco/base/test/common/virtualScheduling/recordingTimeApi.dart` | tested |
 | 1133 | base | `base/test/common/virtualScheduling/runWithFakedTimers.ts` | `lib/src/monaco/base/test/common/virtualScheduling/runWithFakedTimers.dart` | pending |
 | 1134 | base | `base/test/common/virtualScheduling/timeApi.ts` | `lib/src/monaco/base/test/common/virtualScheduling/timeApi.dart` | tested |
