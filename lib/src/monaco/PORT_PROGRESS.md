@@ -303,7 +303,7 @@
 | 294 | editor | `editor/common/model/textModelText.ts` | `lib/src/monaco/editor/common/model/textModelText.dart` | pending |
 | 295 | editor | `editor/common/model/textModelTokens.ts` | `lib/src/monaco/editor/common/model/textModelTokens.dart` | pending |
 | 296 | editor | `editor/common/model/tokens/abstractSyntaxTokenBackend.ts` | `lib/src/monaco/editor/common/model/tokens/abstractSyntaxTokenBackend.dart` | pending |
-| 297 | editor | `editor/common/model/tokens/annotations.ts` | `lib/src/monaco/editor/common/model/tokens/annotations.dart` | pending |
+| 297 | editor | `editor/common/model/tokens/annotations.ts` | `lib/src/monaco/editor/common/model/tokens/annotations.dart` | tested |
 | 298 | editor | `editor/common/model/tokens/tokenizationFontDecorationsProvider.ts` | `lib/src/monaco/editor/common/model/tokens/tokenizationFontDecorationsProvider.dart` | pending |
 | 299 | editor | `editor/common/model/tokens/tokenizationTextModelPart.ts` | `lib/src/monaco/editor/common/model/tokens/tokenizationTextModelPart.dart` | pending |
 | 300 | editor | `editor/common/model/tokens/tokenizerSyntaxTokenBackend.ts` | `lib/src/monaco/editor/common/model/tokens/tokenizerSyntaxTokenBackend.dart` | pending |
@@ -1009,7 +1009,7 @@
 | 1000 | base | `base/common/collections.ts` | `lib/src/monaco/base/common/collections.dart` | tested |
 | 1001 | base | `base/common/color.ts` | `lib/src/monaco/base/common/color.dart` | tested |
 | 1002 | base | `base/common/comparers.ts` | `lib/src/monaco/base/common/comparers.dart` | tested |
-| 1003 | base | `base/common/dataTransfer.ts` | `lib/src/monaco/base/common/dataTransfer.dart` | pending |
+| 1003 | base | `base/common/dataTransfer.ts` | `lib/src/monaco/base/common/dataTransfer.dart` | tested |
 | 1004 | base | `base/common/date.ts` | `lib/src/monaco/base/common/date.dart` | tested |
 | 1005 | base | `base/common/decorators/cancelPreviousCalls.ts` | `lib/src/monaco/base/common/decorators/cancelPreviousCalls.dart` | tested |
 | 1006 | base | `base/common/decorators.ts` | `lib/src/monaco/base/common/decorators.dart` | tested |
@@ -1126,7 +1126,7 @@
 | 1117 | base | `base/common/worker/webWorker.ts` | `lib/src/monaco/base/common/worker/webWorker.dart` | pending |
 | 1118 | base | `base/common/worker/webWorkerBootstrap.ts` | `lib/src/monaco/base/common/worker/webWorkerBootstrap.dart` | pending |
 | 1119 | base | `base/parts/sandbox/common/sandboxTypes.ts` | `lib/src/monaco/base/parts/sandbox/common/sandboxTypes.dart` | pending |
-| 1120 | base | `base/parts/storage/common/storage.ts` | `lib/src/monaco/base/parts/storage/common/storage.dart` | pending |
+| 1120 | base | `base/parts/storage/common/storage.ts` | `lib/src/monaco/base/parts/storage/common/storage.dart` | tested |
 | 1121 | base | `base/test/browser/testWindow.ts` | `lib/src/monaco/base/test/browser/testWindow.dart` | pending |
 | 1122 | base | `base/test/common/executionGraph.ts` | `lib/src/monaco/base/test/common/executionGraph.dart` | tested |
 | 1123 | base | `base/test/common/mock.ts` | `lib/src/monaco/base/test/common/mock.dart` | pending |

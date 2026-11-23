@@ -647,16 +647,25 @@ class Delayer<T> implements IDisposable {
 }
 
 /// 1:1: `export class ThrottledDelayer<T>`
+///
+/// Dart's `Future.then` auto-flattens a returned `Future<T>`, so using
+/// `Delayer<Future<T>>` would deliver the flattened `T` into a
+/// `Completer<Future<T>>` and fail a `value as Future<T>` cast. Use a
+/// `Delayer<dynamic>` (matching JS promise-flattening semantics) and expose a
+/// correctly typed `Future<T>` via a bridge.
 class ThrottledDelayer<T> {
-  final Delayer<Future<T>> delayer;
+  final Delayer<dynamic> delayer;
   final Throttler throttler;
 
   ThrottledDelayer(int defaultDelay)
-      : delayer = Delayer<Future<T>>(defaultDelay),
+      : delayer = Delayer<dynamic>(defaultDelay),
         throttler = Throttler();
 
-  Future<T> trigger(ICancellableTask<Future<T>> promiseFactory, [dynamic delay]) =>
-      delayer.trigger(() => throttler.queue(promiseFactory), delay) as Future<T>;
+  Future<T> trigger(ICancellableTask<Future<T>> promiseFactory, [dynamic delay]) {
+    final Future<dynamic> result =
+        delayer.trigger(() => throttler.queue(promiseFactory), delay);
+    return result.then((dynamic value) => value as T);
+  }
 
   bool isTriggered() => delayer.isTriggered();
   void cancel() => delayer.cancel();
