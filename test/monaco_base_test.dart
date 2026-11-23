@@ -38,6 +38,9 @@ import 'package:semi_design_flutter/src/monaco/base/common/uri.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/path.dart' as path;
 import 'package:semi_design_flutter/src/monaco/base/common/platform.dart' as pf;
 import 'package:semi_design_flutter/src/monaco/base/common/process.dart' as pr;
+import 'package:semi_design_flutter/src/monaco/base/common/jsonFormatter.dart' as fmt;
+import 'package:semi_design_flutter/src/monaco/base/common/keybindings.dart' as kb;
+import 'package:semi_design_flutter/src/monaco/base/common/naturalLanguage/korean.dart' as korean;
 import 'package:semi_design_flutter/src/monaco/base/common/stopwatch.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/symbols.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/types.dart';
@@ -1026,4 +1029,412 @@ void main() {
     });
   });
 
+  group('jsonFormatter.ts', () {
+    // Mirrors the `format` helper from jsonFormatter.test.ts: `|` markers
+    // delimit the range, edits are applied from last to first.
+    String runFormat(String content, {bool insertSpaces = true}) {
+      fmt.FormatRange? range;
+      final int rangeStart = content.indexOf('|');
+      final int rangeEnd = content.lastIndexOf('|');
+      if (rangeStart != -1 && rangeEnd != -1) {
+        content = content.substring(0, rangeStart) +
+            content.substring(rangeStart + 1, rangeEnd) +
+            content.substring(rangeEnd + 1);
+        range = fmt.FormatRange(rangeStart, rangeEnd - rangeStart);
+      }
+      final List<fmt.Edit> edits = fmt.format(
+          content,
+          range,
+          fmt.FormattingOptions(tabSize: 2, insertSpaces: insertSpaces, eol: '\n'));
+      int lastEditOffset = content.length;
+      for (int i = edits.length - 1; i >= 0; i--) {
+        final edit = edits[i];
+        expect(edit.offset >= 0 && edit.length >= 0 && edit.offset + edit.length <= content.length,
+            isTrue);
+        expect(lastEditOffset >= edit.offset + edit.length, isTrue);
+        lastEditOffset = edit.offset;
+        content = content.substring(0, edit.offset) +
+            edit.content +
+            content.substring(edit.offset + edit.length);
+      }
+      return content;
+    }
+
+    test('object + array formatting (mirrors jsonFormatter.test.ts)', () {
+      expect(runFormat('{"x" : 1}'), ['{', '  "x": 1', '}'].join('\n'));
+      expect(runFormat('{"x" : 1,  "y" : "foo", "z"  : true}'),
+          ['{', '  "x": 1,', '  "y": "foo",', '  "z": true', '}'].join('\n'));
+      expect(runFormat('{"x" : {    },  "y" : {}}'),
+          ['{', '  "x": {},', '  "y": {}', '}'].join('\n'));
+      expect(runFormat('{"x" : {  "y" : { "z"  : { }}, "a": true}}'),
+          ['{', '  "x": {', '    "y": {', '      "z": {}', '    },', '    "a": true', '  }', '}']
+              .join('\n'));
+      expect(runFormat('["[]"]'), ['[', '  "[]"', ']'].join('\n'));
+      expect(runFormat('[true,null,1.2]'), ['[', '  true,', '  null,', '  1.2', ']'].join('\n'));
+      expect(runFormat('[      ]'), ['[]'].join('\n'));
+      expect(runFormat('[ [], [ [ {} ], "a" ]  ]'),
+          ['[', '  [],', '  [', '    [', '      {}', '    ],', '    "a"', '  ]', ']'].join('\n'));
+      expect(runFormat('[ null 1.2 ]'), ['[', '  null 1.2', ']'].join('\n'));
+    });
+
+    test('comments (mirrors jsonFormatter.test.ts)', () {
+      expect(runFormat(['{', '"a": true,', '', '"b": true', '}'].join('\n'), insertSpaces: false),
+          ['{', '\t"a": true,', '\t"b": true', '}'].join('\n'));
+      expect(runFormat(['[ ', '//comment', '"foo", "bar"', '] '].join('\n')),
+          ['[', '  //comment', '  "foo",', '  "bar"', ']'].join('\n'));
+      expect(runFormat(['[{', '        /*comment*/     ', '"foo" : true', '}] '].join('\n')),
+          ['[', '  {', '    /*comment*/', '    "foo": true', '  }', ']'].join('\n'));
+      expect(runFormat([' {  ', '        "a": {}// comment    ', ' } '].join('\n')),
+          ['{', '  "a": {} // comment    ', '}'].join('\n'));
+      expect(runFormat(['{ //comment', '}'].join('\n')),
+          ['{ //comment', '}'].join('\n'));
+      expect(runFormat(['{      "a": {}, /*comment*/    ', '        /*comment*/ "b": {},    ',
+              '        "c": {/*comment*/}    } '].join('\n')),
+          ['{', '  "a": {}, /*comment*/', '  /*comment*/ "b": {},', '  "c": { /*comment*/}', '}']
+              .join('\n'));
+      expect(runFormat([' {       "d": [', '             null', '        ] /*comment*/',
+              '        ,"e": /*comment*/ [null] }'].join('\n')),
+          ['{', '  "d": [', '    null', '  ] /*comment*/,', '  "e": /*comment*/ [', '    null',
+                  '  ]', '}']
+              .join('\n'));
+      expect(runFormat(['{      "a": {} /*comment*/, /*comment*/   ',
+              '        /*comment*/ "b": {}  /*comment*/  } '].join('\n')),
+          ['{', '  "a": {} /*comment*/, /*comment*/', '  /*comment*/ "b": {} /*comment*/', '}']
+              .join('\n'));
+      expect(runFormat(['[ /*comment*/  /*comment*/   // comment ', ']'].join('\n')),
+          ['[ /*comment*/ /*comment*/ // comment ', ']'].join('\n'));
+      expect(runFormat(['{ "a": [ 1', '/* comment */', ', 2', '/* comment */', ']',
+              '/* comment */', ',', ' "b": true', '/* comment */', '}'].join('\n')),
+          ['{', '  "a": [', '    1', '    /* comment */', '    ,', '    2',
+                  '    /* comment */', '  ]', '  /* comment */', '  ,', '  "b": true',
+                  '  /* comment */', '}']
+              .join('\n'));
+      expect(runFormat(['{ "a":', '// comment', 'null,', ' "b"', '// comment', ': null',
+              '// comment', '}'].join('\n')),
+          ['{', '  "a":', '  // comment', '  null,', '  "b"', '  // comment', '  : null',
+                  '  // comment', '}']
+              .join('\n'));
+    });
+
+    test('range formatting (mirrors jsonFormatter.test.ts)', () {
+      expect(runFormat(['{ "a": {},', '|"b": [null, null]|', '} '].join('\n')),
+          ['{ "a": {},', '"b": [', '  null,', '  null', ']', '} '].join('\n'));
+      expect(runFormat(['{ "a": {},', '   |"b": [null],', '"c": {}', '}|'].join('\n')),
+          ['{ "a": {},', '   "b": [', '    null', '  ],', '  "c": {}', '}'].join('\n'));
+      expect(
+          runFormat(['{ "a": {},', '|  "b": [null],   ', '"c": {}', '} |    '].join('\n'),
+              insertSpaces: false),
+          ['{ "a": {},', '\t"b": [', '\t\tnull', '\t],', '\t"c": {}', '}'].join('\n'));
+    });
+
+    test('toFormattedString (mirrors jsonFormatter.test.ts)', () {
+      final Object obj = <String, Object?>{
+        'a': <String, Object?>{'b': 1, 'd': <Object?>['hello']}
+      };
+      String getExpected(String tab, String eol) => [
+            '{',
+            '${tab}"a": {',
+            '${tab}${tab}"b": 1,',
+            '${tab}${tab}"d": [',
+            '${tab}${tab}${tab}"hello"',
+            '${tab}${tab}]',
+            '${tab}}',
+            '}'
+          ].join(eol);
+      expect(fmt.toFormattedString(obj, fmt.FormattingOptions(insertSpaces: true, tabSize: 2, eol: '\n')),
+          getExpected('  ', '\n'));
+      expect(fmt.toFormattedString(obj, fmt.FormattingOptions(insertSpaces: true, tabSize: 2, eol: '\r\n')),
+          getExpected('  ', '\r\n'));
+      expect(fmt.toFormattedString(obj, fmt.FormattingOptions(insertSpaces: false, eol: '\r\n')),
+          getExpected('\t', '\r\n'));
+    });
+  });
+
+  group('keybindings.ts', () {
+    test('issue #173325: KeyCodeChord hash != ScanCodeChord hash', () {
+      final a = kb.KeyCodeChord(true, false, false, false, kc.KeyCode.KeyV);
+      final b = kb.ScanCodeChord(true, false, false, false, kc.ScanCode.Equal);
+      expect(a.getHashCode() == b.getHashCode(), isFalse);
+    });
+    test('decodeKeybinding / createSimpleKeybinding / equals', () {
+      // KeyV with ctrlCmd bit set; on non-Mac this is ctrlKey
+      final simple = kb.createSimpleKeybinding(
+          (1 << 11) | kc.KeyCode.KeyV, pf.OperatingSystem.Windows);
+      expect(simple.ctrlKey, isTrue);
+      expect(simple.keyCode, kc.KeyCode.KeyV);
+      expect(simple.isModifierKey(), isFalse);
+      expect(kb.decodeKeybinding(0, pf.OperatingSystem.Windows), isNull);
+      final single = kb.decodeKeybinding(
+          (1 << 11) | kc.KeyCode.KeyV, pf.OperatingSystem.Windows)!;
+      expect(single.chords.length, 1);
+      expect(single.equals(kb.Keybinding([kb.KeyCodeChord(true, false, false, false, kc.KeyCode.KeyV)])),
+          isTrue);
+      // two-chord (chord) encoding
+      final int chord = ((1 << 11) | kc.KeyCode.KeyK) | (((1 << 10) | kc.KeyCode.KeyS) << 16);
+      final decoded = kb.decodeKeybinding(chord, pf.OperatingSystem.Windows)!;
+      expect(decoded.chords.length, 2);
+      expect(decoded.getHashCode(), isNotEmpty);
+      // array form
+      final arr = kb.decodeKeybinding(<int>[kc.KeyCode.KeyA, kc.KeyCode.KeyB], pf.OperatingSystem.Windows)!;
+      expect(arr.chords.length, 2);
+      // modifier duplicate cases
+      expect(kb.KeyCodeChord(true, false, false, false, kc.KeyCode.Ctrl).isDuplicateModifierCase(), isTrue);
+      expect(kb.ScanCodeChord(false, true, false, false, kc.ScanCode.ShiftLeft).isDuplicateModifierCase(), isTrue);
+    });
+  });
+
+  group('korean.ts', () {
+    String altForString(String text) {
+      final result = StringBuffer();
+      for (int i = 0; i < text.length; i++) {
+        final chars = korean.getKoreanAltChars(text.codeUnitAt(i));
+        if (chars != null) {
+          for (final c in chars) { result.writeCharCode(c); }
+        } else {
+          result.writeCharCode(text.codeUnitAt(i));
+        }
+      }
+      return result.toString();
+    }
+    test("Modern initial consonants", () {
+      final cases = <String, String>{
+        "ᄀ": "r",
+        "ᄁ": "R",
+        "ᄂ": "s",
+        "ᄃ": "e",
+        "ᄄ": "E",
+        "ᄅ": "f",
+        "ᄆ": "a",
+        "ᄇ": "q",
+        "ᄈ": "Q",
+        "ᄉ": "t",
+        "ᄊ": "T",
+        "ᄋ": "d",
+        "ᄌ": "w",
+        "ᄍ": "W",
+        "ᄎ": "c",
+        "ᄏ": "z",
+        "ᄐ": "x",
+        "ᄑ": "v",
+        "ᄒ": "g",
+      };
+      for (final entry in cases.entries) {
+        expect(altForString(entry.key), entry.value,
+            reason: '"${entry.key}" should result in "${entry.value}"');
+      }
+    });
+    test("Modern latter consonants", () {
+      final cases = <String, String>{
+        "ᆨ": "r",
+        "ᆩ": "R",
+        "ᆪ": "rt",
+        "ᆫ": "s",
+        "ᆬ": "sw",
+        "ᆭ": "sg",
+        "ᆮ": "e",
+        "ᆯ": "f",
+        "ᆰ": "fr",
+        "ᆱ": "fa",
+        "ᆲ": "fq",
+        "ᆳ": "ft",
+        "ᆴ": "fx",
+        "ᆵ": "fv",
+        "ᆶ": "fg",
+        "ᆷ": "a",
+        "ᆸ": "q",
+        "ᆹ": "qt",
+        "ᆺ": "t",
+        "ᆻ": "T",
+        "ᆼ": "d",
+        "ᆽ": "w",
+        "ᆾ": "c",
+        "ᆿ": "z",
+        "ᇀ": "x",
+        "ᇁ": "v",
+        "ᇂ": "g",
+      };
+      for (final entry in cases.entries) {
+        expect(altForString(entry.key), entry.value,
+            reason: '"${entry.key}" should result in "${entry.value}"');
+      }
+    });
+    test("Modern vowels", () {
+      final cases = <String, String>{
+        "ᅡ": "k",
+        "ᅢ": "o",
+        "ᅣ": "i",
+        "ᅤ": "O",
+        "ᅥ": "j",
+        "ᅦ": "p",
+        "ᅧ": "u",
+        "ᅨ": "P",
+        "ᅩ": "h",
+        "ᅪ": "hk",
+        "ᅫ": "ho",
+        "ᅬ": "hl",
+        "ᅭ": "y",
+        "ᅮ": "n",
+        "ᅯ": "nj",
+        "ᅰ": "np",
+        "ᅱ": "nl",
+        "ᅲ": "b",
+        "ᅳ": "m",
+        "ᅴ": "ml",
+        "ᅵ": "l",
+      };
+      for (final entry in cases.entries) {
+        expect(altForString(entry.key), entry.value,
+            reason: '"${entry.key}" should result in "${entry.value}"');
+      }
+    });
+    test("Compatibility Jamo", () {
+      final cases = <String, String>{
+        "ㄱ": "r",
+        "ㄲ": "R",
+        "ㄳ": "rt",
+        "ㄴ": "s",
+        "ㄵ": "sw",
+        "ㄶ": "sg",
+        "ㄷ": "e",
+        "ㄸ": "E",
+        "ㄹ": "f",
+        "ㄺ": "fr",
+        "ㄻ": "fa",
+        "ㄼ": "fq",
+        "ㄽ": "ft",
+        "ㄾ": "fx",
+        "ㄿ": "fv",
+        "ㅀ": "fg",
+        "ㅁ": "a",
+        "ㅂ": "q",
+        "ㅃ": "Q",
+        "ㅄ": "qt",
+        "ㅅ": "t",
+        "ㅆ": "T",
+        "ㅇ": "d",
+        "ㅈ": "w",
+        "ㅉ": "W",
+        "ㅊ": "c",
+        "ㅋ": "z",
+        "ㅌ": "x",
+        "ㅍ": "v",
+        "ㅎ": "g",
+        "ㅏ": "k",
+        "ㅐ": "o",
+        "ㅑ": "i",
+        "ㅒ": "O",
+        "ㅓ": "j",
+        "ㅔ": "p",
+        "ㅕ": "u",
+        "ㅖ": "P",
+        "ㅗ": "h",
+        "ㅘ": "hk",
+        "ㅙ": "ho",
+        "ㅚ": "hl",
+        "ㅛ": "y",
+        "ㅜ": "n",
+        "ㅝ": "nj",
+        "ㅞ": "np",
+        "ㅟ": "nl",
+        "ㅠ": "b",
+        "ㅡ": "m",
+        "ㅢ": "ml",
+        "ㅣ": "l",
+      };
+      for (final entry in cases.entries) {
+        expect(altForString(entry.key), entry.value,
+            reason: '"${entry.key}" should result in "${entry.value}"');
+      }
+    });
+    test("Composed samples", () {
+      final cases = <String, String>{
+        "ㅁㅊㅊㄷㄴ냐ㅠㅑㅣㅑ쇼": "accessibility",
+        "ㅁㅊ채ㅕㅜㅅ뚜샤시드둣ㄴ": "accountEntitlements",
+        "며야ㅐ쳗ㄴ": "audioCues",
+        "ㅠㄱㅁ찯셰먁채ㅣㅐ걐ㄷㄱ2ㅆ디듣ㅅ교": "bracketPairColorizer2Telemetry",
+        "ㅠㅕㅣㅏㄸ얏": "bulkEdit",
+        "ㅊ미ㅣㅗㅑㄷㄱㅁㄱ초ㅛ": "callHierarchy",
+        "촘ㅅ": "chat",
+        "챙ㄷㅁㅊ샤ㅐㅜㄴ": "codeActions",
+        "챙ㄷㄸ야색": "codeEditor",
+        "채ㅡㅡ뭉ㄴ": "commands",
+        "채ㅡㅡ둣ㄴ": "comments",
+        "채ㅜ럏ㄸ테ㅐㄳㄷㄱ": "configExporter",
+        "채ㅜㅅㄷㅌ스두ㅕ": "contextmenu",
+        "쳔새ㅡㄸ야색": "customEditor",
+        "ㅇ듀ㅕㅎ": "debug",
+        "ㅇ덱ㄷㅊㅁㅅㄷㅇㄸㅌㅅ두냐ㅐㅜㅡㅑㅎㄱㅁ색": "deprecatedExtensionMigrator",
+        "ㄷ얏ㄴㄷㄴ냐ㅐㅜㄴ": "editSessions",
+        "드ㅡㄷㅅ": "emmet",
+        "ㄷㅌㅅ두냐ㅐㅜㄴ": "extensions",
+        "ㄷㅌㅅㄷ구밌ㄷ그ㅑㅜ미": "externalTerminal",
+        "ㄷㅌㅅㄷ구미ㅕ갸ㅒㅔ둗ㄱ": "externalUriOpener",
+        "랴ㅣㄷㄴ": "files",
+        "래ㅣ야ㅜㅎ": "folding",
+        "래금ㅅ": "format",
+        "ㅑㅟ묘ㅗㅑㅜㅅㄴ": "inlayHints",
+        "ㅑㅟㅑㅜㄷ촘ㅅ": "inlineChat",
+        "ㅑㅜㅅㄷㄱㅁㅊ샾ㄷ": "interactive",
+        "ㅑㄴ녇": "issue",
+        "ㅏ됴ㅠㅑㅜ야ㅜㅎㄴ": "keybindings",
+        "ㅣ무혐ㅎㄷㅇㄷㅅㄷㅊ샤ㅐㅜ": "languageDetection",
+        "ㅣ무혐ㅎㄷㄴㅅㅁ션": "languageStatus",
+        "ㅣㅑㅡㅑ샤ㅜ얓ㅁ색": "limitIndicator",
+        "ㅣㅑㄴㅅ": "list",
+        "ㅣㅐㅊ미ㅗㅑㄴ새교": "localHistory",
+        "ㅣㅐㅊ미ㅑㅋㅁ샤ㅐㅜ": "localization",
+        "ㅣㅐㅎㄴ": "logs",
+        "ㅡ메ㅔㄷㅇㄸ얏ㄴ": "mappedEdits",
+        "ㅡㅁ가애주": "markdown",
+        "ㅡㅁ갇ㄱㄴ": "markers",
+        "ㅡㄷㄱㅎㄷㄸ야색": "mergeEditor",
+        "ㅡㅕㅣ샤얄ㄹㄸ야색": "multiDiffEditor",
+        "ㅜㅐㅅ듀ㅐㅐㅏ": "notebook",
+        "ㅐㅕ시ㅑㅜㄷ": "outline",
+        "ㅐㅕ세ㅕㅅ": "output",
+        "ㅔㄷㄱ래그뭋ㄷ": "performance",
+        "ㅔㄱㄷㄹㄷㄱ둧ㄷㄴ": "preferences",
+        "벼ㅑ참ㅊㅊㄷㄴㄴ": "quickaccess",
+        "ㄱ디며ㅜ촏ㄱ": "relauncher",
+        "ㄱ드ㅐㅅㄷ": "remote",
+        "ㄱ드ㅐㅅㄷ쎠ㅜㅜ디": "remoteTunnel",
+        "ㄴㅁ노": "sash",
+        "ㄴ츠": "scm",
+        "ㄴㄷㅁㄱ초": "search",
+        "ㄴㄷㅁㄱ초ㄸ야색": "searchEditor",
+        "놈ㄱㄷ": "share",
+        "누ㅑㅔㅔㄷㅅㄴ": "snippets",
+        "넫ㄷ초": "speech",
+        "네ㅣㅁ노": "splash",
+        "녁ㅍ됸": "surveys",
+        "ㅅㅁㅎㄴ": "tags",
+        "ㅅㅁ난": "tasks",
+        "ㅅ디듣ㅅ교": "telemetry",
+        "ㅅㄷ그ㅑㅜ미": "terminal",
+        "ㅅㄷ그ㅑㅜ미채ㅜㅅ갸ㅠ": "terminalContrib",
+        "ㅅㄷㄴ샤ㅜㅎ": "testing",
+        "소듣ㄴ": "themes",
+        "샤ㅡ디ㅑㅜㄷ": "timeline",
+        "쇼ㅔ도ㅑㄷㄱㅁㄱ초ㅛ": "typeHierarchy",
+        "ㅕㅔㅇㅁㅅㄷ": "update",
+        "ㅕ기": "url",
+        "ㅕㄴㄷㄱㅇㅁㅅ몌개랴ㅣㄷ": "userDataProfile",
+        "ㅕㄴㄷㄱㅇㅁㅅㅁ뇨ㅜㅊ": "userDataSync",
+        "ㅈ듀퍋ㅈ": "webview",
+        "ㅈ듀퍋졔무디": "webviewPanel",
+        "ㅈ듀퍋ㅈ퍋ㅈ": "webviewView",
+        "ㅈ디채ㅡ듀무ㅜㄷㄱ": "welcomeBanner",
+        "ㅈ디채ㅡㄷ야미ㅐㅎ": "welcomeDialog",
+        "ㅈ디채ㅡㄷㅎㄷㅅ샤ㅜㅎㄴㅅㅁㄳㄷㅇ": "welcomeGettingStarted",
+        "ㅈ디채ㅡㄷ퍋ㅈㄴ": "welcomeViews",
+        "ㅈ디채ㅡㄷㅉ미ㅏ소개ㅕ호": "welcomeWalkthrough",
+        "재가넴ㅊㄷ": "workspace",
+        "재가넴ㅊㄷㄴ": "workspaces",
+      };
+      for (final entry in cases.entries) {
+        expect(altForString(entry.key).toLowerCase(), entry.value.toLowerCase(),
+            reason: '"${entry.key}" should result in "${entry.value}"');
+      }
+    });
+  });
 }

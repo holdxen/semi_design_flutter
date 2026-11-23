@@ -403,3 +403,13 @@ semi_design_flutter/
 - [x] 测试追加 3 case；base 测试文件合计 **65 case 全绿**；文件 `dart analyze` 零 error/warning。
 
 **下一批**：剩余依赖闭合 base 文件，再进核心环 `arrays↔cancellation↔event↔lifecycle`。
+
+### base 工具链批次续十二（2026-11-23，累计 57/1690 文件 tested）
+
+- [x] `base/common/jsonFormatter.dart`：1:1 翻译 `jsonFormatter.ts`（262 行），`format`/`toFormattedString`/`repeat`/`computeIndentLevel`/`getEOL`/`isEOL` 全部成员 + `FormattingOptions`/`Edit`/`Range` 值类。`const enum` SyntaxKind/ScanError 直接复用 json.dart；Dart switch 不 fall through → `StringLiteral` 落到字面量组的逻辑抽为共享局部函数 `literalFollow()`；**JS `substring` 越界 clamp** → 加 `_substring` 辅助（range helper 的 off-by-one 靠 JS clamp 兜住，Dart 会抛 RangeError，已复刻）。`jsonFormatter.test.ts` 全部 18 个 format 用例 + toFormattedString 通过。
+- [x] `base/common/keybindings.dart`：1:1 翻译 `keybindings.ts`（285 行），`decodeKeybinding`/`createSimpleKeybinding` + `KeyCodeChord`/`ScanCodeChord`/`Keybinding`/`ResolvedChord`/`ResolvedKeybinding`。`const enum BinaryKeybindingsMask` → class + static const；`type Chord = KeyCodeChord | ScanCodeChord` → abstract class 双实现；`number | number[]` → Object；`OS` 参数保留源码命名（info）。`keybindings.test.ts` issue #173325 + 自建 decode/equals 断言通过。
+- [x] `base/common/naturalLanguage/korean.dart`：1:1 翻译 `korean.ts`（424 行），`getKoreanAltChars`/`disassembleKorean`/`getCodesFromArray`/`addCodesToBuffer` + 4 张韩文 Jamo 数据表（19/21/27/51 项，combo 值用脚本从源码 `const enum AsciiCodeCombo` 精确预计算）。`Uint32/Uint8/Uint16Array` → `List<int>`；`subarray` → 不可变 `sublist`。`korean.test.ts` 全部 5 组 case（初声/终声/元音/兼容 Jamo/82 个组合词）通过。
+- [x] 测试追加 11 case（jsonFormatter 4 + keybindings 2 + korean 5）；base 测试文件合计 **76 case 全绿**；三文件 `dart analyze` 零 error/warning（仅源码风格 info）。
+- [x] **依赖分析**：核心环 `arrays↔cancellation↔event↔lifecycle↔async` 彼此成环，且 `event`/`async` 依赖 `observable`/`resources`（各自闭包 48 个未翻译文件），当前无法闭合，继续按依赖闭包推进 base 工具链小文件。
+
+**下一批**：继续消费依赖闭合的 base 文件（`executionGraph`/`rpc`/`keybindings` 已翻等），或转 `platform/registry/common/platform.ts`、`platform/contextkey/common/scanner.ts`（有源码测试、依赖闭合），再择机啃核心环。

@@ -7,7 +7,7 @@
 
 | # | 层 | 源文件 | 目标 Dart | 状态 |
 |---|---|---|---|---|
-> 进度：35 / 1690 tested（2026-11-23，含 base/common/uri.ts、base/common/map.ts）。
+> 进度：57 / 1690 tested（2026-11-23，含 jsonFormatter / keybindings / naturalLanguage/korean）。
 
 | 1 | editor | `editor/browser/config/charWidthReader.ts` | `lib/src/monaco/editor/browser/config/charWidthReader.dart` | pending |
 | 2 | editor | `editor/browser/config/domFontInfo.ts` | `lib/src/monaco/editor/browser/config/domFontInfo.dart` | pending |
@@ -1038,11 +1038,11 @@
 | 1027 | base | `base/common/iterator.ts` | `lib/src/monaco/base/common/iterator.dart` | tested |
 | 1028 | base | `base/common/json.ts` | `lib/src/monaco/base/common/json.dart` | tested |
 | 1029 | base | `base/common/jsonEdit.ts` | `lib/src/monaco/base/common/jsonEdit.dart` | pending |
-| 1030 | base | `base/common/jsonFormatter.ts` | `lib/src/monaco/base/common/jsonFormatter.dart` | pending |
+| 1030 | base | `base/common/jsonFormatter.ts` | `lib/src/monaco/base/common/jsonFormatter.dart` | tested |
 | 1031 | base | `base/common/jsonSchema.ts` | `lib/src/monaco/base/common/jsonSchema.dart` | tested |
 | 1032 | base | `base/common/keyCodes.ts` | `lib/src/monaco/base/common/keyCodes.dart` | tested |
 | 1033 | base | `base/common/keybindingLabels.ts` | `lib/src/monaco/base/common/keybindingLabels.dart` | pending |
-| 1034 | base | `base/common/keybindings.ts` | `lib/src/monaco/base/common/keybindings.dart` | pending |
+| 1034 | base | `base/common/keybindings.ts` | `lib/src/monaco/base/common/keybindings.dart` | tested |
 | 1035 | base | `base/common/labels.ts` | `lib/src/monaco/base/common/labels.dart` | pending |
 | 1036 | base | `base/common/layout.ts` | `lib/src/monaco/base/common/layout.dart` | tested |
 | 1037 | base | `base/common/lazy.ts` | `lib/src/monaco/base/common/lazy.dart` | tested |
@@ -1054,7 +1054,7 @@
 | 1043 | base | `base/common/marshalling.ts` | `lib/src/monaco/base/common/marshalling.dart` | pending |
 | 1044 | base | `base/common/marshallingIds.ts` | `lib/src/monaco/base/common/marshallingIds.dart` | tested |
 | 1045 | base | `base/common/mime.ts` | `lib/src/monaco/base/common/mime.dart` | tested |
-| 1046 | base | `base/common/naturalLanguage/korean.ts` | `lib/src/monaco/base/common/naturalLanguage/korean.dart` | pending |
+| 1046 | base | `base/common/naturalLanguage/korean.ts` | `lib/src/monaco/base/common/naturalLanguage/korean.dart` | tested |
 | 1047 | base | `base/common/navigator.ts` | `lib/src/monaco/base/common/navigator.dart` | tested |
 | 1048 | base | `base/common/network.ts` | `lib/src/monaco/base/common/network.dart` | pending |
 | 1049 | base | `base/common/normalization.ts` | `lib/src/monaco/base/common/normalization.dart` | tested |
