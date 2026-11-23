@@ -45,6 +45,10 @@ import 'package:semi_design_flutter/src/monaco/base/common/keybindings.dart' as 
 import 'package:semi_design_flutter/src/monaco/base/common/keybindingLabels.dart' as kbl;
 import 'package:semi_design_flutter/src/monaco/platform/contextkey/common/scanner.dart' as scan;
 import 'package:semi_design_flutter/src/monaco/base/common/observableInternal/logging/debugger/rpc.dart' as rpc;
+import 'package:semi_design_flutter/src/monaco/platform/instantiation/common/graph.dart' as igraph;
+import 'package:semi_design_flutter/src/monaco/editor/contrib/inlineCompletions/browser/model/graph.dart' as dgraph;
+import 'package:semi_design_flutter/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/smallImmutableSet.dart' as sis;
+import 'package:semi_design_flutter/src/monaco/base/browser/ui/list/rangeMap.dart' as rmap;
 import 'package:semi_design_flutter/src/monaco/base/common/naturalLanguage/korean.dart' as korean;
 import 'package:semi_design_flutter/src/monaco/base/common/stopwatch.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/symbols.dart';
@@ -2289,4 +2293,298 @@ void main() {
       expect(channel.notifications.length, 1);
     });
   });
+  group('platform/instantiation/common/graph.ts', () {
+    // Mirrors graph.ts semantics (no direct .test.ts; self-authored from source).
+    String hash(String s) => s;
+    test('roots / insertEdge / removeNode / lookup / isEmpty', () {
+      final g = igraph.Graph<String>(hash);
+      expect(g.isEmpty(), isTrue);
+      g.insertEdge('a', 'b');
+      g.insertEdge('b', 'c');
+      expect(g.isEmpty(), isFalse);
+      // b has incoming a and outgoing c; c is a root (no outgoing)
+      final roots = g.roots().map((n) => n.key).toList()..sort();
+      expect(roots, <String>['c']);
+      expect(g.lookup('a')!.outgoing.containsKey('b'), isTrue);
+      expect(g.lookup('b')!.incoming.containsKey('a'), isTrue);
+      expect(g.lookup('zzz'), isNull);
+      g.removeNode('b');
+      expect(g.lookup('b'), isNull);
+      expect(g.lookup('a')!.outgoing.isEmpty, isTrue);
+    });
+    test('findCycleSlow', () {
+      final g = igraph.Graph<String>(hash);
+      g.insertEdge('a', 'b');
+      g.insertEdge('b', 'c');
+      expect(g.findCycleSlow(), isNull);
+      g.insertEdge('c', 'a');
+      final cyc = g.findCycleSlow();
+      expect(cyc, isNotNull);
+      expect(cyc, contains('a'));
+      expect(cyc, contains('->'));
+    });
+    test('toString', () {
+      final g = igraph.Graph<String>(hash);
+      g.insertEdge('a', 'b');
+      expect(g.toString(), contains('a'));
+      expect(g.toString(), contains('(outgoing ->)'));
+    });
+  });
+
+  group('editor/contrib/inlineCompletions/browser/model/graph.ts', () {
+    // Mirrors graph.test.ts (DirectedGraph) exactly.
+    List<String> Function(String) outgoing(Map<String, List<String>> m) =>
+        (node) => m[node] ?? <String>[];
+
+    test('from - creates empty graph', () {
+      final g = dgraph.DirectedGraph.from<String>(<String>[], outgoing({}));
+      expect(g.getOutgoing('a'), isEmpty);
+    });
+    test('from - creates graph with single node', () {
+      final g = dgraph.DirectedGraph.from<String>(<String>['a'], outgoing({}));
+      expect(g.getOutgoing('a'), isEmpty);
+    });
+    test('from - nodes and edges', () {
+      final g = dgraph.DirectedGraph.from<String>(
+          <String>['a', 'b', 'c'],
+          outgoing({'a': ['b', 'c'], 'b': ['c'], 'c': []}));
+      expect((g.getOutgoing('a')..sort()), <String>['b', 'c']);
+      expect(g.getOutgoing('b'), <String>['c']);
+      expect(g.getOutgoing('c'), isEmpty);
+    });
+    test('from - handles duplicate edges', () {
+      final g = dgraph.DirectedGraph.from<String>(
+          <String>['a', 'b'], outgoing({'a': ['b', 'b'], 'b': []}));
+      expect(g.getOutgoing('a'), <String>['b']);
+      expect(g.getOutgoing('b'), isEmpty);
+    });
+    test('removeCycles - no cycles', () {
+      final g = dgraph.DirectedGraph.from<String>(
+          <String>['a', 'b', 'c'],
+          outgoing({'a': ['b'], 'b': ['c'], 'c': []}));
+      final r = g.removeCycles();
+      expect(r['foundCycles'], isEmpty);
+      expect(g.getOutgoing('a'), <String>['b']);
+      expect(g.getOutgoing('b'), <String>['c']);
+    });
+    test('removeCycles - simple cycle', () {
+      final g = dgraph.DirectedGraph.from<String>(
+          <String>['a', 'b'], outgoing({'a': ['b'], 'b': ['a']}));
+      final r = g.removeCycles();
+      final found = r['foundCycles'] as List<String>;
+      expect(found.length, 1);
+      expect(found.contains('a') || found.contains('b'), isTrue);
+      final aO = g.getOutgoing('a'); final bO = g.getOutgoing('b');
+      expect((aO.isEmpty && bO.length == 1) || (aO.length == 1 && bO.isEmpty), isTrue);
+    });
+    test('removeCycles - self loop', () {
+      final g = dgraph.DirectedGraph.from<String>(
+          <String>['a'], outgoing({'a': ['a']}));
+      final r = g.removeCycles();
+      expect(r['foundCycles'], <String>['a']);
+      expect(g.getOutgoing('a'), isEmpty);
+    });
+    test('removeCycles - complex cycle', () {
+      final g = dgraph.DirectedGraph.from<String>(
+          <String>['a', 'b', 'c', 'd'],
+          outgoing({'a': ['b'], 'b': ['c'], 'c': ['d', 'a'], 'd': []}));
+      final r = g.removeCycles();
+      expect((r['foundCycles'] as List).length, greaterThanOrEqualTo(1));
+      expect(g.getOutgoing('c').contains('a'), isFalse);
+    });
+    test('removeCycles - multiple disconnected cycles', () {
+      final g = dgraph.DirectedGraph.from<String>(
+          <String>['a', 'b', 'c', 'd'],
+          outgoing({'a': ['b'], 'b': ['a'], 'c': ['d'], 'd': ['c']}));
+      final r = g.removeCycles();
+      expect((r['foundCycles'] as List).length, greaterThanOrEqualTo(2));
+      final aO = g.getOutgoing('a'); final bO = g.getOutgoing('b');
+      final cO = g.getOutgoing('c'); final dO = g.getOutgoing('d');
+      expect((aO.isEmpty && bO.length == 1) || (aO.length == 1 && bO.isEmpty), isTrue);
+      expect((cO.isEmpty && dO.length == 1) || (cO.length == 1 && dO.isEmpty), isTrue);
+    });
+    test('getOutgoing - non-existent node', () {
+      final g = dgraph.DirectedGraph.from<String>(<String>['a'], outgoing({}));
+      expect(g.getOutgoing('b'), isEmpty);
+    });
+    test('with number nodes', () {
+      final g = dgraph.DirectedGraph.from<int>(<int>[1, 2, 3],
+          (n) => ({1: [2, 3], 2: [3], 3: <int>[]}[n] ?? <int>[]));
+      expect((g.getOutgoing(1)..sort()), <int>[2, 3]);
+      expect(g.getOutgoing(2), <int>[3]);
+      expect(g.getOutgoing(3), isEmpty);
+    });
+  });
+
+  group('smallImmutableSet.ts', () {
+    // Mirrors smallImmutableSet.test.ts.
+    test('Basic', () {
+      final kp = sis.DenseKeyProvider<String>();
+      final empty = sis.SmallImmutableSet.getEmpty<String>();
+      final items1 = empty.add('item1', kp);
+      final items12 = items1.add('item2', kp);
+      final items2 = empty.add('item2', kp);
+      final items21 = items2.add('item1', kp);
+      final items3 = empty.add('item3', kp);
+      expect(items12.intersects(items1), isTrue);
+      expect(items12.has('item1', kp), isTrue);
+      expect(items12.intersects(items3), isFalse);
+      expect(items12.has('item3', kp), isFalse);
+      expect(items21.equals(items12), isTrue);
+      expect(items21.equals(items2), isFalse);
+    });
+    test('Many Elements', () {
+      final kp = sis.DenseKeyProvider<String>();
+      var set = sis.SmallImmutableSet.getEmpty<String>();
+      for (int i = 0; i < 100; i++) {
+        kp.getKey('item$i');
+        if (i % 2 == 0) set = set.add('item$i', kp);
+      }
+      for (int i = 0; i < 100; i++) {
+        expect(set.has('item$i', kp), i % 2 == 0);
+      }
+    });
+    test('DenseKeyProvider reverseLookup / keys', () {
+      final kp = sis.DenseKeyProvider<String>();
+      kp.getKey('a'); kp.getKey('b');
+      expect(kp.reverseLookup(0), 'a');
+      expect(kp.reverseLookup(1), 'b');
+      expect(kp.reverseLookup(99), isNull);
+      expect(kp.keys().toList(), <String>['a', 'b']);
+    });
+  });
+
+  group('base/browser/ui/list/rangeMap.ts', () {
+    // Mirrors rangeMap.test.ts.
+    IRange rg(num s, num e) => IRange(s, e);
+    IRangedGroup grp(num s, num e, num sz) => IRangedGroup(IRange(s, e), sz);
+    void expectRange(IRange a, IRange b) {
+      expect(a.start, b.start); expect(a.end, b.end);
+    }
+    void expectGroups(List<IRangedGroup> a, List<IRangedGroup> b) {
+      expect(a.length, b.length);
+      for (int i = 0; i < a.length; i++) {
+        expectRange(a[i].range, b[i].range);
+        expect(a[i].size, b[i].size);
+      }
+    }
+    final one = rmap.IItem(1); final two = rmap.IItem(2); final three = rmap.IItem(3);
+    final five = rmap.IItem(5); final ten = rmap.IItem(10);
+
+    test('intersection (Range.intersect)', () {
+      expectRange(Range.intersect(rg(0,0), rg(0,0)), rg(0,0));
+      expectRange(Range.intersect(rg(0,1), rg(5,6)), rg(0,0));
+      expectRange(Range.intersect(rg(0,1), rg(0,1)), rg(0,1));
+      expectRange(Range.intersect(rg(0,10), rg(0,5)), rg(0,5));
+      expectRange(Range.intersect(rg(0,10), rg(5,15)), rg(5,10));
+      expectRange(Range.intersect(rg(2,8), rg(0,10)), rg(2,8));
+    });
+    test('multiIntersect (groupIntersect)', () {
+      expect(rmap.groupIntersect(rg(0,0), [grp(0,10,1)]), isEmpty);
+      expect(rmap.groupIntersect(rg(10,20), [grp(0,10,1)]), isEmpty);
+      expectGroups(rmap.groupIntersect(rg(2,8), [grp(0,10,1)]), [grp(2,8,1)]);
+      expectGroups(rmap.groupIntersect(rg(2,18), [grp(0,10,1),grp(10,20,5)]), [grp(2,10,1),grp(10,18,5)]);
+      expectGroups(rmap.groupIntersect(rg(2,28), [grp(0,10,1),grp(10,20,5),grp(20,30,10)]), [grp(2,10,1),grp(10,20,5),grp(20,28,10)]);
+    });
+    test('consolidate', () {
+      expect(rmap.consolidate([]), isEmpty);
+      expectGroups(rmap.consolidate([grp(0,10,1),grp(10,20,1)]), [grp(0,20,1)]);
+      expectGroups(rmap.consolidate([grp(0,10,1),grp(10,20,1),grp(20,100,1)]), [grp(0,100,1)]);
+      expectGroups(rmap.consolidate([grp(0,10,1),grp(10,20,5),grp(20,30,10)]), [grp(0,10,1),grp(10,20,5),grp(20,30,10)]);
+      expectGroups(rmap.consolidate([grp(0,10,1),grp(10,20,2),grp(20,100,2)]), [grp(0,10,1),grp(10,100,2)]);
+    });
+    test('empty', () {
+      final m = rmap.RangeMap();
+      expect(m.size, 0); expect(m.count, 0);
+    });
+    test('length & count', () {
+      final m = rmap.RangeMap(); m.splice(0,0,[one]);
+      expect(m.size,1); expect(m.count,1);
+      final m2 = rmap.RangeMap(); m2.splice(0,0,[five,five,five,five,five]);
+      expect(m2.size,25); expect(m2.count,5);
+    });
+    test('insert', () {
+      final m = rmap.RangeMap();
+      m.splice(0,0,[five,five,five,five,five]);
+      expect(m.size,25); expect(m.count,5);
+      m.splice(0,0,[five,five,five,five,five]);
+      expect(m.size,50); expect(m.count,10);
+      m.splice(5,0,[ten,ten]);
+      expect(m.size,70); expect(m.count,12);
+      m.splice(12,0,[rmap.IItem(200)]);
+      expect(m.size,270); expect(m.count,13);
+    });
+    test('delete', () {
+      final m = rmap.RangeMap();
+      m.splice(0,0,List<rmap.IItem>.filled(20, five));
+      expect(m.size,100); expect(m.count,20);
+      m.splice(10,5); expect(m.size,75); expect(m.count,15);
+      m.splice(0,1); expect(m.size,70); expect(m.count,14);
+      m.splice(1,13); expect(m.size,5); expect(m.count,1);
+      m.splice(1,1); expect(m.size,5); expect(m.count,1);
+    });
+    test('insert & delete', () {
+      final m = rmap.RangeMap();
+      expect(m.size,0); expect(m.count,0);
+      m.splice(0,0,[one]); expect(m.size,1); expect(m.count,1);
+      m.splice(0,1); expect(m.size,0); expect(m.count,0);
+    });
+    test('insert & delete #3', () {
+      final m = rmap.RangeMap();
+      m.splice(0,0,[...List<rmap.IItem>.filled(10, one), ...List<rmap.IItem>.filled(10, two)]);
+      m.splice(8,4);
+      expect(m.count,16); expect(m.size,24);
+    });
+    test('insert & delete #4', () {
+      final m = rmap.RangeMap();
+      m.splice(0,0,[...List<rmap.IItem>.filled(10, one), ...List<rmap.IItem>.filled(10, two)]);
+      m.splice(5,0,List<rmap.IItem>.filled(5, three));
+      expect(m.count,25); expect(m.size,45);
+      m.splice(4,7);
+      expect(m.count,18); expect(m.size,28);
+    });
+    test('indexAt, positionAt - empty/simple', () {
+      final m = rmap.RangeMap();
+      expect(m.indexAt(0),0); expect(m.indexAt(10),0); expect(m.indexAt(-1),-1);
+      expect(m.positionAt(0),-1); expect(m.positionAt(10),-1); expect(m.positionAt(-1),-1);
+      final m2 = rmap.RangeMap(); m2.splice(0,0,[one]);
+      expect(m2.indexAt(0),0); expect(m2.indexAt(1),1);
+      expect(m2.positionAt(0),0); expect(m2.positionAt(1),-1);
+      final m3 = rmap.RangeMap(); m3.splice(0,0,[ten]);
+      expect(m3.indexAt(0),0); expect(m3.indexAt(5),0); expect(m3.indexAt(9),0); expect(m3.indexAt(10),1);
+      expect(m3.positionAt(0),0); expect(m3.positionAt(1),-1);
+    });
+    test('indexAt, positionAt - insert/delete', () {
+      final m = rmap.RangeMap();
+      m.splice(0,0,List<rmap.IItem>.filled(10, one));
+      expect(m.indexAt(0),0); expect(m.indexAt(5),5); expect(m.indexAt(9),9); expect(m.indexAt(10),10); expect(m.indexAt(11),10);
+      m.splice(10,0,List<rmap.IItem>.filled(10, one));
+      expect(m.indexAt(19),19); expect(m.indexAt(20),20); expect(m.indexAt(21),20);
+      expect(m.positionAt(0),0); expect(m.positionAt(19),19); expect(m.positionAt(20),-1);
+      final d = rmap.RangeMap();
+      d.splice(0,0,List<rmap.IItem>.filled(10, one)); d.splice(2,6);
+      expect(d.indexAt(0),0); expect(d.indexAt(1),1); expect(d.indexAt(3),3); expect(d.indexAt(4),4); expect(d.indexAt(5),4);
+      expect(d.positionAt(0),0); expect(d.positionAt(3),3); expect(d.positionAt(4),-1);
+    });
+    test('indexAt, positionAt - delete #2', () {
+      final m = rmap.RangeMap();
+      m.splice(0,0,List<rmap.IItem>.filled(10, ten)); m.splice(2,6);
+      expect(m.indexAt(0),0); expect(m.indexAt(1),0); expect(m.indexAt(30),3); expect(m.indexAt(40),4); expect(m.indexAt(50),4);
+      expect(m.positionAt(0),0); expect(m.positionAt(1),10); expect(m.positionAt(2),20); expect(m.positionAt(3),30); expect(m.positionAt(4),-1);
+    });
+    test('with top padding', () {
+      final m = rmap.RangeMap(10);
+      expect(m.size,10); expect(m.count,0);
+      m.splice(0,0,[one]); expect(m.size,11); expect(m.count,1);
+      final m2 = rmap.RangeMap(10); m2.splice(0,0,[five,five,five,five,five]);
+      expect(m2.size,35); expect(m2.count,5);
+      final m3 = rmap.RangeMap(10);
+      expect(m3.indexAt(0),0); expect(m3.indexAt(10),0); expect(m3.indexAt(-1),-1);
+      expect(m3.positionAt(0),-1);
+      final m4 = rmap.RangeMap(10); m4.splice(0,0,[one]);
+      expect(m4.indexAt(0),0); expect(m4.indexAt(1),0); expect(m4.indexAt(10),0); expect(m4.indexAt(11),1);
+      expect(m4.positionAt(0),10); expect(m4.positionAt(1),-1);
+    });
+  });
+
 }

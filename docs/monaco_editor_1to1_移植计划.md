@@ -432,3 +432,14 @@ semi_design_flutter/
 - [x] 测试追加 36 case（scanner 34 + rpc 2）；base 测试文件 83 → **119 case 全绿**；两文件 `dart analyze` 零 error/warning。
 
 **下一批**：继续消费依赖闭合且有独立 test 的文件（`base/browser/ui/list/rangeMap.ts` 219 行、`base/browser/ui/scrollbar/scrollbarState.ts` 244 行、`editor/.../smallImmutableSet.ts` 177 行、`platform/instantiation/common/graph.ts` 112 行等），择机啃核心环。
+
+### platform/editor/base 逻辑批次续十五（2026-11-23，累计 66/1690 文件 tested）
+
+- [x] `platform/instantiation/common/graph.dart`：1:1 翻译 `graph.ts`（112 行），`Node<T>`/`Graph<T>`（roots/insertEdge/removeNode/lookupOrInsertNode/lookup/isEmpty/toString/findCycleSlow/_findCycle）。其 `graph.test.ts` 是文件名碰撞误匹配（实际测 inlineCompletions 的 graph），改用源码语义自建 3 case（环检测/roots/toString）。
+- [x] `editor/contrib/inlineCompletions/browser/model/graph.dart`：1:1 翻译真正的 `graph.ts`（83 行），`DirectedGraph<T>`（`from`/`removeCycles`/`getOutgoing`）。`removeCycles` 返回 `{ foundCycles }` → `Map<String,dynamic>`；合作 DFS 闭包捕获 `toRemove`/`foundCycles`。`graph.test.ts` 全部 11 case 精确搬运（含重复边/自环/复杂环/多断开环/number 节点）。
+- [x] `editor/.../bracketPairsTree/smallImmutableSet.dart`：1:1 翻译 `smallImmutableSet.ts`（177 行），`SmallImmutableSet<T>`（add/has/merge/intersects/equals）+ `IDenseKeyProvider`/`identityKeyProvider`/`DenseKeyProvider`。**两个关键适配**：(1) TS 缓存 `SmallImmutableSet<any>` 跨 T 共享单例——Dart reified generics 下 `Never`/`dynamic` 单例会在 `add(String)` 运行时类型检查失败 → 改为**按 `Type` 分桶缓存**（每 T 独立 129 槽），保持每种元素类型的 identity 语义；(2) TS `newItems[idx] |= ...` 在 `idx == length` 时稀疏数组自动扩展 → Dart `while (length <= idx)` 补足。`smallImmutableSet.test.ts` 2 case + reverseLookup 自建 1 case 通过。
+- [x] `base/browser/ui/list/rangeMap.dart`：1:1 翻译 `rangeMap.ts`（219 行），`groupIntersect`/`shift`/`consolidate`/`concat`/`IItem`/`IRangeMap`/`RangeMap`。复用 base/common/range.dart 的 `IRange`/`IRangedGroup`/`Range`（同 shape）；`Number.POSITIVE_INFINITY` → `double.infinity`；`Math.floor` → `.floor()`；JS `|| 0` 用三元保护越界。`rangeMap.test.ts` 14 case 精确搬运（intersection/multiIntersect/consolidate/insert/delete/indexAt/positionAt/top padding），全绿。
+- [x] 测试追加 31 case（instantiation graph 3 + DirectedGraph 11 + smallImmutableSet 3 + rangeMap 14）；base 测试文件 119 → **150 case 全绿**；四文件 `dart analyze` 零 error/warning（仅文件名风格 info）。
+- [x] **依赖闭包核对**：确认 `graph.test.ts` 导入的是 `../../browser/model/graph.js`（inlineCompletions 的 graph），非 `platform/instantiation/common/graph.ts`——避免按文件名误配测试。
+
+**下一批**：继续消费依赖闭合且有独立 test 的文件（`scrollbarState.ts` 244 行、`compressedVirtualizedScrollLayout.ts` 239 行、`overviewZoneManager.ts` 248 行、`bufferDirtyTracker.ts` 73 行、`mock.ts` 48 行等），择机啃核心环。

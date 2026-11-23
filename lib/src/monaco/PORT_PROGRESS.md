@@ -7,7 +7,7 @@
 
 | # | 层 | 源文件 | 目标 Dart | 状态 |
 |---|---|---|---|---|
-> 进度：62 / 1690 tested（2026-11-23，含 contextkey/scanner + observableInternal/rpc）。
+> 进度：66 / 1690 tested（2026-11-23，含两个 graph + smallImmutableSet + rangeMap）。
 
 | 1 | editor | `editor/browser/config/charWidthReader.ts` | `lib/src/monaco/editor/browser/config/charWidthReader.dart` | pending |
 | 2 | editor | `editor/browser/config/domFontInfo.ts` | `lib/src/monaco/editor/browser/config/domFontInfo.dart` | pending |
@@ -282,7 +282,7 @@
 | 271 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/length.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/length.dart` | pending |
 | 272 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/nodeReader.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/nodeReader.dart` | pending |
 | 273 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/parser.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/parser.dart` | pending |
-| 274 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/smallImmutableSet.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/smallImmutableSet.dart` | pending |
+| 274 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/smallImmutableSet.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/smallImmutableSet.dart` | tested |
 | 275 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/tokenizer.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/tokenizer.dart` | pending |
 | 276 | editor | `editor/common/model/bracketPairsTextModelPart/colorizedBracketPairsDecorationProvider.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/colorizedBracketPairsDecorationProvider.dart` | pending |
 | 277 | editor | `editor/common/model/bracketPairsTextModelPart/fixBrackets.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/fixBrackets.dart` | pending |
@@ -566,7 +566,7 @@
 | 555 | editor | `editor/contrib/inlineCompletions/browser/model/computeGhostText.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/computeGhostText.dart` | pending |
 | 556 | editor | `editor/contrib/inlineCompletions/browser/model/editKind.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/editKind.dart` | pending |
 | 557 | editor | `editor/contrib/inlineCompletions/browser/model/ghostText.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/ghostText.dart` | pending |
-| 558 | editor | `editor/contrib/inlineCompletions/browser/model/graph.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/graph.dart` | pending |
+| 558 | editor | `editor/contrib/inlineCompletions/browser/model/graph.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/graph.dart` | tested |
 | 559 | editor | `editor/contrib/inlineCompletions/browser/model/inlineCompletionIsVisible.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/inlineCompletionIsVisible.dart` | pending |
 | 560 | editor | `editor/contrib/inlineCompletions/browser/model/inlineCompletionsModel.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/inlineCompletionsModel.dart` | pending |
 | 561 | editor | `editor/contrib/inlineCompletions/browser/model/inlineCompletionsSource.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/inlineCompletionsSource.dart` | pending |
@@ -957,7 +957,7 @@
 | 946 | base | `base/browser/ui/list/listPaging.ts` | `lib/src/monaco/base/browser/ui/list/listPaging.dart` | pending |
 | 947 | base | `base/browser/ui/list/listView.ts` | `lib/src/monaco/base/browser/ui/list/listView.dart` | pending |
 | 948 | base | `base/browser/ui/list/listWidget.ts` | `lib/src/monaco/base/browser/ui/list/listWidget.dart` | pending |
-| 949 | base | `base/browser/ui/list/rangeMap.ts` | `lib/src/monaco/base/browser/ui/list/rangeMap.dart` | pending |
+| 949 | base | `base/browser/ui/list/rangeMap.ts` | `lib/src/monaco/base/browser/ui/list/rangeMap.dart` | tested |
 | 950 | base | `base/browser/ui/list/rowCache.ts` | `lib/src/monaco/base/browser/ui/list/rowCache.dart` | pending |
 | 951 | base | `base/browser/ui/list/splice.ts` | `lib/src/monaco/base/browser/ui/list/splice.dart` | pending |
 | 952 | base | `base/browser/ui/menu/menu.ts` | `lib/src/monaco/base/browser/ui/menu/menu.dart` | pending |
@@ -1204,7 +1204,7 @@
 | 1193 | platform | `platform/hover/test/browser/nullHoverService.ts` | `lib/src/monaco/platform/hover/test/browser/nullHoverService.dart` | pending |
 | 1194 | platform | `platform/instantiation/common/descriptors.ts` | `lib/src/monaco/platform/instantiation/common/descriptors.dart` | pending |
 | 1195 | platform | `platform/instantiation/common/extensions.ts` | `lib/src/monaco/platform/instantiation/common/extensions.dart` | pending |
-| 1196 | platform | `platform/instantiation/common/graph.ts` | `lib/src/monaco/platform/instantiation/common/graph.dart` | pending |
+| 1196 | platform | `platform/instantiation/common/graph.ts` | `lib/src/monaco/platform/instantiation/common/graph.dart` | tested |
 | 1197 | platform | `platform/instantiation/common/instantiation.ts` | `lib/src/monaco/platform/instantiation/common/instantiation.dart` | pending |
 | 1198 | platform | `platform/instantiation/common/instantiationService.ts` | `lib/src/monaco/platform/instantiation/common/instantiationService.dart` | pending |
 | 1199 | platform | `platform/instantiation/common/serviceCollection.ts` | `lib/src/monaco/platform/instantiation/common/serviceCollection.dart` | pending |
