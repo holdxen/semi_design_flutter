@@ -126,6 +126,13 @@ IDisposable Function(void Function(IManagedTextModel model) cb) onDidCreateModel
 /// bridge: `monaco.editor.getModels(): ITextModel[]`
 List<IManagedTextModel> Function() getModelsProvider = () => <IManagedTextModel>[];
 
+/// 1:1: `monaco.editor.getModels()` — forwards to the injectable provider.
+List<IManagedTextModel> getModels() => getModelsProvider();
+
+/// 1:1: `monaco.editor.onDidCreateModel(cb)` — forwards to the provider.
+IDisposable onDidCreateModel(void Function(IManagedTextModel model) cb) =>
+    onDidCreateModelProvider(cb);
+
 /// Test helper: look up a registered command handler by id (via provider override).
 Object? Function(Object? accessor, Object? command, Object? args)? commandHandlerFor(String id) => null;
 

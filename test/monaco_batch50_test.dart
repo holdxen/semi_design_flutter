@@ -9,7 +9,7 @@ import 'package:semi_design_flutter/src/monaco/lsp/adapters/ITextModelBridge.dar
 import 'package:semi_design_flutter/src/monaco/lsp/adapters/monacoBridge.dart';
 import 'package:semi_design_flutter/src/monaco/lsp/adapters/monacoEditorApi.dart' as M;
 import 'package:semi_design_flutter/src/monaco/lsp/adapters/typedChannel.dart' as TC;
-import 'package:semi_design_flutter/src/monaco/lsp/adapters/utils.dart' show IDisposable, Disposable;
+import 'package:semi_design_flutter/src/monaco/lsp/utils.dart' show IDisposable, Disposable;
 import 'package:semi_design_flutter/src/monaco/lsp/types.dart' as T;
 
 // Feature imports
@@ -114,8 +114,10 @@ class _Bridge implements ITextModelBridge {
     (textDocument: _Td(textModel.uriString(true)), position: _Pos(monacoPos));
   @override
   T.Range translateRange(IMonacoTextModel textModel, MonacoRange monacoRange) =>
-    _Range(_Pos(MonacoRange(monacoRange.startLineNumber, monacoRange.startColumn, monacoRange.startLineNumber, monacoRange.startColumn)),
-           _Pos(MonacoRange(monacoRange.endLineNumber, monacoRange.endColumn, monacoRange.endLineNumber, monacoRange.endColumn)));
+    _Range(
+      _TdPos(monacoRange.startLineNumber - 1, monacoRange.startColumn - 1),
+      _TdPos(monacoRange.endLineNumber - 1, monacoRange.endColumn - 1),
+    );
   @override
   ({IMonacoTextModel textModel, MonacoPosition position}) translateBack(
     T.TextDocumentIdentifier textDocument, T.Position position) =>
@@ -135,6 +137,11 @@ class _Pos implements T.Position {
   @override final int line;
   @override final int character;
   _Pos(MonacoPosition p) : line = p.lineNumber - 1, character = p.column - 1;
+}
+class _TdPos implements T.Position {
+  @override final int line;
+  @override final int character;
+  _TdPos(this.line, this.character);
 }
 class _Range implements T.Range {
   @override final T.Position start;
@@ -159,7 +166,7 @@ void main() {
       commands: commands,
     );
     final kinds = <String>[];
-    final prevSlots = Map<String, M.IDisposable Function(Object?, Object)>.from(M.monacoProviderSlots);
+    final prevSlots = Map<String, IDisposable Function(Object?, Object)>.from(M.monacoProviderSlots);
     M.monacoProviderSlots.clear();
     for (final k in [
       'registerDocumentHighlightProvider', 'registerDeclarationProvider', 'registerDefinitionProvider',

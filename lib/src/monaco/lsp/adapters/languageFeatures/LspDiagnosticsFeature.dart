@@ -4,8 +4,11 @@ library;
 import '../../types.dart' as T;
 import '../../utils.dart';
 import '../LspConnection.dart';
+import '../TextDocumentSynchronizer.dart' show LspTextDocumentIdentifier, LspPos, LspRange;
 import '../monacoBridge.dart';
-import '../monacoEditorApi.dart';
+import '../monacoEditorApi.dart' as M;
+import '../monacoEditorApi.dart' show IManagedTextModel;
+import '../monacoEditorApi.dart' show setModelMarkers, setTimeout, clearTimeout, consoleDebug, consoleError;
 import 'common.dart' as C;
 
 /// 1:1: `export class LspDiagnosticsFeature extends Disposable`
@@ -52,10 +55,10 @@ class LspDiagnosticsFeature extends Disposable {
       (capability) {
         final cap = capability as Map<String, Object?>;
         final disposables = DisposableStore();
-        for (final model in getModels()) {
+        for (final model in M.getModels()) {
           _addPullDiagnosticProvider(model, cap, disposables);
         }
-        disposables.add(onDidCreateModel((model) {
+        disposables.add(M.onDidCreateModel((model) {
           _addPullDiagnosticProvider(model, cap, disposables);
         }));
         return disposables;
@@ -98,8 +101,8 @@ class LspDiagnosticsFeature extends Disposable {
     final uri = p['uri'] as String;
     try {
       final translated = _lspConnection.bridge.translateBack(
-        <String, Object?>{'uri': uri},
-        <String, Object?>{'line': 0, 'character': 0},
+        LspTextDocumentIdentifier(uri),
+        _zeroPosition,
       );
       final model = translated.textModel;
       if (model.isDisposed()) return;
@@ -199,8 +202,8 @@ class _ModelDiagnosticProvider extends Disposable {
       final report = entry.value;
       try {
         final translated = _connection.bridge.translateBack(
-          <String, Object?>{'uri': uri},
-          <String, Object?>{'line': 0, 'character': 0},
+          LspTextDocumentIdentifier(uri),
+          _zeroPosition,
         );
         final model = translated.textModel;
         if (model.isDisposed()) continue;
@@ -226,3 +229,6 @@ class _ModelDiagnosticProvider extends Disposable {
     super.dispose();
   }
 }
+
+/// 1:1: LSP `{line:0, character:0}` position carrier used for translateBack.
+final T.Position _zeroPosition = LspPos(0, 0);

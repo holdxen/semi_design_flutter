@@ -5,6 +5,7 @@ import '../../types.dart' as T;
 import '../../utils.dart';
 import '../ITextModelBridge.dart' show assertRangeTarget, assertPositionTarget;
 import '../LspConnection.dart' show CommandCarrier, LspConnection;
+import '../TextDocumentSynchronizer.dart' show LspTextDocumentIdentifier;
 import '../monacoBridge.dart';
 import '../monacoEditorApi.dart';
 import 'common.dart' as C;
@@ -79,14 +80,14 @@ class _LspInlayHintsProvider {
   final Map<String, Object?> _capabilities;
 
   final MonacoEmitter<void> _onDidChangeInlayHints = MonacoEmitter<void>();
-  late final void Function(void Function()) onDidChangeInlayHints;
+  late final void Function(void Function(void)) onDidChangeInlayHints;
 
   /// 1:1: `resolveInlayHint` assigned only when resolveProvider is set.
   Future<Map<String, Object?>?> Function(Map<String, Object?>, Object?)?
       resolveInlayHint;
 
   _LspInlayHintsProvider(this._client, this._capabilities) {
-    onDidChangeInlayHints = _onDidChangeInlayHints.event as void Function(void Function());
+    onDidChangeInlayHints = _onDidChangeInlayHints.event;
     if (_capabilities['resolveProvider'] == true) {
       resolveInlayHint = (hint, token) async {
         final lspHint = hint['_lspInlayHint'] as Map<String, Object?>;
@@ -103,7 +104,7 @@ class _LspInlayHintsProvider {
           hint['textEdits'] = (r['textEdits'] as List).map<Object?>((edit) {
             final e = edit as Map<String, Object?>;
             final translated = _client.bridge.translateBackRange(
-              <String, Object?>{'uri': hint['_targetUri']},
+              LspTextDocumentIdentifier(hint['_targetUri'] as String),
               C.lspRangeFromMap(e['range']),
             );
             return <String, Object?>{
