@@ -24,6 +24,9 @@ import 'package:semi_design_flutter/src/monaco/base/common/marshallingIds.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/numbers.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/mime.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/objects.dart' as objs;
+import 'package:semi_design_flutter/src/monaco/base/common/managedSettings.dart' as ms;
+import 'package:semi_design_flutter/src/monaco/base/common/layout.dart' as layout;
+import 'package:semi_design_flutter/src/monaco/base/common/date.dart' as dt;
 import 'package:semi_design_flutter/src/monaco/base/common/uri.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/path.dart' as path;
 import 'package:semi_design_flutter/src/monaco/base/common/platform.dart' as pf;
@@ -591,6 +594,96 @@ void main() {
       expect(objs.stableStringify(circ), '{"a":1,"self":"[Circular]"}');
       final shared = <String, Object?>{'a': 1};
       expect(objs.stableStringify(<String, Object?>{'x': shared, 'y': shared}), '{"x":{"a":1},"y":{"a":1}}');
+    });
+  });
+
+  group('managedSettings.ts', () {
+    test('extraKnownMarketplacesToConfigDict', () {
+      expect(ms.extraKnownMarketplacesToConfigDict(null), isNull);
+      expect(ms.extraKnownMarketplacesToConfigDict(<Object?>[]), isNull);
+      final dict = ms.extraKnownMarketplacesToConfigDict(<Object?>[
+        'plain-source',
+        '__proto__', // unsafe key, skipped
+        ms.GithubMarketplaceEntry('github-entry', ms.GithubMarketplaceSource('org/repo')),
+        ms.GitMarketplaceEntry('git-entry', ms.GitMarketplaceSource('https://example.com/repo', 'main')),
+        ms.GithubMarketplaceEntry('auto-entry', ms.GithubMarketplaceSource('org/repo2'), true),
+      ]);
+      expect(dict, isNotNull);
+      expect(dict!['plain-source'], 'plain-source');
+      expect(dict.containsKey('__proto__'), isFalse);
+      expect(dict['github-entry'], 'org/repo');
+      expect(dict['git-entry'], 'https://example.com/repo#main');
+      expect(dict['auto-entry'], '{"source":"org/repo2","autoUpdate":true}');
+      expect(ms.isUnsafeMarketplaceKey('constructor'), isTrue);
+      expect(ms.isUnsafeMarketplaceKey('prototype'), isTrue);
+      expect(ms.isUnsafeMarketplaceKey('safe'), isFalse);
+    });
+  });
+
+  group('layout.ts', () {
+    test('layout 1d', () {
+      final a = layout.ILayoutAnchor(30, 20, layout.LayoutAnchorPosition.Before);
+      final r = layout.layout(100, 30, a);
+      expect(r.position, 50);
+      expect(r.result, 'ok');
+      final aligned = layout.ILayoutAnchor(30, 20, layout.LayoutAnchorPosition.Before, layout.LayoutAnchorMode.ALIGN);
+      expect(layout.layout(100, 30, aligned).position, 30);
+      expect(layout.layout(100, 80, a).result, 'overlap');
+      // flipped reachable when before boundary > viewport - after boundary:
+      final late = layout.ILayoutAnchor(60, 10, layout.LayoutAnchorPosition.Before);
+      expect(layout.layout(100, 40, late).result, 'flipped');
+    });
+
+    test('layout2d', () {
+      final viewport = layout.IRect(0, 0, 100, 100);
+      final view = layout.ISize(20, 10);
+      final anchor = layout.IRect(30, 30, 10, 10);
+      final result = layout.layout2d(viewport, view, anchor);
+      expect(result.top >= 0, isTrue);
+      expect(result.left >= 0, isTrue);
+      expect(result.anchorAlignment, layout.AnchorAlignment.LEFT);
+      expect(result.anchorPosition, layout.AnchorPosition.BELOW);
+    });
+  });
+
+  group('date.ts', () {
+    test('expiration helpers (mirrors date.test.ts)', () {
+      expect(dt.getRemainingTimeInSeconds(null, 1000), isNull);
+      expect(dt.getRemainingTimeInSeconds(1000, 1000), isNull);
+      expect(dt.getRemainingTimeInSeconds(1001, 1000), 1);
+      expect(dt.getRemainingTimeInSeconds(2001, 1000), 2);
+      expect(dt.getExpirationTime(null, 1000), isNull);
+      expect(dt.getExpirationTime(0, 1000), 1000);
+      expect(dt.getExpirationTime(2, 1000), 3000);
+      expect(dt.isExpired(null, 1000), isFalse);
+      expect(dt.isExpired(1000, 1000), isTrue);
+      expect(dt.isExpired(1001, 1000), isFalse);
+    });
+
+    test('fromNow / fromNowByDay (mirrors date.test.ts)', () {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      expect(dt.fromNow(now - 35000), '35 secs');
+      expect(dt.fromNow(now - 35000, true), '35 secs ago');
+      expect(dt.fromNow(now - 35000, null, true), '35 seconds');
+      expect(dt.fromNow(now + 4 * 60 * 60 * 1000, false, true), 'in 4 hours');
+      expect(dt.fromNow(now - 5000), 'now');
+      expect(dt.fromNow(now - 5000, null, null, true), '5 secs');
+      expect(dt.fromNowByDay(DateTime.now()), 'Today');
+      expect(dt.fromNowByDay(DateTime.now().subtract(const Duration(days: 1))), 'Yesterday');
+      expect(dt.fromNowByDay(DateTime.now().subtract(const Duration(days: 5, hours: 2)), true), '5 days ago');
+    });
+
+    test('getDurationString / safeIntl (mirrors date.test.ts)', () {
+      expect(dt.getDurationString(1), '1ms');
+      expect(dt.getDurationString(1000), '1s');
+      expect(dt.getDurationString(1000 * 60 - 1), '59.999s');
+      expect(dt.getDurationString(1000 * 60), '1 mins');
+      expect(dt.getDurationString(1000 * 60 * 60), '1 hrs');
+      expect(dt.getDurationString(1000 * 60 * 60 * 24), '1 days');
+      expect(dt.getDurationString(1, true), '1 milliseconds');
+      expect(dt.getDurationString(1000, true), '1 seconds');
+      expect(dt.safeIntl.Collator('en_IT').value.compare('a', 'b'), -1);
+      expect(dt.safeIntl.Locale('en_IT').value.baseName, pf.LANGUAGE_DEFAULT);
     });
   });
 }

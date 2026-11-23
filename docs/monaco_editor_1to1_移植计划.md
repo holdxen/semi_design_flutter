@@ -345,3 +345,13 @@ semi_design_flutter/
 - [x] 注意：测试中 `equals` 与 `package:matcher` 同名冲突，objects.dart import 加 `as objs` 前缀。
 
 **下一批**：`color`/`json`/`keyCodes`/`mime`已翻 等剩余依赖闭合 base 文件，再进核心环 `arrays↔cancellation↔event↔lifecycle`。
+
+### base 工具链批次续六（2026-11-23，累计 47/1690 文件 tested）
+
+- [x] `base/common/managedSettings.dart`：1:1 翻译 `managedSettings.ts`（82 行），`IExtraKnownMarketplaceEntry` discriminator union → 抽象基类 + `Github`/`Git` 值类，`extraKnownMarketplacesToConfigDict`/`isUnsafeMarketplaceKey` 逐行对照（含 `__proto__`/`constructor`/`prototype` 原型污染防护）。
+- [x] `base/common/layout.dart`：1:1 翻译 `layout.ts`（166 行），`layout`/`layout2d` 全部逻辑；`const enum`→class+static const，对象字面量→值类；同时把 `range.dart` 的 `IRange`/`IRangedGroup` 字段由 `int` 改为 `num` 以贴合源码 `number` 语义（现有 int 测试仍兼容）。
+- [x] `base/common/date.dart`：1:1 翻译 `date.ts`（342 行），`getExpirationTime`/`isExpired`/`getRemainingTimeInSeconds`/`fromNow`/`fromNowByDay`/`getDurationString`/`toLocalISOString`/`safeIntl` 全部。`Date`→`DateTime`；`Intl.*` 无 Dart 对应 → 最小承载类（`IntlLocale` 用 `_` 抛错模拟 `en_IT` 触发 fallback）；`Date.now()`→`millisecondsSinceEpoch`。
+- [x] `nls.dart` 的 `_format` num 分支补 JS number 字符串语义（整数 double 去 `.0`，如 `1000/1000`→`'1'` 而非 `'1.0'`），以保证 `getDurationString` 断言与源码一致。
+- [x] 测试追加 6 case（managedSettings 1 + layout 2 + date 3，date 逐条对应 `date.test.ts`）；base 测试文件合计 **47 case 全绿**；三文件 `dart analyze` 零 error/warning。
+
+**下一批**：剩余依赖闭合 base 文件（`color`942/`json`1344/`keyCodes`838/`jsonSchema`330/`performance`149 等），再进核心环 `arrays↔cancellation↔event↔lifecycle`。

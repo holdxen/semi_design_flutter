@@ -8,15 +8,15 @@
 import 'dart:math' as math;
 
 class IRange {
-  int start;
-  int end;
+  num start;
+  num end;
 
   IRange(this.start, this.end);
 }
 
 class IRangedGroup {
   IRange range;
-  int size;
+  num size;
 
   IRangedGroup(this.range, this.size);
 }
@@ -29,8 +29,8 @@ class Range {
       return IRange(0, 0);
     }
 
-    final int start = math.max(one.start, other.start);
-    final int end = math.min(one.end, other.end);
+    final num start = math.max(one.start, other.start);
+    final num end = math.min(one.end, other.end);
 
     if (end - start <= 0) {
       return IRange(0, 0);

@@ -44,7 +44,11 @@ String _format(String message, List<Object?> args) {
       String result = match.group(0)!;
       if (arg is String) {
         result = arg;
-      } else if (arg is num || arg is bool || arg == null) {
+      } else if (arg is num) {
+        // JS `number` has no int/double split: an integral double stringifies
+        // without a trailing ".0" (e.g. 1000/1000 -> "1", not "1.0").
+        result = arg is double && arg == arg.roundToDouble() ? arg.toInt().toString() : arg.toString();
+      } else if (arg is bool || arg == null) {
         result = arg.toString();
       }
       return result;

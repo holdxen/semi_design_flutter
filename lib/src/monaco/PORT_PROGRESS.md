@@ -1011,7 +1011,7 @@
 | 1000 | base | `base/common/color.ts` | `lib/src/monaco/base/common/color.dart` | pending |
 | 1001 | base | `base/common/comparers.ts` | `lib/src/monaco/base/common/comparers.dart` | pending |
 | 1002 | base | `base/common/dataTransfer.ts` | `lib/src/monaco/base/common/dataTransfer.dart` | pending |
-| 1003 | base | `base/common/date.ts` | `lib/src/monaco/base/common/date.dart` | pending |
+| 1003 | base | `base/common/date.ts` | `lib/src/monaco/base/common/date.dart` | tested |
 | 1004 | base | `base/common/decorators/cancelPreviousCalls.ts` | `lib/src/monaco/base/common/decorators/cancelPreviousCalls.dart` | pending |
 | 1005 | base | `base/common/decorators.ts` | `lib/src/monaco/base/common/decorators.dart` | pending |
 | 1006 | base | `base/common/defaultAccount.ts` | `lib/src/monaco/base/common/defaultAccount.dart` | pending |
@@ -1044,12 +1044,12 @@
 | 1033 | base | `base/common/keybindingLabels.ts` | `lib/src/monaco/base/common/keybindingLabels.dart` | pending |
 | 1034 | base | `base/common/keybindings.ts` | `lib/src/monaco/base/common/keybindings.dart` | pending |
 | 1035 | base | `base/common/labels.ts` | `lib/src/monaco/base/common/labels.dart` | pending |
-| 1036 | base | `base/common/layout.ts` | `lib/src/monaco/base/common/layout.dart` | pending |
+| 1036 | base | `base/common/layout.ts` | `lib/src/monaco/base/common/layout.dart` | tested |
 | 1037 | base | `base/common/lazy.ts` | `lib/src/monaco/base/common/lazy.dart` | tested |
 | 1038 | base | `base/common/lifecycle.ts` | `lib/src/monaco/base/common/lifecycle.dart` | pending |
 | 1039 | base | `base/common/linkedList.ts` | `lib/src/monaco/base/common/linkedList.dart` | tested |
 | 1040 | base | `base/common/linkedText.ts` | `lib/src/monaco/base/common/linkedText.dart` | pending |
-| 1041 | base | `base/common/managedSettings.ts` | `lib/src/monaco/base/common/managedSettings.dart` | pending |
+| 1041 | base | `base/common/managedSettings.ts` | `lib/src/monaco/base/common/managedSettings.dart` | tested |
 | 1042 | base | `base/common/map.ts` | `lib/src/monaco/base/common/map.dart` | tested |
 | 1043 | base | `base/common/marshalling.ts` | `lib/src/monaco/base/common/marshalling.dart` | pending |
 | 1044 | base | `base/common/marshallingIds.ts` | `lib/src/monaco/base/common/marshallingIds.dart` | tested |
