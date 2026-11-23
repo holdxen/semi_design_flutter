@@ -313,3 +313,11 @@ semi_design_flutter/
 - [x] 测试 `test/monaco_base_test.dart` 追加 3 个 path case；两测试文件合计 **30 case 全绿**；全量 analyze 零 error/warning。
 
 **下一批继续**：`path` 已就绪 → 解锁 `uri`(765) → `map`(1027) → 逼近 `lifecycle`；`strings`(1434)/`buffer`(582)/`stream`(790) 与核心环 `arrays↔cancellation↔event↔lifecycle`（含 `async`2752/`event`1991 巨兽）仍未翻。
+
+### base 工具链批次续二（2026-11-23，累计 35/1690 文件 tested）
+
+- [x] `base/common/uri.dart`：完整 1:1 翻译 `uri.ts`（765 行）。`URI`/`Uri`/`UriComponents`/`UriState`/`UriChange`、`isUri`/`isUriComponents`、`withChanges`(源 `with`，Dart 关键字改名)、`parse`/`file`/`from`/`joinPath`/`revive`/`toString`/`toJSON`、`uriToFsPath`、percent 编码解码全链路逐行对照。适配：`class Uri` 与 dart:core 同名 → 双重 import（默认 + `as core`）访问 `core.Uri.encodeComponent/decodeComponent`；`[Symbol.for('debug.description')]()` → `debugDescription()`；对象字面量参数 → `UriChange`/`UriComponents` 值类 + `undefined` 哨兵；`new Error` → `StateError`；`charCodeAt` 越界 → -1 助手（保持与 NaN 比较恒 false 的语义）。
+- [x] `base/common/map.dart`：完整 1:1 翻译 `map.ts`（1027 行）。`getOrSet`/`mapToString`/`setToString`、`ResourceMap`/`ResourceSet`、`LinkedMap` + `Touch`、`Cache`/`LRUCache`/`MRUCache`、`CounterSet`/`BidirectionalMap`/`SetMap`/`mapsStrictEqualIgnoreOrder`/`NKeyMap` 全部成员与算法。适配：`MapIterator`+generator → `sync*` Iterable，`_state` 迭代修改检测通过"外层立即捕获 state、内层生成器消费"保持源码语义；`[Symbol.iterator]`/`[Symbol.toStringTag]` → 普通成员；tuple → Dart record；`Math.round` → `.round()`。
+- [x] 测试 `test/monaco_base_test.dart` 追加 11 个 case（uri 5 + map 6）；两测试文件合计 **24 case 全绿**；`dart analyze` 两文件零 error/warning。
+
+**下一批**：逼近核心环与剩余 base 叶子——`strings`(1434)/`buffer`(582)/`stream`(790)、`assert`已翻、`equals`；再进核心环 `arrays↔cancellation↔event↔lifecycle`（含 `async`2752/`event`1991 巨兽），解锁 T1 剩余 59 文件。

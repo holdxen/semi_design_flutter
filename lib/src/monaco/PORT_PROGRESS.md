@@ -7,6 +7,8 @@
 
 | # | 层 | 源文件 | 目标 Dart | 状态 |
 |---|---|---|---|---|
+> 进度：35 / 1690 tested（2026-11-23，含 base/common/uri.ts、base/common/map.ts）。
+
 | 1 | editor | `editor/browser/config/charWidthReader.ts` | `lib/src/monaco/editor/browser/config/charWidthReader.dart` | pending |
 | 2 | editor | `editor/browser/config/domFontInfo.ts` | `lib/src/monaco/editor/browser/config/domFontInfo.dart` | pending |
 | 3 | editor | `editor/browser/config/editorConfiguration.ts` | `lib/src/monaco/editor/browser/config/editorConfiguration.dart` | pending |
@@ -1048,7 +1050,7 @@
 | 1039 | base | `base/common/linkedList.ts` | `lib/src/monaco/base/common/linkedList.dart` | tested |
 | 1040 | base | `base/common/linkedText.ts` | `lib/src/monaco/base/common/linkedText.dart` | pending |
 | 1041 | base | `base/common/managedSettings.ts` | `lib/src/monaco/base/common/managedSettings.dart` | pending |
-| 1042 | base | `base/common/map.ts` | `lib/src/monaco/base/common/map.dart` | pending |
+| 1042 | base | `base/common/map.ts` | `lib/src/monaco/base/common/map.dart` | tested |
 | 1043 | base | `base/common/marshalling.ts` | `lib/src/monaco/base/common/marshalling.dart` | pending |
 | 1044 | base | `base/common/marshallingIds.ts` | `lib/src/monaco/base/common/marshallingIds.dart` | tested |
 | 1045 | base | `base/common/mime.ts` | `lib/src/monaco/base/common/mime.dart` | pending |
@@ -1117,7 +1119,7 @@
 | 1108 | base | `base/common/themables.ts` | `lib/src/monaco/base/common/themables.dart` | pending |
 | 1109 | base | `base/common/types.ts` | `lib/src/monaco/base/common/types.dart` | tested |
 | 1110 | base | `base/common/uint.ts` | `lib/src/monaco/base/common/uint.dart` | tested |
-| 1111 | base | `base/common/uri.ts` | `lib/src/monaco/base/common/uri.dart` | pending |
+| 1111 | base | `base/common/uri.ts` | `lib/src/monaco/base/common/uri.dart` | tested |
 | 1112 | base | `base/common/uuid.ts` | `lib/src/monaco/base/common/uuid.dart` | pending |
 | 1113 | base | `base/common/validation.ts` | `lib/src/monaco/base/common/validation.dart` | pending |
 | 1114 | base | `base/common/worker/webWorker.ts` | `lib/src/monaco/base/common/worker/webWorker.dart` | pending |
