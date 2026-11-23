@@ -819,7 +819,7 @@
 | 810 | editor | `editor/test/common/core/lineRange.test.ts` | `lib/src/monaco/editor/test/common/core/lineRange.test.dart` | pending |
 | 811 | editor | `editor/test/common/core/lineTokens.test.ts` | `lib/src/monaco/editor/test/common/core/lineTokens.test.dart` | pending |
 | 812 | editor | `editor/test/common/core/positionOffsetTransformer.test.ts` | `lib/src/monaco/editor/test/common/core/positionOffsetTransformer.test.dart` | pending |
-| 813 | editor | `editor/test/common/core/random.ts` | `lib/src/monaco/editor/test/common/core/random.dart` | pending |
+| 813 | editor | `editor/test/common/core/random.ts` | `lib/src/monaco/editor/test/common/core/random.dart` | tested |
 | 814 | editor | `editor/test/common/core/range.test.ts` | `lib/src/monaco/editor/test/common/core/range.test.dart` | pending |
 | 815 | editor | `editor/test/common/core/stringBuilder.test.ts` | `lib/src/monaco/editor/test/common/core/stringBuilder.test.dart` | pending |
 | 816 | editor | `editor/test/common/core/stringEdit.test.ts` | `lib/src/monaco/editor/test/common/core/stringEdit.test.dart` | pending |
@@ -1023,7 +1023,7 @@
 | 1014 | base | `base/common/extpath.ts` | `lib/src/monaco/base/common/extpath.dart` | tested |
 | 1015 | base | `base/common/filters.ts` | `lib/src/monaco/base/common/filters.dart` | tested |
 | 1016 | base | `base/common/functional.ts` | `lib/src/monaco/base/common/functional.dart` | tested |
-| 1017 | base | `base/common/fuzzyScorer.ts` | `lib/src/monaco/base/common/fuzzyScorer.dart` | pending |
+| 1017 | base | `base/common/fuzzyScorer.ts` | `lib/src/monaco/base/common/fuzzyScorer.dart` | tested |
 | 1018 | base | `base/common/glob.ts` | `lib/src/monaco/base/common/glob.dart` | pending |
 | 1019 | base | `base/common/hash.ts` | `lib/src/monaco/base/common/hash.dart` | tested |
 | 1020 | base | `base/common/hierarchicalKind.ts` | `lib/src/monaco/base/common/hierarchicalKind.dart` | tested |
@@ -1042,7 +1042,7 @@
 | 1033 | base | `base/common/keyCodes.ts` | `lib/src/monaco/base/common/keyCodes.dart` | tested |
 | 1034 | base | `base/common/keybindingLabels.ts` | `lib/src/monaco/base/common/keybindingLabels.dart` | tested |
 | 1035 | base | `base/common/keybindings.ts` | `lib/src/monaco/base/common/keybindings.dart` | tested |
-| 1036 | base | `base/common/labels.ts` | `lib/src/monaco/base/common/labels.dart` | pending |
+| 1036 | base | `base/common/labels.ts` | `lib/src/monaco/base/common/labels.dart` | tested |
 | 1037 | base | `base/common/layout.ts` | `lib/src/monaco/base/common/layout.dart` | tested |
 | 1038 | base | `base/common/lazy.ts` | `lib/src/monaco/base/common/lazy.dart` | tested |
 | 1039 | base | `base/common/lifecycle.ts` | `lib/src/monaco/base/common/lifecycle.dart` | tested |
@@ -1063,7 +1063,7 @@
 | 1054 | base | `base/common/observable.ts` | `lib/src/monaco/base/common/observable.dart` | pending |
 | 1055 | base | `base/common/observableInternal/base.ts` | `lib/src/monaco/base/common/observableInternal/base.dart` | pending |
 | 1056 | base | `base/common/observableInternal/changeTracker.ts` | `lib/src/monaco/base/common/observableInternal/changeTracker.dart` | pending |
-| 1057 | base | `base/common/observableInternal/commonFacade/cancellation.ts` | `lib/src/monaco/base/common/observableInternal/commonFacade/cancellation.dart` | pending |
+| 1057 | base | `base/common/observableInternal/commonFacade/cancellation.ts` | `lib/src/monaco/base/common/observableInternal/commonFacade/cancellation.dart` | tested |
 | 1058 | base | `base/common/observableInternal/commonFacade/deps.ts` | `lib/src/monaco/base/common/observableInternal/commonFacade/deps.dart` | pending |
 | 1059 | base | `base/common/observableInternal/debugLocation.ts` | `lib/src/monaco/base/common/observableInternal/debugLocation.dart` | tested |
 | 1060 | base | `base/common/observableInternal/debugName.ts` | `lib/src/monaco/base/common/observableInternal/debugName.dart` | tested |
@@ -1156,7 +1156,7 @@
 | 1147 | platform | `platform/actionWidget/browser/actionList.ts` | `lib/src/monaco/platform/actionWidget/browser/actionList.dart` | pending |
 | 1148 | platform | `platform/actionWidget/browser/actionWidget.ts` | `lib/src/monaco/platform/actionWidget/browser/actionWidget.dart` | pending |
 | 1149 | platform | `platform/actionWidget/browser/actionWidgetMotion.ts` | `lib/src/monaco/platform/actionWidget/browser/actionWidgetMotion.dart` | pending |
-| 1150 | platform | `platform/actionWidget/common/actionWidget.ts` | `lib/src/monaco/platform/actionWidget/common/actionWidget.dart` | pending |
+| 1150 | platform | `platform/actionWidget/common/actionWidget.ts` | `lib/src/monaco/platform/actionWidget/common/actionWidget.dart` | tested |
 | 1151 | platform | `platform/actions/browser/actionViewItemService.ts` | `lib/src/monaco/platform/actions/browser/actionViewItemService.dart` | pending |
 | 1152 | platform | `platform/actions/browser/menuEntryActionViewItem.ts` | `lib/src/monaco/platform/actions/browser/menuEntryActionViewItem.dart` | pending |
 | 1153 | platform | `platform/actions/browser/toolbar.ts` | `lib/src/monaco/platform/actions/browser/toolbar.dart` | pending |
