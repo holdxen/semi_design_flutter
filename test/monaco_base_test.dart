@@ -1,6 +1,8 @@
 // Regression tests for base/common files in the 1:1 Monaco port.
 // Assertions mirror the semantics of the TypeScript originals.
 
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:semi_design_flutter/src/monaco/nls.dart';
@@ -8,11 +10,20 @@ import 'package:semi_design_flutter/src/monaco/base/common/assert.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/errors.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/collections.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/functional.dart';
+import 'package:semi_design_flutter/src/monaco/base/common/idGenerator.dart';
+import 'package:semi_design_flutter/src/monaco/base/common/hierarchicalKind.dart';
+import 'package:semi_design_flutter/src/monaco/base/common/navigator.dart';
+import 'package:semi_design_flutter/src/monaco/base/common/diff/diffChange.dart';
+import 'package:semi_design_flutter/src/monaco/base/common/range.dart';
+import 'package:semi_design_flutter/src/monaco/base/common/uuid.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/iterator.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/lazy.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/linkedList.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/map.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/marshallingIds.dart';
+import 'package:semi_design_flutter/src/monaco/base/common/numbers.dart';
+import 'package:semi_design_flutter/src/monaco/base/common/mime.dart';
+import 'package:semi_design_flutter/src/monaco/base/common/objects.dart' as objs;
 import 'package:semi_design_flutter/src/monaco/base/common/uri.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/path.dart' as path;
 import 'package:semi_design_flutter/src/monaco/base/common/platform.dart' as pf;
@@ -353,6 +364,233 @@ void main() {
       expect(getOrSet(m, 'k', 9), 5);
       expect(mapToString(<String, int>{'a': 1}), 'Map(1) {a => 1}');
       expect(setToString(<String>{'a'}), 'Set(1) {a}');
+    });
+  });
+
+  group('idGenerator.ts', () {
+    test('increments ids with prefix', () {
+      final g = IdGenerator('id#');
+      expect(g.nextId(), 'id#1');
+      expect(g.nextId(), 'id#2');
+      expect(defaultGenerator.nextId().startsWith('id#'), isTrue);
+    });
+  });
+
+  group('hierarchicalKind.ts', () {
+    test('equals/contains/intersects/append', () {
+      final a = HierarchicalKind('a');
+      final ab = HierarchicalKind('a.b');
+      final abc = HierarchicalKind('a.b.c');
+      expect(HierarchicalKind.sep, '.');
+      expect(a.equals(HierarchicalKind('a')), isTrue);
+      expect(a.contains(ab), isTrue);
+      expect(a.contains(abc), isTrue);
+      expect(ab.contains(a), isFalse);
+      expect(a.intersects(ab), isTrue);
+      expect(ab.intersects(a), isTrue);
+      expect(HierarchicalKind.Empty.contains(abc), isTrue);
+      expect(HierarchicalKind.None.contains(a), isFalse);
+      expect(a.append(['b', 'c']).value, 'a.b.c');
+      expect(HierarchicalKind.Empty.append(['a', 'b']).value, 'a.b');
+    });
+  });
+
+  group('navigator.ts', () {
+    test('ArrayNavigator traversal', () {
+      final nav = ArrayNavigator<int>([1, 2, 3]);
+      expect(nav.current(), isNull);
+      expect(nav.next(), 1);
+      expect(nav.next(), 2);
+      expect(nav.next(), 3);
+      expect(nav.next(), isNull);
+      expect(nav.first(), 1);
+      expect(nav.previous(), isNull);
+      expect(nav.last(), 3);
+      final sub = ArrayNavigator<int>([1, 2, 3, 4], 1, 3);
+      expect(sub.current(), isNull);
+      expect(sub.next(), 2);
+      expect(sub.next(), 3);
+      expect(sub.next(), isNull);
+    });
+  });
+
+  group('diff/diffChange.ts', () {
+    test('end points are exclusive', () {
+      final c = DiffChange(2, 3, 5, 1);
+      expect(c.getOriginalEnd(), 5);
+      expect(c.getModifiedEnd(), 6);
+    });
+  });
+
+  group('range.ts', () {
+    test('intersect/isEmpty/intersects/relativeComplement', () {
+      expect(Range.intersect(IRange(0, 5), IRange(3, 8)).start, 3);
+      expect(Range.intersect(IRange(0, 5), IRange(3, 8)).end, 5);
+      expect(Range.isEmpty(Range.intersect(IRange(0, 2), IRange(5, 8))), isTrue);
+      expect(Range.intersects(IRange(0, 5), IRange(5, 8)), isFalse);
+      expect(Range.isEmpty(IRange(3, 3)), isTrue);
+      final comp = Range.relativeComplement(IRange(0, 10), IRange(3, 6));
+      expect(comp.length, 2);
+      expect(comp[0].start, 0);
+      expect(comp[0].end, 3);
+      expect(comp[1].start, 6);
+      expect(comp[1].end, 10);
+    });
+  });
+
+  group('uuid.ts', () {
+    test('generation (mirrors uuid.test.ts)', () {
+      final asHex = generateUuid();
+      expect(asHex.length, 36);
+      expect(asHex[14], '4');
+      expect(<String>['8', '9', 'a', 'b'], contains(asHex[19]));
+    });
+
+    test('self-check', () {
+      for (int i = 0; i < 100; i++) {
+        expect(isUUID(generateUuid()), isTrue);
+      }
+      expect(isUUID('not-a-uuid'), isFalse);
+    });
+
+    test('prefixedUuid', () {
+      const namespace = 'abc';
+      final result = prefixedUuid(namespace);
+      expect(result.startsWith('$namespace-'), isTrue);
+      expect(result.length, namespace.length + 1 + 36);
+      expect(isUUID(result.substring(namespace.length + 1)), isTrue);
+    });
+  });
+
+  group('numbers.ts', () {
+    test('isPointWithinTriangle (mirrors numbers.test.ts)', () {
+      expect(isPointWithinTriangle(0.25, 0.25, 0, 0, 1, 0, 0, 1), isTrue);
+      expect(isPointWithinTriangle(2, 2, 0, 0, 1, 0, 0, 1), isFalse);
+      expect(isPointWithinTriangle(0.5, 0, 0, 0, 1, 0, 0, 1), isTrue);
+    });
+
+    test('formatTokenCount (mirrors numbers.test.ts)', () {
+      expect(formatTokenCount(1000000), '1M');
+      expect(formatTokenCount(935997), '1M');
+      expect(formatTokenCount(1100000), '1.1M');
+      expect(formatTokenCount(1990000), '1.9M');
+      expect(formatTokenCount(2500000), '2.5M');
+      expect(formatTokenCount(128000), '128K');
+      expect(formatTokenCount(900000), '900K');
+      expect(formatTokenCount(500), '500');
+    });
+
+    test('clamp/rot/Counter/MovingAverage', () {
+      expect(clamp(5, 0, 3), 3);
+      expect(rot(-1, 3), 2);
+      final c = Counter();
+      expect(c.getNext(), 0);
+      expect(c.getNext(), 1);
+      final m = MovingAverage();
+      expect(m.update(10), 10);
+      expect(m.value, 10);
+      final s = SlidingWindowAverage(2);
+      expect(s.update(1), 1);
+      expect(s.update(3), 2);
+    });
+  });
+
+  group('mime.ts', () {
+    test('normalize (mirrors mime.test.ts)', () {
+      expect(normalizeMimeType('invalid'), 'invalid');
+      expect(normalizeMimeType('invalid', true), isNull);
+      expect(normalizeMimeType('Text/plain'), 'text/plain');
+      expect(normalizeMimeType('Text/pläin'), 'text/pläin');
+      expect(normalizeMimeType('Text/plain;UPPER'), 'text/plain;UPPER');
+      expect(normalizeMimeType('Text/plain;lower'), 'text/plain;lower');
+    });
+
+    test('getExtensionForMimeType / getMediaMime / getMediaOrTextMime', () {
+      expect(<String>['.jpe', '.jpeg', '.jpg'], contains(getExtensionForMimeType('image/jpg')));
+      expect(getExtensionForMimeType('image/avif'), '.avif');
+      expect(getExtensionForMimeType('text/plain'), '.txt');
+      expect(getExtensionForMimeType('unknown/type'), isNull);
+      expect(getMediaMime('profile.avif'), 'image/avif');
+      final inputs = ['a.json', 'a.js.map', 'a.pdf', 'a.wasm', 'a.woff2', 'a.ttf', 'a.otf', 'a.PDF', 'a.png', 'a.unknown'];
+      final expectMimes = ['application/json', 'application/json', 'application/pdf', 'application/wasm', 'font/woff2', 'font/ttf', 'font/otf', 'application/pdf', 'image/png', null];
+      for (int i = 0; i < inputs.length; i++) {
+        expect(getMediaOrTextMime(inputs[i]), expectMimes[i]);
+      }
+      expect(Mimes.text, 'text/plain');
+      expect(isTextStreamMime('application/vnd.code.notebook.stdout'), isTrue);
+    });
+  });
+
+  group('objects.ts', () {
+    test('equals (mirrors objects.test.ts)', () {
+      expect(objs.equals(null, null), isTrue);
+      expect(objs.equals(1234, 1234), isTrue);
+      expect(objs.equals('1234', '1234'), isTrue);
+      expect(objs.equals(<Object?>[], <Object?>[]), isTrue);
+      expect(objs.equals(<Object?>[<Object?>[1, 2, 3]], <Object?>[<Object?>[1, 2, 3]]), isTrue);
+      expect(objs.equals(<String, Object?>{'a': 1, 'b': '123'}, <String, Object?>{'b': '123', 'a': 1}), isTrue);
+      expect(objs.equals(null, ''), isFalse);
+      expect(objs.equals('', <Object?>[]), isFalse);
+      expect(objs.equals(<Object?>[], <String, Object?>{}), isFalse);
+      expect(objs.equals('1234', 1234), isFalse);
+    });
+
+    test('mixin / cloneAndChange / distinct', () {
+      final foo = <String, Object?>{};
+      objs.mixin(foo, <String, Object?>{'bar': <Object?>[1, 2, 3]});
+      expect((foo['bar'] as List).length, 3);
+      final foo2 = <String, Object?>{'bar': '123'};
+      objs.mixin(foo2, <String, Object?>{'bar': '456'}, false);
+      expect(foo2['bar'], '123');
+      final o1 = <String, Object?>{'something': 'hello'};
+      final o = <String, Object?>{'o1': o1, 'o2': o1};
+      expect(objs.equals(objs.cloneAndChange(o, (x) => null), o), isTrue);
+      final base = <String, Object?>{'one': 'one', 'two': 2, 'four': false};
+      final obj = <String, Object?>{'one': 'two', 'two': 2, 'four': true};
+      final diff = objs.distinct(base, obj);
+      expect(diff.length, 2);
+      expect(diff['one'], 'two');
+      expect(diff['four'], true);
+      expect(objs.getCaseInsensitive(<String, Object?>{'mIxEdCaSe': 456}, 'MIXEDCASE'), 456);
+      expect(objs.mapValues<String, String>(<String, String>{'a': '1'}, (v, k) => '$k:$v')['a'], 'a:1');
+    });
+
+    test('safeStringify circular / shared (mirrors objects.test.ts)', () {
+      final obj1 = <String, Object?>{'friend': null};
+      final obj2 = <String, Object?>{'friend': null};
+      obj1['friend'] = obj2;
+      obj2['friend'] = obj1;
+      final arr = <Object?>[1];
+      arr.add(arr);
+      final circular = <String, Object?>{'a': 42, 'b': null, 'c': <Object?>[obj1, obj2], 'd': null, 'e': BigInt.from(42)};
+      arr.add(circular);
+      circular['b'] = circular;
+      circular['d'] = arr;
+      final parsed = jsonDecode(objs.safeStringify(circular)) as Map<String, dynamic>;
+      expect(parsed['a'], 42);
+      expect(parsed['b'], '[Circular]');
+      expect((parsed['c'] as List)[0]['friend']['friend'], '[Circular]');
+      expect(parsed['d'][0], 1);
+      expect(parsed['d'][1], '[Circular]');
+      expect(parsed['e'], '[BigInt 42]');
+      final shared = <String, Object?>{'a': 1};
+      expect(objs.safeStringify(<Object?>[shared, <String, Object?>{'x': shared, 'y': <Object?>[shared]}]), '[{"a":1},{"x":{"a":1},"y":[{"a":1}]}]');
+    });
+
+    test('stableStringify (mirrors objects.test.ts)', () {
+      final a = <String, Object?>{'b': 1, 'a': 2, 'c': <String, Object?>{'y': 1, 'x': 2}};
+      final b = <String, Object?>{'c': <String, Object?>{'x': 2, 'y': 1}, 'a': 2, 'b': 1};
+      expect(objs.stableStringify(a), objs.stableStringify(b));
+      expect(objs.stableStringify(a), '{"a":2,"b":1,"c":{"x":2,"y":1}}');
+      expect(objs.stableStringify(<Object?>[<String, Object?>{'b': 1, 'a': 2}, 'x', null, 3]), '[{"a":2,"b":1},"x",null,3]');
+      expect(objs.stableStringify(null), 'undefined');
+      expect(objs.stableStringify(0), '0');
+      expect(objs.stableStringify(''), '""');
+      final circ = <String, Object?>{'a': 1};
+      circ['self'] = circ;
+      expect(objs.stableStringify(circ), '{"a":1,"self":"[Circular]"}');
+      final shared = <String, Object?>{'a': 1};
+      expect(objs.stableStringify(<String, Object?>{'x': shared, 'y': shared}), '{"x":{"a":1},"y":{"a":1}}');
     });
   });
 }

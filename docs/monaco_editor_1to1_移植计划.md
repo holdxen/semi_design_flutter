@@ -321,3 +321,27 @@ semi_design_flutter/
 - [x] 测试 `test/monaco_base_test.dart` 追加 11 个 case（uri 5 + map 6）；两测试文件合计 **24 case 全绿**；`dart analyze` 两文件零 error/warning。
 
 **下一批**：逼近核心环与剩余 base 叶子——`strings`(1434)/`buffer`(582)/`stream`(790)、`assert`已翻、`equals`；再进核心环 `arrays↔cancellation↔event↔lifecycle`（含 `async`2752/`event`1991 巨兽），解锁 T1 剩余 59 文件。
+
+### base 工具链批次续三（2026-11-23，累计 41/1690 文件 tested）
+
+- [x] 依赖闭包扫描发现 32 个依赖已闭合的 base 文件，本批先落地其中 6 个基础小文件：`base/common/idGenerator.dart`、`hierarchicalKind.dart`、`navigator.dart`、`diff/diffChange.dart`、`range.dart`、`uuid.dart`。
+- [x] `uuid.ts` 的 `crypto.randomUUID` 快路径在 Dart 无对应，按源码注释保留判断说明并走 `crypto.getRandomValues` 等价路径（`Random.secure()`）；version bits 设置与 8-4-4-4-12 逐段拼装完全不改。`namespace Range` → class + static，对象字面量 → `IRange`/`IRangedGroup` 值类；`ArrayNavigator` 构造函数中引用前序参数的默认值 → Dart 可选位置参数 + 初始化列表解析。
+- [x] 测试 `test/monaco_base_test.dart` 追加 8 个 case（idGenerator 1 + hierarchicalKind 1 + navigator 1 + diffChange 1 + range 1 + uuid 3，其中 uuid 3 个逐条对应 `uuid.test.ts`）；测试文件合计 **32 case 全绿**；6 个文件 `dart analyze` 零 error/warning。
+
+**下一批**：继续消费剩余 26 个依赖闭合 base 文件（`numbers`/`mime`/`objects`/`color`/`json`/`keyCodes` 等），再进核心环 `arrays↔cancellation↔event↔lifecycle`。
+
+### base 工具链批次续四（2026-11-23，累计 43/1690 文件 tested）
+
+- [x] `base/common/numbers.dart`：1:1 翻译 `numbers.ts`（121 行），`clamp`/`formatTokenCount`/`rot`/`Counter`/`MovingAverage`/`SlidingWindowAverage`/`isPointWithinTriangle`/`randomChance`。`assert`→`assertCondition`、`Math.random()`→`math.Random`、`new Array(size).fill(0)`→`List.filled`。
+- [x] `base/common/mime.dart`：1:1 翻译 `mime.ts`（146 行），`Mimes`/`mapExtToTextMimes`/`mapExtToMediaMimes`/`getMediaOrTextMime`/`getMediaMime`/`getExtensionForMimeType`/`normalizeMimeType`/`isTextStreamMime`。`Object.freeze({...})`→class+static const；`string|string[]`→`Object` + `is List`；重载→可选参数；依赖顶层 `extname` 已在 path.dart 提供。
+- [x] 测试追加 5 case（numbers 3 + mime 2，逐条对应 `numbers.test.ts`/`mime.test.ts`）；base 测试文件合计 **37 case 全绿**；两文件 `dart analyze` 零 error/warning。
+
+**下一批**：`objects`(动态对象语义，单独处理)、`color`/`json`/`keyCodes` 等剩余依赖闭合 base 文件，再进核心环。
+
+### base 工具链批次续五（2026-11-23，累计 44/1690 文件 tested）
+
+- [x] `base/common/objects.dart`：1:1 翻译 `objects.ts`（298 行），`deepClone`/`deepFreeze`/`cloneAndChange`/`mixin`/`equals`/`safeStringify`/`stableStringify`/`distinct`/`getCaseInsensitive`/`filter`/`mapValues` 全部成员。适配：TS `any`/对象字面量 → `Object?`/`Map<String,Object?>`；`Object.entries/keys`+`for..in`+`hasOwnProperty` → `Map.entries/keys`/`containsKey`；`Object.freeze` → identity Set 标记；`JSON.stringify` 的 JS replacer `this` 绑定无 Dart 对应 → 自实现 `_jsonStringifyWithReplacer`（保留 ancestors 循环检测、`[Circular]`/`[BigInt]` 语义）；`stableStringify` 自实现确定性 key 排序 + 祖先 tracking。
+- [x] 测试追加 4 case（objects: equals/mixin+clone+distinct/safeStringify/stability，逐条对应 `objects.test.ts`）；base 测试文件合计 **41 case 全绿**；`dart analyze` 零 error/warning。
+- [x] 注意：测试中 `equals` 与 `package:matcher` 同名冲突，objects.dart import 加 `as objs` 前缀。
+
+**下一批**：`color`/`json`/`keyCodes`/`mime`已翻 等剩余依赖闭合 base 文件，再进核心环 `arrays↔cancellation↔event↔lifecycle`。
