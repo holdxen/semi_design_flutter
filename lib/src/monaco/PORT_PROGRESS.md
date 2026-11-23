@@ -225,7 +225,7 @@
 | 216 | editor | `editor/common/cursorEvents.ts` | `lib/src/monaco/editor/common/cursorEvents.dart` | tested |
 | 217 | editor | `editor/common/diff/defaultLinesDiffComputer/algorithms/diffAlgorithm.ts` | `lib/src/monaco/editor/common/diff/defaultLinesDiffComputer/algorithms/diffAlgorithm.dart` | tested |
 | 218 | editor | `editor/common/diff/defaultLinesDiffComputer/algorithms/dynamicProgrammingDiffing.ts` | `lib/src/monaco/editor/common/diff/defaultLinesDiffComputer/algorithms/dynamicProgrammingDiffing.dart` | pending |
-| 219 | editor | `editor/common/diff/defaultLinesDiffComputer/algorithms/myersDiffAlgorithm.ts` | `lib/src/monaco/editor/common/diff/defaultLinesDiffComputer/algorithms/myersDiffAlgorithm.dart` | pending |
+| 219 | editor | `editor/common/diff/defaultLinesDiffComputer/algorithms/myersDiffAlgorithm.ts` | `lib/src/monaco/editor/common/diff/defaultLinesDiffComputer/algorithms/myersDiffAlgorithm.dart` | tested |
 | 220 | editor | `editor/common/diff/defaultLinesDiffComputer/computeMovedLines.ts` | `lib/src/monaco/editor/common/diff/defaultLinesDiffComputer/computeMovedLines.dart` | pending |
 | 221 | editor | `editor/common/diff/defaultLinesDiffComputer/defaultLinesDiffComputer.ts` | `lib/src/monaco/editor/common/diff/defaultLinesDiffComputer/defaultLinesDiffComputer.dart` | pending |
 | 222 | editor | `editor/common/diff/defaultLinesDiffComputer/heuristicSequenceOptimizations.ts` | `lib/src/monaco/editor/common/diff/defaultLinesDiffComputer/heuristicSequenceOptimizations.dart` | pending |
@@ -472,7 +472,7 @@
 | 463 | editor | `editor/contrib/find/browser/findWidget.ts` | `lib/src/monaco/editor/contrib/find/browser/findWidget.dart` | pending |
 | 464 | editor | `editor/contrib/find/browser/findWidgetSearchHistory.ts` | `lib/src/monaco/editor/contrib/find/browser/findWidgetSearchHistory.dart` | pending |
 | 465 | editor | `editor/contrib/find/browser/replaceAllCommand.ts` | `lib/src/monaco/editor/contrib/find/browser/replaceAllCommand.dart` | pending |
-| 466 | editor | `editor/contrib/find/browser/replacePattern.ts` | `lib/src/monaco/editor/contrib/find/browser/replacePattern.dart` | pending |
+| 466 | editor | `editor/contrib/find/browser/replacePattern.ts` | `lib/src/monaco/editor/contrib/find/browser/replacePattern.dart` | tested |
 | 467 | editor | `editor/contrib/find/browser/replaceWidgetHistory.ts` | `lib/src/monaco/editor/contrib/find/browser/replaceWidgetHistory.dart` | pending |
 | 468 | editor | `editor/contrib/find/test/browser/find.test.ts` | `lib/src/monaco/editor/contrib/find/test/browser/find.test.dart` | pending |
 | 469 | editor | `editor/contrib/find/test/browser/findController.test.ts` | `lib/src/monaco/editor/contrib/find/test/browser/findController.test.dart` | pending |
@@ -672,7 +672,7 @@
 | 663 | editor | `editor/contrib/smartSelect/browser/wordSelections.ts` | `lib/src/monaco/editor/contrib/smartSelect/browser/wordSelections.dart` | pending |
 | 664 | editor | `editor/contrib/smartSelect/test/browser/smartSelect.test.ts` | `lib/src/monaco/editor/contrib/smartSelect/test/browser/smartSelect.test.dart` | pending |
 | 665 | editor | `editor/contrib/snippet/browser/snippetController2.ts` | `lib/src/monaco/editor/contrib/snippet/browser/snippetController2.dart` | pending |
-| 666 | editor | `editor/contrib/snippet/browser/snippetParser.ts` | `lib/src/monaco/editor/contrib/snippet/browser/snippetParser.dart` | pending |
+| 666 | editor | `editor/contrib/snippet/browser/snippetParser.ts` | `lib/src/monaco/editor/contrib/snippet/browser/snippetParser.dart` | tested |
 | 667 | editor | `editor/contrib/snippet/browser/snippetSession.ts` | `lib/src/monaco/editor/contrib/snippet/browser/snippetSession.dart` | pending |
 | 668 | editor | `editor/contrib/snippet/browser/snippetVariables.ts` | `lib/src/monaco/editor/contrib/snippet/browser/snippetVariables.dart` | pending |
 | 669 | editor | `editor/contrib/snippet/test/browser/snippetController2.old.test.ts` | `lib/src/monaco/editor/contrib/snippet/test/browser/snippetController2.old.test.dart` | pending |

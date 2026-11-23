@@ -25,6 +25,9 @@ import 'package:semi_design_flutter/src/monaco/editor/common/core/text/abstractT
 import 'package:semi_design_flutter/src/monaco/editor/common/core/text/positionToOffsetImpl.dart' as posOffset;
 import 'package:semi_design_flutter/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/length.dart' as bpLength;
 import 'package:semi_design_flutter/src/monaco/editor/common/diff/defaultLinesDiffComputer/algorithms/diffAlgorithm.dart' as da;
+import 'package:semi_design_flutter/src/monaco/editor/common/diff/defaultLinesDiffComputer/algorithms/myersDiffAlgorithm.dart' as myers;
+import 'package:semi_design_flutter/src/monaco/editor/contrib/find/browser/replacePattern.dart' as rp;
+import 'package:semi_design_flutter/src/monaco/editor/contrib/snippet/browser/snippetParser.dart' as sp;
 import 'package:semi_design_flutter/src/monaco/editor/common/core/misc/eolCounter.dart';
 import 'package:semi_design_flutter/src/monaco/editor/common/core/misc/indentation.dart' as indentation;
 import 'package:semi_design_flutter/src/monaco/editor/common/core/misc/rgba.dart';
@@ -1086,6 +1089,250 @@ void main() {
       expect(() => da.DateTimeout(0), throwsA(isA<Exception>()));
     });
   });
+
+  group('myersDiffAlgorithm.ts (1:1)', () {
+    final myers.MyersDiffAlgorithm algo = myers.MyersDiffAlgorithm();
+
+    test('trivial empty', () {
+      final r1 = algo.compute(_DiffSeq(<int>[]), _DiffSeq(<int>[1, 2]));
+      expect(r1.diffs.length, 1);
+      expect(r1.hitTimeout, isFalse);
+      final r2 = algo.compute(_DiffSeq(<int>[1, 2]), _DiffSeq(<int>[]));
+      expect(r2.diffs.length, 1);
+    });
+
+    test('identical sequences -> no diffs', () {
+      final r = algo.compute(_DiffSeq(<int>[1, 2, 3]), _DiffSeq(<int>[1, 2, 3]));
+      expect(r.diffs, isEmpty);
+    });
+
+    test('single replacement', () {
+      // a=1 2 3, b=1 9 3
+      final r = algo.compute(_DiffSeq(<int>[1, 2, 3]), _DiffSeq(<int>[1, 9, 3]));
+      expect(r.diffs.length, 1);
+      final d = r.diffs[0];
+      expect(d.seq1Range.start, 1);
+      expect(d.seq1Range.endExclusive, 2);
+      expect(d.seq2Range.start, 1);
+      expect(d.seq2Range.endExclusive, 2);
+    });
+
+    test('insert and delete', () {
+      final ins = algo.compute(_DiffSeq(<int>[1, 3]), _DiffSeq(<int>[1, 2, 3]));
+      expect(ins.diffs.length, 1);
+      expect(ins.diffs[0].seq2Range.start, 1);
+      expect(ins.diffs[0].seq2Range.endExclusive, 2);
+      expect(ins.diffs[0].seq1Range.start, ins.diffs[0].seq1Range.endExclusive);
+      final del = algo.compute(_DiffSeq(<int>[1, 2, 3]), _DiffSeq(<int>[1, 3]));
+      expect(del.diffs.length, 1);
+      expect(del.diffs[0].seq1Range.start, 1);
+      expect(del.diffs[0].seq1Range.endExclusive, 2);
+      expect(del.diffs[0].seq2Range.start, del.diffs[0].seq2Range.endExclusive);
+    });
+
+    test('matches base diff for mixed edit', () {
+      final a = <int>[1, 2, 3, 4, 5, 6];
+      final b = <int>[1, 2, 9, 4, 5, 7, 6];
+      final r = algo.compute(_DiffSeq(a), _DiffSeq(b));
+      expect(r.hitTimeout, isFalse);
+      // apply diffs to a and reconstruct b to verify correctness
+      final out = <int>[];
+      int ai = 0;
+      for (final d in r.diffs) {
+        while (ai < d.seq1Range.start) { out.add(a[ai++]); }
+        for (int x = d.seq2Range.start; x < d.seq2Range.endExclusive; x++) { out.add(b[x]); }
+        ai = d.seq1Range.endExclusive;
+      }
+      while (ai < a.length) { out.add(a[ai++]); }
+      expect(out, b);
+    });
+
+    test('negative indices FastInt32Array roundtrip via long diff', () {
+      // forces k < 0 paths (delete-heavy)
+      final a = List<int>.generate(40, (i) => i);
+      final b = List<int>.generate(20, (i) => i + 20);
+      final r = algo.compute(_DiffSeq(a), _DiffSeq(b));
+      expect(r.hitTimeout, isFalse);
+      expect(r.diffs.isNotEmpty, isTrue);
+    });
+  });
+
+  group('replacePattern.ts (1:1)', () {
+    List<String>? exec(String target, RegExp re) {
+      final Match? m = re.firstMatch(target);
+      if (m == null) return null;
+      return List<String>.generate(m.groupCount + 1, (i) => m.group(i) ?? '');
+    }
+
+    test('parse replace string pieces', () {
+      // static
+      expect(rp.parseReplaceString('hello').buildReplaceString(null), 'hello');
+      expect(rp.parseReplaceString('\\thello').buildReplaceString(null), '\thello');
+      expect(rp.parseReplaceString('h\\tello').buildReplaceString(null), 'h\tello');
+      expect(rp.parseReplaceString('\\\\thello').buildReplaceString(null), r'\thello');
+      expect(rp.parseReplaceString('hello\\').buildReplaceString(null), 'hello\\');
+      // $$ => $
+      expect(rp.parseReplaceString(r'hello$$').buildReplaceString(null), 'hello\$');
+      expect(rp.parseReplaceString(r'hello$$0').buildReplaceString(null), 'hello\$0');
+      // $& / $0
+      expect(rp.parseReplaceString(r'hello$&').buildReplaceString(<String>['WORLD']), 'helloWORLD');
+      expect(rp.parseReplaceString(r'hello$0').buildReplaceString(<String>['WORLD']), 'helloWORLD');
+      expect(rp.parseReplaceString(r'hello$02').buildReplaceString(<String>['WORLD']), 'helloWORLD2');
+      // $100 -> group 10 + literal 0
+      expect(rp.parseReplaceString(r'hello$100').buildReplaceString(<String>['M', 'G1', 'G10']), 'helloG100');
+    });
+
+    test('case modifiers U/u/L/l', () {
+      expect(rp.parseReplaceString('func \\U\$1(').buildReplaceString(exec('func privateFunc(', RegExp(r'func (\w+)\('))), 'func PRIVATEFUNC(');
+      expect(rp.parseReplaceString('func \\u\$1(').buildReplaceString(exec('func privateFunc(', RegExp(r'func (\w+)\('))), 'func PrivateFunc(');
+      expect(rp.parseReplaceString('func \\L\$1(').buildReplaceString(exec('func privateFunc(', RegExp(r'func (\w+)\('))), 'func privatefunc(');
+      expect(rp.parseReplaceString('func \\l\$1(').buildReplaceString(exec('func PrivateFunc(', RegExp(r'func (\w+)\('))), 'func privateFunc(');
+    });
+
+    test('complete match and substring', () {
+      final re = RegExp("let\\s+(\\w+)\\s*=\\s*require\\s*\\(\\s*['\"]([\\w.\\-/]+)\\s*['\"]\\s*\\)\\s*");
+      expect(rp.parseReplaceString("import * as \$1 from '\$2';").buildReplaceString(exec("let fs = require('fs')", re)), "import * as fs from 'fs';");
+      expect(rp.parseReplaceString("import * as \$2 from '\$1';").buildReplaceString(exec("let something = require('fs')", re)), "import * as fs from 'something';");
+      expect(rp.parseReplaceString('cat\$1').buildReplaceString(exec('for ()', RegExp(r'for(.*)'))), 'cat ()');
+    });
+
+    test('undefined capture group => empty', () {
+      expect(rp.parseReplaceString('a{\$1}').buildReplaceString(exec('abcd', RegExp(r'a(z)?'))), 'a{}');
+    });
+
+    test('preserve case', () {
+      expect(rp.parseReplaceString('Def').buildReplaceString(<String>['abc'], true), 'def');
+      expect(rp.parseReplaceString('Def').buildReplaceString(<String>['ABC'], true), 'DEF');
+      expect(rp.parseReplaceString('newfoo-newbar').buildReplaceString(<String>['Foo-Bar'], true), 'Newfoo-Newbar');
+      expect(rp.parseReplaceString('newfoo_newbar').buildReplaceString(<String>['Foo_Bar'], true), 'Newfoo_Newbar');
+    });
+  });
+
+  group('snippetParser.ts (1:1)', () {
+    test('Scanner tokens', () {
+      final sp.Scanner s = sp.Scanner();
+      s.text(r'abc$1${foo}');
+      final types = <int>[];
+      while (true) {
+        final t = s.next();
+        types.add(t.type);
+        if (t.type == sp.TokenType.EOF) break;
+      }
+      expect(types.first, sp.TokenType.VariableName); // abc
+      expect(types, contains(sp.TokenType.Dollar));
+      expect(types, contains(sp.TokenType.Int));
+      expect(types, contains(sp.TokenType.CurlyOpen));
+      expect(types.last, sp.TokenType.EOF);
+    });
+
+    test('asInsertText strips placeholders/variables', () {
+      expect(sp.SnippetParser.asInsertText(r'foo${1:bar}'), 'foobar');
+      expect(sp.SnippetParser.asInsertText(r'$1 and ${2:two}'), ' and two');
+      // JS 'Foo \\\\${abc}bar' = two backslashes + literal ${abc}; result 'Foo \\bar'
+      expect(sp.SnippetParser.asInsertText(r'Foo \\${abc}bar'), r'Foo \bar');
+    });
+
+    test('parse children types', () {
+      final s = sp.SnippetParser().parse(r'far$0boo');
+      expect(s.children.length, 3);
+      expect(s.children[0], isA<sp.Text>());
+      expect(s.children[1], isA<sp.Placeholder>());
+      expect(s.children[2], isA<sp.Text>());
+      final s2 = sp.SnippetParser().parse(r'far${123}boo');
+      expect(s2.children[1], isA<sp.Placeholder>());
+      expect(s2.children[1].len(), 0);
+      expect(sp.SnippetParser().parse(r'far\${123}boo').children.length, 1);
+    });
+
+    test('toTextmateString identity', () {
+      const inputs = <String>[
+        r'foo${1:bar}',
+        r'$1 and ${2:two}',
+        r'${foo}',
+        r'${1|one,two,three|}',
+      ];
+      for (final input in inputs) {
+        final s = sp.SnippetParser().parse(input);
+        final s2 = sp.SnippetParser().parse(s.toTextmateString());
+        expect(s2.toString(), s.toString(), reason: input);
+      }
+    });
+
+    test('placeholders and offset', () {
+      final s = sp.SnippetParser().parse('te\$1xt', true);
+      expect(s.offset(s.children[0]), 0);
+      expect(s.offset(s.children[1]), 2);
+      expect(s.offset(s.children[2]), 2);
+      expect(s.placeholders.length, 2); // 1 and final 0
+      expect(s.placeholders.first.index, 1);
+      expect(s.placeholders.last.index, 0);
+      expect(s.offset(sp.Text('foo')), -1);
+    });
+
+    test('choice', () {
+      final s = sp.SnippetParser().parse(r'${1|one,two,three|}');
+      expect(s.placeholders.length, 1);
+      final ph = s.placeholders.first;
+      expect(ph.choice, isNotNull);
+      expect(ph.choice!.options.length, 3);
+      expect(ph.choice!.toString(), 'one');
+    });
+
+    test('FormatString case conversions', () {
+      expect(sp.FormatString(1, 'upcase').resolve('foo'), 'FOO');
+      expect(sp.FormatString(1, 'downcase').resolve('FOO'), 'foo');
+      expect(sp.FormatString(1, 'capitalize').resolve('bar no repeat'), 'Bar no repeat');
+      expect(sp.FormatString(1, 'pascalcase').resolve('bar-42-foo'), 'Bar42Foo');
+      expect(sp.FormatString(1, 'pascalcase').resolve('snake_AndPascalCase'), 'SnakeAndPascalCase');
+      expect(sp.FormatString(1, 'camelcase').resolve('bar-42-foo'), 'bar42Foo');
+      expect(sp.FormatString(1, 'kebabcase').resolve('ABarFoo'), 'a-bar-foo');
+      expect(sp.FormatString(1, 'kebabcase').resolve('__UPCASE__'), 'upcase');
+      expect(sp.FormatString(1, 'snakecase').resolve('bar-42-foo'), 'bar_42_foo');
+      expect(sp.FormatString(1, 'notKnown').resolve('input'), 'input');
+    });
+
+    test('FormatString if/else', () {
+      expect(sp.FormatString(1, null, 'foo', null).resolve(''), '');
+      expect(sp.FormatString(1, null, 'foo', null).resolve('bar'), 'foo');
+      expect(sp.FormatString(1, null, null, 'foo').resolve(''), 'foo');
+      expect(sp.FormatString(1, null, null, 'foo').resolve('bar'), 'bar');
+      expect(sp.FormatString(1, null, 'bar', 'foo').resolve('baz'), 'bar');
+    });
+
+    test('Unicode case conversions via transform', () {
+      final resolver = _SnippetVarResolver(<String, String>{
+        'RUSSIAN': 'одинДва',
+        'GREEK': 'έναςΔύο',
+        'JAPANESE': 'こんにちは',
+      });
+      String trans(String name, String varName) {
+        final s = sp.SnippetParser().parse(r'${' + varName + r'/(.*)/${1:/' + name + r'}/}');
+        final v = s.children[0] as sp.Variable;
+        v.resolve(resolver);
+        return v.toString();
+      }
+      expect(trans('kebabcase', 'RUSSIAN'), 'один-два');
+      expect(trans('snakecase', 'GREEK'), 'ένας_δύο');
+      expect(trans('pascalcase', 'RUSSIAN'), 'ОдинДва');
+      expect(trans('upcase', 'JAPANESE'), 'こんにちは');
+    });
+
+    test('guessNeedsClipboard / escape', () {
+      expect(sp.SnippetParser.guessNeedsClipboard(r'$CLIPBOARD'), isTrue);
+      expect(sp.SnippetParser.guessNeedsClipboard(r'${CLIPBOARD}'), isTrue);
+      expect(sp.SnippetParser.guessNeedsClipboard('plain'), isFalse);
+      expect(sp.SnippetParser.escape(r'a$b}c\d'), r'a\$b\}c\\d');
+    });
+  });
+
+}
+
+// Test helper: a snippet variable resolver.
+class _SnippetVarResolver implements sp.VariableResolver {
+  final Map<String, String> values;
+  _SnippetVarResolver(this.values);
+  @override
+  String? resolve(sp.Variable variable) => values[variable.name];
 }
 
 // Test helper: a concrete ISequence for diffAlgorithm tests.
