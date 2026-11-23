@@ -293,9 +293,55 @@ class IntlDateTimeFormat {
   IntlDateTimeFormat(Object? locales, [Object? options]);
 }
 
+class IntlCollatorOptions {
+  final bool numeric;
+  IntlCollatorOptions(this.numeric);
+}
+
 class IntlCollator {
-  IntlCollator(Object? locales, [Object? options]);
-  int compare(String a, String b) => a.compareTo(b);
+  final IntlCollatorOptions _options;
+  IntlCollator(Object? locales, [Object? options])
+      : _options = IntlCollatorOptions(options is Map && options['numeric'] == true);
+
+  /// Approximates JS `Intl.Collator.compare`: code-unit ordering with an
+  /// optional numeric sort (digit runs compared by value). Full ICU locale
+  /// collation has no Dart-stdlib equivalent; the source's own disambiguation
+  /// logic resolves the ties this leaves (foo1/foo01, case, accents).
+  int compare(String a, String b) {
+    if (!_options.numeric) {
+      return a.compareTo(b);
+    }
+    final List<Object> at = _splitNumeric(a);
+    final List<Object> bt = _splitNumeric(b);
+    final int n = at.length < bt.length ? at.length : bt.length;
+    for (int i = 0; i < n; i++) {
+      final Object x = at[i];
+      final Object y = bt[i];
+      int c;
+      if (x is int && y is int) {
+        c = x.compareTo(y);
+      } else {
+        c = x.toString().compareTo(y.toString());
+      }
+      if (c != 0) {
+        return c < 0 ? -1 : 1;
+      }
+    }
+    return at.length == bt.length ? 0 : (at.length < bt.length ? -1 : 1);
+  }
+
+  static List<Object> _splitNumeric(String s) {
+    final List<Object> parts = <Object>[];
+    final RegExp re = RegExp(r'\d+|\D+');
+    for (final RegExpMatch m in re.allMatches(s)) {
+      final String token = m.group(0)!;
+      final int? value = int.tryParse(token);
+      parts.add(value ?? token);
+    }
+    return parts;
+  }
+
+  IntlCollatorOptions resolvedOptions() => _options;
 }
 
 class IntlSegmenter {

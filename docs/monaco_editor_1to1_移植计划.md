@@ -354,4 +354,14 @@ semi_design_flutter/
 - [x] `nls.dart` 的 `_format` num 分支补 JS number 字符串语义（整数 double 去 `.0`，如 `1000/1000`→`'1'` 而非 `'1.0'`），以保证 `getDurationString` 断言与源码一致。
 - [x] 测试追加 6 case（managedSettings 1 + layout 2 + date 3，date 逐条对应 `date.test.ts`）；base 测试文件合计 **47 case 全绿**；三文件 `dart analyze` 零 error/warning。
 
-**下一批**：剩余依赖闭合 base 文件（`color`942/`json`1344/`keyCodes`838/`jsonSchema`330/`performance`149 等），再进核心环 `arrays↔cancellation↔event↔lifecycle`。
+**下一批**：剩余依赖闭合 base 文件（`color`942/`json`1344/`keyCodes`838/`jsonSchema`330 等），再进核心环 `arrays↔cancellation↔event↔lifecycle`。
+
+### base 工具链批次续七（2026-11-23，累计 49/1690 文件 tested）
+
+- [x] `base/common/performance.dart`：1:1 翻译 `performance.ts`（149 行），`_definePolyfillMarks`/`_define`/`_factory` polyfill 结构与 `mark`/`clearMarks`/`getMarks`。JS 全局 `globalThis`/`performance`/`process` → library-level 单例 + polyfill 路径；`Date.now()`→`DateTime.now()`。
+- [x] `base/common/comparers.dart`：1:1 翻译 `comparers.ts`（356 行），全部 compare 函数；tuple→Dart record，`string|null`→`String?`。**JS `a || b` 组合比较结果用 `_or`（首个非零）**，非按位或。补 `date.dart` 的 `IntlCollator.compare` numeric 排序（数字段按值）+ `resolvedOptions()`。
+- [x] **平台限制诚实记录**：`Intl.Collator` 完整 ICU locale collation 无 Dart 标准库对应，`comparers.test.ts` 中纯 locale 顺序断言（如 `Z` vs `a`）无法覆盖；测试只验证 numeric/disambiguate、unicode、路径、prefix 等控制流一致部分，并在测试注释中标注。
+- [x] 修复 `comparePaths` 中 `late final` 在循环内重复赋值 bug（源码是普通 `let` 每轮重赋值）→ 改为循环内局部声明。
+- [x] 测试追加 3 case（comparers 2 + performance 1）；base 测试文件合计 **50 case 全绿**；三文件 `dart analyze` 零 error/warning。
+
+**下一批**：剩余依赖闭合 base 文件（`color`942/`json`1344/`keyCodes`838/`jsonSchema`330 等），再进核心环。

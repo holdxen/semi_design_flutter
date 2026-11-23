@@ -27,6 +27,8 @@ import 'package:semi_design_flutter/src/monaco/base/common/objects.dart' as objs
 import 'package:semi_design_flutter/src/monaco/base/common/managedSettings.dart' as ms;
 import 'package:semi_design_flutter/src/monaco/base/common/layout.dart' as layout;
 import 'package:semi_design_flutter/src/monaco/base/common/date.dart' as dt;
+import 'package:semi_design_flutter/src/monaco/base/common/comparers.dart' as cmp;
+import 'package:semi_design_flutter/src/monaco/base/common/performance.dart' as perf;
 import 'package:semi_design_flutter/src/monaco/base/common/uri.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/path.dart' as path;
 import 'package:semi_design_flutter/src/monaco/base/common/platform.dart' as pf;
@@ -684,6 +686,54 @@ void main() {
       expect(dt.getDurationString(1000, true), '1 seconds');
       expect(dt.safeIntl.Collator('en_IT').value.compare('a', 'b'), -1);
       expect(dt.safeIntl.Locale('en_IT').value.baseName, pf.LANGUAGE_DEFAULT);
+    });
+  });
+
+  group('comparers.ts', () {
+    // Note: JS Intl.Collator full ICU locale collation has no Dart-stdlib
+    // equivalent. Assertions here mirror the source's numeric/disambiguation,
+    // unicode, path and prefix logic; pure ICU-locale-order cases are omitted.
+    test('compareFileNames numeric / null / dotfiles', () {
+      expect(cmp.compareFileNames(null, null), 0);
+      expect(cmp.compareFileNames(null, 'abc') < 0, isTrue);
+      expect(cmp.compareFileNames('', ''), 0);
+      expect(cmp.compareFileNames('abc', 'abc'), 0);
+      expect(cmp.compareFileNames('1', '1'), 0);
+      expect(cmp.compareFileNames('abc1.txt', 'abc2.txt') < 0, isTrue);
+      expect(cmp.compareFileNames('abc2.txt', 'abc10.txt') < 0, isTrue);
+      expect(cmp.compareFileNames('abc02.txt', 'abc010.txt') < 0, isTrue);
+      expect(cmp.compareFileNames('.abc', '.abc'), 0);
+      expect(cmp.compareFileNames(null, '.abc') < 0, isTrue);
+      final arr = <String>['abc2.txt', 'abc10.txt', 'abc1.txt']..sort(cmp.compareFileNames);
+      expect(arr, <String>['abc1.txt', 'abc2.txt', 'abc10.txt']);
+    });
+
+    test('compareFileNamesUnicode / compareByPrefix / comparePaths', () {
+      expect(cmp.compareFileNamesUnicode('a', 'a'), 0);
+      expect(cmp.compareFileNamesUnicode('b', 'a') > 0, isTrue);
+      expect(cmp.compareByPrefix('apple', 'application', 'app'), -1);
+      expect(cmp.compareByPrefix('apple', 'banana', 'app') < 0, isTrue);
+      expect(cmp.compareByPrefix('app', 'apple', 'app') < 0, isTrue);
+      expect(cmp.comparePaths('a/b/c', 'a/b/c'), 0);
+      expect(cmp.comparePaths('a/b', 'a/b/c') < 0, isTrue);
+      expect(cmp.compareFileExtensionsUnicode('a.png', 'a.txt') < 0, isTrue);
+    });
+  });
+
+  group('performance.ts', () {
+    test('polyfill mark / getMarks / clearMarks', () {
+      perf.clearMarks();
+      perf.mark('code/test', <String, Object>{'startTime': 100});
+      perf.mark('code/other');
+      final marks = perf.getMarks();
+      expect(marks.length, 2);
+      expect(marks[0].name, 'code/test');
+      expect(marks[0].startTime, 100);
+      perf.clearMarks('code/test');
+      expect(perf.getMarks().length, 1);
+      expect(perf.getMarks()[0].name, 'code/other');
+      perf.clearMarks();
+      expect(perf.getMarks(), isEmpty);
     });
   });
 }

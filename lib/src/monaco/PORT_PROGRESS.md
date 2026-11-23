@@ -1009,7 +1009,7 @@
 | 998 | base | `base/common/codiconsUtil.ts` | `lib/src/monaco/base/common/codiconsUtil.dart` | pending |
 | 999 | base | `base/common/collections.ts` | `lib/src/monaco/base/common/collections.dart` | tested |
 | 1000 | base | `base/common/color.ts` | `lib/src/monaco/base/common/color.dart` | pending |
-| 1001 | base | `base/common/comparers.ts` | `lib/src/monaco/base/common/comparers.dart` | pending |
+| 1001 | base | `base/common/comparers.ts` | `lib/src/monaco/base/common/comparers.dart` | tested |
 | 1002 | base | `base/common/dataTransfer.ts` | `lib/src/monaco/base/common/dataTransfer.dart` | pending |
 | 1003 | base | `base/common/date.ts` | `lib/src/monaco/base/common/date.dart` | tested |
 | 1004 | base | `base/common/decorators/cancelPreviousCalls.ts` | `lib/src/monaco/base/common/decorators/cancelPreviousCalls.dart` | pending |
@@ -1099,7 +1099,7 @@
 | 1088 | base | `base/common/observableInternal/utils/valueWithChangeEvent.ts` | `lib/src/monaco/base/common/observableInternal/utils/valueWithChangeEvent.dart` | pending |
 | 1089 | base | `base/common/paging.ts` | `lib/src/monaco/base/common/paging.dart` | pending |
 | 1090 | base | `base/common/path.ts` | `lib/src/monaco/base/common/path.dart` | tested |
-| 1091 | base | `base/common/performance.ts` | `lib/src/monaco/base/common/performance.dart` | pending |
+| 1091 | base | `base/common/performance.ts` | `lib/src/monaco/base/common/performance.dart` | tested |
 | 1092 | base | `base/common/platform.ts` | `lib/src/monaco/base/common/platform.dart` | tested |
 | 1093 | base | `base/common/policy.ts` | `lib/src/monaco/base/common/policy.dart` | pending |
 | 1094 | base | `base/common/process.ts` | `lib/src/monaco/base/common/process.dart` | tested |
