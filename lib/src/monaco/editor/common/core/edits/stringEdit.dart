@@ -52,11 +52,11 @@ abstract class BaseStringEdit<T extends BaseStringReplacement<T>, TEdit extends 
     final List<String> resultText = <String>[];
     int pos = 0;
     for (final T edit in this.replacements) {
-      resultText.add(base.substring(pos, edit.replaceRange.start));
+      resultText.add(_jsSubstring(base, pos, edit.replaceRange.start));
       resultText.add(edit.newText);
       pos = edit.replaceRange.endExclusive;
     }
-    resultText.add(base.substring(pos));
+    resultText.add(_jsSubstring(base, pos));
     return resultText.join();
   }
 
@@ -553,4 +553,22 @@ String _jsonString(String s) {
   }
   out.write('"');
   return out.toString();
+}
+
+/// JS `String.prototype.substring` semantics: indices are clamped to [0, len],
+/// negative values become 0, and start > end is swapped. Used by `apply` where
+/// composed edits may carry ranges beyond the base length (JS tolerates this,
+/// Dart's `String.substring` throws). Keeps the port 1:1 with TypeScript.
+String _jsSubstring(String s, int start, [int? end]) {
+  final int len = s.length;
+  int a = start < 0 ? 0 : (start > len ? len : start);
+  int b = end == null
+      ? len
+      : (end < 0 ? 0 : (end > len ? len : end));
+  if (a > b) {
+    final int tmp = a;
+    a = b;
+    b = tmp;
+  }
+  return s.substring(a, b);
 }

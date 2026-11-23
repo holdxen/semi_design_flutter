@@ -37,8 +37,10 @@ class Disposable implements IDisposable {
   }
 
   /// 1:1: `protected _register<T extends IDisposable>(t: T): T`
-  // ignore: unused_element
-  T _register<T extends IDisposable>(T t) {
+  /// Dart has no `protected`; exposed library-wide so subclasses in sibling
+  /// files (LspCapabilitiesRegistry, LspCommands, TextDocumentSynchronizer, ...)
+  /// can call it, mirroring TS protected access from derived classes.
+  T register<T extends IDisposable>(T t) {
     if (identical(t, this)) {
       throw StateError('Cannot register a disposable on itself!');
     }

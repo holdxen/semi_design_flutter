@@ -47,7 +47,10 @@ class AnnotatedString<T> implements IAnnotatedString<T> {
       final int endIndexExclusive =
           _getEndIndexOfIntersectingAnnotation(annotation.range.endExclusive);
       if (annotation.annotation != null) {
-        _annotations.setRange(
+        // 1:1: JS `Array.splice(start, deleteCount, item)` inserts/replaces with
+        // a variable-length segment; Dart `setRange` requires equal lengths and
+        // throws "Too few elements", so `replaceRange` is the correct mapping.
+        _annotations.replaceRange(
             startIndex,
             endIndexExclusive,
             <IAnnotation<T>>[

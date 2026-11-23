@@ -6,7 +6,7 @@
 // 1:1 翻译自 vscode/src/vs/editor/contrib/snippet/browser/snippetParser.ts
 // 关键 JS 语义适配：
 //  - const enum TokenType -> class static const int
-//  - JS RegExp（.source/.global/.ignoreCase + replace 回调）-> _JsRegExp carrier
+//  - JS RegExp（.source/.global/.ignoreCase + replace 回调）-> JsRegExp carrier
 //  - if (value = _accept(...)) 赋值表达式 -> 局部提升
 //  - toLocaleUpperCase/LowerCase -> toUpperCase/toLowerCase（Dart 无 locale 参数，语义对齐）
 
@@ -325,18 +325,30 @@ class Choice extends Marker {
 
 /// 1:1: JS RegExp 承载：保存 source/flags 并提供 `replace(value, replacer)` 语义。
 /// 源码 `regexp: RegExp = new RegExp('')` 且可读写 `.source/.global/.ignoreCase`。
-class _JsRegExp {
+class JsRegExp {
   String _source;
   bool global;
   bool ignoreCase;
   RegExp? _compiled;
 
-  _JsRegExp(this._source, {this.global = false, this.ignoreCase = false});
+  JsRegExp(this._source, {this.global = false, this.ignoreCase = false});
 
-  static _JsRegExp empty() => _JsRegExp('');
+  static JsRegExp empty() => JsRegExp('');
 
   /// 1:1: `new RegExp(regexValue, regexOptions)`；无效正则返回 null（源码 catch）
-  static _JsRegExp? compile(String source, String options) {
+  static JsRegExp? compile(String source, String options) {
+    // 1:1: JS RegExp flag validation — only [dgimsuvy] are legal, and each at
+    // most once. `new RegExp('x','GMI')` / `'funky'` throw, which the source
+    // catches and treats as "invalid regexp" (whole placeholder becomes text).
+    // Dart's RegExp ignores unknown flags, so validate explicitly here.
+    const String legalFlags = 'dgimsuvy';
+    final Set<String> seen = <String>{};
+    for (int k = 0; k < options.length; k++) {
+      final String f = options[k];
+      if (!legalFlags.contains(f) || !seen.add(f)) {
+        return null;
+      }
+    }
     bool g = false, i = false;
     for (int k = 0; k < options.length; k++) {
       final String f = options[k];
@@ -346,7 +358,7 @@ class _JsRegExp {
     try {
       // 1:1: JS flags 顺序无关；Dart caseSensitive 与 ignoreCase 相反
       final RegExp re = RegExp(source, caseSensitive: !i);
-      return _JsRegExp(source, global: g, ignoreCase: i).._compiled = re;
+      return JsRegExp(source, global: g, ignoreCase: i).._compiled = re;
     } catch (_) {
       return null;
     }
@@ -392,15 +404,15 @@ class _JsRegExp {
   }
 
   /// 1:1: clone: `new RegExp(this.regexp.source, flags)`
-  _JsRegExp cloneRegExp() {
-    return _JsRegExp(_source, global: global, ignoreCase: ignoreCase)
+  JsRegExp cloneRegExp() {
+    return JsRegExp(_source, global: global, ignoreCase: ignoreCase)
       .._compiled = RegExp(_source, caseSensitive: !ignoreCase);
   }
 }
 
 /// 1:1: `export class Transform`
 class Transform extends Marker {
-  _JsRegExp regexp = _JsRegExp.empty();
+  JsRegExp regexp = JsRegExp.empty();
 
   /// 1:1: `resolve(value)`
   String resolve(String value) {
@@ -897,7 +909,7 @@ class SnippetParser {
     }
     final String value = _scanner.value
         .substring(start.pos, _token.pos)
-        .replaceAllMapped(RegExp(r'\\(\$|}|\\\\)'), (m) => m.group(1)!);
+        .replaceAllMapped(RegExp(r'\\(\$|}|\\)'), (m) => m.group(1)!);
     _token = _scanner.next();
     return value;
   }
@@ -1156,7 +1168,7 @@ class SnippetParser {
       return false;
     }
 
-    final _JsRegExp? compiled = _JsRegExp.compile(regexValue, regexOptions);
+    final JsRegExp? compiled = JsRegExp.compile(regexValue, regexOptions);
     if (compiled == null) {
       // invalid regexp
       return false;
