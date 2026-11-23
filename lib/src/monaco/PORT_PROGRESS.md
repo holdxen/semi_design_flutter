@@ -1008,7 +1008,7 @@
 | 997 | base | `base/common/codiconsLibrary.ts` | `lib/src/monaco/base/common/codiconsLibrary.dart` | pending |
 | 998 | base | `base/common/codiconsUtil.ts` | `lib/src/monaco/base/common/codiconsUtil.dart` | pending |
 | 999 | base | `base/common/collections.ts` | `lib/src/monaco/base/common/collections.dart` | tested |
-| 1000 | base | `base/common/color.ts` | `lib/src/monaco/base/common/color.dart` | pending |
+| 1000 | base | `base/common/color.ts` | `lib/src/monaco/base/common/color.dart` | tested |
 | 1001 | base | `base/common/comparers.ts` | `lib/src/monaco/base/common/comparers.dart` | tested |
 | 1002 | base | `base/common/dataTransfer.ts` | `lib/src/monaco/base/common/dataTransfer.dart` | pending |
 | 1003 | base | `base/common/date.ts` | `lib/src/monaco/base/common/date.dart` | tested |
@@ -1036,11 +1036,11 @@
 | 1025 | base | `base/common/idGenerator.ts` | `lib/src/monaco/base/common/idGenerator.dart` | tested |
 | 1026 | base | `base/common/ime.ts` | `lib/src/monaco/base/common/ime.dart` | pending |
 | 1027 | base | `base/common/iterator.ts` | `lib/src/monaco/base/common/iterator.dart` | tested |
-| 1028 | base | `base/common/json.ts` | `lib/src/monaco/base/common/json.dart` | pending |
+| 1028 | base | `base/common/json.ts` | `lib/src/monaco/base/common/json.dart` | tested |
 | 1029 | base | `base/common/jsonEdit.ts` | `lib/src/monaco/base/common/jsonEdit.dart` | pending |
 | 1030 | base | `base/common/jsonFormatter.ts` | `lib/src/monaco/base/common/jsonFormatter.dart` | pending |
-| 1031 | base | `base/common/jsonSchema.ts` | `lib/src/monaco/base/common/jsonSchema.dart` | pending |
-| 1032 | base | `base/common/keyCodes.ts` | `lib/src/monaco/base/common/keyCodes.dart` | pending |
+| 1031 | base | `base/common/jsonSchema.ts` | `lib/src/monaco/base/common/jsonSchema.dart` | tested |
+| 1032 | base | `base/common/keyCodes.ts` | `lib/src/monaco/base/common/keyCodes.dart` | tested |
 | 1033 | base | `base/common/keybindingLabels.ts` | `lib/src/monaco/base/common/keybindingLabels.dart` | pending |
 | 1034 | base | `base/common/keybindings.ts` | `lib/src/monaco/base/common/keybindings.dart` | pending |
 | 1035 | base | `base/common/labels.ts` | `lib/src/monaco/base/common/labels.dart` | pending |
@@ -1057,7 +1057,7 @@
 | 1046 | base | `base/common/naturalLanguage/korean.ts` | `lib/src/monaco/base/common/naturalLanguage/korean.dart` | pending |
 | 1047 | base | `base/common/navigator.ts` | `lib/src/monaco/base/common/navigator.dart` | tested |
 | 1048 | base | `base/common/network.ts` | `lib/src/monaco/base/common/network.dart` | pending |
-| 1049 | base | `base/common/normalization.ts` | `lib/src/monaco/base/common/normalization.dart` | pending |
+| 1049 | base | `base/common/normalization.ts` | `lib/src/monaco/base/common/normalization.dart` | tested |
 | 1050 | base | `base/common/numbers.ts` | `lib/src/monaco/base/common/numbers.dart` | tested |
 | 1051 | base | `base/common/objects.ts` | `lib/src/monaco/base/common/objects.dart` | tested |
 | 1052 | base | `base/common/observable.ts` | `lib/src/monaco/base/common/observable.dart` | pending |

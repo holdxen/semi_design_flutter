@@ -29,6 +29,11 @@ import 'package:semi_design_flutter/src/monaco/base/common/layout.dart' as layou
 import 'package:semi_design_flutter/src/monaco/base/common/date.dart' as dt;
 import 'package:semi_design_flutter/src/monaco/base/common/comparers.dart' as cmp;
 import 'package:semi_design_flutter/src/monaco/base/common/performance.dart' as perf;
+import 'package:semi_design_flutter/src/monaco/base/common/normalization.dart' as norm;
+import 'package:semi_design_flutter/src/monaco/base/common/jsonSchema.dart' as jsonschema;
+import 'package:semi_design_flutter/src/monaco/base/common/keyCodes.dart' as kc;
+import 'package:semi_design_flutter/src/monaco/base/common/color.dart' as clr;
+import 'package:semi_design_flutter/src/monaco/base/common/json.dart' as js;
 import 'package:semi_design_flutter/src/monaco/base/common/uri.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/path.dart' as path;
 import 'package:semi_design_flutter/src/monaco/base/common/platform.dart' as pf;
@@ -736,4 +741,289 @@ void main() {
       expect(perf.getMarks(), isEmpty);
     });
   });
+
+  group('normalization.ts', () {
+    test('tryNormalizeToBase — precomposed accents fold to base', () {
+      for (final s in ['joào', 'joáo', 'joâo', 'joäo', 'joão', 'joåo', 'joāo']) {
+        expect(norm.tryNormalizeToBase(s), 'joao');
+      }
+      for (final s in ['fôo', 'föo', 'fòo', 'fóo', 'fōo', 'fõo']) {
+        expect(norm.tryNormalizeToBase(s), 'foo');
+      }
+      for (final s in ['andrè', 'andré', 'andrê', 'andrë', 'andrē', 'andrė', 'andrę']) {
+        expect(norm.tryNormalizeToBase(s), 'andre');
+      }
+      for (final s in ['hvîc', 'hvïc', 'hvíc', 'hvīc', 'hvįc', 'hvìc']) {
+        expect(norm.tryNormalizeToBase(s), 'hvic');
+      }
+      for (final s in ['ûdo', 'üdo', 'ùdo', 'údo', 'ūdo']) {
+        expect(norm.tryNormalizeToBase(s), 'udo');
+      }
+      expect(norm.tryNormalizeToBase('heÿ'), 'hey');
+      expect(norm.tryNormalizeToBase('gruś'), 'grus');
+      expect(norm.tryNormalizeToBase('gruš'), 'grus');
+      expect(norm.tryNormalizeToBase('çool'), 'cool');
+      expect(norm.tryNormalizeToBase('ćool'), 'cool');
+      expect(norm.tryNormalizeToBase('čool'), 'cool');
+      expect(norm.tryNormalizeToBase('ñice'), 'nice');
+      expect(norm.tryNormalizeToBase('ńice'), 'nice');
+    });
+    test('tryNormalizeToBase — cases, precomposed and combining marks', () {
+      for (final s in ['CAFÉ', 'Café', 'café', 'CaFé']) {
+        expect(norm.tryNormalizeToBase(s), 'cafe');
+      }
+      for (final s in ['JOÃO', 'João', 'JoÃo']) {
+        expect(norm.tryNormalizeToBase(s), 'joao');
+      }
+      expect(norm.tryNormalizeToBase('AnDrÉ'), 'andre');
+      expect(norm.tryNormalizeToBase('\u00E9'), 'e');
+      expect(norm.tryNormalizeToBase('\u00E0'), 'a');
+      expect(norm.tryNormalizeToBase('caf\u00E9'), 'cafe');
+      // base + combining accent: NFD keeps them, length unchanged after strip => lower only
+      expect(norm.tryNormalizeToBase('\u0065\u0301'), '\u0065\u0301');
+      expect(norm.tryNormalizeToBase('Ã\u0061\u0300'), 'ã\u0061\u0300');
+      expect(norm.tryNormalizeToBase('CaF\u0065\u0301'), 'caf\u0065\u0301');
+    });
+    test('normalizeNFC / normalizeNFD', () {
+      expect(norm.normalizeNFD('\u00E9'), 'e\u0301');
+      expect(norm.normalizeNFC('e\u0301'), '\u00E9');
+      expect(norm.normalizeNFD('abc'), 'abc');
+      expect(norm.normalizeNFC(''), '');
+    });
+  });
+
+  group('jsonSchema.ts', () {
+    test('getCompressedContent — shared subtree extracted to \$defs', () {
+      jsonschema.IJSONSchema js(String src) => jsonDecode(src) as Map<String, Object?>;
+      const s1 = '{"type":"object","properties":{"a":{"type":"object","description":"a","properties":{"b":{"type":"object","properties":{"c":{"type":"object","properties":{"d":{"type":"string"}}}}}}},"e":{"type":"object","description":"e","properties":{"b":{"type":"object","properties":{"c":{"type":"object","properties":{"d":{"type":"string"}}}}}}}}}';
+      const x1 = '{"type":"object","properties":{"a":{"type":"object","description":"a","properties":{"b":{"\$ref":"#/\$defs/_0"}}},"e":{"type":"object","description":"e","properties":{"b":{"\$ref":"#/\$defs/_0"}}}},"\$defs":{"_0":{"type":"object","properties":{"c":{"type":"object","properties":{"d":{"type":"string"}}}}}}}';
+      expect(jsonschema.getCompressedContent(js(s1)), jsonEncode(jsonDecode(x1)));
+    });
+    test('getCompressedContent — identical nodes replaced by \$ref', () {
+      jsonschema.IJSONSchema js(String src) => jsonDecode(src) as Map<String, Object?>;
+      const s2 = '{"type":"object","properties":{"a":{"type":"object","properties":{"b":{"type":"object","properties":{"c":{"type":"object","properties":{"d":{"type":"string"}}}}}}},"e":{"type":"object","properties":{"b":{"type":"object","properties":{"c":{"type":"object","properties":{"d":{"type":"string"}}}}}}}}}';
+      const x2 = '{"type":"object","properties":{"a":{"\$ref":"#/\$defs/_0"},"e":{"\$ref":"#/\$defs/_0"}},"\$defs":{"_0":{"type":"object","properties":{"b":{"type":"object","properties":{"c":{"type":"object","properties":{"d":{"type":"string"}}}}}}}}}';
+      expect(jsonschema.getCompressedContent(js(s2)), jsonEncode(jsonDecode(x2)));
+    });
+  });
+
+  group('keyCodes.ts', () {
+    test('mapping for Minus (mirrors keyCodes.test.ts)', () {
+      expect(kc.EVENT_KEY_CODE_MAP[189], kc.KeyCode.Minus);
+      expect(kc.NATIVE_WINDOWS_KEY_CODE_TO_KEY_CODE['VK_OEM_MINUS'], kc.KeyCode.Minus);
+      expect(kc.ScanCodeUtils.lowerCaseToEnum('minus'), kc.ScanCode.Minus);
+      expect(kc.ScanCodeUtils.toEnum('Minus'), kc.ScanCode.Minus);
+      expect(kc.ScanCodeUtils.toStringValue(kc.ScanCode.Minus), 'Minus');
+      expect(kc.IMMUTABLE_CODE_TO_KEY_CODE[kc.ScanCode.Minus], kc.KeyCode.DependsOnKbLayout);
+      expect(kc.IMMUTABLE_KEY_CODE_TO_CODE[kc.KeyCode.Minus], kc.KeyCode.DependsOnKbLayout);
+      expect(kc.KeyCodeUtils.toStringValue(kc.KeyCode.Minus), '-');
+      expect(kc.KeyCodeUtils.fromString('-'), kc.KeyCode.Minus);
+      expect(kc.KeyCodeUtils.toUserSettingsUS(kc.KeyCode.Minus), '-');
+      expect(kc.KeyCodeUtils.toUserSettingsGeneral(kc.KeyCode.Minus), 'OEM_MINUS');
+      expect(kc.KeyCodeUtils.fromUserSettings('-'), kc.KeyCode.Minus);
+      expect(kc.KeyCodeUtils.fromUserSettings('OEM_MINUS'), kc.KeyCode.Minus);
+      expect(kc.KeyCodeUtils.fromUserSettings('oem_minus'), kc.KeyCode.Minus);
+    });
+    test('mapping for Space (mirrors keyCodes.test.ts)', () {
+      expect(kc.EVENT_KEY_CODE_MAP[32], kc.KeyCode.Space);
+      expect(kc.NATIVE_WINDOWS_KEY_CODE_TO_KEY_CODE['VK_SPACE'], kc.KeyCode.Space);
+      expect(kc.ScanCodeUtils.lowerCaseToEnum('space'), kc.ScanCode.Space);
+      expect(kc.ScanCodeUtils.toEnum('Space'), kc.ScanCode.Space);
+      expect(kc.ScanCodeUtils.toStringValue(kc.ScanCode.Space), 'Space');
+      expect(kc.IMMUTABLE_CODE_TO_KEY_CODE[kc.ScanCode.Space], kc.KeyCode.Space);
+      expect(kc.IMMUTABLE_KEY_CODE_TO_CODE[kc.KeyCode.Space], kc.ScanCode.Space);
+      expect(kc.KeyCodeUtils.toStringValue(kc.KeyCode.Space), 'Space');
+      expect(kc.KeyCodeUtils.fromString('Space'), kc.KeyCode.Space);
+      expect(kc.KeyCodeUtils.toUserSettingsUS(kc.KeyCode.Space), 'Space');
+      expect(kc.KeyCodeUtils.toUserSettingsGeneral(kc.KeyCode.Space), 'Space');
+      expect(kc.KeyCodeUtils.fromUserSettings('Space'), kc.KeyCode.Space);
+      expect(kc.KeyCodeUtils.fromUserSettings('space'), kc.KeyCode.Space);
+    });
+    test('enum values, modifiers, chord and accelerator', () {
+      expect(kc.KeyCode.Unknown, 0);
+      expect(kc.KeyCode.Digit0, 21);
+      expect(kc.KeyCode.KeyA, 31);
+      expect(kc.KeyCode.MAX_VALUE, 132);
+      expect(kc.ScanCode.KeyA, 10);
+      expect(kc.ScanCode.MAX_VALUE, 193);
+      expect(kc.isModifierKey(kc.KeyCode.Ctrl), isTrue);
+      expect(kc.isModifierKey(kc.KeyCode.KeyA), isFalse);
+      expect(kc.KeyMod.CtrlCmd, 2048);
+      expect(kc.KeyMod.Shift, 1024);
+      final chord = kc.KeyChord(kc.KeyCode.Enter, kc.KeyMod.Alt);
+      expect(chord & 0xFFFF, kc.KeyCode.Enter);
+      expect((chord >> 16) & 0xFFFF, kc.KeyMod.Alt);
+      expect(kc.KeyCodeUtils.toElectronAccelerator(kc.KeyCode.UpArrow), 'Up');
+      expect(kc.KeyCodeUtils.toElectronAccelerator(kc.KeyCode.Numpad0), isNull);
+    });
+  });
+  group('color.ts', () {
+    test('getRelativeLuminance / blend / contrast (mirrors color.test.ts)', () {
+      expect(clr.Color(clr.RGBA(0, 0, 0)).getRelativeLuminance(), 0);
+      expect(clr.Color(clr.RGBA(255, 255, 255)).getRelativeLuminance(), 1);
+      expect(clr.Color(clr.RGBA(255, 0, 0)).getRelativeLuminance(), 0.2126);
+      expect(clr.Color(clr.RGBA(0, 255, 0)).getRelativeLuminance(), 0.7152);
+      expect(clr.Color(clr.RGBA(0, 0, 255)).getRelativeLuminance(), 0.0722);
+      expect(clr.Color(clr.RGBA(255, 255, 0)).getRelativeLuminance(), 0.9278);
+      expect(clr.Color(clr.RGBA(128, 128, 128)).getRelativeLuminance(), 0.2159);
+      void expectRgba(Object c, int r, int g, int b, [double a = 1.0]) {
+        final v = c is clr.Color ? c.rgba : c as clr.RGBA;
+        expect(v.r, r); expect(v.g, g); expect(v.b, b); expect(v.a, a);
+      }
+      expectRgba(clr.Color(clr.RGBA(0, 0, 0, 0)).blend(clr.Color(clr.RGBA(243, 34, 43))), 243, 34, 43);
+      expectRgba(clr.Color(clr.RGBA(255, 255, 255)).blend(clr.Color(clr.RGBA(243, 34, 43))), 255, 255, 255);
+      expectRgba(clr.Color(clr.RGBA(122, 122, 122, 0.7)).blend(clr.Color(clr.RGBA(243, 34, 43))), 158, 95, 98);
+      expectRgba(clr.Color(clr.RGBA(0, 0, 0, 0.58)).blend(clr.Color(clr.RGBA(255, 255, 255, 0.33))), 49, 49, 49, 0.719);
+      expect(clr.Color(clr.RGBA(0, 0, 0)).getContrastRatio(clr.Color(clr.RGBA(255, 255, 255))) > 20, isTrue);
+    });
+    test('lighter / darker colors (mirrors color.test.ts)', () {
+      final c1 = clr.Color(clr.HSLA(60, 1, 0.5, 1)), c2 = clr.Color(clr.HSLA(0, 0, 0.753, 1));
+      expect(c1.isLighterThan(c2), isTrue);
+      void expectHsla(clr.Color c, int h, double s, double l, double a) {
+        final x = c.hsla;
+        expect(x.h, h); expect(x.s, s); expect(x.l, l); expect(x.a, a);
+      }
+      expectHsla(clr.Color.getLighterColor(c2, c1), 0, 0, 0.916, 1);
+      expectHsla(clr.Color.getLighterColor(c2, c1, 0.3), 0, 0, 0.851, 1);
+      expectHsla(clr.Color.getLighterColor(c2, c1, 1), 0, 0, 1, 1);
+      expectHsla(clr.Color.getDarkerColor(c1, c2), 60, 1, 0.392, 1);
+      expectHsla(clr.Color.getDarkerColor(c1, c2, 0.7), 60, 1, 0.349, 1);
+      expectHsla(clr.Color.getDarkerColor(clr.Color.fromHex('#770811'), clr.Color.fromHex('#000c18'), 0.4), 355, 0.874, 0.157, 1);
+    });
+    test('HSLA / HSVA conversions (mirrors color.test.ts)', () {
+      void expectRgba(Object c, int r, int g, int b) {
+        final v = c is clr.Color ? c.rgba : c as clr.RGBA;
+        expect(v.r, r); expect(v.g, g); expect(v.b, b);
+      }
+      expectRgba(clr.HSLA.toRGBA(clr.HSLA(0, 1, 0.5, 1)), 255, 0, 0);
+      expectRgba(clr.HSLA.toRGBA(clr.HSLA(120, 1, 0.5, 1)), 0, 255, 0);
+      expectRgba(clr.HSLA.toRGBA(clr.HSLA(240, 1, 0.5, 1)), 0, 0, 255);
+      expect(clr.Color(clr.HSLA.fromRGBA(clr.RGBA(255, 0, 0))).hsla.h, 0);
+      expect(clr.Color(clr.HSLA.fromRGBA(clr.RGBA(0, 255, 0))).hsla.h, 120);
+      expectRgba(clr.HSVA.toRGBA(clr.HSVA(0, 1, 1, 1)), 255, 0, 0);
+      expectRgba(clr.HSVA.toRGBA(clr.HSVA(120, 1, 1, 1)), 0, 255, 0);
+      expectRgba(clr.HSVA.toRGBA(clr.HSVA(240, 1, 1, 1)), 0, 0, 255);
+      expect(clr.HSVA.fromRGBA(clr.HSLA.toRGBA(clr.HSLA(120, 0, 0.5, 1))).h, 0);
+    });
+    test('parseHex / parse / format / toNumber32Bit (mirrors color.test.ts)', () {
+      void expectRgba(clr.Color c, int r, int g, int b, [double a = 1.0]) {
+        expect(c.rgba.r, r); expect(c.rgba.g, g); expect(c.rgba.b, b); expect(c.rgba.a, a);
+      }
+      expectRgba(clr.ColorFormatCSS.parseHex('#abc')!, 170, 187, 204);
+      expectRgba(clr.ColorFormatCSS.parseHex('#abcd')!, 170, 187, 204, 0.867);
+      expectRgba(clr.ColorFormatCSS.parseHex('#aabbcc')!, 170, 187, 204);
+      expectRgba(clr.ColorFormatCSS.parseHex('#aabbccdd')!, 170, 187, 204, 0.867);
+      expect(clr.ColorFormatCSS.parseHex(''), isNull);
+      expect(clr.ColorFormatCSS.parseHex('abc'), isNull);
+      expect(clr.ColorFormatCSS.parse('transparent'), clr.Color.transparentColor);
+      expectRgba(clr.ColorFormatCSS.parse('red')!, 255, 0, 0);
+      expectRgba(clr.ColorFormatCSS.parse('#f00')!, 255, 0, 0);
+      expectRgba(clr.ColorFormatCSS.parse('rgb(1, 2, 3)')!, 1, 2, 3);
+      expectRgba(clr.ColorFormatCSS.parse('rgba(1, 2, 3, 0.5)')!, 1, 2, 3, 0.5);
+      expect(clr.ColorFormatCSS.parse('bogus'), isNull);
+      expect(clr.Color.fromHex('#00000000').toString(), 'rgba(0, 0, 0, 0)');
+      expect(clr.Color.fromHex('#00000080').toString(), 'rgba(0, 0, 0, 0.5)');
+      expect(clr.Color.fromHex('#000000FF').toString(), '#000000');
+      expect(clr.ColorFormatCSS.formatRGB(clr.Color(clr.RGBA(1, 2, 3))), 'rgb(1, 2, 3)');
+      expect(clr.ColorFormatCSS.formatHSL(clr.Color(clr.HSLA(120, 1, 0.5, 1))), 'hsl(120, 100%, 50%)');
+      expect(clr.ColorFormatCSS.formatHexA(clr.Color(clr.RGBA(0, 0, 0, 0.5))), '#00000080');
+      expect(clr.Color.fromHex('#00000000').toNumber32Bit(), 0);
+      expect(clr.Color.fromHex('#000000FF').toNumber32Bit(), 255);
+      expect(clr.Color.fromHex('#01020300').toNumber32Bit(), 0x01020300);
+    });
+  });
+
+  group('json.ts', () {
+    void expectKinds(String text, List<int> expected) {
+      final scanner = js.createScanner(text);
+      final got = <int>[];
+      int k;
+      while ((k = scanner.scan()) != js.SyntaxKind.eof) got.add(k);
+      expect(got, expected);
+    }
+    test('scanner tokens / comments / strings / numbers (mirrors json.test.ts)', () {
+      expectKinds('{', [js.SyntaxKind.openBraceToken]);
+      expectKinds('}', [js.SyntaxKind.closeBraceToken]);
+      expectKinds('[', [js.SyntaxKind.openBracketToken]);
+      expectKinds(',', [js.SyntaxKind.commaToken]);
+      expectKinds('// comment', [js.SyntaxKind.lineCommentTrivia]);
+      expectKinds('// comment\n', [js.SyntaxKind.lineCommentTrivia, js.SyntaxKind.lineBreakTrivia]);
+      expectKinds('/* comment */', [js.SyntaxKind.blockCommentTrivia]);
+      expectKinds('/ ttt', [js.SyntaxKind.unknown, js.SyntaxKind.trivia, js.SyntaxKind.unknown]);
+      expectKinds('"test"', [js.SyntaxKind.stringLiteral]);
+      expectKinds('"\\n"', [js.SyntaxKind.stringLiteral]);
+      expectKinds('"test', [js.SyntaxKind.stringLiteral]);
+      expectKinds('"test\n"', [js.SyntaxKind.stringLiteral, js.SyntaxKind.lineBreakTrivia, js.SyntaxKind.stringLiteral]);
+      expectKinds('0', [js.SyntaxKind.numericLiteral]);
+      expectKinds('0.1', [js.SyntaxKind.numericLiteral]);
+      expectKinds('-0.1', [js.SyntaxKind.numericLiteral]);
+      expectKinds('123456789', [js.SyntaxKind.numericLiteral]);
+      expectKinds('true', [js.SyntaxKind.trueKeyword]);
+      expectKinds('false', [js.SyntaxKind.falseKeyword]);
+      expectKinds('null', [js.SyntaxKind.nullKeyword]);
+      expectKinds(' { ', [js.SyntaxKind.trivia, js.SyntaxKind.openBraceToken, js.SyntaxKind.trivia]);
+      final s2 = js.createScanner(' { ', true);
+      expect(s2.scan(), js.SyntaxKind.openBraceToken);
+    });
+    test('parse literals / objects / arrays / errors (mirrors json.test.ts)', () {
+      void valid(String input, Object? expected) {
+        final errors = <js.ParseError>[];
+        final actual = js.parse(input, errors);
+        expect(errors, isEmpty);
+        expect(actual.toString(), expected.toString());
+      }
+      valid('true', true);
+      valid('false', false);
+      valid('null', null);
+      valid('123', 123);
+      valid('"hello"', 'hello');
+      valid('[]', <Object?>[]);
+      valid('[1,2,3]', <Object?>[1, 2, 3]);
+      valid('{}', <String, Object?>{});
+      valid('{"a":1}', <String, Object?>{'a': 1});
+      valid('{"a":1,"b":[2,3]}', <String, Object?>{'a': 1, 'b': <Object?>[2, 3]});
+      valid('{"a":1,}', <String, Object?>{'a': 1});
+      final e1 = <js.ParseError>[];
+      js.parse('{', e1);
+      expect(e1, isNotEmpty);
+      final e2 = <js.ParseError>[];
+      js.parse('[1,', e2);
+      expect(e2, isNotEmpty);
+      final e3 = <js.ParseError>[];
+      js.parse('{"a":1 /* c */}', e3, js.ParseOptions(disallowComments: true));
+      expect(e3, isNotEmpty);
+      // __proto__ own property preserved
+      final e4 = <js.ParseError>[];
+      final obj = js.parse('{"__proto__": 5}', e4) as Map<String, Object?>;
+      expect(e4, isEmpty);
+      expect(obj['__proto__'], 5);
+    });
+    test('parseTree / getLocation / findNode / getNodeValue (mirrors json.test.ts)', () {
+      for (final input in ['[]', '{}', '{"a":1}', '[1,2,3]', '{"a":[1,{"b":2}]}']) {
+        final errors = <js.ParseError>[];
+        final root = js.parseTree(input, errors);
+        expect(errors, isEmpty);
+        expect(root.type, input.startsWith('[') ? js.NodeType.array : js.NodeType.object);
+      }
+      final root = js.parseTree('{"a":[1,2],"b":3}');
+      final n1 = js.findNodeAtLocation(root, <Object>['a', 1]);
+      expect(n1, isNotNull);
+      expect(n1!.value, 2);
+      final path = js.getNodePath(n1);
+      expect(path, ['a', 1]);
+      final val = js.getNodeValue(root) as Map<String, Object?>;
+      expect(val['a'].toString(), '[1, 2]');
+      expect(val['b'], 3);
+      final loc = js.getLocation('{"a":1,"b":2}', 4);
+      expect(loc.path, ['a']);
+      expect(js.getLocation('{"a":1,"b":2}', 3).isAtPropertyKey, isTrue);
+      expect(js.contains(js.Node(js.NodeType.string, 2, 3), 3), isTrue);
+      expect(js.getNodeType(true), js.NodeType.boolean);
+      expect(js.getNodeType(1), js.NodeType.number);
+      expect(js.getNodeType(null), js.NodeType.nullValue);
+      expect(js.getNodeType(<Object?>[]), js.NodeType.array);
+      expect(js.getNodeType(<String, Object?>{}), js.NodeType.object);
+    });
+  });
+
 }

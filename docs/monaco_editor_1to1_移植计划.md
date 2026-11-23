@@ -364,4 +364,42 @@ semi_design_flutter/
 - [x] 修复 `comparePaths` 中 `late final` 在循环内重复赋值 bug（源码是普通 `let` 每轮重赋值）→ 改为循环内局部声明。
 - [x] 测试追加 3 case（comparers 2 + performance 1）；base 测试文件合计 **50 case 全绿**；三文件 `dart analyze` 零 error/warning。
 
-**下一批**：剩余依赖闭合 base 文件（`color`942/`json`1344/`keyCodes`838/`jsonSchema`330 等），再进核心环。
+**下一批**：剩余依赖闭合 base 文件（`color`942/`json`1344/`keyCodes`838 等），再进核心环。
+
+### base 工具链批次续八（2026-11-23，累计 51/1690 文件 tested）
+
+- [x] `base/common/normalization.dart`：1:1 翻译 `normalization.ts`（63 行），`normalizeNFC`/`normalizeNFD`/`tryNormalizeToBase`，含 LRUCache(10000)、nonAscii 快路径、IIFE 闭包结构。
+  - **平台限制承载**：Dart 无 `String.prototype.normalize`（无 unicode 依赖）→ `_nfdTable`（Latin-1/Latin Extended-A 正则分解表）+ `_nfcCompose` 逆向组合，保留源码控制流。`normalization.test.ts` 全部断言通过（预组合重音、大小写、base+combining 边界）。
+- [x] `base/common/jsonSchema.dart`：1:1 翻译 `jsonSchema.ts`（330 行），`IJSONSchema`/`JSONSchemaType`/`IJSONSchemaSnippet` + `getCompressedContent` + `traverseNodes`。
+  - TS 纯类型体操（`TypeFromJsonSchema`/`UnionOf`/`IsRequired` 等）运行时无意义，仅注释保留（与全项目 `type X<T>=` 处理一致）。
+  - JS `Map<IJSONSchema,Equals>` 对象身份 → `HashMap.identity()`；`JSON.stringify(root, replacer)` → 自实现 `_jsonStringify`（replacer 收到原始对象引用）。`jsonSchema.test.ts` 两条压缩用例通过。
+- [x] 测试追加 5 case（normalization 3 + jsonSchema 2）；base 测试文件合计 **55 case 全绿**；两文件 `dart analyze` 零 error/warning。
+
+**下一批**：剩余依赖闭合 base 文件（`color`942/`json`1344 等），再进核心环 `arrays↔cancellation↔event↔lifecycle`。
+
+### base 工具链批次续九（2026-11-23，累计 52/1690 文件 tested）
+
+- [x] `base/common/keyCodes.dart`：1:1 翻译 `keyCodes.ts`（838 行）——两个 `const enum`（KeyCode 134 项 / ScanCode 195 项）展开为 `class + static const int`（隐式值精确递增）、229 条 `IMappingEntry` 用 record 表逐行保留（Python 从源码正则解析生成，避免手工转录）、`KeyCodeStrMap`/五个导出映射 + `ScanCodeUtils`/`KeyCodeUtils`/`KeyMod`/`KeyChord`/`isModifierKey`。
+  - **适配**：源码顶层 IIFE（模块加载即初始化）→ Dart 懒初始化 + 公开 getter 触发；`toString` 与 dart:core 冲突 → `toStringValue`。
+  - **发现并修复真实 bug**：`_setAt` 用 `value` 填充数组空洞会让 `seenKeyCode` 全部预置为 true（源码 `[]` 未赋值项为 undefined/falsey）→ 改为按类型填中性默认值。`keyCodes.test.ts` 的 Minus/Space 全链路断言（41 检查）通过。
+- [x] 测试追加 3 case；base 测试文件合计 **58 case 全绿**；文件 `dart analyze` 零 error/warning。
+
+**下一批**：剩余依赖闭合 base 文件（`json`1344 等），再进核心环 `arrays↔cancellation↔event↔lifecycle`。
+
+### base 工具链批次续十（2026-11-23，累计 53/1690 文件 tested）
+
+- [x] `base/common/color.dart`：1:1 翻译 `color.ts`（942 行）——`RGBA`/`HSLA`/`HSVA`/`Color` 全部成员（转换、亮度、对比度、blend/mix/flatten、getLighter/DarkerColor、静态色值）+ `Color.Format.CSS`（format/parse/parseHex/parseNamedKeyword 148 项命名颜色）。命名颜色表用 Python 从源码正则解析生成，避免手工转录。
+  - **适配**：JS `|0`→`.toInt()`、`>>>0`→`& 0xFFFFFFFF`、`toFixed`/`+toFixed(2)`→`_toFixed`/`_fixedNum`；static `equals`→`equalsStatic`、static `transparent`→`transparentColor`（Dart static/instance 同名冲突）；`final rgba`→`late final`（构造体三分支赋值）。
+  - `color.test.ts` 110 条断言全过（亮度、blend、HSL/HSV 互转、parseHex 四格式、命名颜色、format、toNumber32Bit、对比度）。
+- [x] 测试追加 4 case；base 测试文件合计 **62 case 全绿**；文件 `dart analyze` 零 error/warning。
+
+**下一批**：剩余依赖闭合 base 文件，再进核心环 `arrays↔cancellation↔event↔lifecycle`。
+
+### base 工具链批次续十一（2026-11-23，累计 54/1690 文件 tested）
+
+- [x] `base/common/json.dart`：1:1 翻译 `json.ts`（1344 行）——`createScanner`（完整 JSON scanner：hex/number/string/注释/关键字）、`parse`/`parseTree`/`visit`（容错解析器，含 trailing comma / disallowComments / `__proto__` 防护）、`getLocation`/`findNodeAtLocation`/`getNodePath`/`getNodeValue`/`contains`/`findNodeAtOffset`/`getNodeType`、`ParseOptions`/`JSONVisitor`/`Node` 值类。四个 `const enum` → class + static const。
+  - **适配**：`throw earlyReturnException` 哨兵 → Dart `identical` 捕获；`Object.create(null)` → 普通 Map（Dart 无原型）；`JSON.parse(number)` → num.parse；`string|number` Segment → `Object`。
+  - **发现并修复两个真实 bug**：① JS `substring(-1,n)` clamp 到 0，Dart 抛 RangeError → slash 分支起始 clamp；② Dart switch **不像 TS 那样从非空 case fall through**，minus→digit 的 fall through 丢失（`-0.1` 被切成两个 token）→ 显式内联 digit body。`json.test.ts` 59 条断言通过。
+- [x] 测试追加 3 case；base 测试文件合计 **65 case 全绿**；文件 `dart analyze` 零 error/warning。
+
+**下一批**：剩余依赖闭合 base 文件，再进核心环 `arrays↔cancellation↔event↔lifecycle`。
