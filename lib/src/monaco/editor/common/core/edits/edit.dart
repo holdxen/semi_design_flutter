@@ -28,7 +28,7 @@ abstract class BaseEdit<T extends BaseReplacement<T>, TEdit extends BaseEdit<T, 
     }
   }
 
-  TEdit _createNew(List<T> replacements);
+  TEdit createNew(List<T> replacements);
 
   /// Returns true if and only if this edit and the given edit are structurally equal.
   bool equals(TEdit other) {
@@ -74,7 +74,7 @@ abstract class BaseEdit<T extends BaseReplacement<T>, TEdit extends BaseEdit<T, 
     if (lastReplacement != null) {
       newReplacements.add(lastReplacement);
     }
-    return this._createNew(newReplacements);
+    return this.createNew(newReplacements);
   }
 
   /// Combines two edits into one with the same effect.
@@ -168,7 +168,7 @@ abstract class BaseEdit<T extends BaseReplacement<T>, TEdit extends BaseEdit<T, 
       result.add(item);
     }
 
-    return this._createNew(result).normalize();
+    return this.createNew(result).normalize();
   }
 
   /// Splits this edit into two edits by [shouldBeInE1].
@@ -185,7 +185,7 @@ abstract class BaseEdit<T extends BaseReplacement<T>, TEdit extends BaseEdit<T, 
         e2.add(edit.slice(edit.replaceRange.delta(e2delta), OffsetRange(0, edit.getNewLength())));
       }
     }
-    return (e1: this._createNew(e1), e2: this._createNew(e2));
+    return (e1: this.createNew(e1), e2: this.createNew(e2));
   }
 
   /// Returns the range of each replacement in the applied value.
@@ -346,7 +346,7 @@ class Edit<T extends BaseReplacement<T>> extends BaseEdit<T, Edit<T>> {
   static Edit<T> single<T extends BaseReplacement<T>>(T replacement) => Edit<T>(<T>[replacement]);
 
   @override
-  Edit<T> _createNew(List<T> replacements) => Edit<T>(replacements);
+  Edit<T> createNew(List<T> replacements) => Edit<T>(replacements);
 }
 
 /// 1:1: `AnnotationReplacement<TAnnotation>`

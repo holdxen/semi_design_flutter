@@ -17,6 +17,12 @@ import 'package:semi_design_flutter/src/monaco/editor/common/core/2d/size.dart';
 import 'package:semi_design_flutter/src/monaco/editor/common/core/characterClassifier.dart';
 import 'package:semi_design_flutter/src/monaco/editor/common/core/editOperation.dart';
 import 'package:semi_design_flutter/src/monaco/editor/common/core/edits/edit.dart' as ed;
+import 'package:semi_design_flutter/src/monaco/editor/common/core/edits/arrayEdit.dart' as arrayEdit;
+import 'package:semi_design_flutter/src/monaco/editor/common/core/edits/lengthEdit.dart' as lengthEdit;
+import 'package:semi_design_flutter/src/monaco/editor/common/core/edits/stringEdit.dart' as stringEdit;
+import 'package:semi_design_flutter/src/monaco/editor/common/core/edits/textEdit.dart' as textEdit;
+import 'package:semi_design_flutter/src/monaco/editor/common/core/text/abstractText.dart' as abstractText;
+import 'package:semi_design_flutter/src/monaco/editor/common/core/text/positionToOffsetImpl.dart' as posOffset;
 import 'package:semi_design_flutter/src/monaco/editor/common/core/misc/eolCounter.dart';
 import 'package:semi_design_flutter/src/monaco/editor/common/core/misc/indentation.dart' as indentation;
 import 'package:semi_design_flutter/src/monaco/editor/common/core/misc/rgba.dart';
@@ -696,6 +702,277 @@ void main() {
       expect(rev.mappings.single.original.toString(), '[2,4 -> 2,7]');
       expect(rev.mappings.single.modified.toString(), '[2,4 -> 2,6]');
       expect(mapping.toString(), '[2,4 -> 2,6] -> [2,4 -> 2,7]');
+    });
+  });
+
+  group('edits/arrayEdit.ts (1:1)', () {
+    test('basic: replace', () {
+      final arr = <String>['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+      final edit = arrayEdit.ArrayEdit.replace<String>(OffsetRange(4, 6), <String>['x', 'y', 'z']);
+      expect(edit.apply(arr), <String>['0', '1', '2', '3', 'x', 'y', 'z', '6', '7', '8', '9']);
+    });
+
+    test('insert / delete', () {
+      expect(arrayEdit.ArrayEdit.insert<int>(0, <int>[9, 8]).apply(<int>[1, 2]), <int>[9, 8, 1, 2]);
+      expect(arrayEdit.ArrayEdit.delete<int>(OffsetRange(1, 3)).apply(<int>[1, 2, 3, 4]), <int>[1, 4]);
+    });
+
+    test('inverse round-trip', () {
+      final arr = <int>[0, 1, 2, 3, 4, 5];
+      final edit = arrayEdit.ArrayEdit.create<int>(<arrayEdit.ArrayReplacement<int>>[
+        arrayEdit.ArrayReplacement<int>(OffsetRange(1, 3), <int>[9, 8, 7, 6]),
+        arrayEdit.ArrayReplacement<int>(OffsetRange(4, 4), <int>[42]),
+      ]);
+      final after = edit.apply(arr);
+      final reverted = edit.inverse(arr).apply(after);
+      expect(reverted, arr);
+    });
+
+    test('compose invariant (fuzz)', () {
+      final rng = math.Random(42);
+      const String s0Str = 'abcde\nfghij\nklmno\npqrst\n';
+      final List<String> s0 = s0Str.split('');
+
+      arrayEdit.ArrayEdit<String> randomEdit(String doc) {
+        final int count = 1 + rng.nextInt(4);
+        final List<arrayEdit.ArrayReplacement<String>> reps = <arrayEdit.ArrayReplacement<String>>[];
+        int i = 0;
+        for (int j = 0; j < count; j++) {
+          if (i >= doc.length) {
+            break;
+          }
+          final int start = i + rng.nextInt(doc.length - i);
+          final int end = start + rng.nextInt(doc.length - start + 1);
+          final int textStart = rng.nextInt(doc.length);
+          final int textLen = rng.nextInt((doc.length - textStart).clamp(0, 7) + 1);
+          reps.add(arrayEdit.ArrayReplacement<String>(
+            OffsetRange(start, end),
+            doc.substring(textStart, textStart + textLen).split(''),
+          ));
+          i = end + 1;
+        }
+        return arrayEdit.ArrayEdit.create<String>(reps);
+      }
+
+      for (int seed = 0; seed < 100; seed++) {
+        final e1 = randomEdit(s0Str);
+        final List<String> s1 = e1.apply(s0);
+        final e2 = randomEdit(s1.join());
+        final List<String> s2 = e2.apply(s1);
+        final combined = e1.compose(e2);
+        expect(combined.apply(s0), s2, reason: 'compose mismatch at seed $seed');
+      }
+    });
+  });
+
+  group('edits/lengthEdit.ts (1:1)', () {
+    test('applyArray', () {
+      final edit = lengthEdit.LengthEdit.replace(OffsetRange(1, 3), 4);
+      expect(edit.applyArray<int>(<int>[0, 1, 2, 3, 4], -1), <int>[0, -1, -1, -1, -1, 3, 4]);
+    });
+
+    test('fromEdit + getLengthDelta', () {
+      final e = ed.Edit<ed.AnyReplacement>(<ed.AnyReplacement>[
+        ed.AnyReplacement(OffsetRange(1, 3)),
+        ed.AnyReplacement(OffsetRange(5, 6)),
+      ]);
+      final le = lengthEdit.LengthEdit.fromEdit(e);
+      expect(le.replacements.length, 2);
+      expect(le.replacements[0].newLength, 2);
+      expect(le.getLengthDelta(), 0);
+    });
+
+    test('inverse round-trip of lengths', () {
+      final arr = <int>[0, 1, 2, 3, 4, 5, 6, 7];
+      final le = lengthEdit.LengthEdit.create(<lengthEdit.LengthReplacement>[
+        lengthEdit.LengthReplacement(OffsetRange(1, 3), 5),
+        lengthEdit.LengthReplacement(OffsetRange(6, 6), 2),
+      ]);
+      final applied = le.applyArray(arr, -1);
+      expect(applied.length, 13); // 8 + 5
+      final reverted = le.inverse().applyArray(applied, -1);
+      expect(reverted.length, arr.length);
+    });
+
+    test('static composeStatic', () {
+      final a = lengthEdit.LengthEdit.replace(OffsetRange(3, 4), 3); // after insert, delta +1
+      final b = lengthEdit.LengthEdit.insert(0, 2); // insert +2 at offset 0
+      final combined = lengthEdit.LengthEdit.composeStatic(<lengthEdit.LengthEdit>[b, a]);
+      expect(combined.getLengthDelta(), 2 + 2); // insert +2, replace [3,4)->3 = +2
+      // Applying to a length-5 array: insert 2 at 0 -> 7, then a's range shifted by 2.
+      expect(combined.applyArray<int>(<int>[0, 1, 2, 3, 4], -1).length, 9);
+    });
+
+    test('LengthReplacement.create + toString', () {
+      final r = lengthEdit.LengthReplacement.create(1, 4, 7);
+      expect(r.newLength, 7);
+      expect(r.getNewLength(), 7);
+      expect(r.toString(), '[1, +3) -> +7}');
+    });
+  });
+
+  group('edits/stringEdit.ts (1:1)', () {
+    test('basic apply', () {
+      final e = stringEdit.StringEdit.replace(OffsetRange(4, 6), 'xyz');
+      expect(e.apply('0123456789'), '0123xyz6789');
+    });
+
+    test('equals is structural', () {
+      final e1 = stringEdit.StringEdit.replace(OffsetRange(4, 6), 'xyz');
+      final e2 = stringEdit.StringEdit.replace(OffsetRange(4, 6), 'xyz');
+      final e3 = stringEdit.StringEdit.replace(OffsetRange(5, 6), 'xyz');
+      final e4 = stringEdit.StringEdit.replace(OffsetRange(4, 6), 'xy');
+      expect(e1.equals(e2), isTrue);
+      expect(e1.equals(e3), isFalse);
+      expect(e1.equals(e4), isFalse);
+    });
+
+    test('getNewRanges / getJoinedReplaceRange / getLengthDelta', () {
+      final e = stringEdit.StringEdit.create(<stringEdit.StringReplacement>[
+        stringEdit.StringReplacement(OffsetRange(4, 6), 'abcde'),
+        stringEdit.StringReplacement(OffsetRange(7, 9), 'a'),
+      ]);
+      final ranges = e.getNewRanges();
+      expect(ranges[0].toString(), '[4, 9)');
+      expect(ranges[1].toString(), '[10, 11)');
+      expect(e.getJoinedReplaceRange().toString(), '[4, 9)');
+      expect(e.getLengthDelta(), 2);
+    });
+
+    test('inverse round-trip + compose invariant (fuzz)', () {
+      final rng = math.Random(7);
+      const String s0 = 'abcde\nfghij\nklmno\npqrst\n';
+
+      stringEdit.StringEdit randomEdit(String doc) {
+        final List<stringEdit.StringReplacement> edits = <stringEdit.StringReplacement>[];
+        int i = 0;
+        final int count = 1 + rng.nextInt(4);
+        for (int j = 0; j < count; j++) {
+          if (i >= doc.length) {
+            break;
+          }
+          final int start = i + rng.nextInt(doc.length - i);
+          final int end = start + rng.nextInt(doc.length - start + 1);
+          final int textStart = rng.nextInt(doc.length);
+          final int textLen = rng.nextInt((doc.length - textStart).clamp(0, 7) + 1);
+          edits.add(stringEdit.StringReplacement(
+            OffsetRange(start, end),
+            doc.substring(textStart, textStart + textLen),
+          ));
+          i = end + 1;
+        }
+        return stringEdit.StringEdit.create(edits);
+      }
+
+      for (int seed = 0; seed < 100; seed++) {
+        final e = randomEdit(s0);
+        expect(e.inverse(s0).apply(e.apply(s0)), s0, reason: 'inverse seed $seed');
+        final e1 = randomEdit(s0);
+        final String s1 = e1.apply(s0);
+        final e2 = randomEdit(s1);
+        final String s2 = e2.apply(s1);
+        expect(e1.compose(e2).apply(s0), s2, reason: 'compose seed $seed');
+      }
+    });
+
+    test('parse round-trip', () {
+      final e = stringEdit.StringEdit.create(<stringEdit.StringReplacement>[
+        stringEdit.StringReplacement(OffsetRange(2, 5), 'a\nb'),
+        stringEdit.StringReplacement(OffsetRange(7, 7), 'x\\y'),
+      ]);
+      final stringEdit.StringEdit parsed = stringEdit.StringEdit.parse(e.toString());
+      expect(parsed.equals(e), isTrue);
+    });
+
+    test('applyEditsToRanges', () {
+      final e = stringEdit.StringEdit.replace(OffsetRange(2, 4), 'XY');
+      final List<OffsetRange> result = stringEdit.applyEditsToRanges(
+        <OffsetRange>[OffsetRange(0, 1), OffsetRange(6, 8)],
+        e,
+      );
+      expect(result.map((OffsetRange r) => r.toString()).toList(), <String>['[0, 1)', '[6, 8)']);
+    });
+
+    test('AnnotatedStringEdit + mapData', () {
+      final e = stringEdit.StringEdit.replace(OffsetRange(1, 2), 'Z');
+      final annotated = e.mapData<stringEdit.VoidEditData>((stringEdit.StringReplacement r) => stringEdit.VoidEditData());
+      expect(annotated.toStringEdit().apply('abc'), 'aZc');
+    });
+  });
+
+  group('text/abstractText + positionToOffsetImpl + textEdit.ts (1:1)', () {
+    test('StringText basics + getValueOfRange + transformer', () {
+      final t = abstractText.StringText('hello\nworld');
+      expect(t.value, 'hello\nworld');
+      expect(t.getLines(), <String>['hello', 'world']);
+      expect(t.length.lineCount, 1);
+      expect(t.length.columnCount, 5);
+      expect(t.getValueOfRange(Range(1, 2, 1, 5)), 'ell');
+      final posOffset.PositionOffsetTransformer tr = t.getTransformer();
+      expect(tr.getOffset(Position(2, 1)), 6);
+      expect(tr.getPosition(8).toString(), '(2,3)');
+    });
+
+    test('PositionOffsetTransformer CRLF + validation', () {
+      final tr = posOffset.PositionOffsetTransformer('a\r\nb\n');
+      expect(tr.getOffset(Position(1, 1)), 0);
+      expect(tr.getOffset(Position(2, 1)), 3);
+      expect(tr.getOffset(Position(1, 99)), 1); // clamped to line end (before \r)
+      expect(tr.getPosition(3).toString(), '(2,1)');
+    });
+
+    test('TextEdit applyToString / inverse / mapRange', () {
+      final e = textEdit.TextEdit.replace(Range(1, 4, 1, 6), 'xyz');
+      expect(e.applyToString('0123456789'), '012xyz56789');
+      final t = abstractText.StringText('0123456789');
+      final inv = e.inverse(t);
+      expect(inv.applyToString(e.applyToString('0123456789')), '0123456789');
+      expect(e.mapRange(Range(1, 8, 1, 10)).toString(), '[1,9 -> 1,11]');
+    });
+
+    test('TextEdit compose invariant (fuzz)', () {
+      final rng = math.Random(11);
+      const String s0 = 'abcde\nfghij\nklmno\npqrst\n';
+      final t0 = abstractText.StringText(s0);
+
+      String editText(String doc) {
+        final int start = rng.nextInt(doc.length);
+        final int end = start + rng.nextInt(doc.length - start + 1);
+        final int len = rng.nextInt(5);
+        final String text = List<String>.generate(len, (_) => String.fromCharCode(65 + rng.nextInt(6))).join();
+        final te = textEdit.TextEdit.replace(
+          Range(1, start + 1, 1, end + 1),
+          text,
+        );
+        return te.applyToString(doc);
+      }
+
+      // Single-line fuzz to avoid multi-line Range complexity in test helper.
+      const String flat = 'abcdefghijklmnopqrst';
+      for (int seed = 0; seed < 100; seed++) {
+        final int a = rng.nextInt(flat.length);
+        final int b = a + rng.nextInt(flat.length - a + 1);
+        final String ta = String.fromCharCode(65 + rng.nextInt(6));
+        final e1 = textEdit.TextEdit.replace(Range(1, a + 1, 1, b + 1), ta);
+        final String s1 = e1.applyToString(flat);
+        final int c = rng.nextInt(s1.length);
+        final int d = c + rng.nextInt(s1.length - c + 1);
+        final String tb = String.fromCharCode(97 + rng.nextInt(6));
+        final e2 = textEdit.TextEdit.replace(Range(1, c + 1, 1, d + 1), tb);
+        final String s2 = e2.applyToString(s1);
+        expect(e1.compose(e2).applyToString(flat), s2, reason: 'compose seed $seed');
+      }
+      expect(t0.value, s0);
+      expect(editText('abc').isNotEmpty, isTrue);
+    });
+
+    test('TextReplacement common prefix/suffix + effective deletion', () {
+      final t = abstractText.StringText('hello world');
+      final r = textEdit.TextReplacement(Range(1, 1, 1, 12), 'hello there');
+      final trimmed = r.removeCommonPrefixAndSuffix(t);
+      expect(trimmed.toEdit().applyToString('hello world'), 'hello there');
+      final del = textEdit.TextReplacement(Range(1, 1, 1, 6), '');
+      expect(del.isEffectiveDeletion(t), isTrue);
     });
   });
 }
