@@ -423,3 +423,12 @@ semi_design_flutter/
 - [x] 测试追加 7 case（jsonEdit 4 + keybindingLabels 2 + platform registry 1）；base 测试文件合计 **83 case 全绿**；三文件 `dart analyze` 零 error/warning（仅源码风格 info）。
 
 **下一批**：继续消费依赖闭合的小文件（`platform/contextkey/common/scanner.ts` 385 行、`base/common/observableInternal/logging/debugger/rpc.ts` 111 行，`base/test/common/executionGraph.ts` 544 行等，均有源码 test），择机啃核心环。
+
+### platform/base 工具链批次续十四（2026-11-23，累计 62/1690 文件 tested）
+
+- [x] `platform/contextkey/common/scanner.dart`：1:1 翻译 `scanner.ts`（385 行），`TokenType`（const enum → static const）、`Token`（discriminated union 扁平为单值类，`lexeme`/`isTripleEq` 用 nullable 承载 `'lexeme' in token`）、`LexingError`、`Scanner`（`getLexeme`/`reset`/`scan` + `_match`/`_advance`/`_peek`/`_addToken`/`_error`/`_string`/`_quotedString`/`_regex`/`_isAtEnd`）、`hintDidYouMean`（rest → `List<String>`）。**关键适配**：JS 正则 `[a-zA-Z0-9_...\p{L}-]+/uy` 的 `\p{L}` + sticky flag 在 Dart RegExp 不支持 → 手写 `_isStringCharCode` 字符集匹配（ASCII 显式 + `c >= 0xAA` 覆盖 Unicode 字母）；nbsp（0xA0）在 scan switch 中按空白处理。`scanner.test.ts` 全部 34 case 精确搬运，含复杂正则、转义、`\w`→`w`、JSON.parse、nbsp 场景，全绿。
+- [x] `base/common/observableInternal/logging/debugger/rpc.dart`：1:1 翻译 `rpc.ts`（111 行），`IChannel`/`IChannelHandler`/`RpcRequestResult`（union → 抽象基类 + RpcResult/RpcError）、`API`/`Side`、`ChannelFactory`、`SimpleTypedRpcConnection`。**关键适配**：JS `Proxy` 用 `noSuchMethod` 承载（`then` 返回 null 复刻"不可 thenable"，method/getter 两态都覆盖）；构造函数不能在 initializer 引用实例成员 → 改为构造体初始化 `_channel`/`api`。`rpc.test.ts` 1 case + 转发 extra 1 case 通过。
+- [x] 放弃 `platform/environment/common/argv.ts`：其 `argv.test.ts` 实际测的是 `node/argv.ts`（formatOptions/parseArgs），`common/argv.ts` 仅接口定义无运行时逻辑，跳过以免无意义的类型翻译。
+- [x] 测试追加 36 case（scanner 34 + rpc 2）；base 测试文件 83 → **119 case 全绿**；两文件 `dart analyze` 零 error/warning。
+
+**下一批**：继续消费依赖闭合且有独立 test 的文件（`base/browser/ui/list/rangeMap.ts` 219 行、`base/browser/ui/scrollbar/scrollbarState.ts` 244 行、`editor/.../smallImmutableSet.ts` 177 行、`platform/instantiation/common/graph.ts` 112 行等），择机啃核心环。

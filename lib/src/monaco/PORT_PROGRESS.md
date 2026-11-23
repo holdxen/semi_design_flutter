@@ -7,7 +7,7 @@
 
 | # | 层 | 源文件 | 目标 Dart | 状态 |
 |---|---|---|---|---|
-> 进度：60 / 1690 tested（2026-11-23，含 jsonEdit / keybindingLabels / platform/registry）。
+> 进度：62 / 1690 tested（2026-11-23，含 contextkey/scanner + observableInternal/rpc）。
 
 | 1 | editor | `editor/browser/config/charWidthReader.ts` | `lib/src/monaco/editor/browser/config/charWidthReader.dart` | pending |
 | 2 | editor | `editor/browser/config/domFontInfo.ts` | `lib/src/monaco/editor/browser/config/domFontInfo.dart` | pending |
@@ -1074,7 +1074,7 @@
 | 1063 | base | `base/common/observableInternal/logging/debugGetDependencyGraph.ts` | `lib/src/monaco/base/common/observableInternal/logging/debugGetDependencyGraph.dart` | pending |
 | 1064 | base | `base/common/observableInternal/logging/debugger/debuggerRpc.ts` | `lib/src/monaco/base/common/observableInternal/logging/debugger/debuggerRpc.dart` | pending |
 | 1065 | base | `base/common/observableInternal/logging/debugger/devToolsLogger.ts` | `lib/src/monaco/base/common/observableInternal/logging/debugger/devToolsLogger.dart` | pending |
-| 1066 | base | `base/common/observableInternal/logging/debugger/rpc.ts` | `lib/src/monaco/base/common/observableInternal/logging/debugger/rpc.dart` | pending |
+| 1066 | base | `base/common/observableInternal/logging/debugger/rpc.ts` | `lib/src/monaco/base/common/observableInternal/logging/debugger/rpc.dart` | tested |
 | 1067 | base | `base/common/observableInternal/logging/debugger/utils.ts` | `lib/src/monaco/base/common/observableInternal/logging/debugger/utils.dart` | pending |
 | 1068 | base | `base/common/observableInternal/logging/logging.ts` | `lib/src/monaco/base/common/observableInternal/logging/logging.dart` | pending |
 | 1069 | base | `base/common/observableInternal/map.ts` | `lib/src/monaco/base/common/observableInternal/map.dart` | pending |
@@ -1175,7 +1175,7 @@
 | 1164 | platform | `platform/contextkey/browser/contextKeyService.ts` | `lib/src/monaco/platform/contextkey/browser/contextKeyService.dart` | pending |
 | 1165 | platform | `platform/contextkey/common/contextkey.ts` | `lib/src/monaco/platform/contextkey/common/contextkey.dart` | pending |
 | 1166 | platform | `platform/contextkey/common/contextkeys.ts` | `lib/src/monaco/platform/contextkey/common/contextkeys.dart` | pending |
-| 1167 | platform | `platform/contextkey/common/scanner.ts` | `lib/src/monaco/platform/contextkey/common/scanner.dart` | pending |
+| 1167 | platform | `platform/contextkey/common/scanner.ts` | `lib/src/monaco/platform/contextkey/common/scanner.dart` | tested |
 | 1168 | platform | `platform/contextview/browser/contextMenuHandler.ts` | `lib/src/monaco/platform/contextview/browser/contextMenuHandler.dart` | pending |
 | 1169 | platform | `platform/contextview/browser/contextMenuService.ts` | `lib/src/monaco/platform/contextview/browser/contextMenuService.dart` | pending |
 | 1170 | platform | `platform/contextview/browser/contextView.ts` | `lib/src/monaco/platform/contextview/browser/contextView.dart` | pending |

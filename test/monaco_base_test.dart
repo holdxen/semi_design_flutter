@@ -43,10 +43,35 @@ import 'package:semi_design_flutter/src/monaco/base/common/jsonFormatter.dart' a
 import 'package:semi_design_flutter/src/monaco/base/common/jsonEdit.dart' as jedit;
 import 'package:semi_design_flutter/src/monaco/base/common/keybindings.dart' as kb;
 import 'package:semi_design_flutter/src/monaco/base/common/keybindingLabels.dart' as kbl;
+import 'package:semi_design_flutter/src/monaco/platform/contextkey/common/scanner.dart' as scan;
+import 'package:semi_design_flutter/src/monaco/base/common/observableInternal/logging/debugger/rpc.dart' as rpc;
 import 'package:semi_design_flutter/src/monaco/base/common/naturalLanguage/korean.dart' as korean;
 import 'package:semi_design_flutter/src/monaco/base/common/stopwatch.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/symbols.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/types.dart';
+
+class _TestSide extends rpc.Side {
+  final Map<String, Function> requests = <String, Function>{
+    'echo': (String s, int n) => '$s:$n',
+  };
+  final Map<String, Function> notifications = <String, Function>{
+    'note': (String s) {},
+  };
+}
+
+class _TestChannel implements rpc.IChannel {
+  final List<Object> notifications = <Object>[];
+  @override
+  void sendNotification(Object data) => notifications.add(data);
+  @override
+  Future<rpc.RpcRequestResult> sendRequest(Object data) async {
+    final list = data as List<Object?>;
+    final key = list[0] as String;
+    final args = list[1] as List<dynamic>;
+    final fn = _TestSide().requests[key]!;
+    return rpc.RpcResult(Function.apply(fn, args));
+  }
+}
 
 void main() {
   group('lazy.ts', () {
@@ -1591,4 +1616,677 @@ void main() {
     });
   });
 
+  group('contextkey/scanner.ts', () {
+    List<Map<String, Object?>> scanTokens(String input) {
+      final s = scan.Scanner().reset(input).scan();
+      return s.map((t) => <String, Object?>{
+        'type': t.type, 'offset': t.offset,
+        if (t.lexeme != null) 'lexeme': t.lexeme,
+        if (t.isTripleEq != null) 'isTripleEq': t.isTripleEq,
+      }).toList();
+    }
+    test("foo.bar<C-shift+2>", () {
+      final actual = scanTokens("foo.bar<C-shift+2>");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "foo.bar<C-shift+2>"},
+        {'type': scan.TokenType.EOF, 'offset': 18},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("!foo", () {
+      final actual = scanTokens("!foo");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Neg, 'offset': 0},
+        {'type': scan.TokenType.Str, 'offset': 1, 'lexeme': "foo"},
+        {'type': scan.TokenType.EOF, 'offset': 4},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("foo === bar", () {
+      final actual = scanTokens("foo === bar");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "foo"},
+        {'type': scan.TokenType.Eq, 'offset': 4, 'isTripleEq': true},
+        {'type': scan.TokenType.Str, 'offset': 8, 'lexeme': "bar"},
+        {'type': scan.TokenType.EOF, 'offset': 11},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("foo  !== bar", () {
+      final actual = scanTokens("foo  !== bar");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "foo"},
+        {'type': scan.TokenType.NotEq, 'offset': 5, 'isTripleEq': true},
+        {'type': scan.TokenType.Str, 'offset': 9, 'lexeme': "bar"},
+        {'type': scan.TokenType.EOF, 'offset': 12},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("!(foo && bar)", () {
+      final actual = scanTokens("!(foo && bar)");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Neg, 'offset': 0},
+        {'type': scan.TokenType.LParen, 'offset': 1},
+        {'type': scan.TokenType.Str, 'offset': 2, 'lexeme': "foo"},
+        {'type': scan.TokenType.And, 'offset': 6},
+        {'type': scan.TokenType.Str, 'offset': 9, 'lexeme': "bar"},
+        {'type': scan.TokenType.RParen, 'offset': 12},
+        {'type': scan.TokenType.EOF, 'offset': 13},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("=~ ", () {
+      final actual = scanTokens("=~ ");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.RegexOp, 'offset': 0},
+        {'type': scan.TokenType.EOF, 'offset': 3},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("foo =~ /bar/", () {
+      final actual = scanTokens("foo =~ /bar/");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "foo"},
+        {'type': scan.TokenType.RegexOp, 'offset': 4},
+        {'type': scan.TokenType.RegexStr, 'offset': 7, 'lexeme': "/bar/"},
+        {'type': scan.TokenType.EOF, 'offset': 12},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("foo =~ /zee/i", () {
+      final actual = scanTokens("foo =~ /zee/i");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "foo"},
+        {'type': scan.TokenType.RegexOp, 'offset': 4},
+        {'type': scan.TokenType.RegexStr, 'offset': 7, 'lexeme': "/zee/i"},
+        {'type': scan.TokenType.EOF, 'offset': 13},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("foo =~ /zee/gm", () {
+      final actual = scanTokens("foo =~ /zee/gm");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "foo"},
+        {'type': scan.TokenType.RegexOp, 'offset': 4},
+        {'type': scan.TokenType.RegexStr, 'offset': 7, 'lexeme': "/zee/gm"},
+        {'type': scan.TokenType.EOF, 'offset': 14},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("foo in barrr  ", () {
+      final actual = scanTokens("foo in barrr  ");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "foo"},
+        {'type': scan.TokenType.In, 'offset': 4},
+        {'type': scan.TokenType.Str, 'offset': 7, 'lexeme': "barrr"},
+        {'type': scan.TokenType.EOF, 'offset': 14},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("resource =~ //FileCabinet/(SuiteScripts|Templates/(E-mail%20Templates|Marketing%20Templates)|Web%20Site%20Hosting%20Files)(/.*)*\$/", () {
+      final actual = scanTokens("resource =~ //FileCabinet/(SuiteScripts|Templates/(E-mail%20Templates|Marketing%20Templates)|Web%20Site%20Hosting%20Files)(/.*)*\$/");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "resource"},
+        {'type': scan.TokenType.RegexOp, 'offset': 9},
+        {'type': scan.TokenType.RegexStr, 'offset': 12, 'lexeme': "//"},
+        {'type': scan.TokenType.Str, 'offset': 14, 'lexeme': "FileCabinet/"},
+        {'type': scan.TokenType.LParen, 'offset': 26},
+        {'type': scan.TokenType.Str, 'offset': 27, 'lexeme': "SuiteScripts"},
+        {'type': scan.TokenType.Error, 'offset': 39, 'lexeme': "|"},
+        {'type': scan.TokenType.Str, 'offset': 40, 'lexeme': "Templates/"},
+        {'type': scan.TokenType.LParen, 'offset': 50},
+        {'type': scan.TokenType.Str, 'offset': 51, 'lexeme': "E-mail%20Templates"},
+        {'type': scan.TokenType.Error, 'offset': 69, 'lexeme': "|"},
+        {'type': scan.TokenType.Str, 'offset': 70, 'lexeme': "Marketing%20Templates"},
+        {'type': scan.TokenType.RParen, 'offset': 91},
+        {'type': scan.TokenType.Error, 'offset': 92, 'lexeme': "|"},
+        {'type': scan.TokenType.Str, 'offset': 93, 'lexeme': "Web%20Site%20Hosting%20Files"},
+        {'type': scan.TokenType.RParen, 'offset': 121},
+        {'type': scan.TokenType.LParen, 'offset': 122},
+        {'type': scan.TokenType.RegexStr, 'offset': 123, 'lexeme': "/.*)*\$/"},
+        {'type': scan.TokenType.EOF, 'offset': 130},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("editorLangId in testely.supportedLangIds && resourceFilename =~ /^.+(.test.(w+))\$/gm", () {
+      final actual = scanTokens("editorLangId in testely.supportedLangIds && resourceFilename =~ /^.+(.test.(w+))\$/gm");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "editorLangId"},
+        {'type': scan.TokenType.In, 'offset': 13},
+        {'type': scan.TokenType.Str, 'offset': 16, 'lexeme': "testely.supportedLangIds"},
+        {'type': scan.TokenType.And, 'offset': 41},
+        {'type': scan.TokenType.Str, 'offset': 44, 'lexeme': "resourceFilename"},
+        {'type': scan.TokenType.RegexOp, 'offset': 61},
+        {'type': scan.TokenType.RegexStr, 'offset': 64, 'lexeme': "/^.+(.test.(w+))\$/gm"},
+        {'type': scan.TokenType.EOF, 'offset': 84},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("!(foo && bar) && baz", () {
+      final actual = scanTokens("!(foo && bar) && baz");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Neg, 'offset': 0},
+        {'type': scan.TokenType.LParen, 'offset': 1},
+        {'type': scan.TokenType.Str, 'offset': 2, 'lexeme': "foo"},
+        {'type': scan.TokenType.And, 'offset': 6},
+        {'type': scan.TokenType.Str, 'offset': 9, 'lexeme': "bar"},
+        {'type': scan.TokenType.RParen, 'offset': 12},
+        {'type': scan.TokenType.And, 'offset': 14},
+        {'type': scan.TokenType.Str, 'offset': 17, 'lexeme': "baz"},
+        {'type': scan.TokenType.EOF, 'offset': 20},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("foo.bar:zed==completed - equality with no space", () {
+      final actual = scanTokens("foo.bar:zed==completed");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "foo.bar:zed"},
+        {'type': scan.TokenType.Eq, 'offset': 11},
+        {'type': scan.TokenType.Str, 'offset': 13, 'lexeme': "completed"},
+        {'type': scan.TokenType.EOF, 'offset': 22},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("a && b || c", () {
+      final actual = scanTokens("a && b || c");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "a"},
+        {'type': scan.TokenType.And, 'offset': 2},
+        {'type': scan.TokenType.Str, 'offset': 5, 'lexeme': "b"},
+        {'type': scan.TokenType.Or, 'offset': 7},
+        {'type': scan.TokenType.Str, 'offset': 10, 'lexeme': "c"},
+        {'type': scan.TokenType.EOF, 'offset': 11},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("fooBar && baz.jar && fee.bee<K-loo+1>", () {
+      final actual = scanTokens("fooBar && baz.jar && fee.bee<K-loo+1>");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "fooBar"},
+        {'type': scan.TokenType.And, 'offset': 7},
+        {'type': scan.TokenType.Str, 'offset': 10, 'lexeme': "baz.jar"},
+        {'type': scan.TokenType.And, 'offset': 18},
+        {'type': scan.TokenType.Str, 'offset': 21, 'lexeme': "fee.bee<K-loo+1>"},
+        {'type': scan.TokenType.EOF, 'offset': 37},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("foo.barBaz<C-r> < 2", () {
+      final actual = scanTokens("foo.barBaz<C-r> < 2");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "foo.barBaz<C-r>"},
+        {'type': scan.TokenType.Lt, 'offset': 16},
+        {'type': scan.TokenType.Str, 'offset': 18, 'lexeme': "2"},
+        {'type': scan.TokenType.EOF, 'offset': 19},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("foo.bar >= -1", () {
+      final actual = scanTokens("foo.bar >= -1");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "foo.bar"},
+        {'type': scan.TokenType.GtEq, 'offset': 8},
+        {'type': scan.TokenType.Str, 'offset': 11, 'lexeme': "-1"},
+        {'type': scan.TokenType.EOF, 'offset': 13},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("foo.bar <= -1", () {
+      final actual = scanTokens("foo.bar <= -1");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "foo.bar"},
+        {'type': scan.TokenType.LtEq, 'offset': 8},
+        {'type': scan.TokenType.Str, 'offset': 11, 'lexeme': "-1"},
+        {'type': scan.TokenType.EOF, 'offset': 13},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("resource =~ /\\/Objects\\/.+\\.xml\$/", () {
+      final actual = scanTokens("resource =~ /\\/Objects\\/.+\\.xml\$/");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "resource"},
+        {'type': scan.TokenType.RegexOp, 'offset': 9},
+        {'type': scan.TokenType.RegexStr, 'offset': 12, 'lexeme': "/\\/Objects\\/.+\\.xml\$/"},
+        {'type': scan.TokenType.EOF, 'offset': 33},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("view == vsc-packages-activitybar-folders && vsc-packages-folders-loaded", () {
+      final actual = scanTokens("view == vsc-packages-activitybar-folders && vsc-packages-folders-loaded");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "view"},
+        {'type': scan.TokenType.Eq, 'offset': 5},
+        {'type': scan.TokenType.Str, 'offset': 8, 'lexeme': "vsc-packages-activitybar-folders"},
+        {'type': scan.TokenType.And, 'offset': 41},
+        {'type': scan.TokenType.Str, 'offset': 44, 'lexeme': "vsc-packages-folders-loaded"},
+        {'type': scan.TokenType.EOF, 'offset': 71},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("sfdx:project_opened && resource =~ /.*\\/functions\\/.*\\/[^\\/]+(\\/[^\\/]+.(ts|js|java|json|toml))?\$/ && resourceFilename != package.json && resourceFilename != package-lock.json && resourceFilename != tsconfig.json", () {
+      final actual = scanTokens("sfdx:project_opened && resource =~ /.*\\/functions\\/.*\\/[^\\/]+(\\/[^\\/]+.(ts|js|java|json|toml))?\$/ && resourceFilename != package.json && resourceFilename != package-lock.json && resourceFilename != tsconfig.json");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "sfdx:project_opened"},
+        {'type': scan.TokenType.And, 'offset': 20},
+        {'type': scan.TokenType.Str, 'offset': 23, 'lexeme': "resource"},
+        {'type': scan.TokenType.RegexOp, 'offset': 32},
+        {'type': scan.TokenType.RegexStr, 'offset': 35, 'lexeme': "/.*\\/functions\\/.*\\/[^\\/]+(\\/[^\\/]+.(ts|js|java|json|toml))?\$/"},
+        {'type': scan.TokenType.And, 'offset': 98},
+        {'type': scan.TokenType.Str, 'offset': 101, 'lexeme': "resourceFilename"},
+        {'type': scan.TokenType.NotEq, 'offset': 118},
+        {'type': scan.TokenType.Str, 'offset': 121, 'lexeme': "package.json"},
+        {'type': scan.TokenType.And, 'offset': 134},
+        {'type': scan.TokenType.Str, 'offset': 137, 'lexeme': "resourceFilename"},
+        {'type': scan.TokenType.NotEq, 'offset': 154},
+        {'type': scan.TokenType.Str, 'offset': 157, 'lexeme': "package-lock.json"},
+        {'type': scan.TokenType.And, 'offset': 175},
+        {'type': scan.TokenType.Str, 'offset': 178, 'lexeme': "resourceFilename"},
+        {'type': scan.TokenType.NotEq, 'offset': 195},
+        {'type': scan.TokenType.Str, 'offset': 198, 'lexeme': "tsconfig.json"},
+        {'type': scan.TokenType.EOF, 'offset': 211},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("view =~ '/(servers)/' && viewItem =~ '/^(Starting|Started|Debugging|Stopping|Stopped)/'", () {
+      final actual = scanTokens("view =~ '/(servers)/' && viewItem =~ '/^(Starting|Started|Debugging|Stopping|Stopped)/'");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "view"},
+        {'type': scan.TokenType.RegexOp, 'offset': 5},
+        {'type': scan.TokenType.QuotedStr, 'offset': 9, 'lexeme': "/(servers)/"},
+        {'type': scan.TokenType.And, 'offset': 22},
+        {'type': scan.TokenType.Str, 'offset': 25, 'lexeme': "viewItem"},
+        {'type': scan.TokenType.RegexOp, 'offset': 34},
+        {'type': scan.TokenType.QuotedStr, 'offset': 38, 'lexeme': "/^(Starting|Started|Debugging|Stopping|Stopped)/"},
+        {'type': scan.TokenType.EOF, 'offset': 87},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("resourcePath =~ /.md(.yml|.txt)*\$/gim", () {
+      final actual = scanTokens("resourcePath =~ /.md(.yml|.txt)*\$/gim");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "resourcePath"},
+        {'type': scan.TokenType.RegexOp, 'offset': 13},
+        {'type': scan.TokenType.RegexStr, 'offset': 16, 'lexeme': "/.md(.yml|.txt)*\$/gim"},
+        {'type': scan.TokenType.EOF, 'offset': 37},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("foo === bar'", () {
+      final actual = scanTokens("foo === bar'");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "foo"},
+        {'type': scan.TokenType.Eq, 'offset': 4, 'isTripleEq': true},
+        {'type': scan.TokenType.Str, 'offset': 8, 'lexeme': "bar"},
+        {'type': scan.TokenType.Error, 'offset': 11, 'lexeme': "'"},
+        {'type': scan.TokenType.EOF, 'offset': 12},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("foo === '", () {
+      final actual = scanTokens("foo === '");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "foo"},
+        {'type': scan.TokenType.Eq, 'offset': 4, 'isTripleEq': true},
+        {'type': scan.TokenType.Error, 'offset': 8, 'lexeme': "'"},
+        {'type': scan.TokenType.EOF, 'offset': 9},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("foo && 'bar - unterminated single quote", () {
+      final actual = scanTokens("foo && 'bar");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "foo"},
+        {'type': scan.TokenType.And, 'offset': 4},
+        {'type': scan.TokenType.Error, 'offset': 7, 'lexeme': "'bar"},
+        {'type': scan.TokenType.EOF, 'offset': 11},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("vim<c-r> == 1 && vim<2 <= 3", () {
+      final actual = scanTokens("vim<c-r> == 1 && vim<2 <= 3");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "vim<c-r>"},
+        {'type': scan.TokenType.Eq, 'offset': 9},
+        {'type': scan.TokenType.Str, 'offset': 12, 'lexeme': "1"},
+        {'type': scan.TokenType.And, 'offset': 14},
+        {'type': scan.TokenType.Str, 'offset': 17, 'lexeme': "vim<2"},
+        {'type': scan.TokenType.LtEq, 'offset': 23},
+        {'type': scan.TokenType.Str, 'offset': 26, 'lexeme': "3"},
+        {'type': scan.TokenType.EOF, 'offset': 27},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("vim<c-r>==1 && vim<2<=3", () {
+      final actual = scanTokens("vim<c-r>==1 && vim<2<=3");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "vim<c-r>"},
+        {'type': scan.TokenType.Eq, 'offset': 8},
+        {'type': scan.TokenType.Str, 'offset': 10, 'lexeme': "1"},
+        {'type': scan.TokenType.And, 'offset': 12},
+        {'type': scan.TokenType.Str, 'offset': 15, 'lexeme': "vim<2<"},
+        {'type': scan.TokenType.Error, 'offset': 21, 'lexeme': "="},
+        {'type': scan.TokenType.Str, 'offset': 22, 'lexeme': "3"},
+        {'type': scan.TokenType.EOF, 'offset': 23},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("foo|bar", () {
+      final actual = scanTokens("foo|bar");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "foo"},
+        {'type': scan.TokenType.Error, 'offset': 3, 'lexeme': "|"},
+        {'type': scan.TokenType.Str, 'offset': 4, 'lexeme': "bar"},
+        {'type': scan.TokenType.EOF, 'offset': 7},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("resource =~ //foo/(barr|door/(Foo-Bar%20Templates|Soo%20Looo)|Web%20Site%Jjj%20Llll)(/.*)*\$/", () {
+      final actual = scanTokens("resource =~ //foo/(barr|door/(Foo-Bar%20Templates|Soo%20Looo)|Web%20Site%Jjj%20Llll)(/.*)*\$/");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "resource"},
+        {'type': scan.TokenType.RegexOp, 'offset': 9},
+        {'type': scan.TokenType.RegexStr, 'offset': 12, 'lexeme': "//"},
+        {'type': scan.TokenType.Str, 'offset': 14, 'lexeme': "foo/"},
+        {'type': scan.TokenType.LParen, 'offset': 18},
+        {'type': scan.TokenType.Str, 'offset': 19, 'lexeme': "barr"},
+        {'type': scan.TokenType.Error, 'offset': 23, 'lexeme': "|"},
+        {'type': scan.TokenType.Str, 'offset': 24, 'lexeme': "door/"},
+        {'type': scan.TokenType.LParen, 'offset': 29},
+        {'type': scan.TokenType.Str, 'offset': 30, 'lexeme': "Foo-Bar%20Templates"},
+        {'type': scan.TokenType.Error, 'offset': 49, 'lexeme': "|"},
+        {'type': scan.TokenType.Str, 'offset': 50, 'lexeme': "Soo%20Looo"},
+        {'type': scan.TokenType.RParen, 'offset': 60},
+        {'type': scan.TokenType.Error, 'offset': 61, 'lexeme': "|"},
+        {'type': scan.TokenType.Str, 'offset': 62, 'lexeme': "Web%20Site%Jjj%20Llll"},
+        {'type': scan.TokenType.RParen, 'offset': 83},
+        {'type': scan.TokenType.LParen, 'offset': 84},
+        {'type': scan.TokenType.RegexStr, 'offset': 85, 'lexeme': "/.*)*\$/"},
+        {'type': scan.TokenType.EOF, 'offset': 92},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("/((/foo/(?!bar)(.*)/)|((/src/).*/)).*\$/", () {
+      final actual = scanTokens("/((/foo/(?!bar)(.*)/)|((/src/).*/)).*\$/");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.RegexStr, 'offset': 0, 'lexeme': "/((/"},
+        {'type': scan.TokenType.Str, 'offset': 4, 'lexeme': "foo/"},
+        {'type': scan.TokenType.LParen, 'offset': 8},
+        {'type': scan.TokenType.Str, 'offset': 9, 'lexeme': "?"},
+        {'type': scan.TokenType.Neg, 'offset': 10},
+        {'type': scan.TokenType.Str, 'offset': 11, 'lexeme': "bar"},
+        {'type': scan.TokenType.RParen, 'offset': 14},
+        {'type': scan.TokenType.LParen, 'offset': 15},
+        {'type': scan.TokenType.Str, 'offset': 16, 'lexeme': ".*"},
+        {'type': scan.TokenType.RParen, 'offset': 18},
+        {'type': scan.TokenType.RegexStr, 'offset': 19, 'lexeme': "/)|((/s"},
+        {'type': scan.TokenType.Str, 'offset': 26, 'lexeme': "rc/"},
+        {'type': scan.TokenType.RParen, 'offset': 29},
+        {'type': scan.TokenType.Str, 'offset': 30, 'lexeme': ".*/"},
+        {'type': scan.TokenType.RParen, 'offset': 33},
+        {'type': scan.TokenType.RParen, 'offset': 34},
+        {'type': scan.TokenType.Str, 'offset': 35, 'lexeme': ".*\$/"},
+        {'type': scan.TokenType.EOF, 'offset': 39},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("resourcePath =~ //foo/barr// || resourcePath =~ //view/(jarrr|doooor|bees)/(web|templates)// && resourceExtname in foo.Bar", () {
+      final actual = scanTokens("resourcePath =~ //foo/barr// || resourcePath =~ //view/(jarrr|doooor|bees)/(web|templates)// && resourceExtname in foo.Bar");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "resourcePath"},
+        {'type': scan.TokenType.RegexOp, 'offset': 13},
+        {'type': scan.TokenType.RegexStr, 'offset': 16, 'lexeme': "//"},
+        {'type': scan.TokenType.Str, 'offset': 18, 'lexeme': "foo/barr//"},
+        {'type': scan.TokenType.Or, 'offset': 29},
+        {'type': scan.TokenType.Str, 'offset': 32, 'lexeme': "resourcePath"},
+        {'type': scan.TokenType.RegexOp, 'offset': 45},
+        {'type': scan.TokenType.RegexStr, 'offset': 48, 'lexeme': "//"},
+        {'type': scan.TokenType.Str, 'offset': 50, 'lexeme': "view/"},
+        {'type': scan.TokenType.LParen, 'offset': 55},
+        {'type': scan.TokenType.Str, 'offset': 56, 'lexeme': "jarrr"},
+        {'type': scan.TokenType.Error, 'offset': 61, 'lexeme': "|"},
+        {'type': scan.TokenType.Str, 'offset': 62, 'lexeme': "doooor"},
+        {'type': scan.TokenType.Error, 'offset': 68, 'lexeme': "|"},
+        {'type': scan.TokenType.Str, 'offset': 69, 'lexeme': "bees"},
+        {'type': scan.TokenType.RParen, 'offset': 73},
+        {'type': scan.TokenType.RegexStr, 'offset': 74, 'lexeme': "/(web|templates)/"},
+        {'type': scan.TokenType.Error, 'offset': 91, 'lexeme': "/ && resourceExtname in foo.Bar"},
+        {'type': scan.TokenType.EOF, 'offset': 122},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+    test("foo =~ /file:// || bar", () {
+      final actual = scanTokens("foo =~ /file:// || bar");
+      final expected = <Map<String, Object?>>[
+        {'type': scan.TokenType.Str, 'offset': 0, 'lexeme': "foo"},
+        {'type': scan.TokenType.RegexOp, 'offset': 4},
+        {'type': scan.TokenType.RegexStr, 'offset': 7, 'lexeme': "/file:/"},
+        {'type': scan.TokenType.Error, 'offset': 14, 'lexeme': "/ || bar"},
+        {'type': scan.TokenType.EOF, 'offset': 22},
+      ];
+      expect(actual.length, expected.length, reason: 'token count');
+      for (int i = 0; i < expected.length; i++) {
+        expect(actual[i]['type'], expected[i]['type'], reason: '$i type');
+        expect(actual[i]['offset'], expected[i]['offset'], reason: '$i offset');
+        if (expected[i].containsKey('lexeme')) expect(actual[i]['lexeme'], expected[i]['lexeme'], reason: '$i lexeme');
+        if (expected[i].containsKey('isTripleEq')) expect(actual[i]['isTripleEq'], expected[i]['isTripleEq'], reason: '$i isTripleEq');
+      }
+    });
+  });
+
+  group('observableInternal/logging/debugger/rpc.ts', () {
+    test('API proxies are not thenable', () async {
+      final channel = _TestChannel();
+      final connection = rpc.SimpleTypedRpcConnection.createHost((_) => channel, () => _TestSide());
+      expect(connection.api.requests.then, isNull);
+      expect(connection.api.notifications.then, isNull);
+      expect(await connection.api.requests, same(connection.api.requests));
+      expect(await connection.api.notifications, same(connection.api.notifications));
+    });
+    test('requests/notification forwarding (extra)', () async {
+      final channel = _TestChannel();
+      final connection = rpc.SimpleTypedRpcConnection.createHost((_) => channel, () => _TestSide());
+      final result = await connection.api.requests.echo('hello', 42);
+      expect(result, 'hello:42');
+      connection.api.notifications.note('x');
+      expect(channel.notifications.length, 1);
+    });
+  });
 }
