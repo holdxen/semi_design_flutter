@@ -24,6 +24,11 @@ import 'package:semi_design_flutter/src/monaco/editor/common/core/ranges/offsetR
 import 'package:semi_design_flutter/src/monaco/editor/common/core/ranges/rangeSingleLine.dart';
 import 'package:semi_design_flutter/src/monaco/editor/common/core/selection.dart';
 import 'package:semi_design_flutter/src/monaco/editor/common/encodedTokenAttributes.dart' as eta;
+import 'package:semi_design_flutter/src/monaco/editor/common/core/wordCharacterClassifier.dart' as wcc;
+import 'package:semi_design_flutter/src/monaco/platform/keybinding/common/baseResolvedKeybinding.dart' as brk;
+import 'package:semi_design_flutter/src/monaco/base/common/keybindings.dart' as kb;
+import 'package:semi_design_flutter/src/monaco/base/common/keyCodes.dart' as kc;
+import 'package:semi_design_flutter/src/monaco/base/common/platform.dart' as pf;
 
 void main() {
   group('position.ts', () {
@@ -194,6 +199,87 @@ void main() {
     });
   });
 
+  group('wordCharacterClassifier.ts (1:1)', () {
+    test('classifies separators and whitespace', () {
+      final wcc.WordCharacterClassifier w =
+          wcc.WordCharacterClassifier('.,', <String>[]);
+      expect(w.get('a'.codeUnitAt(0)), wcc.WordCharacterClass.Regular);
+      expect(w.get(CharCode.Space), wcc.WordCharacterClass.Whitespace);
+      expect(w.get(CharCode.Tab), wcc.WordCharacterClass.Whitespace);
+      expect(w.get('.'.codeUnitAt(0)), wcc.WordCharacterClass.WordSeparator);
+      expect(w.get(','.codeUnitAt(0)), wcc.WordCharacterClass.WordSeparator);
+    });
+
+    test('Intl segmenter carrier: find words before/after offset', () {
+      final wcc.WordCharacterClassifier w =
+          wcc.WordCharacterClassifier('', <String>['en']);
+      expect(w.intlSegmenterLocales, <String>['en']);
+      expect(
+          w.findNextIntlWordAtOrAfterOffset('hello world', 6)?.segment, 'world');
+      expect(
+          w.findPrevIntlWordBeforeOrAtOffset('hello world', 6)?.segment, 'world');
+      expect(
+          w.findPrevIntlWordBeforeOrAtOffset('hello world', 5)?.segment, 'hello');
+      expect(w.findNextIntlWordAtOrAfterOffset('hello world', 100), isNull);
+
+      final wcc.WordCharacterClassifier noIntl =
+          wcc.WordCharacterClassifier('', <String>[]);
+      expect(noIntl.findNextIntlWordAtOrAfterOffset('hello', 0), isNull);
+    });
+
+    test('getMapForWordSeparators caches by key', () {
+      final wcc.WordCharacterClassifier a =
+          wcc.getMapForWordSeparators('.,', <String>[]);
+      final wcc.WordCharacterClassifier b =
+          wcc.getMapForWordSeparators('.,', <String>[]);
+      final wcc.WordCharacterClassifier c =
+          wcc.getMapForWordSeparators(':;', <String>[]);
+      expect(identical(a, b), isTrue);
+      expect(identical(a, c), isFalse);
+    });
+  });
+
+  group('baseResolvedKeybinding.ts (1:1)', () {
+    test('labels, chords, WYSIWYG', () {
+      final _TestKeybinding k = _TestKeybinding(pf.OperatingSystem.Windows, <
+          kb.KeyCodeChord>[
+        kb.KeyCodeChord(true, false, false, false, kc.KeyCode.KeyA),
+      ]);
+      expect(k.getLabel(), contains('K${kc.KeyCode.KeyA}'));
+      expect(k.getAriaLabel(), contains('A${kc.KeyCode.KeyA}'));
+      expect(k.getUserSettingsLabel(), contains('U${kc.KeyCode.KeyA}'));
+      expect(k.getElectronAccelerator(), contains('E${kc.KeyCode.KeyA}'));
+      expect(k.hasMultipleChords(), isFalse);
+      expect(k.isWYSIWYG(), isTrue);
+      final List<kb.ResolvedChord> chords = k.getChords();
+      expect(chords.length, 1);
+      expect(chords.single.ctrlKey, isTrue);
+      expect(chords.single.keyLabel, 'K${kc.KeyCode.KeyA}');
+      expect(k.getDispatchChords(), <String?>['D${kc.KeyCode.KeyA}']);
+      expect(k.getSingleModifierDispatchChords(), <String?>[null]);
+    });
+
+    test('chords and duplicate modifier cases have no electron accelerator',
+        () {
+      final _TestKeybinding multi = _TestKeybinding(
+          pf.OperatingSystem.Windows, <kb.KeyCodeChord>[
+        kb.KeyCodeChord(false, false, false, false, kc.KeyCode.KeyA),
+        kb.KeyCodeChord(false, false, false, false, kc.KeyCode.KeyB),
+      ]);
+      expect(multi.hasMultipleChords(), isTrue);
+      expect(multi.getElectronAccelerator(), isNull);
+
+      final _TestKeybinding modifier = _TestKeybinding(
+          pf.OperatingSystem.Windows, <kb.KeyCodeChord>[
+        kb.KeyCodeChord(true, false, false, false, kc.KeyCode.Ctrl),
+      ]);
+      expect(modifier.getElectronAccelerator(), isNull);
+      expect(
+          () => _TestKeybinding(pf.OperatingSystem.Windows, <kb.KeyCodeChord>[]),
+          throwsA(isA<Error>()));
+    });
+  });
+
   group('encodedTokenAttributes.ts', () {
     int enc(int lang, int ttype, bool bal, int font, int fg, int bg) =>
         (lang) | (ttype << 8) | ((bal ? 1 : 0) << 10) |
@@ -236,4 +322,33 @@ void main() {
       expect(pres.strikethrough, true);
     });
   });
+}
+
+
+class _TestKeybinding extends brk.BaseResolvedKeybinding<kb.KeyCodeChord> {
+  _TestKeybinding(int os, List<kb.KeyCodeChord> chords) : super(os, chords);
+
+  @override
+  String? getLabelFor(kb.KeyCodeChord keybinding) => 'K${keybinding.keyCode}';
+
+  @override
+  String? getAriaLabelFor(kb.KeyCodeChord keybinding) => 'A${keybinding.keyCode}';
+
+  @override
+  String? getElectronAcceleratorFor(kb.KeyCodeChord keybinding) =>
+      'E${keybinding.keyCode}';
+
+  @override
+  String? getUserSettingsLabelFor(kb.KeyCodeChord keybinding) =>
+      'U${keybinding.keyCode}';
+
+  @override
+  bool isWYSIWYGFor(kb.KeyCodeChord keybinding) => true;
+
+  @override
+  String? getChordDispatch(kb.KeyCodeChord keybinding) =>
+      'D${keybinding.keyCode}';
+
+  @override
+  String? getSingleModifierChordDispatch(kb.KeyCodeChord keybinding) => null;
 }

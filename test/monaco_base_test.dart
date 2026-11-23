@@ -10,6 +10,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:semi_design_flutter/src/monaco/nls.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/assert.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/errors.dart';
+import 'package:semi_design_flutter/src/monaco/base/common/equals.dart' as eq;
+import 'package:semi_design_flutter/src/monaco/base/common/arrays.dart' as arr;
+import 'package:semi_design_flutter/src/monaco/base/common/lifecycle.dart' as lc;
+import 'package:semi_design_flutter/src/monaco/base/common/event.dart' as ev;
+import 'package:semi_design_flutter/src/monaco/base/common/tfIdf.dart' as tf;
+import 'package:semi_design_flutter/src/monaco/base/common/sequence.dart' as seq;
+import 'package:semi_design_flutter/src/monaco/base/common/cache.dart' as cache;
+import 'package:semi_design_flutter/src/monaco/base/common/cancellation.dart' as cancellation;
+import 'package:semi_design_flutter/src/monaco/base/common/history.dart' as hist;
+import 'package:semi_design_flutter/src/monaco/base/common/actions.dart' as actions;
+import 'package:semi_design_flutter/src/monaco/base/common/stream.dart' as streams;
+import 'package:semi_design_flutter/src/monaco/base/common/scrollable.dart' as scroll;
+import 'package:semi_design_flutter/src/monaco/base/common/decorators/cancelPreviousCalls.dart' as canceldec;
 import 'package:semi_design_flutter/src/monaco/base/common/collections.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/functional.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/idGenerator.dart';
@@ -3230,4 +3243,1068 @@ void main() {
     });
   });
 
+  group('equals (1:1 equals.ts)', () {
+    test('arrays.equals: same ref / null / length / itemEquals', () {
+      final List<int> a = <int>[1, 2, 3];
+      expect(arr.equals<int>(a, a), isTrue); // one === other
+      expect(arr.equals<int>(null, null), isTrue);
+      expect(arr.equals<int>(a, null), isFalse);
+      expect(arr.equals<int>(a, <int>[1, 2]), isFalse);
+      expect(arr.equals<int>(a, <int>[1, 2, 3]), isTrue);
+      expect(arr.equals<int>(a, <int>[1, 2, 4]), isFalse);
+      // custom itemEquals: compare modulo 10
+      expect(arr.equals<int>(<int>[1, 2], <int>[11, 12], (x, y) => x % 10 == y % 10), isTrue);
+    });
+
+    test('strictEquals / strictEqualsC / arrayEquals / arrayEqualsC', () {
+      expect(eq.strictEquals<int>(1, 1), isTrue);
+      expect(eq.strictEquals<int>(1, 2), isFalse);
+      final Object o = Object();
+      expect(eq.strictEquals<Object>(o, o), isTrue);
+      expect(eq.strictEquals<Object>(o, Object()), isFalse);
+      expect(eq.strictEqualsC<int>()(3, 3), isTrue);
+      expect(eq.arrayEquals<int>(<int>[1, 2], <int>[1, 2]), isTrue);
+      expect(eq.arrayEquals<int>(<int>[1, 2], <int>[1, 3]), isFalse);
+      expect(eq.arrayEqualsC<int>()(<int>[5], <int>[5]), isTrue);
+    });
+
+    test('structuralEquals: nested lists and maps', () {
+      expect(eq.structuralEquals<Object>(<Object>[1, <int>[2, 3]], <Object>[1, <int>[2, 3]]), isTrue);
+      expect(eq.structuralEquals(<int>[1, 2], <int>[1, 2, 3]), isFalse);
+      expect(
+        eq.structuralEquals(
+          <String, Object?>{'a': 1, 'b': <int>[2, 3]},
+          <String, Object?>{'b': <int>[2, 3], 'a': 1},
+        ),
+        isTrue,
+      );
+      expect(
+        eq.structuralEquals(
+          <String, Object?>{'a': 1},
+          <String, Object?>{'a': 2},
+        ),
+        isFalse,
+      );
+      // key mismatch
+      expect(eq.structuralEquals(<String, int>{'a': 1}, <String, int>{'b': 1}), isFalse);
+      expect(eq.structuralEqualsC<List<int>>()(<int>[1], <int>[1]), isTrue);
+    });
+
+    test('getStructuralKey: key order normalized, object identity for non-plain', () {
+      final String k1 = eq.getStructuralKey(<String, Object?>{'a': 1, 'b': 2});
+      final String k2 = eq.getStructuralKey(<String, Object?>{'b': 2, 'a': 1});
+      expect(k1, k2);
+      expect(eq.getStructuralKey(<Object?>[1, 'x', true]), '[1,"x",true]');
+      // non-plain object -> stable identity string (same object twice = same key)
+      final Object o = Object();
+      expect(eq.getStructuralKey(o), eq.getStructuralKey(o));
+      expect(eq.getStructuralKey(o), isNot(eq.getStructuralKey(Object())));
+    });
+
+    test('jsonStringifyEquals / equalsIfDefined / thisEqualsC', () {
+      expect(eq.jsonStringifyEquals(<String, int>{'a': 1}, <String, int>{'a': 1}), isTrue);
+      expect(eq.jsonStringifyEqualsC<Map<String, int>>()(<String, int>{'a': 1}, <String, int>{'a': 2}), isFalse);
+      expect(eq.equalsIfDefined<int>(null, null, eq.strictEquals), isTrue);
+      expect(eq.equalsIfDefined<int>(null, 1, eq.strictEquals), isFalse);
+      expect(eq.equalsIfDefined<int>(1, 1, eq.strictEquals), isTrue);
+      expect(eq.equalsIfDefinedC<int>(eq.strictEquals)(null, null), isTrue);
+      expect(eq.Equals.strictValue<int>(2, 2), isTrue);
+      expect(eq.Equals.array<int>()(<int>[1], <int>[1]), isTrue);
+    });
+  });
+
+  group('lifecycle (1:1 lifecycle.ts)', () {
+    test('dispose single / array / iterable; rethrows composite on multiple', () {
+      int calls = 0;
+      final lc.IDisposable d = lc.toDisposable(() => calls++);
+      lc.dispose(d);
+      lc.dispose(d); // FunctionDisposable is idempotent
+      expect(calls, 1);
+
+      int n = 0;
+      final List<lc.IDisposable> items = <lc.IDisposable>[
+        lc.toDisposable(() => n++),
+        lc.toDisposable(() => n++),
+      ];
+      final Object? result = lc.dispose(items);
+      expect(n, 2);
+      expect(result, isA<List<Object>>()); // source returns [] for arrays
+
+      // multiple throw -> AggregateError
+      final List<lc.IDisposable> bad = <lc.IDisposable>[
+        lc.toDisposable(() => throw StateError('a')),
+        lc.toDisposable(() => throw StateError('b')),
+      ];
+      expect(() => lc.dispose(bad), throwsA(isA<lc.AggregateError>()));
+    });
+
+    test('DisposableStore: add/delete/deleteAndLeak/idempotent dispose', () {
+      final lc.DisposableStore store = lc.DisposableStore();
+      int a = 0, b = 0;
+      final lc.IDisposable da = lc.toDisposable(() => a++);
+      final lc.IDisposable db = lc.toDisposable(() => b++);
+      store.add(da);
+      store.add(db);
+      expect(store.isDisposed, isFalse);
+      store.delete(da);
+      expect(a, 1);
+      store.deleteAndLeak(db);
+      expect(b, 0); // not disposed
+      store.dispose();
+      store.dispose(); // idempotent
+      expect(store.isDisposed, isTrue);
+    });
+
+    test('DisposableSet: values / Symbol.iterator / deleteAndLeak', () {
+      final lc.DisposableSet<lc.IDisposable> set = lc.DisposableSet<lc.IDisposable>();
+      int v = 0;
+      final lc.IDisposable d = lc.toDisposable(() => v++);
+      set.add(d);
+      expect(set.has(d), isTrue);
+      expect(set.size, 1);
+      expect(set.toList(), <lc.IDisposable>[d]); // implements Iterable
+      expect(set.deleteAndLeak(d), d);
+      expect(set.has(d), isFalse);
+      expect(v, 0);
+      set.add(d);
+      set.deleteAndDispose(d);
+      expect(v, 1);
+    });
+
+    test('MutableDisposable / MandatoryMutableDisposable / RefCountedDisposable', () {
+      final lc.MutableDisposable<lc.IDisposable> m = lc.MutableDisposable<lc.IDisposable>();
+      int a = 0, b = 0;
+      m.value = lc.toDisposable(() => a++);
+      m.value = lc.toDisposable(() => b++);
+      expect(a, 1); // old disposed on replace
+      expect(m.value, isNotNull);
+      final Object? leaked = m.clearAndLeak();
+      expect(leaked, isNotNull);
+      expect(b, 0);
+      m.dispose();
+
+      final lc.MandatoryMutableDisposable<lc.IDisposable> mm =
+          lc.MandatoryMutableDisposable<lc.IDisposable>(lc.toDisposable(() {}));
+      expect(mm.value, isA<lc.IDisposable>());
+      mm.dispose();
+
+      int disposed = 0;
+      final lc.RefCountedDisposable rc = lc.RefCountedDisposable(lc.toDisposable(() => disposed++));
+      rc.acquire(); // counter = 2
+      rc.release(); // counter = 1
+      expect(disposed, 0);
+      rc.release(); // counter = 0
+      expect(disposed, 1);
+    });
+
+    test('ReferenceCollection / DisposableMap / thenIfNotDisposed', () async {
+      int created = 0, destroyed = 0;
+      final _TestRefCollection refs = _TestRefCollection(() => created++, (_) => destroyed++);
+      final lc.IReference<int> r1 = refs.acquire('k');
+      final lc.IReference<int> r2 = refs.acquire('k');
+      expect(r1.object, 1);
+      expect(created, 1); // cached
+      r1.dispose();
+      r2.dispose();
+      expect(destroyed, 1); // destroyed when counter hits 0
+
+      final lc.DisposableMap<String, lc.IDisposable> dm = lc.DisposableMap<String, lc.IDisposable>();
+      int d = 0;
+      dm.set('a', lc.toDisposable(() => d++));
+      dm.set('a', lc.toDisposable(() => d++)); // disposes old
+      expect(d, 1);
+      expect(dm.has('a'), isTrue);
+      dm.deleteAndDispose('a');
+      expect(d, 2);
+
+      bool ran = false;
+      final Completer<int> c = Completer<int>();
+      final lc.IDisposable sub = lc.thenIfNotDisposed(c.future, (int v) => ran = true);
+      sub.dispose();
+      c.complete(1);
+      await c.future;
+      await Future<void>.delayed(Duration.zero);
+      expect(ran, isFalse); // disposed before resolve
+    });
+  });
+
+  group('event (1:1 event.ts)', () {
+    test('Emitter plain: fire then dispose listener', () {
+      final ev.Emitter<String> emitter = ev.Emitter<String>();
+      final _EventCounter counter = _EventCounter();
+      final lc.IDisposable sub = emitter.event(counter.onEvent);
+      emitter.fire('far');
+      emitter.fire('boo');
+      sub.dispose();
+      emitter.fire('boo');
+      expect(counter.count, 2);
+      emitter.dispose();
+    });
+
+    test('Emitter duplicate functions: same fn added twice', () {
+      final List<String> calls = <String>[];
+      void a(dynamic v) => calls.add('a$v');
+      void b(dynamic v) => calls.add('b$v');
+      final ev.Emitter<String> emitter = ev.Emitter<String>();
+      emitter.event(a);
+      emitter.event(b);
+      final lc.IDisposable s2 = emitter.event(a);
+      emitter.fire('1');
+      expect(calls, <String>['a1', 'b1', 'a1']);
+      s2.dispose();
+      calls.clear();
+      emitter.fire('2');
+      expect(calls, <String>['a2', 'b2']);
+      emitter.dispose();
+    });
+
+    test('Emitter handles removal during emission', () {
+      final List<String> fn1 = <String>[];
+      final List<String> fn2 = <String>[];
+      final ev.Emitter<String> emitter = ev.Emitter<String>();
+      emitter.event((dynamic v) => fn1.add(v as String));
+      late final lc.IDisposable h;
+      h = emitter.event((dynamic v) => h.dispose());
+      emitter.event((dynamic v) => fn2.add(v as String));
+      emitter.fire('foo');
+      expect(fn1, <String>['foo']);
+      expect(fn2, <String>['foo']);
+      emitter.dispose();
+    });
+
+    test('onWillAddFirst / onDidRemoveLast listener counts', () {
+      int first = 0, last = 0;
+      final ev.Emitter<dynamic> emitter = ev.Emitter<dynamic>(ev.EmitterOptions(
+        onWillAddFirstListener: () => first++,
+        onDidRemoveLastListener: () => last++,
+      ));
+      expect(first, 0);
+      expect(last, 0);
+      final lc.IDisposable s1 = emitter.event((dynamic _) {});
+      final lc.IDisposable s2 = emitter.event((dynamic _) {});
+      expect(first, 1);
+      expect(last, 0);
+      s1.dispose();
+      expect(first, 1);
+      expect(last, 0);
+      s2.dispose();
+      expect(first, 1);
+      expect(last, 1);
+      emitter.event((dynamic _) {}).dispose();
+      expect(first, 2);
+      emitter.dispose();
+    });
+
+    test('throwing listener does not block other listeners', () {
+      final ev.Emitter<dynamic> emitter = ev.Emitter<dynamic>(ev.EmitterOptions(
+        onListenerError: (dynamic e) {}, // swallow
+      ));
+      bool hit = false;
+      emitter.event((dynamic _) => throw StateError('boom'));
+      emitter.event((dynamic _) => hit = true);
+      emitter.fire(null);
+      expect(hit, isTrue);
+      emitter.dispose();
+    });
+
+    test('Event.map / filter / once / signal helpers', () {
+      final ev.Emitter<int> emitter = ev.Emitter<int>();
+      final ev.Event<String> mapped = ev.eventMap<int, String>(emitter.event, (i) => 'v$i');
+      final List<String> got = <String>[];
+      mapped((dynamic v) => got.add(v as String));
+      emitter.fire(1);
+      emitter.fire(2);
+      expect(got, <String>['v1', 'v2']);
+
+      final ev.Event<int> filtered = ev.eventFilter<int>(emitter.event, (i) => i.isEven);
+      final List<int> even = <int>[];
+      filtered((dynamic v) => even.add(v as int));
+      emitter.fire(3);
+      emitter.fire(4);
+      // snapshot filters subscribe lazily, so only fires after subscription count.
+      expect(even, <int>[4]);
+
+      int onceCount = 0;
+      ev.eventOnce<int>(emitter.event)((dynamic _) => onceCount++);
+      emitter.fire(5);
+      emitter.fire(6);
+      expect(onceCount, 1);
+      emitter.dispose();
+    });
+
+    test('PauseableEmitter: pause/resume no merge and with merge', () {
+      final List<int> data = <int>[];
+      final ev.PauseableEmitter<int> emitter = ev.PauseableEmitter<int>();
+      emitter.event((dynamic e) => data.add(e as int));
+      emitter.fire(1);
+      emitter.fire(2);
+      expect(data, <int>[1, 2]);
+      emitter.pause();
+      emitter.fire(3);
+      emitter.fire(4);
+      expect(data, <int>[1, 2]);
+      emitter.resume();
+      expect(data, <int>[1, 2, 3, 4]);
+      emitter.fire(5);
+      expect(data, <int>[1, 2, 3, 4, 5]);
+      emitter.dispose();
+
+      final List<int> merged = <int>[];
+      final ev.PauseableEmitter<int> m = ev.PauseableEmitter<int>(
+        ev.EmitterOptionsWithMerge<int>((List<int> xs) => xs.fold<int>(0, (a, b) => a + b)),
+      );
+      m.event((dynamic e) => merged.add(e as int));
+      m.pause();
+      m.fire(1);
+      m.fire(2);
+      m.fire(3);
+      m.resume();
+      expect(merged, <int>[6]);
+      m.dispose();
+    });
+
+    test('Relay forwards from swappable input; ValueWithChangeEvent fires on change', () {
+      final ev.Emitter<int> a = ev.Emitter<int>();
+      final ev.Emitter<int> b = ev.Emitter<int>();
+      final ev.Relay<int> relay = ev.Relay<int>();
+      final List<int> got = <int>[];
+      relay.event((dynamic v) => got.add(v as int));
+      relay.input = a.event;
+      a.fire(1);
+      relay.input = b.event;
+      a.fire(2); // no longer forwarded
+      b.fire(3);
+      expect(got, <int>[1, 3]);
+      relay.dispose();
+
+      int changes = 0;
+      final ev.ValueWithChangeEvent<int> vwc = ev.ValueWithChangeEvent<int>(1);
+      vwc.onDidChange((dynamic _) => changes++);
+      vwc.value = 1; // no change
+      vwc.value = 2;
+      expect(changes, 1);
+      expect(vwc.value, 2);
+    });
+  });
+
+  group('tfIdf / sequence / cache (1:1)', () {
+    tf.TfIdfDocument _doc(String key, Object chunks) => tf.TfIdfDocument(
+        key: key,
+        textChunks: chunks is String ? <String>[chunks] : List<String>.from(chunks as List));
+
+    List<String> _scoreKeys(List<tf.TfIdfScore> scores) {
+      final List<tf.TfIdfScore> sorted = List<tf.TfIdfScore>.from(scores)
+        ..sort((tf.TfIdfScore a, tf.TfIdfScore b) {
+          final int byScore = b.score.compareTo(a.score);
+          return byScore != 0 ? byScore : a.key.compareTo(b.key);
+        });
+      return sorted.map((tf.TfIdfScore s) => s.key).toList();
+    }
+
+    test('TfIdf: no docs / term not present / exact match', () {
+      final cancellationToken = cancellation.CancellationToken.none;
+      expect(tf.TfIdfCalculator().calculateScores('something', cancellationToken), isEmpty);
+
+      final calc2 = tf.TfIdfCalculator()
+        ..updateDocuments(<tf.TfIdfDocument>[_doc('A', 'cat dog fish')]);
+      expect(calc2.calculateScores('elephant', cancellationToken), isEmpty);
+
+      final calc3 = tf.TfIdfCalculator()
+        ..updateDocuments(<tf.TfIdfDocument>[
+          _doc('A', 'cat dog cat'),
+          _doc('B', 'cat fish'),
+        ]);
+      expect(_scoreKeys(calc3.calculateScores('dog', cancellationToken)), <String>['A']);
+    });
+
+    test('TfIdf: more matches first / weighting / camelCase / ignore case', () {
+      final cancellationToken = cancellation.CancellationToken.none;
+      final calc = tf.TfIdfCalculator()
+        ..updateDocuments(<tf.TfIdfDocument>[
+          _doc('/A', 'cat dog cat'),
+          _doc('/B', 'cat fish'),
+          _doc('/C', 'frog'),
+        ]);
+      expect(_scoreKeys(calc.calculateScores('cat', cancellationToken)), <String>['/A', '/B']);
+
+      final camel = tf.TfIdfCalculator()
+        ..updateDocuments(<tf.TfIdfDocument>[
+          _doc('/A', 'catDog cat'),
+          _doc('/B', 'fishCatFish'),
+          _doc('/C', 'frogcat'),
+        ]);
+      expect(_scoreKeys(camel.calculateScores('catDOG', cancellationToken)), <String>['/A', '/B']);
+
+      final ci = tf.TfIdfCalculator()
+        ..updateDocuments(<tf.TfIdfDocument>[
+          _doc('/A', 'Cat doG.cat'),
+          _doc('/B', 'cAt fiSH'),
+          _doc('/C', 'frOg'),
+        ]);
+      expect(_scoreKeys(ci.calculateScores('. ,CaT!  ', cancellationToken)), <String>['/A', '/B']);
+    });
+
+    test('TfIdf: chunks weighting / delete document / normalize', () {
+      final cancellationToken = cancellation.CancellationToken.none;
+      final calc = tf.TfIdfCalculator()
+        ..updateDocuments(<tf.TfIdfDocument>[
+          _doc('/A', <String>['cat dog cat', 'fish']),
+          _doc('/B', <String>['cat cat cat cat dog', 'dog']),
+        ]);
+      expect(_scoreKeys(calc.calculateScores('cat', cancellationToken)), <String>['/B', '/A']);
+
+      final del = tf.TfIdfCalculator()
+        ..updateDocuments(<tf.TfIdfDocument>[_doc('/A', 'cat dog cat'), _doc('/B', 'cat fish')]);
+      expect(_scoreKeys(del.calculateScores('cat', cancellationToken)), <String>['/A', '/B']);
+      del.deleteDocument('/A');
+      expect(_scoreKeys(del.calculateScores('cat', cancellationToken)), <String>['/B']);
+
+      final normalized = tf.normalizeTfIdfScores(<tf.TfIdfScore>[
+        tf.TfIdfScore(key: 'a', score: 2),
+        tf.TfIdfScore(key: 'b', score: 1),
+      ]);
+      expect(normalized.first.key, 'a');
+      expect(normalized.first.score, 1.0);
+      expect(normalized.last.score, 0.5);
+    });
+
+    test('Sequence: splice fires onDidSplice with correct data', () {
+      final seq.Sequence<int> s = seq.Sequence<int>();
+      final List<seq.ISplice<int>> events = <seq.ISplice<int>>[];
+      s.onDidSplice((dynamic e) => events.add(e as seq.ISplice<int>));
+      s.splice(0, 0, <int>[1, 2, 3]);
+      expect(s.elements, <int>[1, 2, 3]);
+      s.splice(1, 1, <int>[9]);
+      expect(s.elements, <int>[1, 9, 3]);
+      expect(events.length, 2);
+      expect(events.first.start, 0);
+      expect(events.first.deleteCount, 0);
+      expect(events.first.toInsert, <int>[1, 2, 3]);
+    });
+
+    test('Cache: caches result, retries after dispose', () async {
+      int counter = 0;
+      final cache.Cache<int> c = cache.Cache<int>((_) async => counter++);
+      final int first = await c.get().promise;
+      final int second = await c.get().promise;
+      expect(first, 0);
+      expect(second, 0); // cached
+      expect(counter, 1);
+      c.get().dispose();
+      final int third = await c.get().promise;
+      expect(third, 1); // recomputed after dispose
+    });
+
+    test('CachedFunction / LRUCachedFunction / WeakCachedFunction', () {
+      int calls = 0;
+      final cache.CachedFunction<int, int> cf = cache.CachedFunction<int, int>((int x) {
+        calls++;
+        return x * 2;
+      });
+      expect(cf.get(3), 6);
+      expect(cf.get(3), 6);
+      expect(calls, 1);
+      expect(cf.cachedValues.length, 1);
+
+      int lruCalls = 0;
+      final cache.LRUCachedFunction<int, int> lru = cache.LRUCachedFunction<int, int>((int x) {
+        lruCalls++;
+        return x + 1;
+      });
+      expect(lru.get(1), 2);
+      expect(lru.get(1), 2);
+      expect(lru.get(2), 3);
+      expect(lruCalls, 2); // last-key only
+
+      final Object key = Object();
+      int weakCalls = 0;
+      final cache.WeakCachedFunction<Object, int> weak =
+          cache.WeakCachedFunction<Object, int>((Object _) => ++weakCalls);
+      expect(weak.get(key), 1);
+      expect(weak.get(key), 1);
+      expect(weakCalls, 1);
+    });
+  });
+
+  group('arrays.ts (1:1 full)', () {
+    test('tail / removeFast / binarySearch / quickSelect', () {
+      expect(arr.tail(<int>[1, 2, 3]).rest, <int>[1, 2]);
+      expect(arr.tail(<int>[1, 2, 3]).last, 3);
+      expect(() => arr.tail(<int>[]), throwsStateError);
+      final a = <int>[1, 2, 3, 4];
+      arr.removeFastWithoutKeepingOrder(a, 1);
+      expect(a, <int>[1, 4, 3]);
+      final sorted = <int>[1, 3, 5, 7];
+      expect(arr.binarySearch(sorted, 5, arr.numberComparator), 2);
+      expect(arr.binarySearch(sorted, 4, arr.numberComparator), -3);
+      expect(arr.binarySearch2(4, (int i) => sorted[i] - 6), -4);
+      expect(arr.quickSelect(2, <int>[9, 1, 5, 3, 7], arr.numberComparator), 5);
+    });
+
+    test('groupBy / groupAdjacentBy / adjacent helpers', () {
+      expect(arr.groupBy(<int>[1, 2, 2, 3], arr.numberComparator),
+          <List<int>>[<int>[1], <int>[2, 2], <int>[3]]);
+      final grouped = arr.groupAdjacentBy<String>(
+          ['a', 'a', 'b', 'b', 'a'], (String x, String y) => x == y);
+      expect(grouped.toList(), <List<String>>[
+        <String>['a', 'a'],
+        <String>['b', 'b'],
+        <String>['a']
+      ]);
+      final adjacent = <List<Object?>>[];
+      arr.forEachAdjacent<int>([1, 2],
+          (Object? a, Object? b) => adjacent.add(<Object?>[a, b]));
+      expect(adjacent, <List<Object?>>[
+        <Object?>[null, 1],
+        <Object?>[1, 2],
+        <Object?>[2, null]
+      ]);
+      final neighbors = <List<Object?>>[];
+      arr.forEachWithNeighbors<int>([1, 2, 3],
+          (Object? b, int e, Object? a) => neighbors.add(<Object?>[b, e, a]));
+      expect(neighbors[0], <Object?>[null, 1, 2]);
+      expect(neighbors[2], <Object?>[2, 3, null]);
+      expect(arr.concatArrays<int>([
+        <int>[1],
+        <int>[2, 3]
+      ]), <int>[1, 2, 3]);
+    });
+
+    test('sortedDiff / delta / top / topAsync', () async {
+      final splices = arr.sortedDiff<int>(
+          [1, 2, 4], [1, 3, 4], arr.numberComparator);
+      // Source merges adjacent splices: delete 2 at 1 and insert 3 at 2.
+      expect(splices.length, 1);
+      expect(splices.first.start, 1);
+      expect(splices.first.deleteCount, 1);
+      expect(splices.first.toInsert, <int>[3]);
+      final d = arr.delta<int>([1, 2, 4], [1, 3, 4], arr.numberComparator);
+      expect(d.removed, <int>[2]);
+      expect(d.added, <int>[3]);
+      expect(arr.top<int>([5, 1, 9, 3], arr.numberComparator, 2), <int>[1, 3]);
+      final cancellation.CancellationTokenSource cts =
+          cancellation.CancellationTokenSource();
+      expect(await arr.topAsync<int>(
+          [5, 1, 9, 3], arr.numberComparator, 2, 1, cts.token), <int>[1, 3]);
+      cts.cancel();
+      expect(() => arr.topAsync<int>(
+          [5, 1], arr.numberComparator, 1, 1, cts.token), throwsA(isA<dynamic>()));
+    });
+
+    test('coalesce / distinct / range / index / insert-remove', () {
+      expect(arr.coalesce<int>(<int?>[1, null, 0, 2]), <int>[1, 2]);
+      final inplace = <int?>[1, null, 0, 2];
+      arr.coalesceInPlace<int>(inplace);
+      expect(inplace, <int>[1, 2]);
+      final moved = <Object?>[1, 2, 3];
+      arr.move(moved, 0, 2);
+      expect(moved, <Object?>[2, 3, 1]);
+      expect(arr.isFalsyOrEmpty(<int>[]), isTrue);
+      expect(arr.isFalsyOrEmpty(<int>[1]), isFalse);
+      expect(arr.isNonEmptyArray(<int>[1]), isTrue);
+      expect(arr.distinct<int>([1, 2, 1, 3]), <int>[1, 2, 3]);
+      final unique = arr.uniqueFilter<int, int>((int x) => x % 2);
+      expect([1, 2, 3, 4].where(unique).toList(), <int>[1, 2]);
+      expect(arr.commonPrefixLength<int>([1, 2, 3], [1, 2, 4]), 2);
+      expect(arr.range(3), <int>[0, 1, 2]);
+      expect(arr.range(3, 1), <int>[3, 2]);
+      expect(arr.index<String, int>(['a', 'bb'], (String s) => s, (String s) => s.length),
+          <String, Object?>{'a': 1, 'bb': 2});
+      final list = <int>[1, 2];
+      final undo = arr.insert(list, 3);
+      expect(list, <int>[1, 2, 3]);
+      undo();
+      expect(list, <int>[1, 2]);
+      expect(arr.remove(list, 1), 1);
+      expect(arr.arrayInsert<int>([1, 4], 1, [2, 3]), <int>[1, 2, 3, 4]);
+    });
+
+    test('shuffle / push / map / splice helpers', () {
+      final a = <int>[1, 2, 3, 4];
+      arr.shuffle(a, 42);
+      expect(a.length, 4);
+      final b = <int>[1, 2, 3];
+      arr.pushToStart(b, 3);
+      expect(b, <int>[3, 1, 2]);
+      arr.pushToEnd(b, 3);
+      expect(b, <int>[1, 2, 3]);
+      arr.pushMany(b, [4, 5]);
+      expect(b, <int>[1, 2, 3, 4, 5]);
+      expect(arr.mapArrayOrNot<int, int>(3, (int x) => x * 2), 6);
+      expect(arr.mapArrayOrNot<int, int>([3, 4], (int x) => x * 2), <int>[6, 8]);
+      expect(arr.mapFilter<int, int>([1, 2, 3], (int x) => x.isEven ? x : null),
+          <int>[2]);
+      expect(arr.withoutDuplicates<int>([1, 2, 1]), <int>[1, 2]);
+      expect(arr.asArray<int>(1), <int>[1]);
+      expect(arr.asArray<int>([1, 2]), <int>[1, 2]);
+      expect(arr.getRandomElement<int>(<int>[]), isNull);
+      final c = <int>[1, 2, 3];
+      arr.insertInto(c, 1, [8, 9]);
+      expect(c, <int>[1, 8, 9, 2, 3]);
+      expect(arr.splice(c, 1, 2, [7]), <int>[8, 9]);
+      expect(c, <int>[1, 7, 2, 3]);
+    });
+
+    test('comparators / ArrayQueue / CallbackIterable / Permutation', () async {
+      expect(arr.compareResultIsLessThan(-1), isTrue);
+      expect(arr.compareResultIsGreaterThan(1), isTrue);
+      expect(arr.compareResultIsNeitherLessOrGreaterThan(0), isTrue);
+      final tie = arr.tieBreakComparators<int>([
+        (int a, int b) => a.compareTo(b),
+        (int a, int b) => -a.compareTo(b),
+      ]);
+      expect(tie(1, 2), -1);
+      expect(tie(1, 1), 0);
+      expect(arr.reverseOrder<int>(arr.numberComparator)(1, 2), 1);
+      final undef = arr.compareUndefinedSmallest<int>(arr.numberComparator);
+      expect(undef(null, 1), -1);
+      expect(undef(1, null), 1);
+      expect(arr.booleanComparator(false, true), -1);
+
+      final q = arr.ArrayQueue<int>([1, 2, 3, 4]);
+      expect(q.length, 4);
+      expect(q.peek(), 1);
+      expect(q.takeWhile((int x) => x < 3), <int>[1, 2]);
+      expect(q.peek(), 3);
+      expect(q.peekLast(), 4);
+      expect(q.takeFromEndWhile((int x) => x > 3), <int>[4]);
+      final q2 = arr.ArrayQueue<int>([1, 2, 3, 4]);
+      expect(q2.dequeue(), 1);
+      expect(q2.removeLast(), 4);
+      expect(q2.takeCount(2), <int>[2, 3]);
+      expect(q2.length, 0);
+
+      final ci = arr.CallbackIterable<int>((bool Function(int item) cb) {
+        for (int i = 1; i <= 4; i++) {
+          if (!cb(i)) return;
+        }
+      });
+      expect(ci.toArray(), <int>[1, 2, 3, 4]);
+      expect(ci.filter((int x) => x.isEven).toArray(), <int>[2, 4]);
+      expect(ci.map((int x) => x * 2).toArray(), <int>[2, 4, 6, 8]);
+      expect(ci.some((int x) => x == 3), isTrue);
+      expect(ci.findFirst((int x) => x > 2), 3);
+      expect(ci.findLast((int x) => x.isEven), 4);
+      expect(ci.findLastMaxBy(arr.numberComparator), 4);
+      expect(arr.CallbackIterable.empty.toArray(), isEmpty);
+
+      final p = arr.Permutation.createSortPermutation<int>(
+          [3, 1, 2], arr.numberComparator);
+      expect(p.apply([3, 1, 2]), <int>[1, 2, 3]);
+      expect(p.inverse().apply([1, 2, 3]), <int>[3, 1, 2]);
+      expect(await arr.findAsync<int>([1, 2, 3], (int e, int i) async => e == 2), 2);
+      expect(arr.sum(<num>[1, 2, 3]), 6);
+      expect(arr.sumBy<int>([1, 2], (int x) => x * 3), 9);
+    });
+  });
+
+  group('history.ts (1:1)', () {
+    test('create reduces input to limit and navigates', () {
+      final hist.HistoryNavigator<String> h =
+          hist.HistoryNavigator<String>(_TestHistory({'1', '2', '3', '4'}), 2);
+      expect(h.getHistory(), <String>['3', '4']);
+      expect(h.current(), isNull);
+      expect(h.isNowhere(), isTrue);
+      expect(h.next(), isNull);
+      expect(h.previous(), '4');
+      expect(h.isLast(), isTrue);
+      expect(h.first(), '3');
+      expect(h.isFirst(), isTrue);
+      expect(h.next(), '4');
+      expect(h.next(), isNull);
+      expect(h.isLast(), isFalse); // stepped past last
+    });
+
+    test('add reorders and clear resets', () {
+      final hist.HistoryNavigator<String> h =
+          hist.HistoryNavigator<String>(_TestHistory({'1', '2', '3'}));
+      h.add('1');
+      expect(h.getHistory(), <String>['2', '3', '1']);
+      h.add('4');
+      expect(h.getHistory(), <String>['2', '3', '1', '4']);
+      expect(h.has('4'), isTrue);
+      h.clear();
+      expect(h.current(), isNull);
+      expect(h.isNowhere(), isTrue);
+    });
+
+    test('HistoryNavigator2: navigation, dedup, replaceLast, prepend', () {
+      final hist.HistoryNavigator2<String> h =
+          hist.HistoryNavigator2<String>(['1', '2', '3', '4']);
+      expect(h.current(), '4');
+      expect(h.isAtEnd(), isTrue);
+      expect(h.next(), '4');
+      expect(h.previous(), '3');
+      expect(h.previous(), '2');
+      expect(h.previous(), '1');
+      expect(h.previous(), '1');
+      expect(h.resetCursor(), '4');
+
+      h.add('2');
+      expect(h.current(), '2');
+      expect(h.previous(), '4');
+      expect(h.previous(), '3');
+      expect(h.previous(), '1');
+
+      h.resetCursor(); // source replaceLast does not move the cursor
+      expect(h.replaceLast('5'), '2');
+      expect(h.current(), '5');
+      expect(h.has('2'), isFalse);
+      h.prepend('0');
+      expect(h.toList(), <String>['0', '1', '3', '4', '5']);
+      h.prepend('3'); // duplicate — ignored
+      expect(h.toList(), <String>['0', '1', '3', '4', '5']);
+    });
+
+    test('capacity + identityFn + onDidChange subscription', () {
+      final hist.HistoryNavigator2<String> h =
+          hist.HistoryNavigator2<String>(['1', '2', '3', '4'], 3,
+              (String s) => s.toLowerCase());
+      expect(h.size, 3);
+      expect(h.has('1'), isFalse);
+      expect(h.has('2'), isTrue);
+
+      final ev.Emitter<List<String>> emitter = ev.Emitter<List<String>>();
+      final _TestHistory notify = _TestHistory({'a'}, emitter.event);
+      int changes = 0;
+      final lc.IDisposable ownSub = emitter.event((dynamic _) => changes++);
+      final hist.HistoryNavigator<String> nav =
+          hist.HistoryNavigator<String>(notify, 10);
+      emitter.fire(<String>['x']);
+      expect(changes, 1);
+      nav.dispose();
+      ownSub.dispose();
+      emitter.fire(<String>['y']);
+      expect(changes, 1);
+    });
+  });
+
+  group('actions.ts (1:1)', () {
+    test('getActionForAltMode', () {
+      final alt = actions.Action('alt', 'alt');
+      final main = _ActionWithAlt(alt);
+      expect(identical(actions.getActionForAltMode(main, (altKey: false, shiftKey: false)), main), isTrue);
+      expect(identical(actions.getActionForAltMode(main, (altKey: true, shiftKey: false)), alt), isTrue);
+      if (pf.isWindows || pf.isLinux) {
+        expect(identical(
+            actions.getActionForAltMode(main, (altKey: false, shiftKey: true)), alt), isTrue);
+      } else {
+        expect(identical(
+            actions.getActionForAltMode(main, (altKey: false, shiftKey: true)), main), isTrue);
+      }
+    });
+
+    test('Action emits changes and runs callback', () async {
+      Object? received;
+      final actions.Action action = actions.Action(
+          'id', 'label', 'css', true, (Object? e) async {
+        received = e;
+      });
+      final List<actions.IActionChangeEvent> changes = <actions.IActionChangeEvent>[];
+      action.onDidChange((dynamic e) => changes.add(e as actions.IActionChangeEvent));
+      action.label = 'new';
+      action.enabled = false;
+      action.checked = true;
+      expect(changes.map((actions.IActionChangeEvent e) => e.label), <Object?>[
+        'new', null, null
+      ]);
+      expect(changes[1].enabled, false);
+      expect(changes[2].checked, true);
+      await action.run(42);
+      expect(received, 42);
+    });
+
+    test('ActionRunner will/did run and captures error', () async {
+      final runner = actions.ActionRunner();
+      final actions.IAction good = actions.Action('g', '', '', true, (Object? _) async {});
+      final actions.IAction bad = actions.Action('b', '', '', true, (Object? _) async {
+        throw StateError('boom');
+      });
+      final List<String> log = <String>[];
+      runner.onWillRun((dynamic e) => log.add('will:${(e as actions.IRunEvent).action.id}'));
+      runner.onDidRun((dynamic e) {
+        final actions.IRunEvent ev = e as actions.IRunEvent;
+        log.add('did:${ev.action.id}:${ev.error != null}');
+      });
+      await runner.run(good);
+      await runner.run(bad);
+      expect(log, <String>['will:g', 'did:g:false', 'will:b', 'did:b:true']);
+    });
+
+    test('Separator join/clean, SubmenuAction, toAction', () {
+      final a = actions.Action('a');
+      final b = actions.Action('b');
+      final joined = actions.Separator.join([
+        <actions.IAction>[a],
+        <actions.IAction>[b],
+      ]);
+      expect(joined.length, 3);
+      expect(joined[1].id, actions.Separator.ID);
+      final cleaned = actions.Separator.clean(<actions.IAction>[
+        actions.Separator(),
+        a,
+        actions.Separator(),
+        actions.Separator(),
+        b,
+        actions.Separator(),
+      ]);
+      expect(cleaned.map((actions.IAction x) => x.id), <String>['a', actions.Separator.ID, 'b']);
+
+      final sub = actions.SubmenuAction('s', 'sub', [a]);
+      expect(sub.actions.length, 1);
+      expect(actions.EmptySubmenuAction().label, '(empty)');
+
+      final converted = actions.toAction(actions.ActionProps(
+        id: 'x',
+        label: 'X',
+        run: (Object? v) => v,
+      ));
+      expect(converted.tooltip, 'X');
+      expect(converted.enabled, isTrue);
+      expect(converted.run(7), 7);
+    });
+  });
+
+  group('stream.ts (1:1)', () {
+    test('write buffers until data listener, reducer merges buffer', () async {
+      final streams.WriteableStream<int> s =
+          streams.newWriteableStream<int>((List<int> chunks) => chunks.fold<int>(0, (int a, int b) => a + b));
+      expect(s.write(1), isNull);
+      expect(s.write(2), isNull);
+      final List<Object?> got = <Object?>[];
+      bool ended = false;
+      s.on('end', () => ended = true);
+      s.on('data', (dynamic d) => got.add(d as int));
+      expect(got, <Object?>[3]);
+      s.end();
+      expect(ended, isTrue);
+    });
+
+    test('highWaterMark resolves pending writes on flow', () async {
+      final streams.WriteableStream<int> s = streams.newWriteableStream<int>(
+          null, streams.WriteableStreamOptions(1));
+      expect(s.write(1), isNull);
+      final Future<void>? pending = s.write(2);
+      expect(pending, isNotNull);
+      bool resolved = false;
+      pending!.then((_) => resolved = true);
+      final List<int> got = <int>[];
+      s.on('data', (dynamic d) => got.add(d as int));
+      await pending;
+      expect(resolved, isTrue);
+      expect(got, <int>[1, 2]);
+    });
+
+    test('consumeStream / prefixedStream / toReadable / peekReadable', () async {
+      final streams.WriteableStream<int> s = streams.newWriteableStream<int>(null);
+      final Future<Object?> sum = streams.consumeStream<int>(
+          s, (List<int> chunks) => chunks.fold<int>(0, (int a, int b) => a + b));
+      s.write(1);
+      s.write(2);
+      s.end();
+      expect(await sum, 3);
+
+      final streams.WriteableStream<int> source = streams.newWriteableStream<int>(null);
+      final streams.ReadableStream<int> prefixed = streams.prefixedStream<int>(
+          0, source, (List<int> parts) => parts.fold<int>(0, (int a, int b) => a + b));
+      final Future<Object?> prefixedSum = streams.consumeStream<int>(
+          prefixed, (List<int> chunks) => chunks.fold<int>(0, (int a, int b) => a + b));
+      source.write(1);
+      source.write(2);
+      source.end();
+      expect(await prefixedSum, 3);
+
+      final streams.Readable<int> readable = streams.toReadable<int>(7);
+      expect(
+          streams.consumeReadable<int>(
+              readable, (List<int> chunks) => chunks.fold<int>(0, (int a, int b) => a + b)),
+          7);
+      final Object? peeked = streams.peekReadable<int>(
+          streams.toReadable<int>(9),
+          (List<int> chunks) => chunks.fold<int>(0, (int a, int b) => a + b),
+          0);
+      expect(peeked, isA<streams.PeekReadable<int>>());
+      expect((peeked as streams.PeekReadable<int>).read(), 9);
+      expect(peeked.read(), isNull);
+    });
+  });
+
+  group('scrollable.ts (1:1)', () {
+    test('ScrollState validates and coerces integers', () {
+      final scroll.ScrollState s =
+          scroll.ScrollState(false, 100, 300, 250, 50, 500, 480);
+      expect(s.scrollLeft, 200);
+      expect(s.scrollTop, 450);
+      expect(s.rawScrollLeft, 250);
+
+      final scroll.ScrollState f =
+          scroll.ScrollState(true, 10.7, 30.9, 25.8, 5.2, 50.9, 48.8);
+      expect(f.width, 10);
+      expect(f.scrollWidth, 30);
+      expect(f.rawScrollLeft, 25); // truncated, before validation
+      expect(f.scrollLeft, 20);
+      expect(f.scrollTop, 45);
+      expect(f.withScrollPosition(scroll.NewScrollPosition()).rawScrollLeft, 25);
+      expect(f.withScrollPosition(scroll.NewScrollPosition()).scrollLeft, 20);
+    });
+
+    test('Scrollable emits scroll events', () {
+      final scroll.Scrollable s = scroll.Scrollable(scroll.ScrollableOptions(
+        forceIntegerValues: false,
+        smoothScrollDuration: 0,
+        scheduleAtNextAnimationFrame: (void Function() cb) => lc.toDisposable(() {}),
+      ));
+      final List<scroll.ScrollEvent> events = <scroll.ScrollEvent>[];
+      s.onScroll((dynamic e) => events.add(e as scroll.ScrollEvent));
+      s.setScrollDimensions(
+          scroll.NewScrollDimensions(width: 100, scrollWidth: 300, height: 50, scrollHeight: 500),
+          false);
+      expect(events.length, 1);
+      expect(events.single.widthChanged, isTrue);
+      s.setScrollPositionNow(scroll.NewScrollPosition(scrollLeft: 250, scrollTop: 480));
+      expect(s.getCurrentScrollPosition().scrollLeft, 200);
+      expect(events.last.scrollLeftChanged, isTrue);
+      expect(s.hasPendingScrollAnimation(), isFalse);
+    });
+
+    test('smooth scrolling helpers', () {
+      expect(scroll.easeInCubic(0.5), 0.125);
+      expect(scroll.easeOutCubic(0.5), closeTo(0.875, 1e-12));
+      final scroll.IAnimation a = scroll.createEaseOutCubic(0, 100);
+      expect(a(0), 0);
+      expect(a(1), 100);
+      final scroll.IAnimation composed = scroll.createComposed(a, a, 0.5);
+      expect(composed(0.5), 0.0);
+    });
+  });
+
+  group('cancelPreviousCalls.ts (1:1)', () {
+    test('appends token and cancels previous call', () async {
+      final _Decorated obj = _Decorated();
+      final canceldec.CancelPreviousCallsMethod decorated =
+          canceldec.cancelPreviousCalls(obj, 'one', obj.one);
+      await (decorated([1, 'foo']) as Future<void>);
+      expect(obj.calls1.length, 1);
+      final cancellation.CancellationToken first =
+          obj.calls1[0][2] as cancellation.CancellationToken;
+      expect(cancellation.CancellationToken.isCancellationToken(first), isTrue);
+      expect(first.isCancellationRequested, isFalse);
+
+      decorated([2, 'bar']);
+      expect(obj.calls1.length, 2);
+      expect(first.isCancellationRequested, isTrue);
+      expect((obj.calls1[1][2] as cancellation.CancellationToken).isCancellationRequested, isFalse);
+
+      decorated([3, 'baz']);
+      expect(obj.calls2, isEmpty);
+    });
+
+    test('reuses trailing token as parent', () async {
+      final _Decorated obj = _Decorated();
+      final canceldec.CancelPreviousCallsMethod decorated =
+          canceldec.cancelPreviousCalls(obj, 'two', obj.two);
+      final cancellation.CancellationTokenSource parent =
+          cancellation.CancellationTokenSource();
+      decorated([1, 'x', parent.token]);
+      expect(obj.calls2.length, 1);
+      expect(obj.calls2[0].length, 3);
+      parent.cancel();
+      expect((obj.calls2[0][2] as cancellation.CancellationToken).isCancellationRequested, isTrue);
+    });
+  });
+
+}
+
+class _TestHistory implements hist.IHistory<String> {
+  final Set<String> _set;
+  final ev.Event<List<String>>? _onDidChange;
+
+  _TestHistory(Iterable<String> values, [this._onDidChange])
+      : _set = <String>{...values};
+
+  @override
+  bool delete(String t) => _set.remove(t);
+
+  @override
+  hist.IHistory<String> add(String t) {
+    _set.add(t);
+    return this;
+  }
+
+  @override
+  bool has(String t) => _set.contains(t);
+
+  @override
+  void clear() => _set.clear();
+
+  @override
+  void forEach(void Function(String value, String value2, Set<String> set) callbackfn,
+      [Object? thisArg]) {
+    for (final String value in _set) {
+      callbackfn(value, value, _set);
+    }
+  }
+
+  @override
+  void Function(List<String> values)? get replace => null;
+
+  @override
+  ev.Event<List<String>>? get onDidChange => _onDidChange;
+}
+
+class _ActionWithAlt implements actions.IAction {
+  @override
+  final actions.IAction? alt;
+  _ActionWithAlt(this.alt);
+
+  @override
+  String get id => 'main';
+  @override
+  String get label => 'main';
+  @override
+  String get tooltip => '';
+  @override
+  String? get cssClass => null;
+  @override
+  bool get enabled => true;
+  @override
+  bool? get checked => null;
+  @override
+  FutureOr<Object?> run([Object? event, Object? data]) async => null;
+}
+
+class _Decorated extends lc.Disposable {
+  final List<List<Object?>> calls1 = <List<Object?>>[];
+  final List<List<Object?>> calls2 = <List<Object?>>[];
+
+  Future<void> one(int a, String b, [cancellation.CancellationToken? token]) async {
+    calls1.add(<Object?>[a, b, token]);
+  }
+
+  Future<void> two(int a, String b, [cancellation.CancellationToken? token]) async {
+    calls2.add(<Object?>[a, b, token]);
+  }
+}
+
+class _TestRefCollection extends lc.ReferenceCollection<int> {
+  final void Function() _onCreated;
+  final void Function(int) _onDestroyed;
+  int _next = 0;
+  _TestRefCollection(this._onCreated, this._onDestroyed);
+
+  @override
+  int createReferencedObject(String key, List<Object?> args) {
+    _onCreated();
+    return ++_next;
+  }
+
+  @override
+  void destroyReferencedObject(String key, int object) {
+    _onDestroyed(object);
+  }
+}
+
+class _EventCounter {
+  int count = 0;
+  void onEvent(dynamic e) => count++;
 }
