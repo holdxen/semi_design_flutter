@@ -229,7 +229,7 @@
 | 220 | editor | `editor/common/diff/defaultLinesDiffComputer/computeMovedLines.ts` | `lib/src/monaco/editor/common/diff/defaultLinesDiffComputer/computeMovedLines.dart` | pending |
 | 221 | editor | `editor/common/diff/defaultLinesDiffComputer/defaultLinesDiffComputer.ts` | `lib/src/monaco/editor/common/diff/defaultLinesDiffComputer/defaultLinesDiffComputer.dart` | pending |
 | 222 | editor | `editor/common/diff/defaultLinesDiffComputer/heuristicSequenceOptimizations.ts` | `lib/src/monaco/editor/common/diff/defaultLinesDiffComputer/heuristicSequenceOptimizations.dart` | pending |
-| 223 | editor | `editor/common/diff/defaultLinesDiffComputer/lineSequence.ts` | `lib/src/monaco/editor/common/diff/defaultLinesDiffComputer/lineSequence.dart` | pending |
+| 223 | editor | `editor/common/diff/defaultLinesDiffComputer/lineSequence.ts` | `lib/src/monaco/editor/common/diff/defaultLinesDiffComputer/lineSequence.dart` | tested |
 | 224 | editor | `editor/common/diff/defaultLinesDiffComputer/linesSliceCharSequence.ts` | `lib/src/monaco/editor/common/diff/defaultLinesDiffComputer/linesSliceCharSequence.dart` | pending |
 | 225 | editor | `editor/common/diff/defaultLinesDiffComputer/utils.ts` | `lib/src/monaco/editor/common/diff/defaultLinesDiffComputer/utils.dart` | pending |
 | 226 | editor | `editor/common/diff/documentDiffProvider.ts` | `lib/src/monaco/editor/common/diff/documentDiffProvider.dart` | pending |
@@ -355,7 +355,7 @@
 | 346 | editor | `editor/common/textModelBracketPairs.ts` | `lib/src/monaco/editor/common/textModelBracketPairs.dart` | pending |
 | 347 | editor | `editor/common/textModelEditSource.ts` | `lib/src/monaco/editor/common/textModelEditSource.dart` | pending |
 | 348 | editor | `editor/common/textModelEvents.ts` | `lib/src/monaco/editor/common/textModelEvents.dart` | pending |
-| 349 | editor | `editor/common/textModelGuides.ts` | `lib/src/monaco/editor/common/textModelGuides.dart` | pending |
+| 349 | editor | `editor/common/textModelGuides.ts` | `lib/src/monaco/editor/common/textModelGuides.dart` | tested |
 | 350 | editor | `editor/common/tokenizationRegistry.ts` | `lib/src/monaco/editor/common/tokenizationRegistry.dart` | pending |
 | 351 | editor | `editor/common/tokenizationTextModelPart.ts` | `lib/src/monaco/editor/common/tokenizationTextModelPart.dart` | pending |
 | 352 | editor | `editor/common/tokens/common.ts` | `lib/src/monaco/editor/common/tokens/common.dart` | tested |
@@ -541,7 +541,7 @@
 | 532 | editor | `editor/contrib/inPlaceReplace/browser/inPlaceReplace.ts` | `lib/src/monaco/editor/contrib/inPlaceReplace/browser/inPlaceReplace.dart` | pending |
 | 533 | editor | `editor/contrib/inPlaceReplace/browser/inPlaceReplaceCommand.ts` | `lib/src/monaco/editor/contrib/inPlaceReplace/browser/inPlaceReplaceCommand.dart` | pending |
 | 534 | editor | `editor/contrib/indentation/browser/indentation.ts` | `lib/src/monaco/editor/contrib/indentation/browser/indentation.dart` | pending |
-| 535 | editor | `editor/contrib/indentation/common/indentUtils.ts` | `lib/src/monaco/editor/contrib/indentation/common/indentUtils.dart` | pending |
+| 535 | editor | `editor/contrib/indentation/common/indentUtils.ts` | `lib/src/monaco/editor/contrib/indentation/common/indentUtils.dart` | tested |
 | 536 | editor | `editor/contrib/indentation/common/indentation.ts` | `lib/src/monaco/editor/contrib/indentation/common/indentation.dart` | pending |
 | 537 | editor | `editor/contrib/indentation/test/browser/indentation.test.ts` | `lib/src/monaco/editor/contrib/indentation/test/browser/indentation.test.dart` | pending |
 | 538 | editor | `editor/contrib/indentation/test/browser/indentationLineProcessor.test.ts` | `lib/src/monaco/editor/contrib/indentation/test/browser/indentationLineProcessor.test.dart` | pending |
@@ -958,7 +958,7 @@
 | 949 | base | `base/browser/ui/list/listWidget.ts` | `lib/src/monaco/base/browser/ui/list/listWidget.dart` | pending |
 | 950 | base | `base/browser/ui/list/rangeMap.ts` | `lib/src/monaco/base/browser/ui/list/rangeMap.dart` | tested |
 | 951 | base | `base/browser/ui/list/rowCache.ts` | `lib/src/monaco/base/browser/ui/list/rowCache.dart` | pending |
-| 952 | base | `base/browser/ui/list/splice.ts` | `lib/src/monaco/base/browser/ui/list/splice.dart` | pending |
+| 952 | base | `base/browser/ui/list/splice.ts` | `lib/src/monaco/base/browser/ui/list/splice.dart` | tested |
 | 953 | base | `base/browser/ui/menu/menu.ts` | `lib/src/monaco/base/browser/ui/menu/menu.dart` | pending |
 | 954 | base | `base/browser/ui/mouseCursor/mouseCursor.ts` | `lib/src/monaco/base/browser/ui/mouseCursor/mouseCursor.dart` | pending |
 | 955 | base | `base/browser/ui/progressbar/progressAccessibilitySignal.ts` | `lib/src/monaco/base/browser/ui/progressbar/progressAccessibilitySignal.dart` | pending |
@@ -1152,7 +1152,7 @@
 | 1143 | platform | `platform/accessibility/test/common/testAccessibilityService.ts` | `lib/src/monaco/platform/accessibility/test/common/testAccessibilityService.dart` | pending |
 | 1144 | platform | `platform/accessibilitySignal/browser/accessibilitySignalService.ts` | `lib/src/monaco/platform/accessibilitySignal/browser/accessibilitySignalService.dart` | pending |
 | 1145 | platform | `platform/action/common/action.ts` | `lib/src/monaco/platform/action/common/action.dart` | pending |
-| 1146 | platform | `platform/action/common/actionCommonCategories.ts` | `lib/src/monaco/platform/action/common/actionCommonCategories.dart` | pending |
+| 1146 | platform | `platform/action/common/actionCommonCategories.ts` | `lib/src/monaco/platform/action/common/actionCommonCategories.dart` | tested |
 | 1147 | platform | `platform/actionWidget/browser/actionList.ts` | `lib/src/monaco/platform/actionWidget/browser/actionList.dart` | pending |
 | 1148 | platform | `platform/actionWidget/browser/actionWidget.ts` | `lib/src/monaco/platform/actionWidget/browser/actionWidget.dart` | pending |
 | 1149 | platform | `platform/actionWidget/browser/actionWidgetMotion.ts` | `lib/src/monaco/platform/actionWidget/browser/actionWidgetMotion.dart` | pending |
