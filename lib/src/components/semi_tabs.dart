@@ -742,48 +742,68 @@ class _SemiTabsState extends State<SemiTabs> {
             horizontal: t.spacingTabsContentLeftPaddingX,
           );
     final motionOffset = _paneMotionOffset(t);
-    final children = <Widget>[];
-    for (final tab in widget.tabList) {
-      final active = tab.itemKey == _activeKey;
-      if (!widget.keepDOM && !active) continue;
-      // lazyRender 只影响内容渲染（上游 TabPane.shouldRender），外层节点仍在。
-      final rendered =
-          !widget.lazyRender || _visited.contains(tab.itemKey) || active;
-      Widget pane = DefaultTextStyle.merge(
-        style: TextStyle(color: t.colorTabsTabPaneTextDefault),
-        child: rendered
-            ? (tab.content ?? const SizedBox.shrink())
-            : const SizedBox.shrink(),
-      );
-      if (active && motionOffset != null) {
-        pane = _TabsPaneMotion(
-          key: ValueKey('pane-motion-${tab.itemKey}-${_activeKey ?? ''}'),
-          offset: motionOffset,
-          startOpacity: t.animationOpacityTabsTabPanelShow,
-          duration: t.animationDurationTabsTabPanelShow,
-          curve: t.animationFunctionTabsTabPanelShow,
-          delay: t.animationDelayTabsTabPanelShow,
-          child: pane,
+
+    // fillContent 时父级给内容区的是有界高度，但 Column 的非 flex 子节点
+    // （即非激活 pane）仍会拿到无界高度；若 pane 内部有 Expanded 就会断言。
+    // 用 LayoutBuilder 把内容区最大高度（扣掉 padding）传给这些 offstage
+    // pane，让它们的约束保持有界，Offstage 本身仍占 0 高度。
+    Widget buildColumn(BoxConstraints constraints) {
+      final availableHeight = constraints.maxHeight - padding.vertical;
+      final maxPaneHeight = widget.fillContent && constraints.maxHeight.isFinite
+          ? (availableHeight > 0 ? availableHeight : 0.0)
+          : null;
+
+      final children = <Widget>[];
+      for (final tab in widget.tabList) {
+        final active = tab.itemKey == _activeKey;
+        if (!widget.keepDOM && !active) continue;
+        // lazyRender 只影响内容渲染（上游 TabPane.shouldRender），外层节点仍在。
+        final rendered =
+            !widget.lazyRender || _visited.contains(tab.itemKey) || active;
+        Widget pane = DefaultTextStyle.merge(
+          style: TextStyle(color: t.colorTabsTabPaneTextDefault),
+          child: rendered
+              ? (tab.content ?? const SizedBox.shrink())
+              : const SizedBox.shrink(),
+        );
+        if (active && motionOffset != null) {
+          pane = _TabsPaneMotion(
+            key: ValueKey('pane-motion-${tab.itemKey}-${_activeKey ?? ''}'),
+            offset: motionOffset,
+            startOpacity: t.animationOpacityTabsTabPanelShow,
+            duration: t.animationDurationTabsTabPanelShow,
+            curve: t.animationFunctionTabsTabPanelShow,
+            delay: t.animationDelayTabsTabPanelShow,
+            child: pane,
+          );
+        }
+        if (!active && maxPaneHeight != null) {
+          pane = ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxPaneHeight),
+            child: pane,
+          );
+        }
+        final offstagePane = Offstage(
+          offstage: !active,
+          child: TickerMode(enabled: active, child: pane),
+        );
+        children.add(
+          widget.fillContent && active
+              ? Expanded(child: offstagePane)
+              : offstagePane,
         );
       }
-      final offstagePane = Offstage(
-        offstage: !active,
-        child: TickerMode(enabled: active, child: pane),
-      );
-      children.add(
-        widget.fillContent && active
-            ? Expanded(child: offstagePane)
-            : offstagePane,
+      return Padding(
+        padding: padding,
+        child: Column(
+          mainAxisSize: widget.fillContent ? MainAxisSize.max : MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: children,
+        ),
       );
     }
-    return Padding(
-      padding: padding,
-      child: Column(
-        mainAxisSize: widget.fillContent ? MainAxisSize.max : MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: children,
-      ),
-    );
+
+    return LayoutBuilder(builder: (context, constraints) => buildColumn(constraints));
   }
 
   /// TabPane.tsx:54-73 `getDirection` + top/left keyframes：进入方向由前一个

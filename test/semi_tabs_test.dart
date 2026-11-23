@@ -2002,5 +2002,38 @@ void main() {
       );
       expect(tester.getSize(tabContainer('Tab 1')).height, greaterThan(46));
     });
+
+    testWidgets('fillContent bounds inactive panes containing Expanded', (
+      tester,
+    ) async {
+      // 回归：非激活 pane 走 Offstage，若仍拿到无界高度，内部 Expanded 会在
+      // performLayout 阶段抛 "non-zero flex but incoming height constraints
+      // are unbounded"（jot 的 CommitFileView 曾触发）。
+      await pumpHost(
+        tester,
+        const SemiTabs(
+          tabPaneMotion: false,
+          fillContent: true,
+          activeKey: 'metadata',
+          tabList: [
+            SemiTabData(
+              itemKey: 'metadata',
+              tab: 'Metadata',
+              content: SizedBox.shrink(),
+            ),
+            SemiTabData(
+              itemKey: 'files',
+              tab: 'Files',
+              content: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [Expanded(child: SizedBox.shrink())],
+              ),
+            ),
+          ],
+        ),
+      );
+      await settle(tester);
+      expect(tester.takeException(), isNull);
+    });
   });
 }
