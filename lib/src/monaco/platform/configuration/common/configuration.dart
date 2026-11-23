@@ -229,7 +229,9 @@ abstract class IConfigurationServiceType {
 
   Map<String, Object?> inspect(String key, [IConfigurationOverrides? overrides]);
 
-  Future<void> reloadConfiguration([Object? target]); // int | IWorkspaceFolder
+  /// 1:1: `reloadConfiguration<T>(): Promise<T>` — the resolved value is the
+  /// service configuration (the TS generic is carried as [Object?] in Dart).
+  Future<Object?> reloadConfiguration([Object? target]); // int | IWorkspaceFolder
 
   Map<String, Object?> keys();
 }

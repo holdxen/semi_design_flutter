@@ -29,7 +29,11 @@ class KeyboardEvent {
     this.getModifierState,
     this.preventDefaultFn,
     this.stopPropagationFn,
+    this.type = '',
   });
+
+  /// 1:1: DOM `Event.type`.
+  final String type;
 
   final int charCode;
   final int keyCode;

@@ -27,6 +27,9 @@ class _RecordingContext implements shelf.AtlasContext2D {
   set fillStyle(String value) => _fillStyle = value;
 
   @override
+  set globalAlpha(num value) {}
+
+  @override
   void drawImage(raster.OffscreenCanvas source, num sx, num sy, num sw, num sh,
       num dx, num dy, num dw, num dh) {
     draws.add('$sx,$sy,$sw,$sh->$dx,$dy,$dw,$dh');

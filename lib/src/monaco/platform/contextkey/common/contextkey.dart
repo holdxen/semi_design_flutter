@@ -1365,7 +1365,7 @@ abstract class IContextKeyServiceType {
   T? getContextKeyValue<T>(String key);
   IScopedContextKeyService createScoped(IContextKeyServiceTarget target);
   IContextKeyServiceType createOverlay(Iterable<List<Object?>> overlay);
-  IContext getContext(IContextKeyServiceTarget? target);
+  IContext? getContext(IContextKeyServiceTarget? target);
   void updateParent(IContextKeyServiceType parentContextKeyService);
 }
 

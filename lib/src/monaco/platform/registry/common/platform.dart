@@ -17,6 +17,17 @@ abstract class IRegistry {
   Object? as(String id);
 }
 
+/// JS `typeof data === 'object'` carrier predicate for registry entries.
+bool _isJsObject(Object? data) =>
+    data != null &&
+    data is! String &&
+    data is! num &&
+    data is! bool &&
+    data is! Function &&
+    data is! List &&
+    data is! RegExp &&
+    data is! DateTime;
+
 /// 1:1: `class RegistryImpl implements IRegistry`
 class RegistryImpl implements IRegistry {
   final Map<String, Object?> _data = <String, Object?>{};
@@ -24,7 +35,10 @@ class RegistryImpl implements IRegistry {
   @override
   void add(String id, Object data) {
     Assert.ok(Types.isString(id));
-    Assert.ok(Types.isObject(data));
+    // JS `Types.isObject` accepts class instances; the generic Dart carrier in
+    // `base/common/types.dart` is Map-only. Mirror the JS predicate here so
+    // registry entries can carry service objects exactly as in TypeScript.
+    Assert.ok(_isJsObject(data));
     Assert.ok(!_data.containsKey(id), 'There is already an extension with this id');
     _data[id] = data;
   }

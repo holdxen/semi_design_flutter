@@ -97,6 +97,9 @@ class FromEventObservable<TArgs, T> extends BaseObservable<T, Object?>
   final DebugNameData _debugNameData;
   final Event<TArgs> event;
   final T Function(TArgs?) _getValue;
+
+  /// 1:1: TS `public readonly _getValue` — exposed for the console logger.
+  Function get getValue => _getValue;
   final ITransaction? Function() _getTransaction;
   final EqualityComparer<T> _equalityComparator;
 

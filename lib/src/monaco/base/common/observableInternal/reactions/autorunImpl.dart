@@ -76,6 +76,11 @@ class AutorunObserver<TChangeSummary>
   }
 
   final DebugNameData _debugNameData;
+
+  /// 1:1: TS `public readonly _debugNameData` — exposed for the console logger.
+  DebugNameData get debugNameData => _debugNameData;
+  /// 1:1: TS `public readonly _runFn` — exposed for the console logger.
+  Function get runFn => _runFn;
   final void Function(IReaderWithStore reader, TChangeSummary changeSummary)
       _runFn;
   final IChangeTracker<TChangeSummary>? _changeTracker;

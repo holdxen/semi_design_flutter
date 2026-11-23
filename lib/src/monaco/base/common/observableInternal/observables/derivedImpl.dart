@@ -94,6 +94,11 @@ class Derived<T, TChangeSummary, TChange> extends BaseObservable<T, TChange>
   final DebugNameData _debugNameData;
   final T Function(IDerivedReader<TChange> reader, TChangeSummary changeSummary)
       _computeFn;
+
+  /// 1:1: TS `public readonly _debugNameData` — exposed for the console logger.
+  DebugNameData get debugNameData => _debugNameData;
+  /// 1:1: TS `public readonly _computeFn` — exposed for the console logger.
+  Function get computeFn => _computeFn;
   final IChangeTracker<TChangeSummary>? _changeTracker;
   final void Function()? _handleLastObserverRemoved;
   final EqualityComparer<T> _equalityComparator;

@@ -232,6 +232,12 @@ IObservable<T> derivedDisposable<T extends Object?>(Object computeFnOrOwner,
 /// find the slot before use. The data argument is the options object literal
 /// those methods pass (a `Map`; or a `DerivedOpts` when called directly).
 bool _derivedOptsRegisteredFlag = false;
+
+/// Public entry for modules that need the derived-opts bridge installed before
+/// calling `ConvenientObservable.map`/`flatten` (TS gets this from importing
+/// derived.ts at module load).
+void ensureDerivedOptsRegistered() => _ensureDerivedOptsRegistered();
+
 void _ensureDerivedOptsRegistered() {
   if (_derivedOptsRegisteredFlag) {
     return;

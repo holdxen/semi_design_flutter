@@ -24,6 +24,11 @@ import 'atlas.dart'
 /// The embedder supplies a concrete context; the allocator only calls these.
 abstract class AtlasContext2D {
   set fillStyle(String value);
+
+  /// Source `ctx.globalAlpha` used by the slab allocator's usage preview.
+  /// Default no-op keeps existing carriers source-compatible.
+  set globalAlpha(num value) {}
+
   void drawImage(
     OffscreenCanvas source,
     num sx,

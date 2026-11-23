@@ -78,6 +78,9 @@ class TransactionImpl implements ITransaction {
   final Function _fn;
   final String Function()? _getDebugName;
 
+  /// 1:1: TS `public readonly _fn` — exposed for the console logger.
+  Function get fn => _fn;
+
   /// 1:1: `getDebugName()`
   String? getDebugName() {
     final g = _getDebugName;
