@@ -1,0 +1,508 @@
+// Port of the `handleSelect` callback in
+// `packages/core/src/data-editor/data-editor.tsx:1838-2087`.
+//
+// Every branch of the original callback is ported: the marker column
+// (`:1853-1911`), the trailing "new row" (`:1912-1915`), header column
+// selection (`:1994-2047`), group headers (`:2048-2049`) and out-of-bounds
+// clearing (`:2050-2057`).
+import 'package:flutter/foundation.dart';
+
+import '../cells/semi_cell_types.dart';
+import '../internal/data_grid/semi_event_args.dart';
+import '../internal/data_grid/semi_selection_behavior.dart';
+import 'semi_row_grouping.dart';
+
+/// What a `handleSelect` call asked the owner to do after mutating the
+/// selection.
+@immutable
+class SemiSelectOutcome {
+  const SemiSelectOutcome({
+    this.clearOverlay = false,
+    this.focus = false,
+    this.prevented = false,
+    this.onSelectionCleared = false,
+  });
+
+  final bool clearOverlay;
+  final bool focus;
+
+  /// A renderer's `onSelect` called `preventDefault`; the selection must not
+  /// move (`data-editor.tsx:1931`).
+  final bool prevented;
+
+  final bool onSelectionCleared;
+}
+
+/// The `data-editor` knobs `handleSelect` reads.
+@immutable
+class SemiBehaviorConfig {
+  const SemiBehaviorConfig({
+    this.rangeBehavior = SemiSelectionBlending.exclusive,
+    this.columnBehavior = SemiSelectionBlending.exclusive,
+    this.rowBehavior = SemiSelectionBlending.exclusive,
+    this.rangeSelect = SemiRangeSelect.multiRect,
+    this.rangeSelectionColumnSpanning = true,
+    this.columnSelectEnabled = true,
+    this.columnSelectionModeMulti = false,
+  });
+
+  final SemiSelectionBlending rangeBehavior;
+  final SemiSelectionBlending columnBehavior;
+  final SemiSelectionBlending rowBehavior;
+  final SemiRangeSelect rangeSelect;
+  final bool rangeSelectionColumnSpanning;
+
+  /// `columnSelect !== "none"` (`data-editor.tsx:2036`).
+  final bool columnSelectEnabled;
+
+  /// `columnSelectionMode === "multi"` (`data-editor.tsx:2019`).
+  final bool columnSelectionModeMulti;
+}
+
+/// Holds the selection plus the `lastSelectedCol`/`lastSelectedRow` refs the
+/// header shift-click path needs (`data-editor.tsx:1885`, `:2009`).
+class SemiDataEditorSelection {
+  SemiDataEditorSelection({
+    required this.behaviorConfig,
+    required this.rows,
+    required this.rowSelectMulti,
+    required this.columnSelectMulti,
+    this.rowMarkerOffset = 0,
+    this.hasRowMarkers = false,
+    this.rowMarkersAreNumbers = false,
+    this.rowSelectEnabled = true,
+    this.rowSelectionModeMulti = false,
+    this.rowDragEnabled = false,
+    this.headerRowMarkerDisabled = false,
+    this.rowGroupingNavBehavior,
+    this.isGroupHeaderRow,
+    this.showTrailingBlankRow = false,
+    this.userRows = 0,
+    this.appendRow,
+    this.getCustomNewRowTargetColumn,
+    SemiGridSelection initial = SemiGridSelection.empty,
+  }) : selection = initial;
+
+  final SemiBehaviorConfig behaviorConfig;
+  final int rows;
+  final bool rowSelectMulti;
+  final bool columnSelectMulti;
+  final int rowMarkerOffset;
+
+  /// `rowMarkers !== "none"` (`data-editor.tsx:953`); enables the marker
+  /// branch of `handleSelect`.
+  final bool hasRowMarkers;
+
+  /// `rowMarkers === "number"` — numbers are not clickable
+  /// (`data-editor.tsx:1856`).
+  final bool rowMarkersAreNumbers;
+
+  /// `rowSelect !== "none"` (`data-editor.tsx:1857`).
+  final bool rowSelectEnabled;
+
+  /// `rowSelectionMode === "multi"` (`data-editor.tsx:1894`).
+  final bool rowSelectionModeMulti;
+
+  /// `onRowMoved !== undefined` (`data-editor.tsx:1866`): the checkbox also
+  /// acts as the drag handle's hit test.
+  final bool rowDragEnabled;
+
+  /// `headerRowMarkerDisabled` (`data-editor.tsx:919`).
+  final bool headerRowMarkerDisabled;
+
+  /// `navigationBehavior` (`row-grouping.ts:56`).
+  final SemiRowGroupNavigationBehavior? rowGroupingNavBehavior;
+
+  /// `mapper(row).isGroupHeader`.
+  final bool Function(int row)? isGroupHeaderRow;
+
+  /// `showTrailingBlankRow` (`data-editor.tsx:955`).
+  final bool showTrailingBlankRow;
+
+  /// The user row count; the trailing row sits at index `userRows`.
+  final int userRows;
+
+  /// `appendRow` (`data-editor.tsx:1687`).
+  final void Function(int col)? appendRow;
+
+  /// `getCustomNewRowTargetColumn` (`data-editor.tsx:1795`).
+  final int? Function(int col)? getCustomNewRowTargetColumn;
+
+  SemiGridSelection selection;
+  int? lastSelectedCol;
+  int? lastSelectedRow;
+
+  SemiSelectionBehavior createBehavior() => SemiSelectionBehavior(
+    gridSelection: selection,
+    setGridSelection: (newVal, expand) => selection = newVal,
+    rangeBehavior: behaviorConfig.rangeBehavior,
+    columnBehavior: behaviorConfig.columnBehavior,
+    rowBehavior: behaviorConfig.rowBehavior,
+    rangeSelect: behaviorConfig.rangeSelect,
+    rangeSelectionColumnSpanning: behaviorConfig.rangeSelectionColumnSpanning,
+  );
+
+  /// `handleSelect` (`data-editor.tsx:1838-2087`).
+  SemiSelectOutcome handleSelect(
+    SemiGridMouseArgs args, {
+    required SemiGetCellRenderer getCellRenderer,
+    required SemiGridCell Function(SemiItem location) getCellContent,
+    required SemiDataGridTheme Function(SemiGridCell cell, SemiItem location)
+    themeForCell,
+  }) {
+    final isMultiKey = defaultTargetPlatform == TargetPlatform.macOS
+        ? args.metaKey
+        : args.ctrlKey;
+    final behavior = createBehavior();
+
+    final (col, row) = switch (args) {
+      SemiGridCellMouseArgs a => (a.location.col, a.location.row),
+      SemiGridHeaderMouseArgs a => (a.location.col, a.location.row),
+      SemiGridGroupHeaderMouseArgs a => (a.location.col, a.location.row),
+      SemiGridOutOfBoundsMouseArgs a => (a.location.col, a.location.row),
+    };
+
+    final selectedColumns = selection.columns;
+    final selectedRows = selection.rows;
+    final cellCol = selection.current?.cell.col;
+    final cellRow = selection.current?.cell.row;
+
+    switch (args.kind) {
+      case SemiGridCellKind.cell:
+        lastSelectedCol = null;
+
+        // `col === 0 && hasRowMarkers` (`data-editor.tsx:1853-1911`).
+        if (hasRowMarkers && col == 0) {
+          if (rowMarkersAreNumbers || !rowSelectEnabled) break;
+
+          final cellArgs = args as SemiGridCellMouseArgs;
+          final markerCell = getCellContent(cellArgs.location);
+          if (markerCell is! SemiMarkerCell) break;
+
+          // With row dragging enabled the checkbox doubles as the drag
+          // handle's hit test (`data-editor.tsx:1866-1879`).
+          if (rowDragEnabled) {
+            final bounds = cellArgs.bounds;
+            final centerX = markerCell.drawHandle
+                ? 7 + (bounds.width - 7) / 2
+                : bounds.width / 2;
+            final centerY = bounds.height / 2;
+            final localX = cellArgs.localEventX - bounds.x;
+            final localY = cellArgs.localEventY - bounds.y;
+            final onCheckbox = (localX - centerX).abs() <= 10 &&
+                (localY - centerY).abs() <= 10;
+            if (!onCheckbox) break;
+          }
+
+          final isSelected = selectedRows.hasIndex(row);
+          final lastHighlighted = lastSelectedRow;
+
+          if (rowSelectMulti &&
+              (cellArgs.shiftKey || cellArgs.isLongTouch == true) &&
+              lastHighlighted != null &&
+              selectedRows.hasIndex(lastHighlighted)) {
+            final newSlice = SemiSlice(
+              lastHighlighted < row ? lastHighlighted : row,
+              (lastHighlighted > row ? lastHighlighted : row) + 1,
+            );
+            if (isMultiKey || cellArgs.isTouch || rowSelectionModeMulti) {
+              behavior.setSelectedRows(
+                newRows: null,
+                append: newSlice,
+                allowMixed: true,
+              );
+            } else {
+              behavior.setSelectedRows(
+                newRows: SemiCompactSelection.fromSingleSelection(newSlice),
+                append: null,
+                allowMixed: isMultiKey,
+              );
+            }
+          } else if (rowSelectMulti &&
+              (isMultiKey ||
+                  cellArgs.isTouch ||
+                  rowSelectionModeMulti)) {
+            if (isSelected) {
+              behavior.setSelectedRows(
+                newRows: selectedRows.remove(row),
+                append: null,
+                allowMixed: true,
+              );
+            } else {
+              behavior.setSelectedRows(
+                newRows: null,
+                append: row,
+                allowMixed: true,
+              );
+              lastSelectedRow = row;
+            }
+          } else if (isSelected && selectedRows.length == 1) {
+            behavior.setSelectedRows(
+              newRows: const SemiCompactSelection.empty(),
+              append: null,
+              allowMixed: isMultiKey,
+            );
+          } else {
+            behavior.setSelectedRows(
+              newRows: SemiCompactSelection.fromSingleSelection(row),
+              append: null,
+              allowMixed: isMultiKey,
+            );
+            lastSelectedRow = row;
+          }
+          return const SemiSelectOutcome(clearOverlay: true, focus: true);
+        }
+
+        // `col >= rowMarkerOffset && showTrailingBlankRow && row === rows`
+        // (`data-editor.tsx:1912-1915`).
+        if (showTrailingBlankRow && row == userRows && col >= rowMarkerOffset) {
+          final custom = getCustomNewRowTargetColumn?.call(col);
+          appendRow?.call(custom ?? col);
+          return const SemiSelectOutcome(clearOverlay: true, focus: true);
+        }
+
+        if (col < rowMarkerOffset) break;
+        if (cellCol == col && cellRow == row) break;
+
+        final cell = getCellContent(SemiItem(col, row));
+        final renderer = getCellRenderer(cell);
+
+        var prevented = false;
+        renderer?.onSelect(
+          SemiCellEventArgs(
+            cell: cell,
+            posX: (args as SemiGridCellMouseArgs).localEventX,
+            posY: args.localEventY,
+            bounds: args.bounds,
+            location: args.location,
+            theme: themeForCell(cell, args.location),
+            preventDefault: () => prevented = true,
+            isTouch: args.isTouch,
+            isLongTouch: args.isLongTouch ?? false,
+            shiftKey: args.shiftKey,
+            ctrlKey: args.ctrlKey,
+            metaKey: args.metaKey,
+          ),
+        );
+        if (prevented) return const SemiSelectOutcome(prevented: true);
+
+        if ((args.shiftKey || args.isLongTouch == true) &&
+            cellCol != null &&
+            cellRow != null &&
+            selection.current != null) {
+          final left = col < cellCol ? col : cellCol;
+          final right = col > cellCol ? col : cellCol;
+          final top = row < cellRow ? row : cellRow;
+          final bottom = row > cellRow ? row : cellRow;
+          behavior.setCurrent(
+            value: (
+              cell: selection.current!.cell,
+              range: SemiRectangle(
+                x: left.toDouble(),
+                y: top.toDouble(),
+                width: (right - left + 1).toDouble(),
+                height: (bottom - top + 1).toDouble(),
+              ),
+            ),
+            expand: true,
+            append: isMultiKey,
+            trigger: SemiSelectionTrigger.click,
+          );
+          lastSelectedRow = null;
+          return const SemiSelectOutcome(focus: true);
+        }
+
+        behavior.setCurrent(
+          value: (
+            cell: SemiItem(col, row),
+            range: SemiRectangle(
+              x: col.toDouble(),
+              y: row.toDouble(),
+              width: 1,
+              height: 1,
+            ),
+          ),
+          expand: true,
+          append: isMultiKey,
+          trigger: SemiSelectionTrigger.click,
+        );
+        lastSelectedRow = null;
+        return const SemiSelectOutcome(clearOverlay: true, focus: true);
+
+      case SemiGridCellKind.header:
+        // The marker header selects (or clears) every row
+        // (`data-editor.tsx:1997-2007`).
+        if (hasRowMarkers && col == 0) {
+          lastSelectedRow = null;
+          lastSelectedCol = null;
+          if (!headerRowMarkerDisabled && rowSelectMulti) {
+            if (selectedRows.length != rows) {
+              behavior.setSelectedRows(
+                newRows: SemiCompactSelection.fromSingleSelection(
+                  SemiSlice(0, rows),
+                ),
+                append: null,
+                allowMixed: isMultiKey,
+              );
+            } else {
+              behavior.setSelectedRows(
+                newRows: const SemiCompactSelection.empty(),
+                append: null,
+                allowMixed: isMultiKey,
+              );
+            }
+          }
+          return const SemiSelectOutcome(clearOverlay: true, focus: true);
+        }
+
+        final lastCol = lastSelectedCol;
+        if (columnSelectMulti &&
+            (args.shiftKey || args.isLongTouch == true) &&
+            lastCol != null &&
+            selectedColumns.hasIndex(lastCol)) {
+          // Support for selecting a slice of columns:
+          final newSlice = SemiSlice(
+            lastCol < col ? lastCol : col,
+            (lastCol > col ? lastCol : col) + 1,
+          );
+
+          if (isMultiKey ||
+              args.isTouch ||
+              behaviorConfig.columnSelectionModeMulti) {
+            behavior.setSelectedColumns(
+              newCols: null,
+              append: newSlice,
+              allowMixed: isMultiKey,
+            );
+          } else {
+            behavior.setSelectedColumns(
+              newCols: SemiCompactSelection.fromSingleSelection(newSlice),
+              append: null,
+              allowMixed: isMultiKey,
+            );
+          }
+        } else if (columnSelectMulti &&
+            (isMultiKey ||
+                args.isTouch ||
+                behaviorConfig.columnSelectionModeMulti)) {
+          // Support for selecting a single column additively:
+          if (selectedColumns.hasIndex(col)) {
+            behavior.setSelectedColumns(
+              newCols: selectedColumns.remove(col),
+              append: null,
+              allowMixed: isMultiKey,
+            );
+          } else {
+            behavior.setSelectedColumns(
+              newCols: null,
+              append: col,
+              allowMixed: isMultiKey,
+            );
+          }
+          lastSelectedCol = col;
+        } else if (behaviorConfig.columnSelectEnabled) {
+          if (selectedColumns.hasIndex(col)) {
+            behavior.setSelectedColumns(
+              newCols: selectedColumns.remove(col),
+              append: null,
+              allowMixed: isMultiKey,
+            );
+          } else {
+            behavior.setSelectedColumns(
+              newCols: SemiCompactSelection.fromSingleSelection(col),
+              append: null,
+              allowMixed: isMultiKey,
+            );
+          }
+          lastSelectedCol = col;
+        }
+        lastSelectedRow = null;
+        return const SemiSelectOutcome(clearOverlay: true, focus: true);
+
+      case SemiGridCellKind.groupHeader:
+        // `handleGroupHeaderSelection` (`:2140-2189`) runs separately; the
+        // click itself only records the location.
+        return const SemiSelectOutcome();
+
+      case SemiGridCellKind.outOfBounds:
+        final out = args as SemiGridOutOfBoundsMouseArgs;
+        if (!out.isMaybeScrollbar) {
+          selection = SemiGridSelection.empty;
+          lastSelectedRow = null;
+          lastSelectedCol = null;
+          return const SemiSelectOutcome(
+            clearOverlay: true,
+            focus: true,
+            onSelectionCleared: true,
+          );
+        }
+        return const SemiSelectOutcome();
+    }
+
+    // Reached when a cell click did not change anything (`cellCol == col`).
+    return const SemiSelectOutcome();
+  }
+
+  /// `handleGroupHeaderSelection` (`data-editor.tsx:2140-2189`), reduced to
+  /// the group-span computation; the `mangledCols`/row-marker pieces are not
+  /// ported.
+  SemiSelectOutcome handleGroupHeaderSelection(
+    SemiGridGroupHeaderMouseArgs args, {
+    required List<SemiGridColumn> columns,
+    required int rowMarkerOffset,
+  }) {
+    if (!columnSelectMulti) return const SemiSelectOutcome();
+
+    final isMultiKey = defaultTargetPlatform == TargetPlatform.macOS
+        ? args.metaKey
+        : args.ctrlKey;
+    final col = args.location.col;
+    final behavior = createBehavior();
+    final selectedColumns = selection.columns;
+
+    if (col < rowMarkerOffset) return const SemiSelectOutcome();
+
+    final needle = columns[col];
+    var start = col;
+    var end = col;
+    for (var i = col - 1; i >= rowMarkerOffset; i--) {
+      if (!isGroupEqual(needle.group, columns[i].group)) break;
+      start--;
+    }
+    for (var i = col + 1; i < columns.length; i++) {
+      if (!isGroupEqual(needle.group, columns[i].group)) break;
+      end++;
+    }
+
+    if (isMultiKey ||
+        args.isTouch ||
+        behaviorConfig.columnSelectionModeMulti) {
+      if (selectedColumns.hasAll(SemiSlice(start, end + 1))) {
+        var newVal = selectedColumns;
+        for (var index = start; index <= end; index++) {
+          newVal = newVal.remove(index);
+        }
+        behavior.setSelectedColumns(
+          newCols: newVal,
+          append: null,
+          allowMixed: isMultiKey,
+        );
+      } else {
+        behavior.setSelectedColumns(
+          newCols: null,
+          append: SemiSlice(start, end + 1),
+          allowMixed: isMultiKey,
+        );
+      }
+    } else {
+      behavior.setSelectedColumns(
+        newCols: SemiCompactSelection.fromSingleSelection(
+          SemiSlice(start, end + 1),
+        ),
+        append: null,
+        allowMixed: isMultiKey,
+      );
+    }
+    return const SemiSelectOutcome(focus: true);
+  }
+}

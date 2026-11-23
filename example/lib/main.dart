@@ -28,7 +28,7 @@ import 'package:example/pages/float_button.dart';
 import 'package:example/pages/highlight.dart';
 import 'package:example/pages/image.dart';
 import 'package:example/pages/form.dart';
-import 'package:example/pages/glide_data_grid.dart';
+import 'package:example/pages/semi_data_grid.dart';
 import 'package:example/pages/input.dart';
 import 'package:example/pages/input_number.dart';
 import 'package:example/pages/modal.dart';
@@ -282,10 +282,10 @@ const List<DemoGroup> demoGroups = [
       CommitGraphPage(),
     ),
     DemoSpec(
-      'glideDataGrid',
-      'GlideDataGrid 数据网格',
+      'semiDataGrid',
+      'SemiDataGrid 数据网格',
       'doc-table.svg',
-      GlideDataGridPage(),
+      SemiDataGridPage(),
     ),
     DemoSpec('timeline', 'Timeline 时间轴', 'doc-timeline.svg', TimelinePage()),
     DemoSpec('tooltip', 'Tooltip 工具提示', 'doc-tooltip.svg', TooltipPage()),
