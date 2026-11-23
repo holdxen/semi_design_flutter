@@ -7,7 +7,8 @@
 // a normal function taking the static strings plus interpolated values.
 // ---------------------------------------------------------------------------
 
-import '../common/color.dart' show Color;
+// `InlineCssTemplateValue = CssFragment | Color` is carried as Object?, so no
+// import of Color is needed (Dart has no union types).
 import '../common/network.dart' show FileAccess;
 import '../common/uri.dart' show URI;
 
@@ -129,7 +130,10 @@ CssFragment className(String value, [bool escapingExpected = false]) {
 
 /// 1:1: `inline` template tag — `strings` are the static pieces, `values` the
 /// interpolated css-safe fragments/colors.
-CssFragment inline(List<String> strings, List<Object?> values) {
+/// 1:1: `type InlineCssTemplateValue = CssFragment | Color` -> Object? carrier.
+typedef InlineCssTemplateValue = Object?;
+
+CssFragment inline(List<String> strings, List<InlineCssTemplateValue> values) {
   final StringBuffer result = StringBuffer();
   for (int i = 0; i < strings.length; i++) {
     final Object? value = i < values.length ? values[i] : null;

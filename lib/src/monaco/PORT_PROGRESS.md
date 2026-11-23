@@ -13,7 +13,7 @@
 | 4 | editor | `editor/browser/config/elementSizeObserver.ts` | `lib/src/monaco/editor/browser/config/elementSizeObserver.dart` | pending |
 | 5 | editor | `editor/browser/config/fontMeasurements.ts` | `lib/src/monaco/editor/browser/config/fontMeasurements.dart` | pending |
 | 6 | editor | `editor/browser/config/migrateOptions.ts` | `lib/src/monaco/editor/browser/config/migrateOptions.dart` | pending |
-| 7 | editor | `editor/browser/config/tabFocus.ts` | `lib/src/monaco/editor/browser/config/tabFocus.dart` | pending |
+| 7 | editor | `editor/browser/config/tabFocus.ts` | `lib/src/monaco/editor/browser/config/tabFocus.dart` | tested |
 | 8 | editor | `editor/browser/controller/dragScrolling.ts` | `lib/src/monaco/editor/browser/controller/dragScrolling.dart` | pending |
 | 9 | editor | `editor/browser/controller/editContext/clipboardUtils.ts` | `lib/src/monaco/editor/browser/controller/editContext/clipboardUtils.dart` | pending |
 | 10 | editor | `editor/browser/controller/editContext/editContext.ts` | `lib/src/monaco/editor/browser/controller/editContext/editContext.dart` | pending |
@@ -99,7 +99,7 @@
 | 90 | editor | `editor/browser/viewParts/minimap/minimap.ts` | `lib/src/monaco/editor/browser/viewParts/minimap/minimap.dart` | pending |
 | 91 | editor | `editor/browser/viewParts/minimap/minimapCharRenderer.ts` | `lib/src/monaco/editor/browser/viewParts/minimap/minimapCharRenderer.dart` | pending |
 | 92 | editor | `editor/browser/viewParts/minimap/minimapCharRendererFactory.ts` | `lib/src/monaco/editor/browser/viewParts/minimap/minimapCharRendererFactory.dart` | pending |
-| 93 | editor | `editor/browser/viewParts/minimap/minimapCharSheet.ts` | `lib/src/monaco/editor/browser/viewParts/minimap/minimapCharSheet.dart` | pending |
+| 93 | editor | `editor/browser/viewParts/minimap/minimapCharSheet.ts` | `lib/src/monaco/editor/browser/viewParts/minimap/minimapCharSheet.dart` | tested |
 | 94 | editor | `editor/browser/viewParts/minimap/minimapDirtyRows.ts` | `lib/src/monaco/editor/browser/viewParts/minimap/minimapDirtyRows.dart` | tested |
 | 95 | editor | `editor/browser/viewParts/minimap/minimapPreBaked.ts` | `lib/src/monaco/editor/browser/viewParts/minimap/minimapPreBaked.dart` | pending |
 | 96 | editor | `editor/browser/viewParts/overlayWidgets/overlayWidgets.ts` | `lib/src/monaco/editor/browser/viewParts/overlayWidgets/overlayWidgets.dart` | pending |
@@ -158,7 +158,7 @@
 | 149 | editor | `editor/browser/widget/multiDiffEditor/multiDiffEditorViewModel.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/multiDiffEditorViewModel.dart` | pending |
 | 150 | editor | `editor/browser/widget/multiDiffEditor/multiDiffEditorWidget.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/multiDiffEditorWidget.dart` | pending |
 | 151 | editor | `editor/browser/widget/multiDiffEditor/multiDiffEditorWidgetImpl.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/multiDiffEditorWidgetImpl.dart` | pending |
-| 152 | editor | `editor/browser/widget/multiDiffEditor/utils.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/utils.dart` | pending |
+| 152 | editor | `editor/browser/widget/multiDiffEditor/utils.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/utils.dart` | tested |
 | 153 | editor | `editor/browser/widget/multiDiffEditor/virtualizedItemManager.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/virtualizedItemManager.dart` | pending |
 | 154 | editor | `editor/browser/widget/multiDiffEditor/workbenchUIElementFactory.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/workbenchUIElementFactory.dart` | pending |
 | 155 | editor | `editor/common/commands/columnSelectionPasteCommand.ts` | `lib/src/monaco/editor/common/commands/columnSelectionPasteCommand.dart` | pending |
@@ -603,7 +603,7 @@
 | 594 | editor | `editor/contrib/inlineCompletions/browser/view/inlineEdits/inlineEditsViews/originalEditorInlineDiffView.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/view/inlineEdits/inlineEditsViews/originalEditorInlineDiffView.dart` | pending |
 | 595 | editor | `editor/contrib/inlineCompletions/browser/view/inlineEdits/theme.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/view/inlineEdits/theme.dart` | pending |
 | 596 | editor | `editor/contrib/inlineCompletions/browser/view/inlineEdits/utils/flexBoxLayout.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/view/inlineEdits/utils/flexBoxLayout.dart` | pending |
-| 597 | editor | `editor/contrib/inlineCompletions/browser/view/inlineEdits/utils/towersLayout.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/view/inlineEdits/utils/towersLayout.dart` | pending |
+| 597 | editor | `editor/contrib/inlineCompletions/browser/view/inlineEdits/utils/towersLayout.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/view/inlineEdits/utils/towersLayout.dart` | tested |
 | 598 | editor | `editor/contrib/inlineCompletions/browser/view/inlineEdits/utils/utils.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/view/inlineEdits/utils/utils.dart` | pending |
 | 599 | editor | `editor/contrib/inlineCompletions/browser/view/inlineSuggestionsView.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/view/inlineSuggestionsView.dart` | pending |
 | 600 | editor | `editor/contrib/inlineCompletions/test/browser/computeGhostText.test.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/test/browser/computeGhostText.test.dart` | pending |
@@ -1229,7 +1229,7 @@
 | 1220 | platform | `platform/markers/common/markers.ts` | `lib/src/monaco/platform/markers/common/markers.dart` | pending |
 | 1221 | platform | `platform/notification/common/notification.ts` | `lib/src/monaco/platform/notification/common/notification.dart` | pending |
 | 1222 | platform | `platform/notification/common/notificationLegacy.ts` | `lib/src/monaco/platform/notification/common/notificationLegacy.dart` | pending |
-| 1223 | platform | `platform/notification/common/notificationMessage.ts` | `lib/src/monaco/platform/notification/common/notificationMessage.dart` | pending |
+| 1223 | platform | `platform/notification/common/notificationMessage.ts` | `lib/src/monaco/platform/notification/common/notificationMessage.dart` | tested |
 | 1224 | platform | `platform/notification/common/notificationTelemetry.ts` | `lib/src/monaco/platform/notification/common/notificationTelemetry.dart` | pending |
 | 1225 | platform | `platform/notification/test/common/testNotificationService.ts` | `lib/src/monaco/platform/notification/test/common/testNotificationService.dart` | pending |
 | 1226 | platform | `platform/observable/common/platformObservableUtils.ts` | `lib/src/monaco/platform/observable/common/platformObservableUtils.dart` | pending |
