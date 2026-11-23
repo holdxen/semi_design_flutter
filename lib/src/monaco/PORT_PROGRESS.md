@@ -246,7 +246,7 @@
 | 237 | editor | `editor/common/editorFeatures.ts` | `lib/src/monaco/editor/common/editorFeatures.dart` | pending |
 | 238 | editor | `editor/common/editorTheme.ts` | `lib/src/monaco/editor/common/editorTheme.dart` | pending |
 | 239 | editor | `editor/common/encodedTokenAttributes.ts` | `lib/src/monaco/editor/common/encodedTokenAttributes.dart` | tested |
-| 240 | editor | `editor/common/inputMode.ts` | `lib/src/monaco/editor/common/inputMode.dart` | pending |
+| 240 | editor | `editor/common/inputMode.ts` | `lib/src/monaco/editor/common/inputMode.dart` | tested |
 | 241 | editor | `editor/common/languageFeatureRegistry.ts` | `lib/src/monaco/editor/common/languageFeatureRegistry.dart` | pending |
 | 242 | editor | `editor/common/languageSelector.ts` | `lib/src/monaco/editor/common/languageSelector.dart` | pending |
 | 243 | editor | `editor/common/languages/autoIndent.ts` | `lib/src/monaco/editor/common/languages/autoIndent.dart` | pending |
@@ -905,7 +905,7 @@
 | 896 | base | `base/browser/browser.ts` | `lib/src/monaco/base/browser/browser.dart` | pending |
 | 897 | base | `base/browser/canIUse.ts` | `lib/src/monaco/base/browser/canIUse.dart` | pending |
 | 898 | base | `base/browser/contextmenu.ts` | `lib/src/monaco/base/browser/contextmenu.dart` | pending |
-| 899 | base | `base/browser/cssValue.ts` | `lib/src/monaco/base/browser/cssValue.dart` | pending |
+| 899 | base | `base/browser/cssValue.ts` | `lib/src/monaco/base/browser/cssValue.dart` | tested |
 | 900 | base | `base/browser/dnd.ts` | `lib/src/monaco/base/browser/dnd.dart` | pending |
 | 901 | base | `base/browser/dom.ts` | `lib/src/monaco/base/browser/dom.dart` | pending |
 | 902 | base | `base/browser/domSanitize.ts` | `lib/src/monaco/base/browser/domSanitize.dart` | pending |
@@ -993,7 +993,7 @@
 | 984 | base | `base/browser/ui/tree/objectTreeModel.ts` | `lib/src/monaco/base/browser/ui/tree/objectTreeModel.dart` | pending |
 | 985 | base | `base/browser/ui/tree/tree.ts` | `lib/src/monaco/base/browser/ui/tree/tree.dart` | pending |
 | 986 | base | `base/browser/ui/widget.ts` | `lib/src/monaco/base/browser/ui/widget.dart` | pending |
-| 987 | base | `base/browser/window.ts` | `lib/src/monaco/base/browser/window.dart` | pending |
+| 987 | base | `base/browser/window.ts` | `lib/src/monaco/base/browser/window.dart` | tested |
 | 988 | base | `base/common/actions.ts` | `lib/src/monaco/base/common/actions.dart` | tested |
 | 989 | base | `base/common/arrays.ts` | `lib/src/monaco/base/common/arrays.dart` | tested |
 | 990 | base | `base/common/arraysFind.ts` | `lib/src/monaco/base/common/arraysFind.dart` | tested |
@@ -1287,7 +1287,7 @@
 | 1278 | platform | `platform/theme/common/colors/quickpickColors.ts` | `lib/src/monaco/platform/theme/common/colors/quickpickColors.dart` | pending |
 | 1279 | platform | `platform/theme/common/colors/searchColors.ts` | `lib/src/monaco/platform/theme/common/colors/searchColors.dart` | pending |
 | 1280 | platform | `platform/theme/common/iconRegistry.ts` | `lib/src/monaco/platform/theme/common/iconRegistry.dart` | pending |
-| 1281 | platform | `platform/theme/common/theme.ts` | `lib/src/monaco/platform/theme/common/theme.dart` | pending |
+| 1281 | platform | `platform/theme/common/theme.ts` | `lib/src/monaco/platform/theme/common/theme.dart` | tested |
 | 1282 | platform | `platform/theme/common/themeService.ts` | `lib/src/monaco/platform/theme/common/themeService.dart` | pending |
 | 1283 | platform | `platform/theme/test/common/testThemeService.ts` | `lib/src/monaco/platform/theme/test/common/testThemeService.dart` | pending |
 | 1284 | platform | `platform/undoRedo/common/undoRedo.ts` | `lib/src/monaco/platform/undoRedo/common/undoRedo.dart` | pending |
