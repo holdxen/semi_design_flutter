@@ -720,7 +720,8 @@ Object? parse(String text, [List<ParseError>? errorsIn, ParseOptions? optionsIn]
 }
 
 /// 1:1: `export function parseTree(text, errors = [], options = DEFAULT)`
-Node parseTree(String text, [List<ParseError>? errorsIn, ParseOptions? optionsIn]) {
+/// TS returns `Node | undefined` (guarded by `if (result) delete result.parent`).
+Node? parseTree(String text, [List<ParseError>? errorsIn, ParseOptions? optionsIn]) {
   final List<ParseError> errors = errorsIn ?? <ParseError>[];
   final ParseOptions options = optionsIn ?? ParseOptions.DEFAULT;
   Node currentParent = Node(NodeType.array, -1, -1, children: <Node>[], parent: null); // artificial root
@@ -775,8 +776,10 @@ Node parseTree(String text, [List<ParseError>? errorsIn, ParseOptions? optionsIn
     onError: (Object? error, int offset, int length) => errors.add(ParseError(error as int, offset, length)),
   ), options);
 
-  final Node result = currentParent.children![0];
-  result.parent = null; // source: `delete result.parent`
+  final Node? result = currentParent.children!.isEmpty ? null : currentParent.children![0];
+  if (result != null) {
+    result.parent = null; // source: `if (result) { delete result.parent; }`
+  }
   return result;
 }
 

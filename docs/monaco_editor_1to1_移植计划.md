@@ -413,3 +413,13 @@ semi_design_flutter/
 - [x] **依赖分析**：核心环 `arrays↔cancellation↔event↔lifecycle↔async` 彼此成环，且 `event`/`async` 依赖 `observable`/`resources`（各自闭包 48 个未翻译文件），当前无法闭合，继续按依赖闭包推进 base 工具链小文件。
 
 **下一批**：继续消费依赖闭合的 base 文件（`executionGraph`/`rpc`/`keybindings` 已翻等），或转 `platform/registry/common/platform.ts`、`platform/contextkey/common/scanner.ts`（有源码测试、依赖闭合），再择机啃核心环。
+
+### base/platform 工具链批次续十三（2026-11-23，累计 60/1690 文件 tested）
+
+- [x] `base/common/jsonEdit.dart`：1:1 翻译 `jsonEdit.ts`（184 行），`removeProperty`/`setProperty`/`withFormatting`/`applyEdit`/`applyEdits` 全部。复用 json.dart 的 Node/JSONPath/parseTree/findNodeAtLocation 与 jsonFormatter.dart 的 Edit/format/isEOL；`JSON.stringify(value)` → dart:convert 承载（integer-valued double 去 `.0`）；`getInsertionIndex?` → `int Function(List<String>)?`。
+- [x] **修复 json.dart 既有翻译缺陷**：TS `parseTree` 结尾有 `if (result) delete result.parent` 并返回 `Node | undefined`，dart 版原为 `children![0]` 直接解引用 + 返回非空 `Node`，空文档输入（jsonEdit 的 `setProperty('', ...)`）抛 RangeError。按 1:1 改返回类型 `Node?` + `isEmpty ? null : children[0]` + 保护 parent 清除；同步适配 jsonEdit（恢复 `root ? root.offset : 0`）与测试（`root!`）。这是继 JS substring clamp 之后又一处"TS 隐含 undefined 分支"适配点。
+- [x] `base/common/keybindingLabels.dart`：1:1 翻译 `keybindingLabels.ts`（185 行），`ModifierLabels`/`KeyLabelProvider<T>`/`ModifierLabelProvider` + 四个 Provider（UILabel/Aria/ElectronAccelerator/UserSettings）。`nls.localize({key,comment}, msg)` → 传 Map（非 int 时 nls 返回 msg 原文，等价 en locale）；`ModifierLabels[]` 带 index0 空位 → `List<ModifierLabels?>`。源码 test 依赖 US-layout resolved keybinding（不在闭包），改为直接断言 Provider.toLabel 标签拼接。
+- [x] `platform/registry/common/platform.dart`：1:1 翻译 `platform.ts`（64 行，platform 层），`IRegistry`/`RegistryImpl`/`Registry` 单例。`as<T>` → `Object? as()`；`data.get(id) || null` → `Map[id]`（registry 存的是对象/函数，恒 truthy）；dispose 用 dynamic 读 `value.dispose`。`platform.test.ts` 全部 4 个断言组通过。
+- [x] 测试追加 7 case（jsonEdit 4 + keybindingLabels 2 + platform registry 1）；base 测试文件合计 **83 case 全绿**；三文件 `dart analyze` 零 error/warning（仅源码风格 info）。
+
+**下一批**：继续消费依赖闭合的小文件（`platform/contextkey/common/scanner.ts` 385 行、`base/common/observableInternal/logging/debugger/rpc.ts` 111 行，`base/test/common/executionGraph.ts` 544 行等，均有源码 test），择机啃核心环。

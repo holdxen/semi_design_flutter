@@ -7,7 +7,7 @@
 
 | # | 层 | 源文件 | 目标 Dart | 状态 |
 |---|---|---|---|---|
-> 进度：57 / 1690 tested（2026-11-23，含 jsonFormatter / keybindings / naturalLanguage/korean）。
+> 进度：60 / 1690 tested（2026-11-23，含 jsonEdit / keybindingLabels / platform/registry）。
 
 | 1 | editor | `editor/browser/config/charWidthReader.ts` | `lib/src/monaco/editor/browser/config/charWidthReader.dart` | pending |
 | 2 | editor | `editor/browser/config/domFontInfo.ts` | `lib/src/monaco/editor/browser/config/domFontInfo.dart` | pending |
@@ -1037,11 +1037,11 @@
 | 1026 | base | `base/common/ime.ts` | `lib/src/monaco/base/common/ime.dart` | pending |
 | 1027 | base | `base/common/iterator.ts` | `lib/src/monaco/base/common/iterator.dart` | tested |
 | 1028 | base | `base/common/json.ts` | `lib/src/monaco/base/common/json.dart` | tested |
-| 1029 | base | `base/common/jsonEdit.ts` | `lib/src/monaco/base/common/jsonEdit.dart` | pending |
+| 1029 | base | `base/common/jsonEdit.ts` | `lib/src/monaco/base/common/jsonEdit.dart` | tested |
 | 1030 | base | `base/common/jsonFormatter.ts` | `lib/src/monaco/base/common/jsonFormatter.dart` | tested |
 | 1031 | base | `base/common/jsonSchema.ts` | `lib/src/monaco/base/common/jsonSchema.dart` | tested |
 | 1032 | base | `base/common/keyCodes.ts` | `lib/src/monaco/base/common/keyCodes.dart` | tested |
-| 1033 | base | `base/common/keybindingLabels.ts` | `lib/src/monaco/base/common/keybindingLabels.dart` | pending |
+| 1033 | base | `base/common/keybindingLabels.ts` | `lib/src/monaco/base/common/keybindingLabels.dart` | tested |
 | 1034 | base | `base/common/keybindings.ts` | `lib/src/monaco/base/common/keybindings.dart` | tested |
 | 1035 | base | `base/common/labels.ts` | `lib/src/monaco/base/common/labels.dart` | pending |
 | 1036 | base | `base/common/layout.ts` | `lib/src/monaco/base/common/layout.dart` | tested |
@@ -1263,7 +1263,7 @@
 | 1252 | platform | `platform/quickinput/browser/tree/quickTree.ts` | `lib/src/monaco/platform/quickinput/browser/tree/quickTree.dart` | pending |
 | 1253 | platform | `platform/quickinput/common/quickAccess.ts` | `lib/src/monaco/platform/quickinput/common/quickAccess.dart` | pending |
 | 1254 | platform | `platform/quickinput/common/quickInput.ts` | `lib/src/monaco/platform/quickinput/common/quickInput.dart` | pending |
-| 1255 | platform | `platform/registry/common/platform.ts` | `lib/src/monaco/platform/registry/common/platform.dart` | pending |
+| 1255 | platform | `platform/registry/common/platform.ts` | `lib/src/monaco/platform/registry/common/platform.dart` | tested |
 | 1256 | platform | `platform/remote/common/remoteHosts.ts` | `lib/src/monaco/platform/remote/common/remoteHosts.dart` | pending |
 | 1257 | platform | `platform/storage/common/storage.ts` | `lib/src/monaco/platform/storage/common/storage.dart` | pending |
 | 1258 | platform | `platform/telemetry/common/commonProperties.ts` | `lib/src/monaco/platform/telemetry/common/commonProperties.dart` | pending |

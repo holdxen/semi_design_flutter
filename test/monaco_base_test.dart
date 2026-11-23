@@ -38,8 +38,11 @@ import 'package:semi_design_flutter/src/monaco/base/common/uri.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/path.dart' as path;
 import 'package:semi_design_flutter/src/monaco/base/common/platform.dart' as pf;
 import 'package:semi_design_flutter/src/monaco/base/common/process.dart' as pr;
+import 'package:semi_design_flutter/src/monaco/platform/registry/common/platform.dart' as reg;
 import 'package:semi_design_flutter/src/monaco/base/common/jsonFormatter.dart' as fmt;
+import 'package:semi_design_flutter/src/monaco/base/common/jsonEdit.dart' as jedit;
 import 'package:semi_design_flutter/src/monaco/base/common/keybindings.dart' as kb;
+import 'package:semi_design_flutter/src/monaco/base/common/keybindingLabels.dart' as kbl;
 import 'package:semi_design_flutter/src/monaco/base/common/naturalLanguage/korean.dart' as korean;
 import 'package:semi_design_flutter/src/monaco/base/common/stopwatch.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/symbols.dart';
@@ -1006,9 +1009,9 @@ void main() {
         final errors = <js.ParseError>[];
         final root = js.parseTree(input, errors);
         expect(errors, isEmpty);
-        expect(root.type, input.startsWith('[') ? js.NodeType.array : js.NodeType.object);
+        expect(root!.type, input.startsWith('[') ? js.NodeType.array : js.NodeType.object);
       }
-      final root = js.parseTree('{"a":[1,2],"b":3}');
+      final root = js.parseTree('{"a":[1,2],"b":3}')!;
       final n1 = js.findNodeAtLocation(root, <Object>['a', 1]);
       expect(n1, isNotNull);
       expect(n1!.value, 2);
@@ -1437,4 +1440,155 @@ void main() {
       }
     });
   });
+  group('jsonEdit.ts', () {
+    // Mirrors assertEdit from jsonEdit.test.ts
+    void assertEdit(String content, List<fmt.Edit> edits, String expected) {
+      for (int i = edits.length - 1; i >= 0; i--) {
+        final e = edits[i];
+        expect(e.offset >= 0 && e.length >= 0 && e.offset + e.length <= content.length, isTrue);
+        content = content.substring(0, e.offset) + e.content + content.substring(e.offset + e.length);
+      }
+      expect(content, expected);
+    }
+    final opts = fmt.FormattingOptions(insertSpaces: true, tabSize: 2, eol: '\n');
+
+    test('set / insert / remove property (mirrors jsonEdit.test.ts)', () {
+      assertEdit('{\n  "x": "y"\n}', jedit.setProperty('{\n  "x": "y"\n}', ['x'], 'bar', opts),
+          '{\n  "x": "bar"\n}');
+      assertEdit('true', jedit.setProperty('true', [], 'bar', opts), '"bar"');
+      assertEdit('{\n  "x": "y"\n}',
+          jedit.setProperty('{\n  "x": "y"\n}', ['x'], {'key': true}, opts),
+          '{\n  "x": {\n    "key": true\n  }\n}');
+      assertEdit('{}', jedit.setProperty('{}', ['foo'], 'bar', opts),
+          '{\n  "foo": "bar"\n}');
+      assertEdit('{}', jedit.setProperty('{}', ['foo', 'foo2'], 'bar', opts),
+          '{\n  "foo": {\n    "foo2": "bar"\n  }\n}');
+      assertEdit('{\n  "x": "y"\n}', jedit.setProperty('{\n  "x": "y"\n}', ['foo'], 'bar', opts),
+          '{\n  "x": "y",\n  "foo": "bar"\n}');
+      // insertion index callback
+      const content = '{\n  "x": {\n    "a": 1,\n    "b": true\n  }\n}\n';
+      assertEdit(content,
+          jedit.setProperty(content, ['x', 'c'], 'bar', opts, (_) => 0),
+          '{\n  "x": {\n    "c": "bar",\n    "a": 1,\n    "b": true\n  }\n}\n');
+      assertEdit(content,
+          jedit.setProperty(content, ['x', 'c'], 'bar', opts, (_) => 1),
+          '{\n  "x": {\n    "a": 1,\n    "c": "bar",\n    "b": true\n  }\n}\n');
+      assertEdit(content,
+          jedit.setProperty(content, ['x', 'c'], 'bar', opts, (_) => 2),
+          '{\n  "x": {\n    "a": 1,\n    "b": true,\n    "c": "bar"\n  }\n}\n');
+      // empty document → nested array
+      assertEdit('', jedit.setProperty('', ['foo', 0], 'bar', opts),
+          '{\n  "foo": [\n    "bar"\n  ]\n}');
+      assertEdit('//comment', jedit.setProperty('//comment', ['foo', 0], 'bar', opts),
+          '{\n  "foo": [\n    "bar"\n  ]\n} //comment');
+    });
+
+    test('removeProperty (mirrors jsonEdit.test.ts)', () {
+      assertEdit('{\n  "x": "y"\n}', jedit.removeProperty('{\n  "x": "y"\n}', ['x'], opts),
+          '{\n}');
+      assertEdit('{\n  "x": "y", "a": []\n}',
+          jedit.removeProperty('{\n  "x": "y", "a": []\n}', ['x'], opts),
+          '{\n  "a": []\n}');
+      // trailing comma / comment
+      assertEdit('{\n  "x": "y",\n}', jedit.removeProperty('{\n  "x": "y",\n}', ['x'], opts),
+          '{\n}');
+      assertEdit('{\n  "x": "y" /* x */, // trailing\n}',
+          jedit.removeProperty('{\n  "x": "y" /* x */, // trailing\n}', ['x'], opts),
+          '{ // trailing\n}');
+    });
+
+    test('array insert / remove (mirrors jsonEdit.test.ts)', () {
+      assertEdit('[\n  2,\n  3\n]', jedit.setProperty('[\n  2,\n  3\n]', [0], 1, opts),
+          '[\n  1,\n  2,\n  3\n]');
+      assertEdit('[\n]', jedit.setProperty('[\n]', [0], 1, opts), '[\n  1\n]');
+      assertEdit('[\n  1,\n  3\n]', jedit.setProperty('[\n  1,\n  3\n]', [1], 2, opts),
+          '[\n  1,\n  2,\n  3\n]');
+      assertEdit('[\n  1,\n  2\n]', jedit.setProperty('[\n  1,\n  2\n]', [-1], 'bar', opts),
+          '[\n  1,\n  2,\n  "bar"\n]');
+      assertEdit('[\n  1\n]', jedit.setProperty('[\n  1\n]', [0], null, opts), '[]');
+      assertEdit('[\n  1,\n  2,\n  3\n]',
+          jedit.setProperty('[\n  1,\n  2,\n  3\n]', [1], null, opts),
+          '[\n  1,\n  3\n]');
+      assertEdit('[\n  1,\n  2,\n  "bar"\n]',
+          jedit.setProperty('[\n  1,\n  2,\n  "bar"\n]', [2], null, opts),
+          '[\n  1,\n  2\n]');
+      assertEdit('[1,2]', jedit.setProperty('[1,2]', [1], null, opts), '[\n  1\n]');
+    });
+
+    test('applyEdit / applyEdits', () {
+      expect(jedit.applyEdit('hello', fmt.Edit(1, 3, 'XYZ')), 'hXYZo');
+      expect(jedit.applyEdits('hello', <fmt.Edit>[
+        fmt.Edit(0, 1, 'H'),
+        fmt.Edit(4, 1, 'O'),
+      ]), 'HellO');
+      expect(() => jedit.applyEdits('abc', <fmt.Edit>[
+        fmt.Edit(0, 2, 'X'),
+        fmt.Edit(1, 1, 'Y'),
+      ]), throwsA(isA<StateError>()));
+    });
+  });
+
+  group('keybindingLabels.ts', () {
+    String? ui(int OS, kb.KeyCodeChord m, String key) =>
+        kbl.UILabelProvider.toLabel(OS, <kb.KeyCodeChord>[m], (_) => key);
+    String? us(int OS, kb.KeyCodeChord m, String key) =>
+        kbl.UserSettingsLabelProvider.toLabel(OS, <kb.KeyCodeChord>[m], (_) => key);
+
+    test('UILabelProvider modifiers (mirrors keybindingLabels.test.ts semantics)', () {
+      expect(ui(pf.OperatingSystem.Windows, kb.KeyCodeChord(false, false, false, false, 0), 'A'), 'A');
+      expect(ui(pf.OperatingSystem.Windows, kb.KeyCodeChord(true, false, false, false, 0), 'A'), 'Ctrl+A');
+      expect(ui(pf.OperatingSystem.Windows, kb.KeyCodeChord(false, true, false, false, 0), 'A'), 'Shift+A');
+      expect(ui(pf.OperatingSystem.Windows, kb.KeyCodeChord(false, false, true, false, 0), 'A'), 'Alt+A');
+      expect(ui(pf.OperatingSystem.Windows, kb.KeyCodeChord(false, false, false, true, 0), 'A'), 'Windows+A');
+      expect(ui(pf.OperatingSystem.Windows, kb.KeyCodeChord(true, true, true, true, 0), 'A'),
+          'Ctrl+Shift+Alt+Windows+A');
+      expect(ui(pf.OperatingSystem.Linux, kb.KeyCodeChord(false, false, false, true, 0), 'A'), 'Super+A');
+      expect(ui(pf.OperatingSystem.Macintosh, kb.KeyCodeChord(true, false, false, false, 0), 'A'), '⌃A');
+      expect(ui(pf.OperatingSystem.Macintosh, kb.KeyCodeChord(false, false, false, true, 0), 'A'), '⌘A');
+      // null provider result cannot be expressed
+      expect(kbl.UILabelProvider.toLabel<kb.KeyCodeChord>(pf.OperatingSystem.Windows, <kb.KeyCodeChord>[kb.KeyCodeChord(true, false, false, false, 0)], (_) => null),
+          isNull);
+      // multiple chords joined with space
+      expect(kbl.UILabelProvider.toLabel(pf.OperatingSystem.Windows,
+          <kb.KeyCodeChord>[kb.KeyCodeChord(true, false, false, false, 0), kb.KeyCodeChord(true, false, false, false, 0)], (m) => 'A'),
+          'Ctrl+A Ctrl+A');
+    });
+
+    test('UserSettings / Electron / Aria label providers', () {
+      expect(us(pf.OperatingSystem.Windows, kb.KeyCodeChord(true, false, false, true, 0), 'A'), 'ctrl+win+A');
+      expect(us(pf.OperatingSystem.Macintosh, kb.KeyCodeChord(true, false, false, true, 0), 'A'), 'ctrl+cmd+A');
+      expect(kbl.UserSettingsLabelProvider.toLabel(pf.OperatingSystem.Linux, <kb.KeyCodeChord>[kb.KeyCodeChord(false, false, false, true, 0)], (_) => 'A'),
+          'meta+A');
+      expect(kbl.ElectronAcceleratorLabelProvider.toLabel(pf.OperatingSystem.Windows, <kb.KeyCodeChord>[kb.KeyCodeChord(true, false, false, true, 0)], (_) => 'A'),
+          'Ctrl+Super+A');
+      expect(kbl.AriaLabelProvider.toLabel(pf.OperatingSystem.Windows, <kb.KeyCodeChord>[kb.KeyCodeChord(true, false, false, false, 0)], (_) => 'A'),
+          'Control+A');
+      // empty chords → null
+      expect(kbl.UILabelProvider.toLabel<kb.KeyCodeChord>(pf.OperatingSystem.Windows, <kb.KeyCodeChord>[], (_) => 'A'), isNull);
+    });
+  });
+
+  group('platform/registry/common/platform.ts', () {
+    test('registry - api / mixin / knows / as / duplicate (mirrors platform.test.ts)', () {
+      expect(reg.Registry.add is Function, isTrue);
+      expect(reg.Registry.as is Function, isTrue);
+      expect(reg.Registry.knows is Function, isTrue);
+
+      reg.Registry.add('foo', <String, Object?>{'bar': true});
+      expect(reg.Registry.knows('foo'), isTrue);
+      expect((reg.Registry.as('foo') as Map<String, Object?>)['bar'], true);
+
+      final Object ext = <String, Object?>{};
+      reg.Registry.add('knows,as', ext);
+      expect(reg.Registry.knows('knows,as'), isTrue);
+      expect(reg.Registry.knows('knows,as1234'), isFalse);
+      expect(identical(reg.Registry.as('knows,as'), ext), isTrue);
+      expect(reg.Registry.as('knows,as1234'), isNull);
+
+      reg.Registry.add('foo-dup', <String, Object?>{'bar': true});
+      expect(() => reg.Registry.add('foo-dup', <String, Object?>{'bar': false}),
+          throwsA(isA<Error>()));
+    });
+  });
+
 }
