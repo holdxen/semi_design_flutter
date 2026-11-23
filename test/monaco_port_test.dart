@@ -23,6 +23,8 @@ import 'package:semi_design_flutter/src/monaco/editor/common/core/edits/stringEd
 import 'package:semi_design_flutter/src/monaco/editor/common/core/edits/textEdit.dart' as textEdit;
 import 'package:semi_design_flutter/src/monaco/editor/common/core/text/abstractText.dart' as abstractText;
 import 'package:semi_design_flutter/src/monaco/editor/common/core/text/positionToOffsetImpl.dart' as posOffset;
+import 'package:semi_design_flutter/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/length.dart' as bpLength;
+import 'package:semi_design_flutter/src/monaco/editor/common/diff/defaultLinesDiffComputer/algorithms/diffAlgorithm.dart' as da;
 import 'package:semi_design_flutter/src/monaco/editor/common/core/misc/eolCounter.dart';
 import 'package:semi_design_flutter/src/monaco/editor/common/core/misc/indentation.dart' as indentation;
 import 'package:semi_design_flutter/src/monaco/editor/common/core/misc/rgba.dart';
@@ -975,6 +977,129 @@ void main() {
       expect(del.isEffectiveDeletion(t), isTrue);
     });
   });
+
+  group('bracketPairsTree/length.ts (1:1)', () {
+    String toStr(bpLength.Length length) => bpLength.lengthToObj(length).toString();
+
+    test('Basic', () {
+      final l1 = bpLength.toLength(100, 10);
+      expect(bpLength.lengthToObj(l1).lineCount, 100);
+      expect(bpLength.lengthToObj(l1).columnCount, 10);
+      expect(toStr(bpLength.lengthAdd(l1, bpLength.toLength(100, 10))), '200,10');
+      expect(toStr(bpLength.lengthAdd(l1, bpLength.toLength(0, 10))), '100,20');
+    });
+
+    test('lengthDiffNonNeg', () {
+      expect(toStr(bpLength.lengthDiffNonNegative(bpLength.toLength(100, 10), bpLength.toLength(100, 20))), '0,10');
+      expect(toStr(bpLength.lengthDiffNonNegative(bpLength.toLength(100, 10), bpLength.toLength(101, 20))), '1,20');
+      expect(toStr(bpLength.lengthDiffNonNegative(bpLength.toLength(101, 30), bpLength.toLength(101, 20))), '0,0');
+      expect(toStr(bpLength.lengthDiffNonNegative(bpLength.toLength(102, 10), bpLength.toLength(101, 20))), '0,0');
+    });
+
+    test('length <-> position/range/string', () {
+      final l = bpLength.toLength(3, 5);
+      final p = bpLength.lengthToPosition(l);
+      expect(p.lineNumber, 4);
+      expect(p.column, 6);
+      expect(bpLength.positionToLength(p), l);
+      expect(bpLength.lengthGetLineCount(l), 3);
+      expect(bpLength.lengthGetColumnCountIfZeroLineCount(bpLength.toLength(0, 7)), 7);
+      final r = bpLength.lengthsToRange(bpLength.toLength(0, 0), bpLength.toLength(2, 3));
+      expect(r.startLineNumber, 1);
+      expect(r.endLineNumber, 3);
+      expect(bpLength.lengthOfStringObj('a\nbc').lineCount, 1);
+      expect(bpLength.lengthOfStringObj('a\nbc').columnCount, 2);
+      expect(bpLength.lengthOfString('a\nbc'), bpLength.toLength(1, 2));
+      expect(bpLength.lengthCompare(l, bpLength.toLength(3, 5)), 0);
+      expect(bpLength.lengthMax(l, bpLength.toLength(1, 0)), l);
+      expect(bpLength.lengthHash(l), l);
+      expect(bpLength.sumLengths<int>(<int>[1, 2, 3], (x) => bpLength.toLength(0, x)), bpLength.toLength(0, 6));
+      expect(bpLength.lengthIsZero(bpLength.lengthZero), isTrue);
+    });
+  });
+
+  group('linesDiff/diffAlgorithm.ts (1:1)', () {
+    da.SequenceDiff sd(int s1, int e1, int s2, int e2) =>
+        da.SequenceDiff(OffsetRange(s1, e1), OffsetRange(s2, e2));
+
+    test('SequenceDiff basics: swap/join/delta/intersect', () {
+      final d = sd(1, 3, 5, 7);
+      expect(d.toString(), '[1, 3) <-> [5, 7)');
+      expect(d.swap().seq1Range.start, 5);
+      expect(d.getStarts().offset1, 1);
+      expect(d.getStarts().offset2, 5);
+      expect(d.getEndExclusives().offset1, 3);
+      expect(d.join(sd(3, 4, 7, 8)).seq1Range.endExclusive, 4);
+      expect(d.delta(2).seq1Range.start, 3);
+      expect(d.deltaStart(2).seq1Range.start, 3);
+      expect(d.deltaStart(2).seq1Range.endExclusive, 3);
+      expect(d.deltaEnd(2).seq1Range.endExclusive, 5);
+      expect(d.delta(0), same(d));
+      expect(d.intersect(sd(2, 5, 6, 9))!.seq1Range.start, 2);
+      expect(d.intersect(sd(10, 12, 10, 12)), isNull);
+      expect(d.intersectsOrTouches(sd(3, 4, 7, 8)), isTrue);
+      expect(d.intersectsOrTouches(sd(4, 6, 8, 10)), isFalse);
+    });
+
+    test('SequenceDiff.invert', () {
+      // A single diff [1,3) <-> [5,7) on doc1 of length 10.
+      final inverted = da.SequenceDiff.invert(<da.SequenceDiff>[sd(1, 3, 5, 7)], 10);
+      expect(inverted.length, 2);
+      // leading region: (0, diff.seq1.start=1) <-> (0, diff.seq2.start=5)
+      expect(inverted[0].seq1Range.start, 0);
+      expect(inverted[0].seq1Range.endExclusive, 1);
+      expect(inverted[0].seq2Range.start, 0);
+      expect(inverted[0].seq2Range.endExclusive, 5);
+      // trailing region: (3,10) <-> (7, (7-3)+10=14)
+      expect(inverted[1].seq1Range.start, 3);
+      expect(inverted[1].seq1Range.endExclusive, 10);
+      expect(inverted[1].seq2Range.start, 7);
+      expect(inverted[1].seq2Range.endExclusive, 14);
+    });
+
+    test('OffsetPair + DiffAlgorithmResult + assertSorted', () {
+      expect(da.OffsetPair.zero.toString(), '0 <-> 0');
+      expect(da.OffsetPair(1, 2).equals(da.OffsetPair(1, 2)), isTrue);
+      expect(da.OffsetPair(1, 2).delta(3).offset1, 4);
+      expect(da.OffsetPair(1, 2).delta(0).offset1, 1);
+      expect(da.OffsetPair.max.offset1, 9007199254740991);
+
+      final seq1 = _DiffSeq(<int>[1, 2, 3]);
+      final seq2 = _DiffSeq(<int>[1, 2]);
+      final trivial = da.DiffAlgorithmResult.trivial(seq1, seq2);
+      expect(trivial.hitTimeout, isFalse);
+      expect(trivial.diffs.length, 1);
+      expect(trivial.diffs[0].seq1Range.endExclusive, 3);
+      expect(da.DiffAlgorithmResult.trivialTimedOut(seq1, seq2).hitTimeout, isTrue);
+
+      da.SequenceDiff.assertSorted(<da.SequenceDiff>[sd(0, 2, 0, 2), sd(2, 4, 2, 4)]);
+      expect(() => da.SequenceDiff.assertSorted(<da.SequenceDiff>[sd(0, 3, 0, 3), sd(2, 4, 2, 4)]),
+          throwsA(isA<Exception>()));
+    });
+
+    test('timeout classes', () {
+      expect(da.InfiniteTimeout.instance.isValid(), isTrue);
+      final t = da.DateTimeout(1000);
+      expect(t.isValid(), isTrue);
+      t.disable();
+      expect(t.isValid(), isTrue);
+      expect(() => da.DateTimeout(0), throwsA(isA<Exception>()));
+    });
+  });
+}
+
+// Test helper: a concrete ISequence for diffAlgorithm tests.
+class _DiffSeq implements da.ISequence {
+  final List<int> items;
+  _DiffSeq(this.items);
+  @override
+  int getElement(int offset) => items[offset];
+  @override
+  int get length => items.length;
+  @override
+  bool isStronglyEqual(int offset1, int offset2) => items[offset1] == items[offset2];
+  @override
+  int getBoundaryScore(int length) => 0;
 }
 
 // Test helper: a concrete BaseReplacement that stores replacement text.

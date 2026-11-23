@@ -65,6 +65,10 @@ import 'package:semi_design_flutter/src/monaco/base/common/keyCodes.dart' as kc;
 import 'package:semi_design_flutter/src/monaco/base/common/color.dart' as clr;
 import 'package:semi_design_flutter/src/monaco/base/common/json.dart' as js;
 import 'package:semi_design_flutter/src/monaco/base/common/uri.dart';
+import 'package:semi_design_flutter/src/monaco/base/common/validation.dart' as val;
+import 'package:semi_design_flutter/src/monaco/base/common/diff/diff.dart' as diff;
+import 'package:semi_design_flutter/src/monaco/base/common/filters.dart' as filters;
+import 'package:semi_design_flutter/src/monaco/base/common/network.dart' as net;
 import 'package:semi_design_flutter/src/monaco/editor/common/core/wordHelper.dart' as wh;
 import 'package:semi_design_flutter/src/monaco/base/common/path.dart' as path;
 import 'package:semi_design_flutter/src/monaco/base/common/charCode.dart' as cc;
@@ -5775,6 +5779,534 @@ void main() {
       final ensured = wh.ensureValidWordDefinition(def);
       expect(identical(ensured, def), isTrue);
       expect(ensured.lastIndex, 0);
+    });
+  });
+
+  group('validation.ts (1:1)', () {
+    test('vString/vNumber/vBoolean type validators', () {
+      final s = val.vString();
+      expect(s.validate('hi').error, isNull);
+      expect(s.validate('hi').content, 'hi');
+      expect(s.validate(42).error!.message, 'Expected string, but got number');
+      expect(s.validate(null).error!.message, 'Expected string, but got undefined');
+
+      expect(val.vNumber().validate(3.5).error, isNull);
+      expect(val.vBoolean().validate(true).error, isNull);
+      expect(val.vBoolean().validate(1).error!.message, 'Expected boolean, but got number');
+    });
+
+    test('vObjAny / vUndefined / vUnknown / vUnchecked', () {
+      expect(val.vObjAny().validate(<String, dynamic>{}).error, isNull);
+      expect(val.vUndefined().validate(null).error, isNull);
+      expect(val.vUndefined().validate(0).error!.message, 'Expected undefined, but got number');
+      expect(val.vUnknown().validate('anything').error, isNull);
+      expect(val.vUnchecked<Object?>().validate(123).content, 123);
+    });
+
+    test('validateOrThrow throws on error', () {
+      expect(() => val.vString().validateOrThrow(1), throwsA(isA<Exception>()));
+      expect(val.vNumber().validateOrThrow(7), 7);
+    });
+
+    test('vObj required + optional fields', () {
+      final v = val.vObj(<String, Object?>{
+        'name': val.vString(),
+        'age': val.vOptionalProp<num>(val.vNumber()),
+      });
+      final ok = v.validate(<String, dynamic>{'name': 'Ada', 'age': 36});
+      expect(ok.error, isNull);
+      expect(ok.content!['name'], 'Ada');
+      expect(ok.content!['age'], 36);
+
+      final noAge = v.validate(<String, dynamic>{'name': 'Ada'});
+      expect(noAge.error, isNull);
+      expect(noAge.content!.containsKey('age'), isFalse);
+
+      final bad = v.validate(<String, dynamic>{'name': 5});
+      expect(bad.error!.message, "Error in property 'name': Expected string, but got number");
+      expect(v.validate('not an object').error!.message, 'Expected object');
+    });
+
+    test('vArray / vTuple / vUnion / vEnum / vLiteral', () {
+      expect(val.vArray<num>(val.vNumber()).validate(<dynamic>[1, 2, 3]).content, <dynamic>[1, 2, 3]);
+      expect(val.vArray<num>(val.vNumber()).validate(<dynamic>[1, 'x']).error!.message,
+          'Error in element 1: Expected number, but got string');
+
+      final tuple = val.vTuple(<val.IValidator<dynamic>>[val.vString(), val.vNumber()]);
+      expect(tuple.validate(<dynamic>['a', 1]).content, <dynamic>['a', 1]);
+      expect(tuple.validate(<dynamic>['a']).error!.message,
+          'Expected tuple of length 2, but got 1');
+
+      final uni = val.vUnion<dynamic>(<val.IValidator<dynamic>>[val.vString(), val.vNumber()]);
+      expect(uni.validate('a').content, 'a');
+      expect(uni.validate(9).content, 9);
+      expect(uni.validate(true).error, isNotNull);
+
+      expect(val.vEnum<String>(<String>['a', 'b']).validate('a').error, isNull);
+      expect(val.vEnum<String>(<String>['a', 'b']).validate('c').error!.message,
+          'Expected one of: a, b');
+      expect(val.vLiteral<String>('x').validate('x').error, isNull);
+      expect(val.vLiteral<String>('x').validate('y').error!.message, 'Expected: x');
+    });
+
+    test('vLazy / vWithJsonSchemaRef / JSON schema shape', () {
+      expect(val.vLazy<String>(() => val.vString()).validate('z').content, 'z');
+      final ref = val.vWithJsonSchemaRef<String>('#/defs/S', val.vString());
+      expect(ref.getJSONSchema()['\$ref'], '#/defs/S');
+      expect(val.vString().getJSONSchema(), <String, Object?>{'type': 'string'});
+      expect(val.vArray<num>(val.vNumber()).getJSONSchema()['type'], 'array');
+      final objSchema = val.vObj(<String, Object?>{
+        'a': val.vString(),
+        'b': val.vOptionalProp<num>(val.vNumber()),
+      }).getJSONSchema();
+      expect(objSchema['type'], 'object');
+      expect((objSchema['required'] as List).length, 1);
+      expect(objSchema['required'], <String>['a']);
+      // Union schema filters out UndefinedValidator
+      final uniSchema = val.vUnion<dynamic>(<val.IValidator<dynamic>>[
+        val.vUndefined(), val.vString(),
+      ]).getJSONSchema();
+      expect((uniSchema['oneOf'] as List).length, 1);
+    });
+  });
+
+  group('network.ts (1:1)', () {
+    test('Schemas constants', () {
+      expect(net.Schemas.file, 'file');
+      expect(net.Schemas.vscodeRemote, 'vscode-remote');
+      expect(net.Schemas.vscodeFileResource, 'vscode-file');
+      expect(net.Schemas.inMemory, 'inmemory');
+    });
+
+    test('matchesScheme / matchesSomeScheme', () {
+      expect(net.matchesScheme(URI.parse('file:///a'), 'FILE'), isTrue);
+      expect(net.matchesScheme('https://example', 'https'), isTrue);
+      expect(net.matchesScheme('https://example', 'http'), isFalse);
+      expect(net.matchesSomeScheme('file:///a', <String>['http', 'file']), isTrue);
+    });
+
+    test('getServerProductSegment', () {
+      expect(net.getServerProductSegment(<String, Object?>{}), 'oss-dev');
+      expect(
+          net.getServerProductSegment(<String, Object?>{'quality': 'stable', 'commit': 'abc'}),
+          'stable-abc');
+    });
+
+    test('RemoteAuthorities: set + rewrite + connection token', () {
+      final ra = net.RemoteAuthoritiesImpl();
+      ra.set('auth', 'example.com', 8080);
+      ra.setConnectionToken('auth', 'tok');
+      final uri = URI.parse('vscode-remote://auth/path/to/file');
+      final rewritten = ra.rewrite(uri);
+      expect(rewritten.scheme, net.Schemas.vscodeRemoteResource);
+      expect(rewritten.authority, 'example.com:8080');
+      expect(rewritten.query, contains('path=%2Fpath%2Fto%2Ffile'));
+      expect(rewritten.query, contains('tkn=tok'));
+    });
+
+    test('RemoteAuthorities: IPv6 host bracketed, delegate', () {
+      final ra = net.RemoteAuthoritiesImpl();
+      ra.set('v6', '::1', 3000);
+      expect(ra.rewrite(URI.parse('vscode-remote://v6/x')).authority, '[::1]:3000');
+      final called = ra.rewrite(URI.parse('vscode-remote://other/x'));
+      expect(called.authority, 'null:null'); // no host/port registered
+      ra.setDelegate((u) => URI.parse('file:///delegated'));
+      expect(ra.rewrite(URI.parse('vscode-remote://v6/x')).path, '/delegated');
+    });
+
+    test('FileAccess native URI round-trip (no authority)', () {
+      final original = URI.file('network.test.ts');
+      final browser = net.FileAccess.uriToBrowserUri(original);
+      expect(browser.authority.isNotEmpty, isTrue);
+      expect(browser.scheme, net.Schemas.vscodeFileResource);
+      final file = net.FileAccess.uriToFileUri(browser);
+      expect(file.authority.isEmpty, isTrue);
+      expect(file.toString(), original.toString());
+    });
+
+    test('FileAccess native URI round-trip (with authority)', () {
+      final original = URI.file('network.test.ts').withChanges(
+          const UriChange(authority: 'test-authority'));
+      final browser = net.FileAccess.uriToBrowserUri(original);
+      expect(browser.authority, 'test-authority');
+      final file = net.FileAccess.uriToFileUri(browser);
+      expect(file.authority, 'test-authority');
+    });
+
+    test('FileAccess drops query/fragment on conversion; keeps if already vscode-file', () {
+      final original = URI.file('network.test.ts').withChanges(
+          const UriChange(query: 'foo=bar', fragment: 'something'));
+      final browser = net.FileAccess.uriToBrowserUri(original);
+      expect(browser.query, '');
+      expect(browser.fragment, '');
+
+      final alreadyCode = original.withChanges(const UriChange(scheme: net.Schemas.vscodeFileResource));
+      final browser2 = net.FileAccess.uriToBrowserUri(alreadyCode);
+      expect(browser2.query, 'foo=bar');
+      expect(browser2.fragment, 'something');
+      expect(net.FileAccess.uriToFileUri(original).query, 'foo=bar');
+    });
+
+    test('FileAccess remote URI changes scheme', () {
+      final remote = URI.file('network.test.ts').withChanges(
+          const UriChange(scheme: net.Schemas.vscodeRemote));
+      final browser = net.FileAccess.uriToBrowserUri(remote);
+      expect(browser.scheme, isNot(net.Schemas.vscodeRemote));
+    });
+
+    test('FileAccess toUri via module root (path and URL)', () {
+      net.globalVSCodeFileRoot = '/root';
+      // asFileUri keeps the file scheme; asBrowserUri converts file -> vscode-file on native.
+      final u1 = net.FileAccess.asFileUri('vs/x');
+      expect(u1.scheme, net.Schemas.file);
+      expect(u1.path, '/root/vs/x');
+      final b1 = net.FileAccess.asBrowserUri('vs/x');
+      expect(b1.scheme, net.Schemas.vscodeFileResource);
+      net.globalVSCodeFileRoot = 'file:///root';
+      final u2 = net.FileAccess.asFileUri('vs/x');
+      expect(u2.path, '/root/vs/x');
+      net.globalVSCodeFileRoot = null;
+    });
+
+    test('COI headers from query', () {
+      expect(net.COI.getHeadersFromQuery('http://x/?vscode-coi=3'),
+          net.COI.CoopAndCoep);
+      expect(net.COI.getHeadersFromQuery('http://x/?vscode-coi=1'),
+          containsPair('Cross-Origin-Opener-Policy', 'same-origin'));
+      expect(net.COI.getHeadersFromQuery('http://x/'), isNull);
+      expect(net.COI.getHeadersFromQuery('http://x/?vscode-coi=zzz'), isNull);
+    });
+  });
+
+  group('diff.ts (1:1)', () {
+    // Mirror of diff.test.ts assertAnswer: apply changes as masks, keep common substring.
+    void assertAnswer(String originalStr, String modifiedStr, List<diff.IDiffChange> changes, String answerStr,
+        [bool onlyLength = false]) {
+      final List<bool> originalMask = List<bool>.filled(originalStr.length, true);
+      final List<bool> modifiedMask = List<bool>.filled(modifiedStr.length, true);
+      for (final change in changes) {
+        if (change.originalLength > 0) {
+          for (int j = 0; j < change.originalLength; j++) {
+            originalMask[change.originalStart + j] = false;
+          }
+        }
+        if (change.modifiedLength > 0) {
+          for (int j = 0; j < change.modifiedLength; j++) {
+            modifiedMask[change.modifiedStart + j] = false;
+          }
+        }
+      }
+      String maskBased(String str, List<bool> mask) {
+        final StringBuffer r = StringBuffer();
+        for (int i = 0; i < str.length; i++) {
+          if (mask[i]) r.write(str[i]);
+        }
+        return r.toString();
+      }
+
+      final String originalAnswer = maskBased(originalStr, originalMask);
+      final String modifiedAnswer = maskBased(modifiedStr, modifiedMask);
+      if (onlyLength) {
+        expect(originalAnswer.length, answerStr.length);
+        expect(modifiedAnswer.length, answerStr.length);
+      } else {
+        expect(originalAnswer, answerStr);
+        expect(modifiedAnswer, answerStr);
+      }
+    }
+
+    List<diff.IDiffChange> lcsChanges(String originalStr, String modifiedStr) =>
+        diff.LcsDiff(diff.StringDiffSequence(originalStr), diff.StringDiffSequence(modifiedStr))
+            .ComputeDiff(false)
+            .changes;
+
+    String stringPower(String str, int power) {
+      String r = str;
+      for (int i = 0; i < power; i++) {
+        r += r;
+      }
+      return r;
+    }
+
+    void lcsInner(String originalStr, String modifiedStr, String answerStr, [bool onlyLength = false]) =>
+        assertAnswer(originalStr, modifiedStr, lcsChanges(originalStr, modifiedStr), answerStr, onlyLength);
+
+    void lcsTest(String originalStr, String modifiedStr, String answerStr) {
+      lcsInner(originalStr, modifiedStr, answerStr);
+      for (int i = 2; i <= 5; i++) {
+        lcsInner(stringPower(originalStr, i), stringPower(modifiedStr, i),
+            stringPower(answerStr, i), true);
+      }
+    }
+
+    test('LcsDiff - different strings tests', () {
+      lcsTest('heLLo world', 'hello orlando', 'heo orld');
+      lcsTest('abcde', 'acd', 'acd');
+      lcsTest('abcdbce', 'bcede', 'bcde');
+      lcsTest('abcdefgabcdefg', 'bcehafg', 'bceafg');
+      lcsTest('abcde', 'fgh', '');
+      lcsTest('abcfabc', 'fabc', 'fabc');
+      lcsTest('0azby0', '9axbzby9', 'azby');
+      lcsTest('0abc00000', '9a1b2c399999', 'abc');
+      lcsTest('fooBar', 'myfooBar', 'fooBar');
+      lcsTest('fooBar', 'fooMyBar', 'fooBar');
+      lcsTest('fooBar', 'fooBar', 'fooBar');
+    });
+
+    test('stringDiff does not split surrogate pairs', () {
+      for (final bool pretty in <bool>[false, true]) {
+        var c = diff.stringDiff('\u{2B7F9}', '\u{2B14D}', pretty);
+        expect(c.length, 1);
+        expect(c[0].originalStart, 0);
+        expect(c[0].originalLength, 2);
+        expect(c[0].modifiedStart, 0);
+        expect(c[0].modifiedLength, 2);
+
+        c = diff.stringDiff('a\u{1F600}b', 'a\u{1F603}b', pretty);
+        expect(c.length, 1);
+        expect(c[0].originalStart, 1);
+        expect(c[0].originalLength, 2);
+
+        c = diff.stringDiff('\u{1F600}a', '\u{1F600}b', pretty);
+        expect(c.length, 1);
+        expect(c[0].originalStart, 2);
+        expect(c[0].originalLength, 1);
+      }
+    });
+
+    test('stringDiff maps insertions/deletions at surrogate boundaries', () {
+      final insertion = diff.stringDiff('a', 'a\u{1F600}', false);
+      expect(insertion.length, 1);
+      expect(insertion[0].originalStart, 1);
+      expect(insertion[0].originalLength, 0);
+      expect(insertion[0].modifiedStart, 1);
+      expect(insertion[0].modifiedLength, 2);
+
+      final deletion = diff.stringDiff('\u{1F600}a', 'a', false);
+      expect(deletion.length, 1);
+      expect(deletion[0].originalStart, 0);
+      expect(deletion[0].originalLength, 2);
+      expect(deletion[0].modifiedStart, 0);
+      expect(deletion[0].modifiedLength, 0);
+    });
+
+    test('using continue processing predicate to quit early', () {
+      const String left = 'abcdef';
+      const String right = 'abxxcyyydzzzzezzzzzzzzzzzzzzzzzzzzf';
+
+      int predicateCallCount = 0;
+      var d = diff.LcsDiff(diff.StringDiffSequence(left), diff.StringDiffSequence(right),
+          (int leftIndex, num longestMatchSoFar) {
+        expect(predicateCallCount, 0);
+        predicateCallCount++;
+        expect(leftIndex, 1);
+        return false;
+      });
+      var changes = d.ComputeDiff(true).changes;
+      expect(predicateCallCount, 1);
+      assertAnswer(left, right, changes, 'abf');
+
+      d = diff.LcsDiff(diff.StringDiffSequence(left), diff.StringDiffSequence(right),
+          (int leftIndex, num longestMatchSoFar) {
+        expect(longestMatchSoFar <= 1, isTrue);
+        return longestMatchSoFar < 1;
+      });
+      changes = d.ComputeDiff(true).changes;
+      assertAnswer(left, right, changes, 'abcf');
+
+      d = diff.LcsDiff(diff.StringDiffSequence(left), diff.StringDiffSequence(right),
+          (int leftIndex, num longestMatchSoFar) {
+        expect(longestMatchSoFar <= 2, isTrue);
+        return longestMatchSoFar < 2;
+      });
+      changes = d.ComputeDiff(true).changes;
+      assertAnswer(left, right, changes, 'abcdf');
+
+      bool hitSecondMatch = false;
+      d = diff.LcsDiff(diff.StringDiffSequence(left), diff.StringDiffSequence(right),
+          (int leftIndex, num longestMatchSoFar) {
+        expect(longestMatchSoFar <= 2, isTrue);
+        final bool hitYet = hitSecondMatch;
+        hitSecondMatch = longestMatchSoFar > 1;
+        return !hitYet;
+      });
+      changes = d.ComputeDiff(true).changes;
+      assertAnswer(left, right, changes, 'abcdf');
+
+      d = diff.LcsDiff(diff.StringDiffSequence(left), diff.StringDiffSequence(right),
+          (int leftIndex, num longestMatchSoFar) {
+        expect(longestMatchSoFar <= 3, isTrue);
+        return longestMatchSoFar < 3;
+      });
+      changes = d.ComputeDiff(true).changes;
+      assertAnswer(left, right, changes, 'abcdef');
+    });
+
+    test('computeLevenshteinDistance', () {
+      expect(diff.computeLevenshteinDistance('kitten', 'sitting'), 3);
+      expect(diff.computeLevenshteinDistance('', 'abc'), 3);
+      expect(diff.computeLevenshteinDistance('abc', ''), 3);
+      expect(diff.computeLevenshteinDistance('same', 'same'), 0);
+      expect(diff.computeLevenshteinDistance('flaw', 'lawn'), 2);
+      // long-string branch (>32): single-char edit distance over a 40-char string
+      final String a = 'a' * 40;
+      final String b = 'a' * 20 + 'x' + 'a' * 19;
+      expect(diff.computeLevenshteinDistance(a, b), 1);
+      expect(diff.computeLevenshteinDistance(a, a), 0);
+    });
+  });
+
+  group('filters.ts (1:1)', () {
+    void filterOk(filters.IFilter filter, String word, String target, [List<filters.IMatch>? highlights]) {
+      final List<filters.IMatch>? r = filter(word, target);
+      expect(r, isNotNull, reason: '$word didn\'t match $target');
+      if (highlights != null) expect(r, highlights);
+    }
+
+    void filterNotOk(filters.IFilter filter, String word, String target) {
+      expect(filter(word, target), isNull, reason: '$word matched $target');
+    }
+
+    List<int>? fscore(String pattern, String word,
+        {int patternPos = 0, int wordPos = 0, bool firstMatchCanBeWeak = false}) {
+      return filters.fuzzyScore(pattern, pattern.toLowerCase(), patternPos,
+          word, word.toLowerCase(), wordPos,
+          filters.FuzzyScoreOptions(firstMatchCanBeWeak, true));
+    }
+
+    // Mirror of filters.test.ts assertMatches: '^' marks matched chars.
+    void assertMatches(String pattern, String word, String? decoratedWord,
+        {int patternPos = 0, int wordPos = 0, bool firstMatchCanBeWeak = false}) {
+      final List<int>? r = fscore(pattern, word,
+          patternPos: patternPos, wordPos: wordPos, firstMatchCanBeWeak: firstMatchCanBeWeak);
+      expect(r == null, decoratedWord == null, reason: 'match presence for $pattern / $word');
+      if (r != null) {
+        final List<filters.IMatch> matches = filters.createMatches(r);
+        final StringBuffer actual = StringBuffer();
+        int pos = 0;
+        for (final m in matches) {
+          actual.write(word.substring(pos, m.start));
+          actual.write('^');
+          actual.write(word.substring(m.start, m.end).split('').join('^'));
+          pos = m.end;
+        }
+        actual.write(word.substring(pos));
+        expect(actual.toString(), decoratedWord);
+      }
+    }
+
+    test('empty queries share immutable matches', () {
+      for (final f in <filters.IFilter>[
+        filters.matchesFuzzy,
+        filters.matchesContiguousSubString,
+        filters.matchesBaseContiguousSubString,
+      ]) {
+        expect(identical(f('', 'first'), filters.emptyMatches), isTrue);
+        expect(identical(f('', ''), filters.emptyMatches), isTrue);
+        expect(f('', '')![0].start, 0);
+      }
+    });
+
+    test('or', () {
+      final counters = <int>[0, 0];
+      filters.IFilter newFilter(int i, bool r) => (String w, String t) {
+        counters[i]++;
+        return r ? <filters.IMatch>[filters.IMatch(0, 1)] : null;
+      };
+      filters.IFilter f = filters.or(<filters.IFilter>[newFilter(0, false), newFilter(1, false)]);
+      filterNotOk(f, 'a', 'a');
+      expect(counters, <int>[1, 1]);
+      counters.setAll(0, <int>[0, 0]);
+      f = filters.or(<filters.IFilter>[newFilter(0, true), newFilter(1, false)]);
+      filterOk(f, 'a', 'a');
+      expect(counters, <int>[1, 0]);
+    });
+
+    test('matchesStrictPrefix / matchesPrefix', () {
+      filterNotOk(filters.matchesStrictPrefix, '', '');
+      filterOk(filters.matchesStrictPrefix, '', 'anything', <filters.IMatch>[]);
+      filterOk(filters.matchesStrictPrefix, 'alpha', 'alpha', <filters.IMatch>[filters.IMatch(0, 5)]);
+      filterNotOk(filters.matchesStrictPrefix, 'alpha', 'alp');
+      filterNotOk(filters.matchesStrictPrefix, 'A', 'alpha');
+      filterOk(filters.matchesPrefix, 'ä', 'Älpha', <filters.IMatch>[filters.IMatch(0, 1)]);
+      filterOk(filters.matchesPrefix, 'A', 'alpha', <filters.IMatch>[filters.IMatch(0, 1)]);
+      filterOk(filters.matchesPrefix, 'AlPh', 'alPHA', <filters.IMatch>[filters.IMatch(0, 4)]);
+      filterNotOk(filters.matchesPrefix, 'T', '4');
+    });
+
+    test('matchesCamelCase', () {
+      filterNotOk(filters.matchesCamelCase, '', '');
+      filterOk(filters.matchesCamelCase, 'alpha', 'alpha', <filters.IMatch>[filters.IMatch(0, 5)]);
+      filterOk(filters.matchesCamelCase, 'AlPhA', 'alpha', <filters.IMatch>[filters.IMatch(0, 5)]);
+      filterOk(filters.matchesCamelCase, 'c', 'CamelCaseRocks', <filters.IMatch>[filters.IMatch(0, 1)]);
+      filterOk(filters.matchesCamelCase, 'cc', 'CamelCaseRocks',
+          <filters.IMatch>[filters.IMatch(0, 1), filters.IMatch(5, 6)]);
+      filterOk(filters.matchesCamelCase, 'cacar', 'CamelCaseRocks',
+          <filters.IMatch>[filters.IMatch(0, 2), filters.IMatch(5, 7), filters.IMatch(9, 10)]);
+      filterNotOk(filters.matchesCamelCase, 'alpha', 'alp');
+    });
+
+    test('matchesContiguousSubString / matchesBaseContiguousSubString / matchesSubString', () {
+      filterOk(filters.matchesContiguousSubString, '', 'x', <filters.IMatch>[filters.IMatch(0, 0)]);
+      filterOk(filters.matchesContiguousSubString, 'abc', 'xxabcxx', <filters.IMatch>[filters.IMatch(2, 5)]);
+      filterNotOk(filters.matchesContiguousSubString, 'ab c', 'xxabcxx');
+      filterOk(filters.matchesSubString, 'ab', 'aXXb', <filters.IMatch>[filters.IMatch(0, 1), filters.IMatch(3, 4)]);
+      filterNotOk(filters.matchesSubString, 'abc', 'acb');
+    });
+
+    test('matchesWords', () {
+      filterOk(filters.matchesWords, 'g p', 'Git: Pull', <filters.IMatch>[
+        filters.IMatch(0, 1), filters.IMatch(5, 6),
+      ]);
+      filterOk(filters.matchesWords, 'gp', 'Git: Pull', <filters.IMatch>[
+        filters.IMatch(0, 1), filters.IMatch(5, 6),
+      ]);
+      filterNotOk(filters.matchesWords, 'xyz', 'Git: Pull');
+    });
+
+    test('matchesFuzzy', () {
+      // Regex path: literal substring match returns a single contiguous range.
+      filterOk(filters.matchesFuzzy, 'am', 'CamelCase', <filters.IMatch>[filters.IMatch(1, 3)]);
+      // Fallback filter path (camelCase) when regex fails.
+      filterOk(filters.matchesFuzzy, 'cc', 'CamelCase');
+      filterNotOk(filters.matchesFuzzy, 'zz', 'CamelCase');
+    });
+
+    test('fuzzyScore core cases', () {
+      assertMatches('tit', 'win.tit', 'win.^t^i^t');
+      assertMatches('title', 'win.title', 'win.^t^i^t^l^e');
+      assertMatches('WordCla', 'WordCharacterClassifier', '^W^o^r^dCharacter^C^l^assifier');
+      assertMatches('ab', 'abA', '^a^bA');
+      assertMatches('ccm', 'cacmelCase', '^ca^c^melCase');
+      assertMatches('BK', 'the_black_knight', 'the_^black_^knight');
+      assertMatches('TEdit', 'TextEdit', '^Text^E^d^i^t');
+      assertMatches('-moz', '-moz-foo', '^-^m^o^z-foo');
+      assertMatches('moz', '-moz-foo', '-^m^o^z-foo');
+      assertMatches('close', 'workbench.quickOpen.closeOnFocusOut', 'workbench.quickOpen.^c^l^o^s^eOnFocusOut');
+      assertMatches('highlight', 'editorHoverHighlight', 'editorHover^H^i^g^h^l^i^g^h^t');
+      assertMatches('dete', '"editor.quickSuggestionsDelay"', null);
+      assertMatches('bti', 'the_black_knight', null);
+      assertMatches('ccm', 'camelCase', null);
+    });
+
+    test('fuzzyScore firstMatchCanBeWeak', () {
+      // Source: fuzzyScore (first match can be weak)
+      assertMatches('Three', 'HTMLHRElement', 'H^TML^H^R^El^ement', firstMatchCanBeWeak: true);
+      assertMatches('tor', 'constructor', 'construc^t^o^r', firstMatchCanBeWeak: true);
+      assertMatches('ur', 'constructor', 'constr^ucto^r', firstMatchCanBeWeak: true);
+      // Weak match without option => no match
+      assertMatches('tor', 'constructor', null);
+    });
+
+    test('createMatches / isPatternInWord / graceful', () {
+      expect(filters.createMatches(null), isEmpty);
+      expect(filters.isPatternInWord('abc', 0, 3, 'aXbYc', 0, 5), isTrue);
+      expect(filters.isPatternInWord('abc', 0, 3, 'acb', 0, 3), isFalse);
+      final graceful = filters.fuzzyScoreGraceful('cno', 'cno', 0, 'console', 'console', 0);
+      expect(graceful, isNotNull);
+      expect(filters.FuzzyScoreNS.isDefault(filters.FuzzyScoreNS.Default), isTrue);
+      expect(filters.nextTypoPermutation('cnoso', 1), 'conso');
+      expect(filters.anyScore('ab', 'ab', 0, 'ab', 'ab', 0)[0] > 0, isTrue);
     });
   });
 

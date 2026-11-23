@@ -223,7 +223,7 @@
 | 214 | editor | `editor/common/cursor/oneCursor.ts` | `lib/src/monaco/editor/common/cursor/oneCursor.dart` | pending |
 | 215 | editor | `editor/common/cursorCommon.ts` | `lib/src/monaco/editor/common/cursorCommon.dart` | pending |
 | 216 | editor | `editor/common/cursorEvents.ts` | `lib/src/monaco/editor/common/cursorEvents.dart` | tested |
-| 217 | editor | `editor/common/diff/defaultLinesDiffComputer/algorithms/diffAlgorithm.ts` | `lib/src/monaco/editor/common/diff/defaultLinesDiffComputer/algorithms/diffAlgorithm.dart` | pending |
+| 217 | editor | `editor/common/diff/defaultLinesDiffComputer/algorithms/diffAlgorithm.ts` | `lib/src/monaco/editor/common/diff/defaultLinesDiffComputer/algorithms/diffAlgorithm.dart` | tested |
 | 218 | editor | `editor/common/diff/defaultLinesDiffComputer/algorithms/dynamicProgrammingDiffing.ts` | `lib/src/monaco/editor/common/diff/defaultLinesDiffComputer/algorithms/dynamicProgrammingDiffing.dart` | pending |
 | 219 | editor | `editor/common/diff/defaultLinesDiffComputer/algorithms/myersDiffAlgorithm.ts` | `lib/src/monaco/editor/common/diff/defaultLinesDiffComputer/algorithms/myersDiffAlgorithm.dart` | pending |
 | 220 | editor | `editor/common/diff/defaultLinesDiffComputer/computeMovedLines.ts` | `lib/src/monaco/editor/common/diff/defaultLinesDiffComputer/computeMovedLines.dart` | pending |
@@ -277,7 +277,7 @@
 | 268 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/brackets.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/brackets.dart` | pending |
 | 269 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/combineTextEditInfos.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/combineTextEditInfos.dart` | pending |
 | 270 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/concat23Trees.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/concat23Trees.dart` | pending |
-| 271 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/length.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/length.dart` | pending |
+| 271 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/length.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/length.dart` | tested |
 | 272 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/nodeReader.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/nodeReader.dart` | pending |
 | 273 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/parser.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/parser.dart` | pending |
 | 274 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/smallImmutableSet.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/smallImmutableSet.dart` | tested |
@@ -1014,14 +1014,14 @@
 | 1005 | base | `base/common/decorators/cancelPreviousCalls.ts` | `lib/src/monaco/base/common/decorators/cancelPreviousCalls.dart` | tested |
 | 1006 | base | `base/common/decorators.ts` | `lib/src/monaco/base/common/decorators.dart` | tested |
 | 1007 | base | `base/common/defaultAccount.ts` | `lib/src/monaco/base/common/defaultAccount.dart` | pending |
-| 1008 | base | `base/common/diff/diff.ts` | `lib/src/monaco/base/common/diff/diff.dart` | pending |
+| 1008 | base | `base/common/diff/diff.ts` | `lib/src/monaco/base/common/diff/diff.dart` | tested |
 | 1009 | base | `base/common/diff/diffChange.ts` | `lib/src/monaco/base/common/diff/diffChange.dart` | tested |
 | 1010 | base | `base/common/equals.ts` | `lib/src/monaco/base/common/equals.dart` | tested |
 | 1011 | base | `base/common/errorMessage.ts` | `lib/src/monaco/base/common/errorMessage.dart` | tested |
 | 1012 | base | `base/common/errors.ts` | `lib/src/monaco/base/common/errors.dart` | tested |
 | 1013 | base | `base/common/event.ts` | `lib/src/monaco/base/common/event.dart` | tested |
 | 1014 | base | `base/common/extpath.ts` | `lib/src/monaco/base/common/extpath.dart` | tested |
-| 1015 | base | `base/common/filters.ts` | `lib/src/monaco/base/common/filters.dart` | pending |
+| 1015 | base | `base/common/filters.ts` | `lib/src/monaco/base/common/filters.dart` | tested |
 | 1016 | base | `base/common/functional.ts` | `lib/src/monaco/base/common/functional.dart` | tested |
 | 1017 | base | `base/common/fuzzyScorer.ts` | `lib/src/monaco/base/common/fuzzyScorer.dart` | pending |
 | 1018 | base | `base/common/glob.ts` | `lib/src/monaco/base/common/glob.dart` | pending |
@@ -1056,7 +1056,7 @@
 | 1047 | base | `base/common/mime.ts` | `lib/src/monaco/base/common/mime.dart` | tested |
 | 1048 | base | `base/common/naturalLanguage/korean.ts` | `lib/src/monaco/base/common/naturalLanguage/korean.dart` | tested |
 | 1049 | base | `base/common/navigator.ts` | `lib/src/monaco/base/common/navigator.dart` | tested |
-| 1050 | base | `base/common/network.ts` | `lib/src/monaco/base/common/network.dart` | pending |
+| 1050 | base | `base/common/network.ts` | `lib/src/monaco/base/common/network.dart` | tested |
 | 1051 | base | `base/common/normalization.ts` | `lib/src/monaco/base/common/normalization.dart` | tested |
 | 1052 | base | `base/common/numbers.ts` | `lib/src/monaco/base/common/numbers.dart` | tested |
 | 1053 | base | `base/common/objects.ts` | `lib/src/monaco/base/common/objects.dart` | tested |
@@ -1122,7 +1122,7 @@
 | 1113 | base | `base/common/uint.ts` | `lib/src/monaco/base/common/uint.dart` | tested |
 | 1114 | base | `base/common/uri.ts` | `lib/src/monaco/base/common/uri.dart` | tested |
 | 1115 | base | `base/common/uuid.ts` | `lib/src/monaco/base/common/uuid.dart` | tested |
-| 1116 | base | `base/common/validation.ts` | `lib/src/monaco/base/common/validation.dart` | pending |
+| 1116 | base | `base/common/validation.ts` | `lib/src/monaco/base/common/validation.dart` | tested |
 | 1117 | base | `base/common/worker/webWorker.ts` | `lib/src/monaco/base/common/worker/webWorker.dart` | pending |
 | 1118 | base | `base/common/worker/webWorkerBootstrap.ts` | `lib/src/monaco/base/common/worker/webWorkerBootstrap.dart` | pending |
 | 1119 | base | `base/parts/sandbox/common/sandboxTypes.ts` | `lib/src/monaco/base/parts/sandbox/common/sandboxTypes.dart` | pending |
