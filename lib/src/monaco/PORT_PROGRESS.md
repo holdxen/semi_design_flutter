@@ -1024,7 +1024,7 @@
 | 1015 | base | `base/common/filters.ts` | `lib/src/monaco/base/common/filters.dart` | tested |
 | 1016 | base | `base/common/functional.ts` | `lib/src/monaco/base/common/functional.dart` | tested |
 | 1017 | base | `base/common/fuzzyScorer.ts` | `lib/src/monaco/base/common/fuzzyScorer.dart` | tested |
-| 1018 | base | `base/common/glob.ts` | `lib/src/monaco/base/common/glob.dart` | pending |
+| 1018 | base | `base/common/glob.ts` | `lib/src/monaco/base/common/glob.dart` | tested |
 | 1019 | base | `base/common/hash.ts` | `lib/src/monaco/base/common/hash.dart` | tested |
 | 1020 | base | `base/common/hierarchicalKind.ts` | `lib/src/monaco/base/common/hierarchicalKind.dart` | tested |
 | 1021 | base | `base/common/history.ts` | `lib/src/monaco/base/common/history.dart` | tested |
