@@ -392,6 +392,13 @@ class InstantiationService implements IInstantiationServiceType, IDisposable {
   }
 
   /// 1:1: `protected _getOrCreateServiceInstance<T>(id, _trace): T`
+  ///
+  /// TS `protected` has no Dart equivalent; the trailing underscore makes this
+  /// library-private, so cross-library subclasses (e.g. TestInstantiationService)
+  /// cannot call it. [getOrCreateServiceInstance] is the public forwarding slot.
+  Object? getOrCreateServiceInstance(ServiceIdentifier id, Trace trace) =>
+      _getOrCreateServiceInstance(id, trace);
+
   Object? _getOrCreateServiceInstance(ServiceIdentifier id, Trace trace) {
     final String? implicitDep = _globalGraphImplicitDependency;
     if (_globalGraph != null && implicitDep != null) {
