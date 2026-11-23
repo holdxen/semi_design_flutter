@@ -1189,7 +1189,7 @@
 | 1180 | platform | `platform/dnd/browser/dnd.ts` | `lib/src/monaco/platform/dnd/browser/dnd.dart` | pending |
 | 1181 | platform | `platform/editor/common/editor.ts` | `lib/src/monaco/platform/editor/common/editor.dart` | pending |
 | 1182 | platform | `platform/environment/common/argv.ts` | `lib/src/monaco/platform/environment/common/argv.dart` | tested |
-| 1183 | platform | `platform/environment/common/environment.ts` | `lib/src/monaco/platform/environment/common/environment.dart` | pending |
+| 1183 | platform | `platform/environment/common/environment.ts` | `lib/src/monaco/platform/environment/common/environment.dart` | tested |
 | 1184 | platform | `platform/extensionManagement/common/extensionGalleryManifest.ts` | `lib/src/monaco/platform/extensionManagement/common/extensionGalleryManifest.dart` | pending |
 | 1185 | platform | `platform/extensionManagement/common/extensionManagement.ts` | `lib/src/monaco/platform/extensionManagement/common/extensionManagement.dart` | pending |
 | 1186 | platform | `platform/extensions/common/extensions.ts` | `lib/src/monaco/platform/extensions/common/extensions.dart` | pending |
@@ -1216,7 +1216,7 @@
 | 1207 | platform | `platform/keybinding/common/keybinding.ts` | `lib/src/monaco/platform/keybinding/common/keybinding.dart` | pending |
 | 1208 | platform | `platform/keybinding/common/keybindingResolver.ts` | `lib/src/monaco/platform/keybinding/common/keybindingResolver.dart` | pending |
 | 1209 | platform | `platform/keybinding/common/keybindingsRegistry.ts` | `lib/src/monaco/platform/keybinding/common/keybindingsRegistry.dart` | pending |
-| 1210 | platform | `platform/keybinding/common/resolvedKeybindingItem.ts` | `lib/src/monaco/platform/keybinding/common/resolvedKeybindingItem.dart` | pending |
+| 1210 | platform | `platform/keybinding/common/resolvedKeybindingItem.ts` | `lib/src/monaco/platform/keybinding/common/resolvedKeybindingItem.dart` | tested |
 | 1211 | platform | `platform/keybinding/common/usLayoutResolvedKeybinding.ts` | `lib/src/monaco/platform/keybinding/common/usLayoutResolvedKeybinding.dart` | pending |
 | 1212 | platform | `platform/keybinding/test/common/mockKeybindingService.ts` | `lib/src/monaco/platform/keybinding/test/common/mockKeybindingService.dart` | pending |
 | 1213 | platform | `platform/label/common/label.ts` | `lib/src/monaco/platform/label/common/label.dart` | pending |
@@ -1292,7 +1292,7 @@
 | 1283 | platform | `platform/theme/test/common/testThemeService.ts` | `lib/src/monaco/platform/theme/test/common/testThemeService.dart` | pending |
 | 1284 | platform | `platform/undoRedo/common/undoRedo.ts` | `lib/src/monaco/platform/undoRedo/common/undoRedo.dart` | pending |
 | 1285 | platform | `platform/undoRedo/common/undoRedoService.ts` | `lib/src/monaco/platform/undoRedo/common/undoRedoService.dart` | pending |
-| 1286 | platform | `platform/uriIdentity/common/uriIdentity.ts` | `lib/src/monaco/platform/uriIdentity/common/uriIdentity.dart` | pending |
+| 1286 | platform | `platform/uriIdentity/common/uriIdentity.ts` | `lib/src/monaco/platform/uriIdentity/common/uriIdentity.dart` | tested |
 | 1287 | platform | `platform/userDataProfile/common/userDataProfile.ts` | `lib/src/monaco/platform/userDataProfile/common/userDataProfile.dart` | pending |
 | 1288 | platform | `platform/userInteraction/browser/userInteractionService.ts` | `lib/src/monaco/platform/userInteraction/browser/userInteractionService.dart` | pending |
 | 1289 | platform | `platform/userInteraction/browser/userInteractionServiceImpl.ts` | `lib/src/monaco/platform/userInteraction/browser/userInteractionServiceImpl.dart` | pending |
@@ -1301,7 +1301,7 @@
 | 1292 | platform | `platform/webWorker/browser/webWorkerServiceImpl.ts` | `lib/src/monaco/platform/webWorker/browser/webWorkerServiceImpl.dart` | pending |
 | 1293 | platform | `platform/window/common/window.ts` | `lib/src/monaco/platform/window/common/window.dart` | pending |
 | 1294 | platform | `platform/workspace/common/workspace.ts` | `lib/src/monaco/platform/workspace/common/workspace.dart` | pending |
-| 1295 | platform | `platform/workspace/common/workspaceTrust.ts` | `lib/src/monaco/platform/workspace/common/workspaceTrust.dart` | pending |
+| 1295 | platform | `platform/workspace/common/workspaceTrust.ts` | `lib/src/monaco/platform/workspace/common/workspaceTrust.dart` | tested |
 | 1296 | platform | `platform/workspace/test/common/testWorkspace.ts` | `lib/src/monaco/platform/workspace/test/common/testWorkspace.dart` | pending |
 | 1297 | platform | `platform/workspaces/common/workspaces.ts` | `lib/src/monaco/platform/workspaces/common/workspaces.dart` | pending |
 | 1298 | vs | `amdX.ts` | `lib/src/monaco/amdX.dart` | pending |
