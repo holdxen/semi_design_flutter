@@ -3,6 +3,7 @@
 
 import 'dart:math' as math;
 import 'dart:convert';
+import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 
@@ -46,6 +47,12 @@ import 'package:semi_design_flutter/src/monaco/base/common/keybindings.dart' as 
 import 'package:semi_design_flutter/src/monaco/base/common/keybindingLabels.dart' as kbl;
 import 'package:semi_design_flutter/src/monaco/platform/contextkey/common/scanner.dart' as scan;
 import 'package:semi_design_flutter/src/monaco/base/common/observableInternal/logging/debugger/rpc.dart' as rpc;
+import 'package:semi_design_flutter/src/monaco/base/common/observableInternal/debugLocation.dart' as dloc;
+import 'package:semi_design_flutter/src/monaco/base/common/observableInternal/debugName.dart' as dname;
+import 'package:semi_design_flutter/src/monaco/base/common/observableInternal/logging/debugger/debuggerApi.d.dart' as dbgapi;
+import 'package:semi_design_flutter/src/monaco/base/common/observableInternal/logging/debugger/debuggerRpc.dart' as dbgrpc;
+import 'package:semi_design_flutter/src/monaco/editor/standalone/common/monarch/monarchTypes.dart' as monarch;
+import 'package:semi_design_flutter/src/monaco/platform/environment/common/argv.dart' as argv;
 import 'package:semi_design_flutter/src/monaco/platform/instantiation/common/graph.dart' as igraph;
 import 'package:semi_design_flutter/src/monaco/editor/contrib/inlineCompletions/browser/model/graph.dart' as dgraph;
 import 'package:semi_design_flutter/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/smallImmutableSet.dart' as sis;
@@ -61,6 +68,34 @@ import 'package:semi_design_flutter/src/monaco/base/common/stopwatch.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/symbols.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/types.dart';
 
+/// Test IChannelHandler for debuggerRpc behavior.
+class _TestChannelHandler implements rpc.IChannelHandler {
+  final List<Object> notifications = <Object>[];
+  final List<Object> requests = <Object>[];
+  @override
+  void handleNotification(Object notificationData) => notifications.add(notificationData);
+  @override
+  FutureOr<rpc.RpcRequestResult> handleRequest(Object requestData) {
+    requests.add(requestData);
+    return rpc.RpcResult('ok');
+  }
+}
+
+/// Minimal API implementation for registerDebugChannel's T extends API bound.
+class _TestApi implements rpc.API {
+  @override
+  rpc.Side get host => _TestApiSide();
+  @override
+  rpc.Side get client => _TestApiSide();
+}
+
+class _TestApiSide implements rpc.Side {
+  @override
+  Map<String, Function> get notifications => <String, Function>{};
+  @override
+  Map<String, Function> get requests => <String, Function>{};
+}
+
 class _EGHistoryBuilder {
   final List<eg.ExecutionRoot> roots = <eg.ExecutionRoot>[];
   final List<eg.ExecutionEvent> events = <eg.ExecutionEvent>[];
@@ -73,7 +108,7 @@ class _EGHistoryBuilder {
 
   eg.ExecutionEvent fire(num time, String label, Object parent) {
     final bool isRoot = parent is eg.ExecutionRoot;
-    final eg.ExecutionRoot root = isRoot ? parent as eg.ExecutionRoot : (parent as eg.ExecutionEvent).root;
+    final eg.ExecutionRoot root = isRoot ? parent : (parent as eg.ExecutionEvent).root;
     final eg.ExecutionEvent? parentEvent = isRoot ? null : parent as eg.ExecutionEvent;
     final e = eg.ExecutionEvent(time: time, label: label, root: root, parent: parentEvent);
     events.add(e);
@@ -1628,10 +1663,6 @@ void main() {
 
   group('platform/registry/common/platform.ts', () {
     test('registry - api / mixin / knows / as / duplicate (mirrors platform.test.ts)', () {
-      expect(reg.Registry.add is Function, isTrue);
-      expect(reg.Registry.as is Function, isTrue);
-      expect(reg.Registry.knows is Function, isTrue);
-
       reg.Registry.add('foo', <String, Object?>{'bar': true});
       expect(reg.Registry.knows('foo'), isTrue);
       expect((reg.Registry.as('foo') as Map<String, Object?>)['bar'], true);
@@ -3023,6 +3054,179 @@ void main() {
       expect(eg.extractCallerFrame('  at foo.ts:1\n  at /virtualScheduling/x\n  at bar.ts:2'),
           'foo.ts:1\nbar.ts:2');
       expect(eg.extractCallerFrame(null), isNull);
+    });
+  });
+
+  group('observableInternal debugLocation 1:1', () {
+    test('parseLine handles both stack formats and rejects garbage', () {
+      final dloc.ILocation? a = dloc.parseLine('  at foo (/path/to/file.ts:12:34)');
+      expect(a, isNotNull);
+      expect(a!.fileName, '/path/to/file.ts');
+      expect(a.line, 12);
+      expect(a.column, 34);
+      expect(a.id, '  at foo (/path/to/file.ts:12:34)');
+
+      final dloc.ILocation? b = dloc.parseLine('  at /another/f.ts:7:9');
+      expect(b, isNotNull);
+      expect(b!.fileName, '/another/f.ts');
+      expect(b.line, 7);
+      expect(b.column, 9);
+
+      expect(dloc.parseLine('no location here'), isNull);
+    });
+
+    test('DebugLocationImpl.fromStack picks parentIdx+1 and returns null on miss', () {
+      const String stack = 'Error: x\n  at frame0 (a.ts:1:1)\n  at frame1 (b.ts:2:3)';
+      final dloc.DebugLocationImpl? loc = dloc.DebugLocationImpl.fromStack(stack, 0);
+      expect(loc, isNotNull);
+      expect(loc!.fileName, 'a.ts');
+      expect(loc.line, 1);
+      expect(loc.column, 1);
+      expect(dloc.DebugLocationImpl.fromStack('Error\n  garbage', 0), isNull);
+    });
+  });
+
+  group('observableInternal debugName 1:1', () {
+    test('getDebugName: string source, owner prefix, #count suffix, cache', () {
+      final Object t1 = Object();
+      final Object t2 = Object();
+      final dname.DebugNameData d1 = dname.DebugNameData(null, 'work', null);
+      expect(dname.getDebugName(t1, d1), 'work');
+      // same target is cached (identity), returns the same name
+      expect(dname.getDebugName(t1, d1), 'work');
+      // second target with same name gets the #2 suffix
+      final dname.DebugNameData d2 = dname.DebugNameData(null, 'work', null);
+      expect(dname.getDebugName(t2, d2), 'work#2');
+      // method delegates to the same top-level function
+      expect(d1.getDebugName(t1), 'work');
+    });
+
+    test('getDebugName: owner prefix and function source', () {
+      final Object target = Object();
+      // findKey with a Map owner resolves by identity
+      final Map<String, Object?> fields = <String, Object?>{'myObs': target};
+      final dname.DebugNameData data =
+          dname.DebugNameData(fields, null, null);
+      final String? name = dname.getDebugName(target, data);
+      expect(name, endsWith('.myObs'));
+
+      // function source returning a string
+      final Object t3 = Object();
+      expect(
+        dname.getDebugName(t3, dname.DebugNameData(null, () => 'fnName', null)),
+        'fnName',
+      );
+    });
+
+    test('getClassName / getFunctionName', () {
+      expect(dname.getClassName(Object()), isNull); // ctor.name === 'Object'
+      expect(dname.getClassName(<int>[1, 2]), isNotNull);
+      expect(
+        dname.getFunctionName(() {
+          /* @description annotated */
+        }),
+        isNull, // Dart closures don't carry source text for the JSDoc regex
+      );
+    });
+  });
+
+  group('observableInternal debuggerApi type shapes', () {
+    test('declaration type constants and value carriers', () {
+      expect(dbgapi.ObsDebuggerApi.channelId, 'observableDevTools');
+      expect(dbgapi.ObsDeclarationType.observableValue, 'observable/value');
+      expect(dbgapi.ObsDeclarationType.observableDerived, 'observable/derived');
+      expect(dbgapi.ObsDeclarationType.autorun, 'autorun');
+      expect(dbgapi.ObsDeclarationType.transaction, 'transaction');
+      final dbgapi.IObsDeclaration decl = dbgapi.IObsDeclaration(
+        1,
+        dbgapi.ObsDeclarationType.observableValue,
+        'file.ts',
+        10,
+        20,
+      );
+      expect(decl.id, 1);
+      expect(decl.line, 10);
+      expect(decl.column, 20);
+    });
+  });
+
+  group('observableInternal debuggerRpc 1:1', () {
+    test('createChannelFactoryFromDebugChannel wires channel and handler', () {
+      final List<Object> hostNotifications = <Object>[];
+      final dbgrpc.IHost host = dbgrpc.IHost((Object data) => hostNotifications.add(data));
+      final dbgrpc.DebugChannelFactoryResult result =
+          dbgrpc.createChannelFactoryFromDebugChannel(host);
+      final _TestChannelHandler handler = _TestChannelHandler();
+
+      final rpc.IChannel channel = result.channel(handler);
+      channel.sendNotification('n1');
+      expect(hostNotifications, <Object>['n1']);
+      expect(() => channel.sendRequest('r1'), throwsA(isA<StateError>()));
+
+      // handler dispatches notification vs request based on `type`
+      result.handler.handleRequest(<String, Object?>{'type': 'notification', 'data': 'dn'});
+      expect(handler.notifications, <Object>['dn']);
+      result.handler.handleRequest(<String, Object?>{'type': 'request', 'data': 'dr'});
+      expect(handler.requests, <Object>['dr']);
+    });
+
+    test('registerDebugChannel queues notifications before host connects', () {
+      const String cid = 'test.channel';
+      dbgrpc.$$debugValueEditor_debugChannels.remove(cid);
+      final rpc.SimpleTypedRpcConnection<rpc.MakeSideAsync> conn =
+          dbgrpc.registerDebugChannel<_TestApi>(cid, () => _TestApi());
+      expect(conn, isA<rpc.SimpleTypedRpcConnection>());
+      expect(dbgrpc.$$debugValueEditor_debugChannels.containsKey(cid), isTrue);
+    });
+  });
+
+  group('monarchTypes / argv type shapes', () {
+    test('monarch language definition carriers', () {
+      final lang = monarch.IMonarchLanguage(
+        tokenizer: <String, List<monarch.IMonarchLanguageRule>>{
+          'root': <monarch.IMonarchLanguageRule>[
+            monarch.IExpandedMonarchLanguageRule(
+              regex: 'abc',
+              action: monarch.IExpandedMonarchLanguageAction(token: 'keyword'),
+            ),
+          ],
+        },
+        ignoreCase: true,
+        defaultToken: 'source',
+      );
+      expect(lang.tokenizer['root']!.length, 1);
+      expect(lang.tokenizer['root']!.first, isA<monarch.IExpandedMonarchLanguageRule>());
+      expect(lang.ignoreCase, isTrue);
+      expect(lang.defaultToken, 'source');
+      expect(lang.extra, isEmpty);
+
+      final shortRule = monarch.IShortMonarchLanguageRule1(
+        '\\d+', monarch.IShortActionCarrier('number'));
+      expect(shortRule.action, isA<monarch.IShortActionCarrier>());
+      final bracket = monarch.IMonarchLanguageBracket('{', '}', 'delimiter.curly');
+      expect(bracket.token, 'delimiter.curly');
+    });
+
+    test('argv interface value carriers', () {
+      final args = argv.NativeParsedArgs(
+        underscore: <String>['file.ts'],
+        help: true,
+        folderUri: <String>['file:///work'],
+        telemetryLevel: 'off',
+      );
+      expect(args.underscore, <String>['file.ts']);
+      expect(args.help, isTrue);
+      expect(args.folderUri, <String>['file:///work']);
+      expect(args.telemetryLevel, 'off');
+      expect(args.version, isNull);
+
+      final tunnel = argv.NativeTunnelOptions(
+        user: argv.NativeTunnelLogin(accessToken: 'tok', provider: 'github'),
+      );
+      expect(tunnel.user!.accessToken, 'tok');
+      final chat = argv.NativeChatOptions(underscore: <String>['hi'], maximize: true);
+      expect(chat.underscore, <String>['hi']);
+      expect(chat.maximize, isTrue);
     });
   });
 

@@ -23,6 +23,7 @@ import 'package:semi_design_flutter/src/monaco/editor/common/core/ranges/columnR
 import 'package:semi_design_flutter/src/monaco/editor/common/core/ranges/offsetRange.dart';
 import 'package:semi_design_flutter/src/monaco/editor/common/core/ranges/rangeSingleLine.dart';
 import 'package:semi_design_flutter/src/monaco/editor/common/core/selection.dart';
+import 'package:semi_design_flutter/src/monaco/editor/common/encodedTokenAttributes.dart' as eta;
 
 void main() {
   group('position.ts', () {
@@ -190,6 +191,49 @@ void main() {
       expect(findLastIdxMonotonous([1, 2, 3, 4], (e) => e < 3), 1);
       expect(findFirstMax([1, 5, 3], (a, b) => a.compareTo(b)), 5);
       expect(mapFindFirst([1, 2, 3], (v) => v > 1 ? v * 10 : null), 20);
+    });
+  });
+
+  group('encodedTokenAttributes.ts', () {
+    int enc(int lang, int ttype, bool bal, int font, int fg, int bg) =>
+        (lang) | (ttype << 8) | ((bal ? 1 : 0) << 10) |
+        (font << 11) | (fg << 15) | (bg << 24);
+
+    test('metadata masks decode each field', () {
+      final cases = <List<Object>>[
+        <Object>[1, 0, false, 0, 1, 0],
+        <Object>[2, 2, true, 15, 7, 3],
+        <Object>[0, 3, false, 5, 0, 255],
+        <Object>[255, 1, true, 1, 511, 128],
+      ];
+      for (final c in cases) {
+        final int m = enc(c[0] as int, c[1] as int, c[2] as bool,
+            c[3] as int, c[4] as int, c[5] as int);
+        expect(eta.TokenMetadata.getLanguageId(m), c[0]);
+        expect(eta.TokenMetadata.getTokenType(m), c[1]);
+        expect(eta.TokenMetadata.containsBalancedBrackets(m), c[2]);
+        expect(eta.TokenMetadata.getFontStyle(m), c[3]);
+        expect(eta.TokenMetadata.getForeground(m), c[4]);
+        expect(eta.TokenMetadata.getBackground(m), c[5]);
+      }
+    });
+
+    test('className / inlineStyle / presentation', () {
+      // fontStyle = Italic|Bold|Underline|Strikethrough = 15, fg = 3
+      final int m = enc(1, 0, false, 15, 3, 0);
+      expect(eta.TokenMetadata.getClassNameFromMetadata(m), 'mtk3 mtki mtkb mtku mtks');
+      final colorMap = List<String>.generate(512, (i) => 'c$i');
+      final String style = eta.TokenMetadata.getInlineStyleFromMetadata(m, colorMap);
+      expect(style, contains('color: c3;'));
+      expect(style, contains('font-style: italic;'));
+      expect(style, contains('font-weight: bold;'));
+      expect(style, contains('text-decoration: underline line-through;'));
+      final pres = eta.TokenMetadata.getPresentationFromMetadata(m);
+      expect(pres.foreground, 3);
+      expect(pres.italic, true);
+      expect(pres.bold, true);
+      expect(pres.underline, true);
+      expect(pres.strikethrough, true);
     });
   });
 }
