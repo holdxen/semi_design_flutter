@@ -272,7 +272,7 @@
 | 263 | editor | `editor/common/languages.ts` | `lib/src/monaco/editor/common/languages.dart` | pending |
 | 264 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsImpl.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsImpl.dart` | pending |
 | 265 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/ast.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/ast.dart` | pending |
-| 266 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/beforeEditPositionMapper.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/beforeEditPositionMapper.dart` | pending |
+| 266 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/beforeEditPositionMapper.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/beforeEditPositionMapper.dart` | tested |
 | 267 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/bracketPairsTree.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/bracketPairsTree.dart` | pending |
 | 268 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/brackets.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/brackets.dart` | pending |
 | 269 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/combineTextEditInfos.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/combineTextEditInfos.dart` | pending |
@@ -916,7 +916,7 @@
 | 907 | base | `base/browser/fonts.ts` | `lib/src/monaco/base/browser/fonts.dart` | pending |
 | 908 | base | `base/browser/formattedTextRenderer.ts` | `lib/src/monaco/base/browser/formattedTextRenderer.dart` | pending |
 | 909 | base | `base/browser/globalPointerMoveMonitor.ts` | `lib/src/monaco/base/browser/globalPointerMoveMonitor.dart` | pending |
-| 910 | base | `base/browser/history.ts` | `lib/src/monaco/base/browser/history.dart` | pending |
+| 910 | base | `base/browser/history.ts` | `lib/src/monaco/base/browser/history.dart` | tested |
 | 911 | base | `base/browser/iframe.ts` | `lib/src/monaco/base/browser/iframe.dart` | pending |
 | 912 | base | `base/browser/indexedDB.ts` | `lib/src/monaco/base/browser/indexedDB.dart` | pending |
 | 913 | base | `base/browser/keyboardEvent.ts` | `lib/src/monaco/base/browser/keyboardEvent.dart` | pending |
@@ -1033,7 +1033,7 @@
 | 1024 | base | `base/common/htmlContent.ts` | `lib/src/monaco/base/common/htmlContent.dart` | pending |
 | 1025 | base | `base/common/iconLabels.ts` | `lib/src/monaco/base/common/iconLabels.dart` | pending |
 | 1026 | base | `base/common/idGenerator.ts` | `lib/src/monaco/base/common/idGenerator.dart` | tested |
-| 1027 | base | `base/common/ime.ts` | `lib/src/monaco/base/common/ime.dart` | pending |
+| 1027 | base | `base/common/ime.ts` | `lib/src/monaco/base/common/ime.dart` | tested |
 | 1028 | base | `base/common/iterator.ts` | `lib/src/monaco/base/common/iterator.dart` | tested |
 | 1029 | base | `base/common/json.ts` | `lib/src/monaco/base/common/json.dart` | tested |
 | 1030 | base | `base/common/jsonEdit.ts` | `lib/src/monaco/base/common/jsonEdit.dart` | tested |
@@ -1203,7 +1203,7 @@
 | 1194 | platform | `platform/hover/browser/hoverWidget.ts` | `lib/src/monaco/platform/hover/browser/hoverWidget.dart` | pending |
 | 1195 | platform | `platform/hover/browser/updatableHoverWidget.ts` | `lib/src/monaco/platform/hover/browser/updatableHoverWidget.dart` | pending |
 | 1196 | platform | `platform/hover/test/browser/nullHoverService.ts` | `lib/src/monaco/platform/hover/test/browser/nullHoverService.dart` | pending |
-| 1197 | platform | `platform/instantiation/common/descriptors.ts` | `lib/src/monaco/platform/instantiation/common/descriptors.dart` | pending |
+| 1197 | platform | `platform/instantiation/common/descriptors.ts` | `lib/src/monaco/platform/instantiation/common/descriptors.dart` | tested |
 | 1198 | platform | `platform/instantiation/common/extensions.ts` | `lib/src/monaco/platform/instantiation/common/extensions.dart` | pending |
 | 1199 | platform | `platform/instantiation/common/graph.ts` | `lib/src/monaco/platform/instantiation/common/graph.dart` | tested |
 | 1200 | platform | `platform/instantiation/common/instantiation.ts` | `lib/src/monaco/platform/instantiation/common/instantiation.dart` | pending |
