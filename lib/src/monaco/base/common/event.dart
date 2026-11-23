@@ -636,6 +636,13 @@ class _CancelablePromiseImpl<T> implements async.CancelablePromise<T> {
   @override
   Future<T> whenComplete(FutureOr<void> Function() action) =>
       _future.whenComplete(action);
+
+  @override
+  Stream<T> asStream() => _future.asStream();
+
+  @override
+  Future<T> timeout(Duration timeLimit, {FutureOr<T> Function()? onTimeout}) =>
+      _future.timeout(timeLimit, onTimeout: onTimeout);
 }
 
 /// 1:1: `Event.forward`

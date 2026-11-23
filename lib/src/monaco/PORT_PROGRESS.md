@@ -998,7 +998,7 @@
 | 989 | base | `base/common/arrays.ts` | `lib/src/monaco/base/common/arrays.dart` | tested |
 | 990 | base | `base/common/arraysFind.ts` | `lib/src/monaco/base/common/arraysFind.dart` | tested |
 | 991 | base | `base/common/assert.ts` | `lib/src/monaco/base/common/assert.dart` | tested |
-| 992 | base | `base/common/async.ts` | `lib/src/monaco/base/common/async.dart` | pending |
+| 992 | base | `base/common/async.ts` | `lib/src/monaco/base/common/async.dart` | tested |
 | 993 | base | `base/common/buffer.ts` | `lib/src/monaco/base/common/buffer.dart` | tested |
 | 994 | base | `base/common/cache.ts` | `lib/src/monaco/base/common/cache.dart` | tested |
 | 995 | base | `base/common/cancellation.ts` | `lib/src/monaco/base/common/cancellation.dart` | tested |
