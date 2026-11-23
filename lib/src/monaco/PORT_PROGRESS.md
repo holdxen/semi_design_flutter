@@ -242,7 +242,7 @@
 | 233 | editor | `editor/common/diff/verifyLinesDiff.ts` | `lib/src/monaco/editor/common/diff/verifyLinesDiff.dart` | pending |
 | 234 | editor | `editor/common/editorAction.ts` | `lib/src/monaco/editor/common/editorAction.dart` | pending |
 | 235 | editor | `editor/common/editorCommon.ts` | `lib/src/monaco/editor/common/editorCommon.dart` | pending |
-| 236 | editor | `editor/common/editorContextKeys.ts` | `lib/src/monaco/editor/common/editorContextKeys.dart` | pending |
+| 236 | editor | `editor/common/editorContextKeys.ts` | `lib/src/monaco/editor/common/editorContextKeys.dart` | tested |
 | 237 | editor | `editor/common/editorFeatures.ts` | `lib/src/monaco/editor/common/editorFeatures.dart` | pending |
 | 238 | editor | `editor/common/editorTheme.ts` | `lib/src/monaco/editor/common/editorTheme.dart` | pending |
 | 239 | editor | `editor/common/encodedTokenAttributes.ts` | `lib/src/monaco/editor/common/encodedTokenAttributes.dart` | tested |
@@ -1148,7 +1148,7 @@
 | 1139 | platform | `platform/accessibility/browser/accessibilityService.ts` | `lib/src/monaco/platform/accessibility/browser/accessibilityService.dart` | pending |
 | 1140 | platform | `platform/accessibility/browser/accessibleView.ts` | `lib/src/monaco/platform/accessibility/browser/accessibleView.dart` | pending |
 | 1141 | platform | `platform/accessibility/browser/accessibleViewRegistry.ts` | `lib/src/monaco/platform/accessibility/browser/accessibleViewRegistry.dart` | pending |
-| 1142 | platform | `platform/accessibility/common/accessibility.ts` | `lib/src/monaco/platform/accessibility/common/accessibility.dart` | pending |
+| 1142 | platform | `platform/accessibility/common/accessibility.ts` | `lib/src/monaco/platform/accessibility/common/accessibility.dart` | tested |
 | 1143 | platform | `platform/accessibility/test/common/testAccessibilityService.ts` | `lib/src/monaco/platform/accessibility/test/common/testAccessibilityService.dart` | pending |
 | 1144 | platform | `platform/accessibilitySignal/browser/accessibilitySignalService.ts` | `lib/src/monaco/platform/accessibilitySignal/browser/accessibilitySignalService.dart` | pending |
 | 1145 | platform | `platform/action/common/action.ts` | `lib/src/monaco/platform/action/common/action.dart` | pending |
@@ -1174,8 +1174,8 @@
 | 1165 | platform | `platform/configuration/common/configurations.ts` | `lib/src/monaco/platform/configuration/common/configurations.dart` | pending |
 | 1166 | platform | `platform/configuration/test/common/testConfigurationService.ts` | `lib/src/monaco/platform/configuration/test/common/testConfigurationService.dart` | pending |
 | 1167 | platform | `platform/contextkey/browser/contextKeyService.ts` | `lib/src/monaco/platform/contextkey/browser/contextKeyService.dart` | pending |
-| 1168 | platform | `platform/contextkey/common/contextkey.ts` | `lib/src/monaco/platform/contextkey/common/contextkey.dart` | pending |
-| 1169 | platform | `platform/contextkey/common/contextkeys.ts` | `lib/src/monaco/platform/contextkey/common/contextkeys.dart` | pending |
+| 1168 | platform | `platform/contextkey/common/contextkey.ts` | `lib/src/monaco/platform/contextkey/common/contextkey.dart` | tested |
+| 1169 | platform | `platform/contextkey/common/contextkeys.ts` | `lib/src/monaco/platform/contextkey/common/contextkeys.dart` | tested |
 | 1170 | platform | `platform/contextkey/common/scanner.ts` | `lib/src/monaco/platform/contextkey/common/scanner.dart` | tested |
 | 1171 | platform | `platform/contextview/browser/contextMenuHandler.ts` | `lib/src/monaco/platform/contextview/browser/contextMenuHandler.dart` | pending |
 | 1172 | platform | `platform/contextview/browser/contextMenuService.ts` | `lib/src/monaco/platform/contextview/browser/contextMenuService.dart` | pending |
@@ -1204,11 +1204,11 @@
 | 1195 | platform | `platform/hover/browser/updatableHoverWidget.ts` | `lib/src/monaco/platform/hover/browser/updatableHoverWidget.dart` | pending |
 | 1196 | platform | `platform/hover/test/browser/nullHoverService.ts` | `lib/src/monaco/platform/hover/test/browser/nullHoverService.dart` | pending |
 | 1197 | platform | `platform/instantiation/common/descriptors.ts` | `lib/src/monaco/platform/instantiation/common/descriptors.dart` | tested |
-| 1198 | platform | `platform/instantiation/common/extensions.ts` | `lib/src/monaco/platform/instantiation/common/extensions.dart` | pending |
+| 1198 | platform | `platform/instantiation/common/extensions.ts` | `lib/src/monaco/platform/instantiation/common/extensions.dart` | tested |
 | 1199 | platform | `platform/instantiation/common/graph.ts` | `lib/src/monaco/platform/instantiation/common/graph.dart` | tested |
-| 1200 | platform | `platform/instantiation/common/instantiation.ts` | `lib/src/monaco/platform/instantiation/common/instantiation.dart` | pending |
-| 1201 | platform | `platform/instantiation/common/instantiationService.ts` | `lib/src/monaco/platform/instantiation/common/instantiationService.dart` | pending |
-| 1202 | platform | `platform/instantiation/common/serviceCollection.ts` | `lib/src/monaco/platform/instantiation/common/serviceCollection.dart` | pending |
+| 1200 | platform | `platform/instantiation/common/instantiation.ts` | `lib/src/monaco/platform/instantiation/common/instantiation.dart` | tested |
+| 1201 | platform | `platform/instantiation/common/instantiationService.ts` | `lib/src/monaco/platform/instantiation/common/instantiationService.dart` | tested |
+| 1202 | platform | `platform/instantiation/common/serviceCollection.ts` | `lib/src/monaco/platform/instantiation/common/serviceCollection.dart` | tested |
 | 1203 | platform | `platform/instantiation/test/common/instantiationServiceMock.ts` | `lib/src/monaco/platform/instantiation/test/common/instantiationServiceMock.dart` | pending |
 | 1204 | platform | `platform/jsonschemas/common/jsonContributionRegistry.ts` | `lib/src/monaco/platform/jsonschemas/common/jsonContributionRegistry.dart` | tested |
 | 1205 | platform | `platform/keybinding/common/abstractKeybindingService.ts` | `lib/src/monaco/platform/keybinding/common/abstractKeybindingService.dart` | pending |
@@ -1269,7 +1269,7 @@
 | 1260 | platform | `platform/storage/common/storage.ts` | `lib/src/monaco/platform/storage/common/storage.dart` | pending |
 | 1261 | platform | `platform/telemetry/common/commonProperties.ts` | `lib/src/monaco/platform/telemetry/common/commonProperties.dart` | pending |
 | 1262 | platform | `platform/telemetry/common/gdprTypings.ts` | `lib/src/monaco/platform/telemetry/common/gdprTypings.dart` | tested |
-| 1263 | platform | `platform/telemetry/common/telemetry.ts` | `lib/src/monaco/platform/telemetry/common/telemetry.dart` | pending |
+| 1263 | platform | `platform/telemetry/common/telemetry.ts` | `lib/src/monaco/platform/telemetry/common/telemetry.dart` | tested |
 | 1264 | platform | `platform/telemetry/common/telemetryUtils.ts` | `lib/src/monaco/platform/telemetry/common/telemetryUtils.dart` | pending |
 | 1265 | platform | `platform/theme/browser/defaultStyles.ts` | `lib/src/monaco/platform/theme/browser/defaultStyles.dart` | pending |
 | 1266 | platform | `platform/theme/browser/iconsStyleSheet.ts` | `lib/src/monaco/platform/theme/browser/iconsStyleSheet.dart` | pending |
@@ -1307,7 +1307,7 @@
 | 1298 | vs | `amdX.ts` | `lib/src/monaco/amdX.dart` | pending |
 | 1299 | vs | `nls.ts` | `lib/src/monaco/nls.dart` | tested |
 | 1300 | monaco | `deprecated/basic-languages/monaco.contribution.ts` | `lib/src/monaco/deprecated/basic-languages/monaco.contribution.dart` | tested |
-| 1301 | monaco | `deprecated/editor/editor.main.ts` | `lib/src/monaco/deprecated/editor/editor.main.dart` | pending |
+| 1301 | monaco | `deprecated/editor/editor.main.ts` | `lib/src/monaco/deprecated/editor/editor.main.dart` | tested |
 | 1302 | monaco | `deprecated/editor/editor.worker.ts` | `lib/src/monaco/deprecated/editor/editor.worker.dart` | tested |
 | 1303 | monaco | `deprecated/language/css/css.worker.ts` | `lib/src/monaco/deprecated/language/css/css.worker.dart` | tested |
 | 1304 | monaco | `deprecated/language/css/monaco.contribution.ts` | `lib/src/monaco/deprecated/language/css/monaco.contribution.dart` | pending |
@@ -1383,7 +1383,7 @@
 | 1374 | monaco | `features/wordHighlighter/register.d.ts` | `lib/src/monaco/features/wordHighlighter/register.d.dart` | tested |
 | 1375 | monaco | `features/wordOperations/register.d.ts` | `lib/src/monaco/features/wordOperations/register.d.dart` | tested |
 | 1376 | monaco | `features/wordPartOperations/register.d.ts` | `lib/src/monaco/features/wordPartOperations/register.d.dart` | tested |
-| 1377 | monaco | `index.ts` | `lib/src/monaco/index.dart` | pending |
+| 1377 | monaco | `index.ts` | `lib/src/monaco/index.dart` | tested |
 | 1378 | monaco | `internal/common/initialize.ts` | `lib/src/monaco/internal/common/initialize.dart` | tested |
 | 1379 | monaco | `internal/common/workers.ts` | `lib/src/monaco/internal/common/workers.dart` | tested |
 | 1380 | monaco | `languages/definitions/_.contribution.ts` | `lib/src/monaco/languages/definitions/_.contribution.dart` | tested |
@@ -1637,7 +1637,7 @@
 | 1628 | monaco | `languages/definitions/yaml/register.ts` | `lib/src/monaco/languages/definitions/yaml/register.dart` | tested |
 | 1629 | monaco | `languages/definitions/yaml/yaml.test.ts` | `lib/src/monaco/languages/definitions/yaml/yaml.test.dart` | tested |
 | 1630 | monaco | `languages/definitions/yaml/yaml.ts` | `lib/src/monaco/languages/definitions/yaml/yaml.dart` | tested |
-| 1631 | monaco | `languages/features/common/lspLanguageFeatures.ts` | `lib/src/monaco/languages/features/common/lspLanguageFeatures.dart` | pending |
+| 1631 | monaco | `languages/features/common/lspLanguageFeatures.ts` | `lib/src/monaco/languages/features/common/lspLanguageFeatures.dart` | tested |
 | 1632 | monaco | `languages/features/css/css.worker.ts` | `lib/src/monaco/languages/features/css/css.worker.dart` | pending |
 | 1633 | monaco | `languages/features/css/cssMode.ts` | `lib/src/monaco/languages/features/css/cssMode.dart` | pending |
 | 1634 | monaco | `languages/features/css/cssWorker.ts` | `lib/src/monaco/languages/features/css/cssWorker.dart` | pending |
@@ -1659,7 +1659,7 @@
 | 1650 | monaco | `languages/features/typescript/lib/editor.worker.d.ts` | `lib/src/monaco/languages/features/typescript/lib/editor.worker.d.dart` | tested |
 | 1651 | monaco | `languages/features/typescript/lib/lib.index.ts` | `lib/src/monaco/languages/features/typescript/lib/lib.index.dart` | tested |
 | 1652 | monaco | `languages/features/typescript/lib/lib.ts` | `lib/src/monaco/languages/features/typescript/lib/lib.dart` | tested |
-| 1653 | monaco | `languages/features/typescript/lib/typescriptServices.d.ts` | `lib/src/monaco/languages/features/typescript/lib/typescriptServices.d.dart` | pending |
+| 1653 | monaco | `languages/features/typescript/lib/typescriptServices.d.ts` | `lib/src/monaco/languages/features/typescript/lib/typescriptServices.d.dart` | tested |
 | 1654 | monaco | `languages/features/typescript/lib/typescriptServicesMetadata.ts` | `lib/src/monaco/languages/features/typescript/lib/typescriptServicesMetadata.dart` | tested |
 | 1655 | monaco | `languages/features/typescript/register.ts` | `lib/src/monaco/languages/features/typescript/register.dart` | pending |
 | 1656 | monaco | `languages/features/typescript/ts.worker.ts` | `lib/src/monaco/languages/features/typescript/ts.worker.dart` | pending |
@@ -1697,6 +1697,6 @@
 | 1688 | lsp | `adapters/languageFeatures/LspSignatureHelpFeature.ts` | `lib/src/monaco/lsp/adapters/languageFeatures/LspSignatureHelpFeature.dart` | tested |
 | 1689 | lsp | `adapters/languageFeatures/LspTypeDefinitionFeature.ts` | `lib/src/monaco/lsp/adapters/languageFeatures/LspTypeDefinitionFeature.dart` | tested |
 | 1690 | lsp | `adapters/languageFeatures/common.ts` | `lib/src/monaco/lsp/adapters/languageFeatures/common.dart` | tested |
-| 1691 | lsp | `index.ts` | `lib/src/monaco/lsp/index.dart` | pending |
+| 1691 | lsp | `index.ts` | `lib/src/monaco/lsp/index.dart` | tested |
 | 1692 | lsp | `types.ts` | `lib/src/monaco/lsp/types.dart` | tested |
 | 1693 | lsp | `utils.ts` | `lib/src/monaco/lsp/utils.dart` | tested |
