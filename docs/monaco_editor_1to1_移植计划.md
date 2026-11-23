@@ -288,3 +288,28 @@ semi_design_flutter/
 - 重载（如 `Rect.withMargin`、`OffsetRange.withMargin`）→ Dart 位置可选参数，保留源码调用形式。
 
 **当前阻塞 / 下一步**：`core/ranges/{lineRange,rangeMapping}` 及 `core/edits/**`、`core/text/**` 依赖 `base/common/{arrays,strings,buffer,assert,equals}` 与更深的 `event.ts`(1991 行)/`lifecycle.ts`(974 行) 链。该链是 base 基础设施，按计划属 T3；为解锁 T1 剩余文件需作为独立大批次系统推进。T1 余 59 文件未翻。
+
+### base 工具链批次进度（2026-11-23，累计 32/1690 文件 tested）
+
+按依赖拓扑从叶子推进 base 闭包，本批新增 13 个文件（全部 analyze 零 error/warning + 行为断言 + 正式测试）：
+- 叶子：`base/common/{lazy,functional,assert,symbols,stopwatch,collections,linkedList,types,iterator,marshallingIds}.dart`
+- `vs/nls.dart`（镜像 `vs/nls.ts`）、`base/common/{platform,process}.dart`（平台环境链）
+
+**清单修复**：`tool/ts2dart/scan_sources.py` 原先只把闭包过滤成 base/platform 两层，漏掉 `base/common/platform.ts` 经 `../../nls.js` 引入的 `vs/nls.ts`。已新增 `vs` 层；manifest 由 1688 → **1690 文件**（vs 层 2 个：`nls.ts`、`amdX.ts`），`PORT_PROGRESS.md` 同步重建并保留已 tested 状态。
+
+**测试**：新建 `test/monaco_base_test.dart`（base 层 11 个 case），连同 `test/monaco_port_test.dart` 共 **27 个 case 全绿**。
+
+**本批新增 Dart 适配规则**：
+- TS `namespace Iterable` → `class IterableX`（`Iterable` 与 dart:core 同名，唯一改名）；`function*` → `sync*`。
+- `Node.Undefined` 链表哨兵 → Dart `null` 链接；`SetWithKey implements Set` → `SetMixin`（补 `remove`/`toSet`）。
+- 顶层 `if`/IIFE 环境检测 → 初始化函数 / 匿名函数 IIFE（Dart 无顶层语句）。
+- `performance.now()` → 持久 `Stopwatch`；`Symbol()` → 唯一 `Object` 哨兵；`globalThis._VSCODE_NLS_*` → nls.dart 顶层可变量 + setter。
+
+**核心环（下一批重点）**：`arrays ↔ cancellation ↔ event ↔ lifecycle ↔ arrays`，外加 `async`(2752 行)/`event`(1991 行) 两个巨兽，以及 `strings`(1434)/`buffer`(582)/`map`(1027)/`uri`(765)/`path`(1589)。Dart 允许循环 import，计划按逻辑批次整批翻译 + 统一 analyze，不再严格按拓扑序逐个等待。这是解锁 T1 剩余 59 个文件（lineRange/rangeMapping/edits/text/model）的前提。
+
+### base 工具链批次续（2026-11-23，累计 33/1690 文件 tested）
+
+- [x] `base/common/path.dart`：Node.js v22.15.0 path 库完整 1:1 拷贝（1589 行）。win32/posix 两套 IPath 实现（resolve/normalize/join/relative/dirname/basename/extname/format/parse/toNamespacedPath）逐行对照，含 UNC 路径、CVE-2024-36139 防护、`..` 归一化等边界。适配：`charCodeAt`→`codeUnitAt`、`slice`→`substring`、varargs→`List<String>`、对象字面量→ParsedPath/类、`_format.bind`→方法、`repeat`→`*`；算法与控制流未改。
+- [x] 测试 `test/monaco_base_test.dart` 追加 3 个 path case；两测试文件合计 **30 case 全绿**；全量 analyze 零 error/warning。
+
+**下一批继续**：`path` 已就绪 → 解锁 `uri`(765) → `map`(1027) → 逼近 `lifecycle`；`strings`(1434)/`buffer`(582)/`stream`(790) 与核心环 `arrays↔cancellation↔event↔lifecycle`（含 `async`2752/`event`1991 巨兽）仍未翻。
