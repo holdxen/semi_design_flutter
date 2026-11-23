@@ -4,6 +4,7 @@
 import 'dart:math' as math;
 import 'dart:convert';
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 
@@ -26,6 +27,17 @@ import 'package:semi_design_flutter/src/monaco/base/common/decorators/cancelPrev
 import 'package:semi_design_flutter/src/monaco/base/common/paging.dart' as paging;
 import 'package:semi_design_flutter/src/monaco/base/common/decorators.dart' as decorators;
 import 'package:semi_design_flutter/src/monaco/base/common/buffer.dart' as buffer;
+import 'package:semi_design_flutter/src/monaco/base/common/linkedText.dart' as linkedText;
+import 'package:semi_design_flutter/src/monaco/base/common/marshalling.dart' as marshalling;
+import 'package:semi_design_flutter/src/monaco/base/common/errorMessage.dart' as errorMessage;
+import 'package:semi_design_flutter/src/monaco/editor/common/core/position.dart';
+import 'package:semi_design_flutter/src/monaco/editor/common/core/text/textLength.dart' as textLength;
+import 'package:semi_design_flutter/src/monaco/editor/common/services/semanticTokensDto.dart' as semTok;
+import 'package:semi_design_flutter/src/monaco/base/common/strings.dart' as strings;
+import 'package:semi_design_flutter/src/monaco/base/common/hash.dart' as hash;
+import 'package:semi_design_flutter/src/monaco/editor/common/core/stringBuilder.dart' as stringBuilder;
+import 'package:semi_design_flutter/src/monaco/editor/common/core/cursorColumns.dart' as cursorColumns;
+import 'package:semi_design_flutter/src/monaco/editor/common/core/textChange.dart' as textChange;
 import 'package:semi_design_flutter/src/monaco/base/common/collections.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/functional.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/idGenerator.dart';
@@ -54,6 +66,11 @@ import 'package:semi_design_flutter/src/monaco/base/common/color.dart' as clr;
 import 'package:semi_design_flutter/src/monaco/base/common/json.dart' as js;
 import 'package:semi_design_flutter/src/monaco/base/common/uri.dart';
 import 'package:semi_design_flutter/src/monaco/base/common/path.dart' as path;
+import 'package:semi_design_flutter/src/monaco/base/common/charCode.dart' as cc;
+import 'package:semi_design_flutter/src/monaco/base/common/extpath.dart' as extpath;
+import 'package:semi_design_flutter/src/monaco/base/common/ternarySearchTree.dart' as tst;
+import 'package:semi_design_flutter/src/monaco/base/common/search.dart' as search;
+import 'package:semi_design_flutter/src/monaco/base/common/severity.dart' as severity;
 import 'package:semi_design_flutter/src/monaco/base/common/platform.dart' as pf;
 import 'package:semi_design_flutter/src/monaco/base/common/process.dart' as pr;
 import 'package:semi_design_flutter/src/monaco/platform/registry/common/platform.dart' as reg;
@@ -4401,6 +4418,1370 @@ void main() {
     });
   });
 
+  group('linkedText.ts (1:1)', () {
+    test('parses text, links, titles and non-links', () {
+      expect(linkedText.parseLinkedText('').nodes, isEmpty);
+      expect(linkedText.parseLinkedText('hello').nodes, ['hello']);
+      expect(linkedText.parseLinkedText('hello there').nodes, ['hello there']);
+      final l = linkedText.parseLinkedText(
+          'Some message with [link text](http://link.href).');
+      expect(l.nodes.length, 3);
+      expect(l.nodes[0], 'Some message with ');
+      expect(l.nodes[1], isA<linkedText.ILink>());
+      expect((l.nodes[1] as linkedText.ILink).label, 'link text');
+      expect((l.nodes[1] as linkedText.ILink).href, 'http://link.href');
+      expect(l.nodes[2], '.');
+      expect(l.toString(), 'Some message with link text.');
+    });
+
+    test('parses quoted titles (single and double), including opposite quote', () {
+      final a = linkedText.parseLinkedText(
+          '[link](http://link.href "and a title")');
+      expect((a.nodes.single as linkedText.ILink).title, 'and a title');
+      final b = linkedText.parseLinkedText(
+          "[link](http://link.href 'and a title')");
+      expect((b.nodes.single as linkedText.ILink).title, 'and a title');
+      final c = linkedText.parseLinkedText(
+          "[link](http://link.href 'and a \"title\"')");
+      expect((c.nodes.single as linkedText.ILink).title, 'and a "title"');
+      final d = linkedText.parseLinkedText(
+          '[link](http://link.href "and a \'title\'")');
+      expect((d.nodes.single as linkedText.ILink).title, "and a 'title'");
+    });
+
+    test('rejects non-url hrefs and scheme-only urls; matches command/file/https', () {
+      expect(linkedText.parseLinkedText('[x](random stuff)').nodes,
+          ['[x](random stuff)']);
+      expect(linkedText.parseLinkedText('[x](https:)').nodes, ['[x](https:)']);
+      expect((linkedText.parseLinkedText('[x](command:foo)').nodes.single
+              as linkedText.ILink)
+          .href, 'command:foo');
+      expect((linkedText.parseLinkedText('[x](file:///a)').nodes.single
+              as linkedText.ILink)
+          .href, 'file:///a');
+      expect((linkedText.parseLinkedText('[x](https://a.b)').nodes.single
+              as linkedText.ILink)
+          .href, 'https://a.b');
+    });
+
+    test('matches non-greedily across multiple links', () {
+      final l = linkedText.parseLinkedText(
+          'a [one](http://a "t1") b [two](http://b "t2") c');
+      expect(l.nodes.length, 5);
+      expect(l.nodes[0], 'a ');
+      expect((l.nodes[1] as linkedText.ILink).label, 'one');
+      expect((l.nodes[1] as linkedText.ILink).title, 't1');
+      expect(l.nodes[2], ' b ');
+      expect((l.nodes[3] as linkedText.ILink).label, 'two');
+      expect(l.nodes[4], ' c');
+    });
+  });
+
+  group('marshalling.ts (1:1)', () {
+    test('RegExp round trips source and flags', () {
+      final Object? raw = marshalling.parse(marshalling.stringify(RegExp(
+          'foo', caseSensitive: false, multiLine: true)));
+      expect(raw, isA<RegExp>());
+      final RegExp clone = raw as RegExp;
+      expect(clone.pattern, 'foo');
+      expect(clone.isCaseSensitive, isFalse);
+      expect(clone.isMultiLine, isTrue);
+    });
+
+    test('URI round trips all components', () {
+      final URI value = URI.from(UriComponents(
+        scheme: 'file',
+        authority: 'server',
+        path: '/shares/c#files',
+        query: 'q',
+        fragment: 'f',
+      ));
+      final URI clone = marshalling.parse(marshalling.stringify(value));
+      expect(clone.scheme, 'file');
+      expect(clone.authority, 'server');
+      expect(clone.path, '/shares/c#files');
+      expect(clone.query, 'q');
+      expect(clone.fragment, 'f');
+    });
+
+    test('Bug 16793: # in folder name survives round trip', () {
+      final URI uri1 = URI.file('C:\\C#\\file.txt');
+      expect(marshalling.parse(marshalling.stringify(uri1)).toString(),
+          uri1.toString());
+    });
+  });
+
+  group('errorMessage.ts (1:1)', () {
+    test('toErrorMessage handles string, null and default', () {
+      setNlsMessages(null);
+      expect(errorMessage.toErrorMessage('oops'), 'oops');
+      expect(errorMessage.toErrorMessage(null),
+          'An unknown error occurred. Please consult the log for more details.');
+    });
+
+    test('toErrorMessage array joins with count', () {
+      setNlsMessages(null);
+      expect(errorMessage.toErrorMessage(['a', 'b', null]),
+          'a (2 errors in total)');
+      expect(errorMessage.toErrorMessage(['only']), 'only');
+    });
+
+    test('toErrorMessage reads .message and .detail', () {
+      setNlsMessages(null);
+      expect(errorMessage.toErrorMessage(_MsgErr('boom')), 'boom');
+      final Object withDetail = _DetailErr(_DetailInner(_MsgErr('inner')));
+      expect(errorMessage.toErrorMessage(withDetail), 'inner');
+    });
+
+    test('createErrorWithActions / isErrorWithActions', () {
+      final e = errorMessage.createErrorWithActions('hi', <actions.IAction>[]);
+      expect(e.message, 'hi');
+      expect(errorMessage.isErrorWithActions(e), isTrue);
+      expect(errorMessage.isErrorWithActions('not an error'), isFalse);
+    });
+  });
+
+  group('textLength.ts (1:1)', () {
+    String fmt(textLength.TextLength t) => '${t.lineCount},${t.columnCount}';
+
+    test('ofText counts UTF-16 code units', () {
+      expect(fmt(textLength.TextLength.ofText('')), '0,0');
+      expect(fmt(textLength.TextLength.ofText('abc')), '0,3');
+      expect(fmt(textLength.TextLength.ofText('😀')), '0,2');
+      expect(fmt(textLength.TextLength.ofText('a😀𝄞b')), '0,6');
+      expect(fmt(textLength.TextLength.ofText('e\u0301')), '0,2');
+      expect(fmt(textLength.TextLength.ofText('\ud83d')), '0,1');
+      expect(fmt(textLength.TextLength.ofText('\ude00')), '0,1');
+    });
+
+    test('ofText counts UTF-16 columns after the last newline', () {
+      expect(fmt(textLength.TextLength.ofText('😀\nx')), '1,1');
+      expect(fmt(textLength.TextLength.ofText('x\n😀𝄞')), '1,4');
+      expect(fmt(textLength.TextLength.ofText('😀\n𝄞\n')), '2,0');
+    });
+
+    test('comparison, add and toString', () {
+      final a = textLength.TextLength(1, 2);
+      final b = textLength.TextLength(1, 3);
+      expect(a.isLessThan(b), isTrue);
+      expect(b.isGreaterThan(a), isTrue);
+      expect(a.isGreaterThanOrEqualTo(a), isTrue);
+      expect(a.equals(textLength.TextLength(1, 2)), isTrue);
+      expect(a.compare(b), -1);
+      expect(a.add(b).lineCount, 2); // other.lineCount != 0 -> adds lines
+      expect(a.add(textLength.TextLength(0, 4)).columnCount, 6);
+      expect(a.toString(), '1,2');
+      expect(textLength.TextLength.zero.isZero(), isTrue);
+    });
+
+    test('lengthDiffNonNegative and betweenPositions', () {
+      final start = textLength.TextLength(1, 5);
+      final end = textLength.TextLength(3, 2);
+      final diff = textLength.TextLength.lengthDiffNonNegative(start, end);
+      expect(diff.lineCount, 2);
+      expect(diff.columnCount, 2);
+      expect(textLength.TextLength.lengthDiffNonNegative(end, start).isZero(),
+          isTrue);
+      final t = textLength.TextLength.betweenPositions(
+          Position(2, 3), Position(4, 7));
+      expect(t.lineCount, 2);
+      expect(t.columnCount, 6);
+    });
+  });
+
+  group('semanticTokensDto.ts (1:1)', () {
+    Uint32List u32(List<int> v) => Uint32List.fromList(v);
+    List<int> toList(Uint32List a) => List<int>.from(a);
+
+    test('full encoding round trip', () {
+      final dto = semTok.IFullSemanticTokensDto(
+          12, u32([(1 << 24) + (2 << 16) + (3 << 8) + 4]));
+      final decoded = semTok.decodeSemanticTokensDto(
+          semTok.encodeSemanticTokensDto(dto));
+      expect(decoded, isA<semTok.IFullSemanticTokensDto>());
+      final d = decoded as semTok.IFullSemanticTokensDto;
+      expect(d.id, 12);
+      expect(toList(d.data), toList(dto.data));
+    });
+
+    test('delta encoding round trip', () {
+      final v = u32([(1 << 24) + (2 << 16) + (3 << 8) + 4]);
+      final dto = semTok.IDeltaSemanticTokensDto(12, [
+        semTok.SemanticTokensDelta(0, 4),
+        semTok.SemanticTokensDelta(15, 0, v),
+        semTok.SemanticTokensDelta(
+            27, 5, u32([(1 << 24) + (2 << 16) + (3 << 8) + 4, 1, 2, 3, 4, 5, 6, 7, 8, 9])),
+      ]);
+      final decoded = semTok.decodeSemanticTokensDto(
+          semTok.encodeSemanticTokensDto(dto)) as semTok.IDeltaSemanticTokensDto;
+      expect(decoded.id, 12);
+      expect(decoded.deltas.length, 3);
+      expect(decoded.deltas[0].start, 0);
+      expect(decoded.deltas[0].deleteCount, 4);
+      expect(decoded.deltas[0].data, isNull);
+      expect(toList(decoded.deltas[1].data!), toList(v));
+      expect(decoded.deltas[2].data!.length, 10);
+    });
+
+    test('partial / misaligned backing buffer (issue #94521)', () {
+      final dto = semTok.IFullSemanticTokensDto(5, u32([1, 2, 3, 4, 5]));
+      final encoded = semTok.encodeSemanticTokensDto(dto);
+      for (final p in [1, 4]) {
+        for (final s in [1, 4]) {
+          final padded = Uint8List(p + encoded.buffer.length + s);
+          padded.setAll(p, encoded.buffer);
+          final sliced = Uint8List.sublistView(padded, p, p + encoded.buffer.length);
+          final decoded = semTok.decodeSemanticTokensDto(
+              buffer.VSBuffer.wrap(sliced)) as semTok.IFullSemanticTokensDto;
+          expect(decoded.id, 5);
+          expect(toList(decoded.data), [1, 2, 3, 4, 5]);
+        }
+      }
+    });
+  });
+
+  group('strings.ts (1:1)', () {
+    test('equals / equalsIgnoreCase / startsWithIgnoreCase / endsWithIgnoreCase', () {
+      expect(strings.equalsIgnoreCase('', ''), isTrue);
+      expect(strings.equalsIgnoreCase('abc', 'ABC'), isTrue);
+      expect(strings.equalsIgnoreCase('Höhenmeter', 'HÖhenmeter'), isTrue);
+      expect(strings.equalsIgnoreCase('ÖL', 'Öl'), isTrue);
+      expect(strings.equals(null, 'abc'), isFalse);
+      expect(strings.equals(null, null), isTrue);
+      expect(strings.equals('abc', 'ABC', true), isTrue);
+      expect(strings.equals('ÖL', 'Öl', true), isTrue);
+      expect(strings.startsWithIgnoreCase('alles klar', 'ALLES K'), isTrue);
+      expect(strings.startsWithIgnoreCase('alles klar', ' ALLES K'), isFalse);
+      expect(strings.endsWithIgnoreCase('alles klar', 'S KLAR'), isTrue);
+      expect(strings.endsWithIgnoreCase('alles klar', 'S KLAR '), isFalse);
+    });
+
+    test('compareIgnoreCase and compareSubstringIgnoreCase', () {
+      int sign(int v) => v > 0 ? 1 : (v < 0 ? -1 : 0);
+      expect(sign(strings.compareIgnoreCase('abc', 'ABC')), 0);
+      expect(sign(strings.compareIgnoreCase('B', 'a')), 1);
+      expect(sign(strings.compareIgnoreCase('a', 'B')), -1);
+      expect(sign(strings.compareIgnoreCase('foo', 'föo')),
+          sign('foo'.toLowerCase().compareTo('föo'.toLowerCase())));
+      expect(
+          sign(strings.compareSubstringIgnoreCase('abcABc', 'ABcd', 3, 6, 0, 4)),
+          sign('ABc'.toLowerCase().compareTo('ABcd'.toLowerCase())));
+    });
+
+    test('format / format2', () {
+      expect(strings.format('Foo Bar'), 'Foo Bar');
+      expect(strings.format('Foo {0} Bar'), 'Foo {0} Bar');
+      expect(strings.format('Foo {0} Bar {0}', ['yes']), 'Foo yes Bar yes');
+      expect(strings.format('Foo {0} Bar {1}{2}', ['yes', 5, false]),
+          'Foo yes Bar 5false');
+      expect(strings.format2('Foo {foo} Bar', {'foo': 'bar'}), 'Foo bar Bar');
+      expect(strings.format2('Foo {foo} Bar {bar}', {'foo': 'bar'}),
+          'Foo bar Bar {bar}');
+    });
+
+    test('lcut / rcut', () {
+      expect(strings.lcut('foo bar', 0), '');
+      expect(strings.lcut('foo bar', 1), 'bar');
+      expect(strings.lcut('foo bar', 5), 'foo bar');
+      expect(strings.lcut('foo bar', 1, '…'), '…bar');
+      expect(strings.lcut('test string 0.1.2.3', 3, '…'), '…2.3');
+      expect(strings.lcut('            a', 10), 'a');
+      expect(strings.rcut('foo bar', 0), '');
+      expect(strings.rcut('foo bar', 3), 'foo');
+      expect(strings.rcut('foo bar', 7), 'foo bar');
+      expect(strings.rcut('foo bar', 3, '…'), 'foo…');
+      expect(strings.rcut('test string 0.1.2.3', 6, '…'), 'test…');
+      expect(strings.rcut('a            ', 10), 'a');
+    });
+
+    test('escape / htmlAttributeEncodeValue / escapeControlAndFormatCharacters', () {
+      expect(strings.escape('<foo>Hello</foo>'), '&lt;foo&gt;Hello&lt;/foo&gt;');
+      expect(strings.htmlAttributeEncodeValue('<>&\'"'),
+          '&lt;&gt;&amp;&apos;&quot;');
+      expect(strings.escapeControlAndFormatCharacters(
+          '/work/api\n\nWorking directory: /work/web'),
+          '/work/api\\u{a}\\u{a}Working directory: /work/web');
+      expect(strings.escapeControlAndFormatCharacters('root-\u202ea-toor\u200b\t\u2028'),
+          'root-\\u{202e}a-toor\\u{200b}\\u{9}\\u{2028}');
+    });
+
+    test('ltrim / rtrim / trim / lastNonWhitespaceIndex', () {
+      expect(strings.ltrim('foo', 'f'), 'oo');
+      expect(strings.ltrim('http://www.test.de', 'http://'), 'www.test.de');
+      expect(strings.ltrim('------hello', '---'), 'hello');
+      expect(strings.rtrim('foo', 'o'), 'f');
+      expect(strings.rtrim('http://www.test.de', '.de'), 'http://www.test');
+      expect(strings.rtrim('hello---------', '---'), 'hello');
+      expect(strings.rtrim('path/to/file///', '//'), 'path/to/file/');
+      expect(strings.trim(' foo '), 'foo');
+      expect(strings.trim('foo bar', 'bar'), 'foo ');
+      expect(strings.lastNonWhitespaceIndex('abc  \t \t '), 2);
+      expect(strings.lastNonWhitespaceIndex('  \t \t '), -1);
+      expect(strings.lastNonWhitespaceIndex('abc  \t \t abc \t \t ', 8), 2);
+    });
+
+    test('containsRTL / isEmojiImprecise / isFullWidthCharacter / isBasicASCII', () {
+      expect(strings.containsRTL('hello world!'), isFalse);
+      expect(strings.containsRTL('هناك حقيقة مثبتة منذ زمن طويل'), isTrue);
+      expect(strings.containsRTL('זוהי עובדה מבוססת שדעתו'), isTrue);
+      expect(strings.isEmojiImprecise(
+          strings.getNextCodePoint('⭐', '⭐'.length, 0)), isTrue);
+      expect(strings.isFullWidthCharacter('Ａ'.codeUnitAt(0)), isTrue);
+      expect(strings.isBasicASCII(' \t\n\r~'), isTrue);
+      expect(strings.isBasicASCII('ä'), isFalse);
+    });
+
+    test('createRegExp / getLeadingWhitespace / fuzzyContains', () {
+      final re = strings.createRegExp('foo', false, strings.RegExpOptions());
+      expect(re.hasMatch('Foo'), isTrue);
+      expect(strings.createRegExp('a.c', false).hasMatch('a.c'), isTrue);
+      expect(strings.createRegExp('a.c', true).hasMatch('abc'), isTrue);
+      expect(strings.getLeadingWhitespace('  foo'), '  ');
+      expect(strings.getLeadingWhitespace('  foo', 0, 1), ' ');
+      expect(strings.fuzzyContains('hello world', 'hw'), isTrue);
+      expect(strings.fuzzyContains('hello world', 'wh'), isFalse);
+      expect(strings.fuzzyContains('\u0130ab', '\u0130b'), isTrue);
+    });
+
+    test('BOM / uppercaseFirstLetter / getNLines / count', () {
+      expect(strings.startsWithUTF8BOM(strings.UTF8_BOM_CHARACTER), isTrue);
+      expect(strings.startsWithUTF8BOM('foo'), isFalse);
+      expect(strings.stripUTF8BOM('${strings.UTF8_BOM_CHARACTER}foobar'), 'foobar');
+      expect(strings.uppercaseFirstLetter('foo'), 'Foo');
+      expect(strings.uppercaseFirstLetter(''), '');
+      expect(strings.getNLines('foo\nbar'), 'foo');
+      expect(strings.getNLines('foo\nbar\nsomething', 2), 'foo\nbar');
+      expect(strings.getNLines('foo', 0), '');
+      expect(strings.count('hello world', 'l'), 3);
+      expect(strings.count('hello world', 'hello world'), 1);
+    });
+
+    test('truncate / truncateMiddle', () {
+      expect(strings.truncate('hello world', 100), 'hello world');
+      expect(strings.truncate('hello world', 5), 'hello…');
+      expect(strings.truncateMiddle('hello world', 5), 'he…ld');
+      expect(strings.truncateMiddle('a😀bcde', 5), 'a…de');
+      expect(strings.truncateMiddle('abcde😀f', 5), 'ab…f');
+    });
+
+    test('replaceAsync', () async {
+      int i = 0;
+      final String result = await strings.replaceAsync(
+          'abcabcabcabc', RegExp(r'b(.)'),
+          (String match, List<Object?> rest) async {
+        expect(match, 'bc');
+        expect(rest[0], 'c');
+        return '${i++}${rest[0]}';
+      });
+      expect(result, 'a0ca1ca2ca3c');
+    });
+
+    test('removeAnsiEscapeCodes / removeAnsiEscapeCodesFromPrompt', () {
+      expect(strings.removeAnsiEscapeCodes('\u001b[31mHello\u001b[0m'), 'Hello');
+      expect(strings.removeAnsiEscapeCodesFromPrompt('\u001b[31m\$ \u001b[0m'), '\$ ');
+      final parts = strings.forAnsiStringParts('a\u001b[31mb\u001b[0mc').toList();
+      expect(parts.length, 5);
+      expect(parts[0]['str'], 'a');
+      expect(parts[0]['isCode'], isFalse);
+      expect(parts[1]['isCode'], isTrue);
+    });
+
+    test('getGraphemeBreakType / AmbiguousCharacters / InvisibleCharacters / btoa', () {
+      expect(strings.getGraphemeBreakType(0xBC1),
+          strings.GraphemeBreakType.SpacingMark);
+      final amb = strings.AmbiguousCharacters.getInstance(<String>{});
+      expect(amb.containsAmbiguousCharacter('abcd'), isFalse);
+      expect(amb.containsAmbiguousCharacter('ο'), isTrue);
+      expect(amb.containsAmbiguousCharacter('abɡc'), isTrue);
+      expect(strings.InvisibleCharacters.containsInvisibleCharacter('abcd'), isFalse);
+      expect(strings.InvisibleCharacters.containsInvisibleCharacter(' '), isTrue);
+      expect(strings.InvisibleCharacters.containsInvisibleCharacter('a\u{e004e}b'), isTrue);
+      expect(strings.multibyteAwareBtoa('hello world').isNotEmpty, isTrue);
+      expect(strings.multibyteAwareBtoa('平仮名').isNotEmpty, isTrue);
+    });
+  });
+
+  group('hash.ts (1:1)', () {
+    test('isStringInSample stable membership and boundaries', () {
+      final List<bool> sample = List<bool>.generate(
+          9, (int i) => hash.isStringInSample('session-${i + 60}', 5));
+      expect(sample, <bool>[false, false, true, true, true, true, true, false, false]);
+      expect(hash.isStringInSample('session', 0), isFalse);
+      expect(hash.isStringInSample('session', 100), isTrue);
+      expect(() => hash.isStringInSample('session', -1), throwsA(isA<Exception>()));
+      expect(() => hash.isStringInSample('session', 101), throwsA(isA<Exception>()));
+    });
+
+    test('ConstantStringHash matches stringHash for int32 accumulators', () {
+      for (final String value in ['', 'a', 'label', 'description', 'ünïcödé', '\u0000\u0001', '\uD83D\uDE80', 'x' * 200]) {
+        for (final int hv in [0, 1, -1, 149417, 2147483647, -2147483648, 123456789]) {
+          expect(hash.ConstantStringHash(value).apply(hv), hash.stringHash(value, hv));
+        }
+      }
+      final int chained = hash.ConstantStringHash('b')
+          .apply(hash.ConstantStringHash('a').apply(0));
+      expect(chained, hash.stringHash('b', hash.stringHash('a', 0)));
+    });
+
+    test('numberHash / doHash primitive values', () {
+      expect(hash.numberHash(0, 0), 0);
+      expect(hash.numberHash(1, 0), 1);
+      expect(hash.numberHash(31, 0), 31);
+      expect(hash.doHash(null, 0), hash.numberHash(349, 0));
+      expect(hash.doHash(true, 0), hash.numberHash(433, 0));
+      expect(hash.doHash(false, 0), hash.numberHash(863, 0));
+    });
+
+    test('StringSHA1 known vectors', () async {
+      final s = hash.StringSHA1();
+      s.update('abc');
+      expect(s.digest(), 'a9993e364706816aba3e25717850c26c9cd0d89d');
+      final s2 = hash.StringSHA1();
+      s2.update('hello world');
+      expect(s2.digest(), '2aae6c35c94fcfb415dbe95f408b9ce91ee846ed');
+      // emoji (surrogate pair) + large string
+      final s3 = hash.StringSHA1();
+      s3.update('😀');
+      expect(s3.digest(), await hash.hashAsync('😀'));
+      expect((await hash.hashAsync('x' * 300)).length, 40);
+    });
+  });
+
+  group('stringBuilder.ts (1:1)', () {
+    test('decodeUTF16LE keeps leading BOM', () {
+      final Uint8List b1 = Uint8List(2);
+      _writeU16LE(b1, 0, 0xFEFF);
+      expect(stringBuilder.decodeUTF16LE(b1, 0, 1), '\uFEFF');
+
+      final Uint8List b2 = Uint8List(4);
+      _writeU16LE(b2, 0, 0x61);
+      _writeU16LE(b2, 2, 0xFEFF);
+      expect(stringBuilder.decodeUTF16LE(b2, 0, 2), 'a\uFEFF');
+
+      final Uint8List b3 = Uint8List(6);
+      _writeU16LE(b3, 0, 0x61);
+      _writeU16LE(b3, 2, 0xFEFF);
+      _writeU16LE(b3, 4, 0x62);
+      expect(stringBuilder.decodeUTF16LE(b3, 0, 3), 'a\uFEFFb');
+    });
+
+    test('StringBuilder basic / reset / surrogate / appendString', () {
+      final sb = stringBuilder.StringBuilder(100);
+      sb.appendASCIICharCode(65); // CharCode.A
+      sb.appendASCIICharCode(32); // CharCode.Space
+      sb.appendString('😊');
+      expect(sb.build(), 'A 😊');
+      sb.reset();
+      expect(sb.build(), '');
+
+      final sb2 = stringBuilder.StringBuilder(3);
+      sb2.appendString('ab');
+      sb2.appendString('cd');
+      expect(sb2.build(), 'abcd');
+
+      final sb3 = stringBuilder.StringBuilder(1);
+      sb3.appendCharCode(0xD83D); // high surrogate flushes
+      sb3.appendCharCode(0xDE00);
+      expect(sb3.build(), '😀');
+    });
+  });
+
+  group('cursorColumns.ts (1:1)', () {
+    test('visibleColumnFromColumn', () {
+      int v(String t, int c, [int tab = 4]) =>
+          cursorColumns.CursorColumns.visibleColumnFromColumn(t, c, tab);
+      expect(v('\t\tvar x = 3;', 1), 0);
+      expect(v('\t\tvar x = 3;', 2), 4);
+      expect(v('\t\tvar x = 3;', 4), 9);
+      expect(v('\t\tvar x = 3;', 13), 18);
+      expect(v('baz', 1), 0);
+      expect(v('baz', 4), 3);
+      expect(v('📚az', 1), 0);
+      expect(v('📚az', 2), 1);
+      expect(v('📚az', 5), 4);
+      expect(v('\t  \tx\t', -1), 0);
+    });
+
+    test('toStatusbarColumn', () {
+      int s(String t, int c, [int tab = 4]) =>
+          cursorColumns.CursorColumns.toStatusbarColumn(t, c, tab);
+      expect(s('    spaces', 1), 1);
+      expect(s('    spaces', 11), 11);
+      expect(s('\ttab', 2), 5);
+      expect(s('🎈🎈🎈🎈', 3), 2);
+      expect(s('何何何何', 4), 4);
+    });
+
+    test('columnFromVisibleColumn', () {
+      int c(String t, int vc, [int tab = 4]) =>
+          cursorColumns.CursorColumns.columnFromVisibleColumn(t, vc, tab);
+      expect(c('\t\tvar x = 3;', 1), 1);
+      expect(c('\t\tvar x = 3;', 3), 2);
+      expect(c('\t\tvar x = 3;', 9), 4);
+      expect(c('\t\tvar x = 3;', 18), 13);
+      expect(c('baz', 0), 1);
+      expect(c('baz', 3), 4);
+      expect(c('📚az', 1), 1);
+      expect(c('📚az', 2), 3);
+      expect(c('\t  \tx\t', -2), 1);
+    });
+
+    test('next/prev tab stops', () {
+      for (final int tab in [1, 2, 4]) {
+        for (int i = 0; i <= 8; i++) {
+          final int expected = i + tab - i % tab;
+          expect(cursorColumns.CursorColumns.nextRenderTabStop(i, tab), expected);
+          expect(cursorColumns.CursorColumns.nextIndentTabStop(i, tab), expected);
+        }
+      }
+      expect(cursorColumns.CursorColumns.prevRenderTabStop(0, 4), 0);
+      expect(cursorColumns.CursorColumns.prevRenderTabStop(4, 4), 0);
+      expect(cursorColumns.CursorColumns.prevRenderTabStop(5, 4), 4);
+      expect(cursorColumns.CursorColumns.prevRenderTabStop(9, 4), 8);
+      expect(cursorColumns.CursorColumns.prevIndentTabStop(9, 2), 8);
+    });
+  });
+
+  group('textChange.ts (1:1)', () {
+    // Mirrors the source test's assertCompression: verify do + undo round trips.
+    String resulting(String initial, List<List<dynamic>> edits) {
+      String content = initial;
+      for (int i = edits.length - 1; i >= 0; i--) {
+        final int off = edits[i][0] as int;
+        final int len = edits[i][1] as int;
+        content = content.substring(0, off) +
+            (edits[i][2] as String) +
+            content.substring(off + len);
+      }
+      return content;
+    }
+
+    List<textChange.TextChange> getChanges(
+        String initial, List<List<dynamic>> edits) {
+      String content = initial;
+      final List<textChange.TextChange> changes = <textChange.TextChange>[];
+      int delta = 0;
+      for (final List<dynamic> edit in edits) {
+        final int off = edit[0] as int;
+        final int len = edit[1] as int;
+        final String text = edit[2] as String;
+        final int position = off + delta;
+        final String oldText = content.substring(position, position + len);
+        content = content.substring(0, position) + text + content.substring(position + len);
+        changes.add(textChange.TextChange(off, oldText, position, text));
+        delta += text.length - len;
+      }
+      return changes;
+    }
+
+    void assertCompression(String initial, List<List<dynamic>> e1,
+        List<List<dynamic>> e2) {
+      final String tmp = resulting(initial, e1);
+      final String finalText = resulting(tmp, e2);
+      final List<textChange.TextChange> compressed =
+          textChange.compressConsecutiveTextChanges(getChanges(initial, e1), getChanges(tmp, e2));
+      final List<List<dynamic>> doEdits = compressed
+          .map((textChange.TextChange c) => <dynamic>[c.oldPosition, c.oldLength, c.newText])
+          .toList();
+      expect(resulting(initial, doEdits), finalText);
+      final List<List<dynamic>> undoEdits = compressed
+          .map((textChange.TextChange c) => <dynamic>[c.newPosition, c.newLength, c.oldText])
+          .toList();
+      expect(resulting(finalText, undoEdits), initial);
+    }
+
+    test('source cases: simple/complex1/gen1-6', () {
+      assertCompression('', <List<dynamic>>[<dynamic>[0, 0, 'h']], <List<dynamic>>[<dynamic>[1, 0, 'e']]);
+      assertCompression('|', <List<dynamic>>[<dynamic>[0, 0, 'h']], <List<dynamic>>[<dynamic>[2, 0, 'e']]);
+      assertCompression('abcdefghij', <List<dynamic>>[
+        <dynamic>[0, 3, 'qh'],
+        <dynamic>[5, 0, '1'],
+        <dynamic>[8, 2, 'X'],
+      ], <List<dynamic>>[
+        <dynamic>[1, 0, 'Z'],
+        <dynamic>[3, 3, 'Y'],
+      ]);
+      assertCompression('kxm', <List<dynamic>>[<dynamic>[0, 1, 'tod_neu']], <List<dynamic>>[<dynamic>[1, 2, 'sag_e']]);
+      assertCompression('kpb_r_v', <List<dynamic>>[<dynamic>[5, 2, 'a_jvf_l']], <List<dynamic>>[<dynamic>[10, 2, 'w']]);
+      assertCompression('slu_w', <List<dynamic>>[<dynamic>[4, 1, '_wfw']], <List<dynamic>>[<dynamic>[3, 5, '']]);
+      assertCompression('_e', <List<dynamic>>[<dynamic>[2, 0, 'zo_b']], <List<dynamic>>[<dynamic>[1, 3, 'tra']]);
+      assertCompression('ssn_', <List<dynamic>>[<dynamic>[0, 2, 'tat_nwe']], <List<dynamic>>[<dynamic>[2, 6, 'jm']]);
+      assertCompression('kl_nru', <List<dynamic>>[<dynamic>[4, 1, '']], <List<dynamic>>[<dynamic>[1, 4, '__ut']]);
+    });
+
+    test('binary write/read round trip (issue #118041)', () {
+      final c = textChange.TextChange(428, '\uFEFF', 428, '');
+      final Uint8List buff = Uint8List(c.writeSize());
+      final int end = c.write(buff, 0);
+      expect(end, c.writeSize());
+      final List<textChange.TextChange> actual = <textChange.TextChange>[];
+      textChange.TextChange.read(buff, 0, actual);
+      expect(actual.length, 1);
+      expect(actual[0].oldPosition, c.oldPosition);
+      expect(actual[0].oldText, c.oldText);
+      expect(actual[0].newPosition, c.newPosition);
+      expect(actual[0].newText, c.newText);
+    });
+
+    test('toString / properties', () {
+      final ins = textChange.TextChange(3, '', 3, 'ab');
+      expect(ins.toString(), '(insert@3 "ab")');
+      expect(ins.oldLength, 0);
+      expect(ins.newEnd, 5);
+      final del = textChange.TextChange(2, 'xy', 2, '');
+      expect(del.toString(), '(delete@2 "xy")');
+      final rep = textChange.TextChange(0, 'a\nb', 0, 'c\rd');
+      expect(rep.toString(), '(replace@0 "a\\nb" with "c\\rd")');
+    });
+
+    test('property: random edit sequences round trip (500 iterations)', () {
+      final rand = math.Random(12345);
+      String randStr(int min, int max) {
+        final int len = min + rand.nextInt(max - min + 1);
+        final StringBuffer sb = StringBuffer();
+        for (int i = 0; i < len; i++) {
+          sb.writeCharCode(97 + rand.nextInt(26));
+        }
+        return sb.toString();
+      }
+      List<List<dynamic>> randEdits(String content) {
+        final List<List<dynamic>> result = <List<dynamic>>[];
+        int cnt = 1 + rand.nextInt(5);
+        int maxOffset = content.length;
+        while (cnt > 0 && maxOffset > 0) {
+          final int off = rand.nextInt(maxOffset + 1);
+          final int len = rand.nextInt(maxOffset - off + 1);
+          result.add(<dynamic>[off, len, randStr(0, 3)]);
+          maxOffset = off;
+          cnt--;
+        }
+        return result.reversed.toList();
+      }
+      for (int it = 0; it < 500; it++) {
+        final String initial = randStr(0, 12);
+        final List<List<dynamic>> e1 = randEdits(initial);
+        final String tmp = resulting(initial, e1);
+        final List<List<dynamic>> e2 = randEdits(tmp);
+        assertCompression(initial, e1, e2);
+      }
+    });
+  });
+
+  group('extpath.ts (1:1)', () {
+    test('toSlashes', () {
+      expect(extpath.toSlashes(r'\\server\share\some\path'), '//server/share/some/path');
+      expect(extpath.toSlashes(r'c:\test'), 'c:/test');
+      expect(extpath.toSlashes(r'foo\bar'), 'foo/bar');
+      expect(extpath.toSlashes('/user/far'), '/user/far');
+    });
+
+    test('getRoot', () {
+      expect(extpath.getRoot('/user/far'), '/');
+      expect(extpath.getRoot(r'\\server\share\some\path'), '//server/share/');
+      expect(extpath.getRoot('//server/share/some/path'), '//server/share/');
+      expect(extpath.getRoot('//server/share'), '/');
+      expect(extpath.getRoot('//server'), '/');
+      expect(extpath.getRoot('//server//'), '/');
+      expect(extpath.getRoot('c:/user/far'), 'c:/');
+      expect(extpath.getRoot('c:user/far'), 'c:');
+      expect(extpath.getRoot('http://www'), '');
+      expect(extpath.getRoot('http://www/'), 'http://www/');
+      expect(extpath.getRoot('file:///foo'), 'file:///');
+      expect(extpath.getRoot('file://foo'), '');
+    });
+
+    test('isUNC (non-Windows platform)', () {
+      expect(extpath.isUNC('foo'), isFalse);
+      expect(extpath.isUNC('/foo'), isFalse);
+      expect(extpath.isUNC(r'\foo'), isFalse);
+      expect(extpath.isUNC(r'\\foo'), isFalse);
+      expect(extpath.isUNC(r'\\a\b'), isFalse);
+      expect(extpath.isUNC('//a/b'), isFalse);
+      expect(extpath.isUNC(r'\\server\share'), isFalse);
+    });
+
+    test('isValidBasename', () {
+      expect(extpath.isValidBasename(null), isFalse);
+      expect(extpath.isValidBasename(''), isFalse);
+      expect(extpath.isValidBasename('test.txt'), isTrue);
+      expect(extpath.isValidBasename('/test.txt'), isFalse);
+      expect(extpath.isValidBasename(r'\test.txt'), isTrue);
+      expect(extpath.isValidBasename(r'\test.txt', true), isFalse);
+      expect(extpath.isValidBasename('aux', true), isFalse);
+      expect(extpath.isValidBasename('Aux', true), isFalse);
+      expect(extpath.isValidBasename('LPT0', true), isFalse);
+      expect(extpath.isValidBasename('aux.txt', true), isFalse);
+      expect(extpath.isValidBasename('com0.abc', true), isFalse);
+      expect(extpath.isValidBasename('LPT00', true), isTrue);
+      expect(extpath.isValidBasename('aux1', true), isTrue);
+      expect(extpath.isValidBasename('aux1.txt', true), isTrue);
+      expect(extpath.isValidBasename('aux1.aux.txt', true), isTrue);
+      expect(extpath.isValidBasename('test.txt.', true), isFalse);
+      expect(extpath.isValidBasename('test.txt..', true), isFalse);
+      expect(extpath.isValidBasename('test.txt ', true), isFalse);
+      expect(extpath.isValidBasename('test.txt\t', true), isFalse);
+      expect(extpath.isValidBasename('tes:t.txt', true), isFalse);
+      expect(extpath.isValidBasename('tes"t.txt', true), isFalse);
+    });
+
+    test('sanitizeFilePath (posix)', () {
+      expect(extpath.sanitizeFilePath('.', '/the/cwd'), '/the/cwd');
+      expect(extpath.sanitizeFilePath('', '/the/cwd'), '/the/cwd');
+      expect(extpath.sanitizeFilePath('/', '/the/cwd'), '/');
+      expect(extpath.sanitizeFilePath('/folder/my.txt', '/the/cwd'), '/folder/my.txt');
+      expect(extpath.sanitizeFilePath('/folder/my', '/the/cwd'), '/folder/my');
+      expect(extpath.sanitizeFilePath('/folder/../my', '/the/cwd'), '/my');
+      expect(extpath.sanitizeFilePath('/folder/my/', '/the/cwd'), '/folder/my');
+      expect(extpath.sanitizeFilePath('/folder/my///', '/the/cwd'), '/folder/my');
+      expect(extpath.sanitizeFilePath('my.txt', '/the/cwd'), '/the/cwd/my.txt');
+      expect(extpath.sanitizeFilePath('my.txt/', '/the/cwd'), '/the/cwd/my.txt');
+    });
+
+    test('isRootOrDriveLetter / hasDriveLetter / getDriveLetter', () {
+      expect(extpath.isRootOrDriveLetter('/'), isTrue);
+      expect(extpath.isRootOrDriveLetter('/path'), isFalse);
+      expect(extpath.hasDriveLetter('/'), isFalse);
+      expect(extpath.hasDriveLetter('/path'), isFalse);
+      expect(extpath.hasDriveLetter('c:', true), isTrue);
+      expect(extpath.hasDriveLetter('D:', true), isTrue);
+      expect(extpath.hasDriveLetter('D:/', true), isTrue);
+      expect(extpath.hasDriveLetter(r'D:\', true), isTrue);
+      expect(extpath.hasDriveLetter(r'D:\path', true), isTrue);
+      expect(extpath.hasDriveLetter('D:/path', true), isTrue);
+      expect(extpath.getDriveLetter('/'), isNull);
+      expect(extpath.getDriveLetter('/path'), isNull);
+      expect(extpath.getDriveLetter('c:', true), 'c');
+      expect(extpath.getDriveLetter('D:', true), 'D');
+      expect(extpath.getDriveLetter('D:/', true), 'D');
+      expect(extpath.getDriveLetter(r'D:\path', true), 'D');
+    });
+
+    test('isWindowsDriveLetter', () {
+      expect(extpath.isWindowsDriveLetter(0), isFalse);
+      expect(extpath.isWindowsDriveLetter(-1), isFalse);
+      expect(extpath.isWindowsDriveLetter(cc.CharCode.A), isTrue);
+      expect(extpath.isWindowsDriveLetter(cc.CharCode.z), isTrue);
+    });
+
+    test('indexOfPath', () {
+      expect(extpath.indexOfPath('/foo', '/bar', true), -1);
+      expect(extpath.indexOfPath('/foo', '/FOO', false), -1);
+      expect(extpath.indexOfPath('/foo', '/FOO', true), 0);
+      expect(extpath.indexOfPath('/some/long/path', '/some/long', false), 0);
+      expect(extpath.indexOfPath('/some/long/path', '/PATH', true), 10);
+    });
+
+    test('parseLineAndColumnAware', () {
+      var res = extpath.parseLineAndColumnAware('/foo/bar');
+      expect(res.path, '/foo/bar');
+      expect(res.line, isNull);
+      expect(res.column, isNull);
+
+      res = extpath.parseLineAndColumnAware('/foo/bar:33');
+      expect(res.path, '/foo/bar');
+      expect(res.line, 33);
+      expect(res.column, 1);
+
+      res = extpath.parseLineAndColumnAware('/foo/bar:33:34');
+      expect(res.path, '/foo/bar');
+      expect(res.line, 33);
+      expect(res.column, 34);
+
+      res = extpath.parseLineAndColumnAware(r'C:\foo\bar');
+      expect(res.path, r'C:\foo\bar');
+      expect(res.line, isNull);
+      expect(res.column, isNull);
+
+      res = extpath.parseLineAndColumnAware(r'C:\foo\bar:33');
+      expect(res.path, r'C:\foo\bar');
+      expect(res.line, 33);
+      expect(res.column, 1);
+
+      res = extpath.parseLineAndColumnAware(r'C:\foo\bar:33:34');
+      expect(res.path, r'C:\foo\bar');
+      expect(res.line, 33);
+      expect(res.column, 34);
+
+      res = extpath.parseLineAndColumnAware('/foo/bar:abb');
+      expect(res.path, '/foo/bar:abb');
+      expect(res.line, isNull);
+      expect(res.column, isNull);
+    });
+
+    test('randomPath', () {
+      expect(extpath.randomPath('/foo/bar').isNotEmpty, isTrue);
+      expect(extpath.randomPath('/foo/bar', 'prefix-').contains('prefix-'), isTrue);
+      expect(extpath.randomPath('/foo/bar') != extpath.randomPath('/foo/bar'), isTrue);
+      expect(extpath.randomPath('', '', 3).length, 3);
+      expect(extpath.randomPath().isNotEmpty, isTrue);
+    });
+  });
+
+  group('ternarySearchTree.ts (1:1)', () {
+    test('PathIterator', () {
+      final iter = tst.PathIterator();
+      iter.reset('file:///usr/bin/file.txt');
+
+      expect(iter.value(), 'file:');
+      expect(iter.hasNext(), isTrue);
+      expect(iter.cmp('file:'), 0);
+      expect(iter.cmp('a') < 0, isTrue);
+      expect(iter.cmp('aile:') < 0, isTrue);
+      expect(iter.cmp('z') > 0, isTrue);
+      expect(iter.cmp('zile:') > 0, isTrue);
+
+      iter.next();
+      expect(iter.value(), 'usr');
+      expect(iter.hasNext(), isTrue);
+      iter.next();
+      expect(iter.value(), 'bin');
+      expect(iter.hasNext(), isTrue);
+      iter.next();
+      expect(iter.value(), 'file.txt');
+      expect(iter.hasNext(), isFalse);
+      iter.next();
+      expect(iter.value(), '');
+      expect(iter.hasNext(), isFalse);
+      iter.next();
+      expect(iter.value(), '');
+      expect(iter.hasNext(), isFalse);
+
+      iter.reset('/foo/bar/');
+      expect(iter.value(), 'foo');
+      expect(iter.hasNext(), isTrue);
+      iter.next();
+      expect(iter.value(), 'bar');
+      expect(iter.hasNext(), isFalse);
+    });
+
+    test('UriIterator', () {
+      final iter = tst.UriIterator((URI key) => false, (URI key) => false);
+      iter.reset(URI.parse('file:///usr/bin/file.txt'));
+
+      expect(iter.value(), 'file');
+      expect(iter.cmp('file'), 0);
+      expect(iter.hasNext(), isTrue);
+      iter.next();
+      expect(iter.value(), 'usr');
+      iter.next();
+      expect(iter.value(), 'bin');
+      iter.next();
+      expect(iter.value(), 'file.txt');
+      expect(iter.hasNext(), isFalse);
+
+      iter.reset(URI.parse('file://share/usr/bin/file.txt?foo'));
+      expect(iter.value(), 'file');
+      expect(iter.cmp('file'), 0);
+      iter.next();
+      expect(iter.value(), 'share');
+      expect(iter.cmp('SHARe'), 0);
+      iter.next();
+      expect(iter.value(), 'usr');
+      iter.next();
+      expect(iter.value(), 'bin');
+      iter.next();
+      expect(iter.value(), 'file.txt');
+      expect(iter.hasNext(), isTrue);
+      iter.next();
+      expect(iter.value(), 'foo');
+      expect(iter.cmp('z') > 0, isTrue);
+      expect(iter.cmp('a') < 0, isTrue);
+      expect(iter.hasNext(), isFalse);
+    });
+
+    test('UriIterator - ignore query/fragment', () {
+      final iter = tst.UriIterator((URI key) => false, (URI key) => true);
+      iter.reset(URI.parse('file://share/usr/bin/file.txt?foo'));
+      expect(iter.value(), 'file');
+      iter.next();
+      expect(iter.value(), 'share');
+      iter.next();
+      expect(iter.value(), 'usr');
+      iter.next();
+      expect(iter.value(), 'bin');
+      iter.next();
+      expect(iter.value(), 'file.txt');
+      expect(iter.hasNext(), isFalse);
+    });
+
+    test('set / set w/ undefined / findLongestMatch / basics', () {
+      var trie = tst.TernarySearchTree.forStrings<int>();
+      trie.set('foobar', 1);
+      trie.set('foobaz', 2);
+      _assertTstDfs(trie, <MapEntry<String, int>>[
+        MapEntry('foobar', 1),
+        MapEntry('foobaz', 2),
+      ]);
+
+      trie = tst.TernarySearchTree.forStrings<int>();
+      trie.set('foobar', 1);
+      trie.set('fooba', 2);
+      _assertTstDfs(trie, <MapEntry<String, int>>[
+        MapEntry('fooba', 2),
+        MapEntry('foobar', 1),
+      ]);
+
+      trie = tst.TernarySearchTree.forStrings<int>();
+      trie.set('foo', 1);
+      trie.set('foo', 2);
+      _assertTstDfs(trie, <MapEntry<String, int>>[MapEntry('foo', 2)]);
+
+      trie = tst.TernarySearchTree.forStrings<int>();
+      trie.set('foo', 1);
+      trie.set('foobar', 2);
+      trie.set('bar', 3);
+      trie.set('foob', 4);
+      trie.set('bazz', 5);
+      _assertTstDfs(trie, <MapEntry<String, int>>[
+        MapEntry('bar', 3),
+        MapEntry('bazz', 5),
+        MapEntry('foo', 1),
+        MapEntry('foob', 4),
+        MapEntry('foobar', 2),
+      ]);
+
+      final Object? trie2 = tst.TernarySearchTree.forStrings<Object?>();
+      final dynamic dynamicTrie = trie2;
+      dynamicTrie.set('foobar', null);
+      dynamicTrie.set('foobaz', 2);
+      expect(dynamicTrie.get('foobar'), isNull);
+      expect(dynamicTrie.get('foobaz'), 2);
+      expect(dynamicTrie.get('NOT HERE'), isNull);
+      expect(dynamicTrie.has('foobar'), isTrue);
+      expect(dynamicTrie.has('NOT HERE'), isFalse);
+      expect(dynamicTrie.set('foobar', 3), isNull);
+      expect(dynamicTrie.get('foobar'), 3);
+
+      trie = tst.TernarySearchTree.forStrings<int>();
+      trie.set('foo', 1);
+      trie.set('foobar', 2);
+      trie.set('foobaz', 3);
+      expect(trie.findSubstr('f'), isNull);
+      expect(trie.findSubstr('z'), isNull);
+      expect(trie.findSubstr('foo'), 1);
+      expect(trie.findSubstr('fooö'), 1);
+      expect(trie.findSubstr('fooba'), 1);
+      expect(trie.findSubstr('foobarr'), 2);
+      expect(trie.findSubstr('foobazrr'), 3);
+    });
+
+    test('delete & cleanup / BST+AVL delete', () {
+      var trie = tst.TernarySearchTree<String, int>(tst.StringIterator());
+      trie.set('foo', 1);
+      trie.set('foobar', 2);
+      trie.set('bar', 3);
+      trie.delete('foo');
+      _assertTstDfs(trie, <MapEntry<String, int>>[
+        MapEntry('bar', 3),
+        MapEntry('foobar', 2),
+      ]);
+      trie.delete('foobar');
+      _assertTstDfs(trie, <MapEntry<String, int>>[MapEntry('bar', 3)]);
+
+      trie = tst.TernarySearchTree<String, int>(tst.StringIterator());
+      trie.set('foo', 1);
+      trie.set('foobar', 2);
+      trie.set('bar', 3);
+      trie.set('foobarbaz', 4);
+      trie.deleteSuperstr('foo');
+      _assertTstDfs(trie, <MapEntry<String, int>>[
+        MapEntry('bar', 3),
+        MapEntry('foo', 1),
+      ]);
+      trie.deleteSuperstr('fo');
+      _assertTstDfs(trie, <MapEntry<String, int>>[MapEntry('bar', 3)]);
+
+      trie = tst.TernarySearchTree<String, int>(tst.StringIterator());
+      trie.set('d', 1);
+      trie.delete('d');
+      expect(trie.toList(), isEmpty);
+      trie.set('d', 1);
+      trie.set('b', 1);
+      trie.set('f', 1);
+      trie.delete('d');
+      _assertTstDfs(trie, <MapEntry<String, int>>[
+        MapEntry('b', 1),
+        MapEntry('f', 1),
+      ]);
+
+      trie = tst.TernarySearchTree<String, int>(tst.StringIterator());
+      for (final String k in <String>['d', 'b', 'f', 'e', 'z']) {
+        trie.set(k, 1);
+      }
+      trie.delete('b');
+      expect(trie.isBalanced(), isTrue);
+      expect(trie.toList().map((e) => e.key).toList(),
+          <String>['d', 'e', 'f', 'z']);
+
+      trie = tst.TernarySearchTree<String, int>(tst.StringIterator());
+      for (final String k in <String>['a', 'ad', 'ab', 'af', 'ae', 'az']) {
+        trie.set(k, 1);
+      }
+      trie.delete('ab');
+      trie.delete('a');
+      expect(trie.toList().map((e) => e.key).toList(),
+          <String>['ad', 'ae', 'af', 'az']);
+    });
+
+    test('(AVL) set rotations', () {
+      tst.TernarySearchTree<String, int> make() =>
+          tst.TernarySearchTree<String, int>(tst.PathIterator());
+      var trie = make();
+      trie.set('/fileA', 1);
+      trie.set('/fileB', 2);
+      trie.set('/fileC', 3);
+      _assertTstDfs(trie, <MapEntry<String, int>>[
+        MapEntry('/fileA', 1),
+        MapEntry('/fileB', 2),
+        MapEntry('/fileC', 3),
+      ]);
+
+      trie = make();
+      trie.set('/foo/fileC', 3);
+      trie.set('/foo/fileB', 2);
+      trie.set('/foo/fileA', 1);
+      _assertTstDfs(trie, <MapEntry<String, int>>[
+        MapEntry('/foo/fileA', 1),
+        MapEntry('/foo/fileB', 2),
+        MapEntry('/foo/fileC', 3),
+      ]);
+
+      trie = make();
+      for (final List<dynamic> pair in <List<dynamic>>[
+        <dynamic>['/fileD', 7],
+        <dynamic>['/fileB', 2],
+        <dynamic>['/fileG', 42],
+        <dynamic>['/fileF', 24],
+        <dynamic>['/fileZ', 73],
+        <dynamic>['/fileE', 15],
+      ]) {
+        trie.set(pair[0] as String, pair[1] as int);
+      }
+      expect(trie.toList().map((e) => e.key).toList(), <String>[
+        '/fileB',
+        '/fileD',
+        '/fileE',
+        '/fileF',
+        '/fileG',
+        '/fileZ',
+      ]);
+      expect(trie.isBalanced(), isTrue);
+    });
+
+    test('issue #138284 (simple + random AVL invariant)', () {
+      final tst.TernarySearchTree<String, bool> simple =
+          tst.TernarySearchTree.forStrings<bool>();
+      for (final String k in <String>['C', 'A', 'D', 'B']) {
+        simple.set(k, true);
+      }
+      expect(simple.isBalanced(), isTrue);
+      simple.delete('C');
+      expect(simple.toList().map((e) => e.key).toList(),
+          <String>['A', 'B', 'D']);
+
+      final rand = math.Random(4242);
+      const String chars =
+          'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      for (int round = 0; round < 10; round++) {
+        final List<String> keys = <String>[];
+        for (int i = 0; i < 100; i++) {
+          final StringBuffer sb = StringBuffer();
+          for (int j = 0; j < 10; j++) {
+            sb.write(chars[rand.nextInt(chars.length)]);
+          }
+          keys.add(sb.toString());
+        }
+        final tst.TernarySearchTree<String, bool> tree =
+            tst.TernarySearchTree.forStrings<bool>();
+        for (final String k in keys) {
+          tree.set(k, true);
+          expect(tree.isBalanced(), isTrue);
+        }
+        for (final String k in keys) {
+          tree.delete(k);
+          expect(tree.isBalanced(), isTrue);
+        }
+      }
+    });
+
+    test('(PathSegments) basics / lookup / superstr / delete_superstr', () {
+      tst.TernarySearchTree<String, int> make() =>
+          tst.TernarySearchTree<String, int>(tst.PathIterator());
+      var trie = make();
+      trie.set('/user/foo/bar', 1);
+      trie.set('/user/foo', 2);
+      trie.set('/user/foo/flip/flop', 3);
+      expect(trie.get('/user/foo/bar'), 1);
+      expect(trie.get('/user/foo'), 2);
+      expect(trie.get('/user//foo'), 2);
+      expect(trie.get(r'/user\foo'), 2);
+      expect(trie.findSubstr('/user/bar'), isNull);
+      expect(trie.findSubstr('/user/foo'), 2);
+      expect(trie.findSubstr(r'\user\foo'), 2);
+      expect(trie.findSubstr('/user//foo'), 2);
+      expect(trie.findSubstr('/user/foo/ba'), 2);
+      expect(trie.findSubstr('/user/foo/far/boo'), 2);
+      expect(trie.findSubstr('/user/foo/bar'), 1);
+      expect(trie.findSubstr('/user/foo/bar/far/boo'), 1);
+
+      trie = make();
+      trie.set('/user/foo/bar', 1);
+      trie.set('/user/foo', 2);
+      trie.set('/user/foo/flip/flop', 3);
+      trie.set('/usr/foo', 4);
+      expect(trie.findSuperstr('/user')!.map((e) => e.value).toList(),
+          <int>[2, 1, 3]);
+      expect(trie.findSuperstr('/usr')!.map((e) => e.value).toList(), <int>[4]);
+      expect(trie.findSuperstr('/not'), isNull);
+      expect(trie.findSuperstr('/us'), isNull);
+      expect(trie.findSuperstr('/usrr'), isNull);
+      expect(trie.findSuperstr('/userr'), isNull);
+
+      _assertTstDfs(trie, <MapEntry<String, int>>[
+        MapEntry('/user/foo', 2),
+        MapEntry('/user/foo/bar', 1),
+        MapEntry('/user/foo/flip/flop', 3),
+        MapEntry('/usr/foo', 4),
+      ]);
+      trie.deleteSuperstr('/user/fo');
+      expect(trie.toList().length, 4);
+      trie.deleteSuperstr('/user/foo');
+      _assertTstDfs(trie, <MapEntry<String, int>>[
+        MapEntry('/user/foo', 2),
+        MapEntry('/usr/foo', 4),
+      ]);
+    });
+
+    test('(URI) basics / query / lookup / casing / superstr', () {
+      tst.TernarySearchTree<URI, int> make() =>
+          tst.TernarySearchTree<URI, int>(
+              tst.UriIterator((URI key) => false, (URI key) => false));
+      var trie = make();
+      trie.set(URI.file('/user/foo/bar'), 1);
+      trie.set(URI.file('/user/foo'), 2);
+      trie.set(URI.file('/user/foo/flip/flop'), 3);
+      expect(trie.get(URI.file('/user/foo/bar')), 1);
+      expect(trie.get(URI.file('/user/foo')), 2);
+      expect(trie.findSubstr(URI.file('/user/bar')), isNull);
+      expect(trie.findSubstr(URI.file('/user/foo')), 2);
+      expect(trie.findSubstr(URI.file('/user/foo/ba')), 2);
+      expect(trie.findSubstr(URI.file('/user/foo/far/boo')), 2);
+      expect(trie.findSubstr(URI.file('/user/foo/bar')), 1);
+      expect(trie.findSubstr(URI.file('/user/foo/bar/far/boo')), 1);
+
+      final queryTrie = tst.TernarySearchTree<URI, int>(
+          tst.UriIterator((URI key) => false, (URI key) => true));
+      queryTrie.set(URI.parse('memfs:/?param=1'), 1);
+      expect(queryTrie.get(URI.parse('memfs:/?param=1')), 1);
+      expect(queryTrie.findSubstr(URI.parse('memfs:/aaa?param=1')), 1);
+
+      trie = make();
+      trie.set(URI.parse('http://foo.bar/user/foo/bar'), 1);
+      trie.set(URI.parse('http://foo.bar/user/foo?query'), 2);
+      trie.set(URI.parse('http://foo.bar/user/foo?QUERY'), 3);
+      trie.set(URI.parse('http://foo.bar/user/foo/flip/flop'), 3);
+      expect(trie.get(URI.parse('http://foo.bar/foo')), isNull);
+      expect(trie.get(URI.parse('http://foo.bar/user')), isNull);
+      expect(trie.get(URI.parse('http://foo.bar/user/foo/bar')), 1);
+      expect(trie.get(URI.parse('http://foo.bar/user/foo?query')), 2);
+      expect(trie.get(URI.parse('http://foo.bar/user/foo?Query')), isNull);
+      expect(trie.get(URI.parse('http://foo.bar/user/foo?QUERY')), 3);
+      expect(trie.get(URI.parse('http://foo.bar/user/foo/bar/boo')), isNull);
+
+      final caseTrie = tst.TernarySearchTree<URI, int>(tst.UriIterator(
+          (URI uri) => RegExp(r'^https?$').hasMatch(uri.scheme),
+          (URI key) => false));
+      caseTrie.set(URI.parse('http://foo.bar/user/foo/bar'), 1);
+      expect(caseTrie.get(URI.parse('http://foo.bar/USER/foo/bar')), 1);
+      caseTrie.set(URI.parse('foo://foo.bar/user/foo/bar'), 1);
+      expect(caseTrie.get(URI.parse('foo://foo.bar/USER/foo/bar')), isNull);
+
+      trie = make();
+      trie.set(URI.file('/user/foo/bar'), 1);
+      trie.set(URI.file('/user/foo'), 2);
+      trie.set(URI.file('/user/foo/flip/flop'), 3);
+      trie.set(URI.file('/usr/foo'), 4);
+      expect(trie.findSuperstr(URI.file('/user'))!.map((e) => e.value).toList(),
+          <int>[2, 1, 3]);
+      expect(trie.findSuperstr(URI.file('/usr'))!.map((e) => e.value).toList(),
+          <int>[4]);
+      expect(trie.findSuperstr(URI.file('/'))!.map((e) => e.value).toList(),
+          <int>[2, 1, 3, 4]);
+      expect(trie.findSuperstr(URI.file('/not')), isNull);
+      expect(trie.findSuperstr(URI.file('/us')), isNull);
+      expect(trie.findSuperstr(URI.file('/usrr')), isNull);
+      expect(trie.findSuperstr(URI.file('/userr')), isNull);
+    });
+
+    test('(ConfigKeySegments) basics / lookup / superstr / delete_superstr', () {
+      tst.TernarySearchTree<String, int> make() =>
+          tst.TernarySearchTree<String, int>(tst.ConfigKeysIterator());
+      var trie = make();
+      trie.set('config.foo.bar', 1);
+      trie.set('config.foo', 2);
+      trie.set('config.foo.flip.flop', 3);
+      expect(trie.get('config.foo.bar'), 1);
+      expect(trie.get('config.foo'), 2);
+      expect(trie.get('config.foo.flip.flop'), 3);
+      expect(trie.findSubstr('config.bar'), isNull);
+      expect(trie.findSubstr('config.foo'), 2);
+      expect(trie.findSubstr('config.foo.ba'), 2);
+      expect(trie.findSubstr('config.foo.far.boo'), 2);
+      expect(trie.findSubstr('config.foo.bar'), 1);
+      expect(trie.findSubstr('config.foo.bar.far.boo'), 1);
+      expect(trie.get('foo'), isNull);
+      expect(trie.get('config'), isNull);
+      expect(trie.get('config.foo.bar.boo'), isNull);
+
+      trie = make();
+      trie.set('config.foo.bar', 1);
+      trie.set('config.foo', 2);
+      trie.set('config.foo.flip.flop', 3);
+      trie.set('boo', 4);
+      expect(trie.findSuperstr('config')!.map((e) => e.value).toList(),
+          <int>[2, 1, 3]);
+      expect(trie.findSuperstr('foo'), isNull);
+      expect(trie.findSuperstr('config.foo.no'), isNull);
+      expect(trie.findSuperstr('config.foop'), isNull);
+
+      _assertTstDfs(trie, <MapEntry<String, int>>[
+        MapEntry('boo', 4),
+        MapEntry('config.foo', 2),
+        MapEntry('config.foo.bar', 1),
+        MapEntry('config.foo.flip.flop', 3),
+      ]);
+      trie.deleteSuperstr('config.fo');
+      expect(trie.toList().length, 4);
+      trie.deleteSuperstr('config.foo');
+      _assertTstDfs(trie, <MapEntry<String, int>>[
+        MapEntry('boo', 4),
+        MapEntry('config.foo', 2),
+      ]);
+    });
+
+    test('fill and hasElementOrSubtree', () {
+      final tst.TernarySearchTree<String, bool> trie =
+          tst.TernarySearchTree.forStrings<bool>();
+      final List<String> keys = <String>['foo', 'bar', 'bang', 'bazz'];
+      trie.fill(true, keys);
+      for (final String key in keys) {
+        expect(trie.get(key), isTrue);
+      }
+      expect(trie.hasElementOrSubtree('fo'), isTrue);
+      expect(trie.hasElementOrSubtree('fooz'), isFalse);
+
+      final tst.TernarySearchTree<String, int> pairs =
+          tst.TernarySearchTree.forStrings<int>();
+      pairs.fill(<dynamic>[
+        <dynamic>['a', 1],
+        <dynamic>['b', 2],
+      ]);
+      expect(pairs.get('a'), 1);
+      expect(pairs.get('b'), 2);
+    });
+  });
+
+  group('search.ts + severity.ts (1:1)', () {
+    test('buildReplaceStringWithCasePreserved (source cases)', () {
+      void assertReplace(List<String> target, String replaceString, String expected) {
+        expect(search.buildReplaceStringWithCasePreserved(target, replaceString), expected);
+      }
+
+      assertReplace(<String>['abc'], 'Def', 'def');
+      assertReplace(<String>['Abc'], 'Def', 'Def');
+      assertReplace(<String>['ABC'], 'Def', 'DEF');
+      assertReplace(<String>['abc', 'Abc'], 'Def', 'def');
+      assertReplace(<String>['Abc', 'abc'], 'Def', 'Def');
+      assertReplace(<String>['ABC', 'abc'], 'Def', 'DEF');
+      assertReplace(<String>['aBc', 'abc'], 'Def', 'def');
+      assertReplace(<String>['AbC'], 'Def', 'Def');
+      assertReplace(<String>['aBC'], 'Def', 'def');
+      assertReplace(<String>['aBc'], 'DeF', 'deF');
+      assertReplace(<String>['Foo-Bar'], 'newfoo-newbar', 'Newfoo-Newbar');
+      assertReplace(<String>['Foo-Bar-Abc'], 'newfoo-newbar-newabc', 'Newfoo-Newbar-Newabc');
+      assertReplace(<String>['Foo-Bar-abc'], 'newfoo-newbar', 'Newfoo-newbar');
+      assertReplace(<String>['foo-Bar'], 'newfoo-newbar', 'newfoo-Newbar');
+      assertReplace(<String>['foo-BAR'], 'newfoo-newbar', 'newfoo-NEWBAR');
+      assertReplace(<String>['foO-BAR'], 'NewFoo-NewBar', 'newFoo-NEWBAR');
+      assertReplace(<String>['Foo_Bar'], 'newfoo_newbar', 'Newfoo_Newbar');
+      assertReplace(<String>['Foo_Bar_Abc'], 'newfoo_newbar_newabc', 'Newfoo_Newbar_Newabc');
+      assertReplace(<String>['Foo_Bar_abc'], 'newfoo_newbar', 'Newfoo_newbar');
+      assertReplace(<String>['Foo_Bar-abc'], 'newfoo_newbar-abc', 'Newfoo_newbar-abc');
+      assertReplace(<String>['foo_Bar'], 'newfoo_newbar', 'newfoo_Newbar');
+      assertReplace(<String>['Foo_BAR'], 'newfoo_newbar', 'Newfoo_NEWBAR');
+      expect(search.buildReplaceStringWithCasePreserved(null, 'Def'), 'Def');
+      expect(search.buildReplaceStringWithCasePreserved(<String>[''], 'Def'), 'Def');
+    });
+
+    test('Severity.fromValue / toString', () {
+      expect(severity.Severity.fromValue(''), severity.Severity.Ignore);
+      expect(severity.Severity.fromValue('error'), severity.Severity.Error);
+      expect(severity.Severity.fromValue('ERROR'), severity.Severity.Error);
+      expect(severity.Severity.fromValue('warning'), severity.Severity.Warning);
+      expect(severity.Severity.fromValue('WARN'), severity.Severity.Warning);
+      expect(severity.Severity.fromValue('Info'), severity.Severity.Info);
+      expect(severity.Severity.fromValue('nonsense'), severity.Severity.Ignore);
+      expect(severity.Severity.toStringStatic(severity.Severity.Error), 'error');
+      expect(severity.Severity.toStringStatic(severity.Severity.Warning), 'warning');
+      expect(severity.Severity.toStringStatic(severity.Severity.Info), 'info');
+      expect(severity.Severity.toStringStatic(severity.Severity.Ignore), 'ignore');
+      expect(severity.Severity.toStringStatic(42), 'ignore');
+    });
+  });
+
+}
+
+void _assertTstDfs<E>(tst.TernarySearchTree<String, E> trie,
+    List<MapEntry<String, E>> elements) {
+  expect(trie.isBalanced(), isTrue, reason: 'TST is not balanced');
+
+  final List<MapEntry<String, E>> actual = trie.toList();
+  expect(actual.length, elements.length);
+  for (int i = 0; i < actual.length; i++) {
+    expect(actual[i].key, elements[i].key);
+    expect(actual[i].value, elements[i].value);
+  }
+
+  final Map<String, E> map = <String, E>{};
+  for (final MapEntry<String, E> e in elements) {
+    map[e.key] = e.value;
+  }
+  map.forEach((String key, E value) {
+    expect(trie.get(key), value);
+  });
+
+  int forEachCount = 0;
+  trie.forEach((E value, String key) {
+    expect(value, map[key]);
+    forEachCount++;
+  });
+  expect(map.length, forEachCount);
+
+  int iterCount = 0;
+  for (final MapEntry<String, E> e in trie.entries) {
+    expect(e.value, map[e.key]);
+    iterCount++;
+  }
+  expect(map.length, iterCount);
+}
+
+void _writeU16LE(Uint8List bytes, int offset, int value) {
+  ByteData.view(bytes.buffer).setUint16(offset, value, Endian.little);
+}
+
+class _MsgErr {
+  final String message;
+  _MsgErr(this.message);
+}
+
+class _DetailErr {
+  final Object detail;
+  _DetailErr(this.detail);
+}
+
+class _DetailInner {
+  final Object error;
+  _DetailInner(this.error);
 }
 
 class _TestPager implements paging.IPager<int> {

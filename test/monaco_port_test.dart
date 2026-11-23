@@ -15,6 +15,7 @@ import 'package:semi_design_flutter/src/monaco/editor/common/core/2d/size.dart';
 import 'package:semi_design_flutter/src/monaco/editor/common/core/characterClassifier.dart';
 import 'package:semi_design_flutter/src/monaco/editor/common/core/editOperation.dart';
 import 'package:semi_design_flutter/src/monaco/editor/common/core/misc/eolCounter.dart';
+import 'package:semi_design_flutter/src/monaco/editor/common/core/misc/indentation.dart' as indentation;
 import 'package:semi_design_flutter/src/monaco/editor/common/core/misc/rgba.dart';
 import 'package:semi_design_flutter/src/monaco/editor/common/core/misc/textModelDefaults.dart';
 import 'package:semi_design_flutter/src/monaco/editor/common/core/position.dart';
@@ -494,6 +495,49 @@ void main() {
       expect(pres.bold, true);
       expect(pres.underline, true);
       expect(pres.strikethrough, true);
+    });
+  });
+
+  group('indentation.ts (1:1)', () {
+    test('normalizeIndentation with tabs (source case 1)', () {
+      String norm(String s) => indentation.normalizeIndentation(s, 4, false);
+      expect(norm('\t'), '\t');
+      expect(norm('    '), '\t');
+      expect(norm('   '), '   ');
+      expect(norm('  '), '  ');
+      expect(norm(' '), ' ');
+      expect(norm(''), '');
+      expect(norm(' \t    '), '\t\t');
+      expect(norm(' \t   '), '\t   ');
+      expect(norm(' \t  '), '\t  ');
+      expect(norm(' \t '), '\t ');
+      expect(norm(' \t'), '\t');
+      expect(norm('\ta'), '\ta');
+      expect(norm('    a'), '\ta');
+      expect(norm('   a'), '   a');
+      expect(norm('  a'), '  a');
+      expect(norm(' a'), ' a');
+      expect(norm('a'), 'a');
+      expect(norm(' \t    a'), '\t\ta');
+      expect(norm(' \t   a'), '\t   a');
+      expect(norm(' \t  a'), '\t  a');
+      expect(norm(' \t a'), '\t a');
+      expect(norm(' \ta'), '\ta');
+    });
+
+    test('normalizeIndentation with spaces (source case 2)', () {
+      String norm(String s) => indentation.normalizeIndentation(s, 4, true);
+      expect(norm('\ta'), '    a');
+      expect(norm('    a'), '    a');
+      expect(norm('   a'), '   a');
+      expect(norm('  a'), '  a');
+      expect(norm(' a'), ' a');
+      expect(norm('a'), 'a');
+      expect(norm(' \t    a'), '        a');
+      expect(norm(' \t   a'), '       a');
+      expect(norm(' \t  a'), '      a');
+      expect(norm(' \t a'), '     a');
+      expect(norm(' \ta'), '    a');
     });
   });
 }
