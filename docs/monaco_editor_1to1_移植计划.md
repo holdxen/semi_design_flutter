@@ -9,14 +9,17 @@
 
 ## 0. 翻译的对象与范围
 
-"源码 1:1" 的对象是下面四处实际存在的 TS 文件，共 **1348 个 .ts 文件 / 约 58.6 万行**：
+"源码 1:1" 的对象是下面五处实际存在的 TS 文件，共 **1688 个 .ts 文件**（由 `tool/ts2dart/scan_sources.py` 的依赖闭包扫描实测，2026-11-23）：
 
 | 来源 | 路径 | 文件数 | 行数 | 说明 |
 |---|---|---|---|---|
 | 编辑器核心 | `vscode/src/vs/editor/**`（含 `test/`） | 894 | 289,328 | `common` / `browser` / `contrib` / `standalone` 四大块 |
-| 基础设施 | `vscode/src/vs/base/**`（编辑器实际 import 部分） | 由闭包决定 | 169,304（全量，闭包内更小） | `common` 为主，`browser/ui` 部分 |
+| 基础设施 | `vscode/src/vs/base/**`（编辑器 import 闭包内） | 241 | 闭包内 | `common` 为主，`browser/ui` 部分 |
+| 平台服务 | `vscode/src/vs/platform/**`（编辑器 import 闭包内） | 159 | 闭包内 | instantiation / theme / undoRedo / registry 等——**初稿漏列，扫描后补入** |
 | Monaco 包装层 | `monaco-editor/src/**` | 361 | 123,267 | `features/` 65 个、`languages/` 84 种、`internal/`、`editor.ts` |
 | LSP 客户端 | `monaco-editor/monaco-lsp-client/src/**` | 33 | 10,944 | 协议适配与 18 个 language feature |
+
+> 准确清单以 `tool/ts2dart/manifest.json` 为准，进度表在 `lib/src/monaco/PORT_PROGRESS.md`。扫描脚本解析全部相对 `import`，把 editor 的传递依赖闭包（base + platform）完整纳入，避免"翻到一半发现缺依赖"。
 
 `monaco-editor/src/vs/editor` 在本仓库里是空的——核心不在该仓库内，而在 `node_modules/monaco-editor-core`（与 vscode 同源）。因此**翻译基线以 vscode 仓库的 `src/vs/editor` 为准**，用 `vscodeRef` 锚定版本。`monaco-editor-core` 的 `.js` + `.js.map` 只作为校验源文本一致性的辅助。
 
@@ -230,7 +233,7 @@ semi_design_flutter/
 
 ### 7.2 验收（机械可验，不靠主观判断）
 
-1. **文件数对齐**：`find lib/src/monaco -name '*.dart' | wc -l` ≥ 源码 `.ts` 文件数（1348），差异逐一在 `PORT_PROGRESS.md` 说明。
+1. **文件数对齐**：`find lib/src/monaco -name '*.dart' | wc -l` ≥ 源码 `.ts` 文件数（1688），差异逐一在 `PORT_PROGRESS.md` 说明。
 2. **analyze**：`flutter analyze lib/src/monaco` 零 error。
 3. **测试**：`flutter test lib/src/monaco/editor/test` 全绿，测试文件数与源码测试文件数对齐。
 4. **逐文件来源标注**：每个 `.dart` 文件头有 `// Port of <path> @<commit>`，脚本扫描无遗漏。
@@ -240,9 +243,9 @@ semi_design_flutter/
 
 ## 8. 规模与工期的诚实数字
 
-- **1348 个 TS 文件 / 约 58.6 万行源码**，逐文件翻译。
-- 纯人工逐文件翻译：按熟手每天 200–300 行有效翻译+校验计，约 **2200–2900 人日**（约 9–12 人年）。
-- 加上机械转译器辅助（TS AST → Dart 骨架，人工逐文件校准）：仍需逐文件 review 与 index/API 对齐，估 **4–6 人年**。
+- **1688 个 TS 文件 / 约 60 万行源码**，逐文件翻译（含 platform 依赖闭包后的实测值）。
+- 纯人工逐文件翻译：按熟手每天 200–300 行有效翻译+校验计，约 **2400–3200 人日**（约 10–13 人年）。
+- 加上机械转译器辅助（TS AST → Dart 骨架，人工逐文件校准）：仍需逐文件 review 与 index/API 对齐，估 **5–7 人年**。
 - 本地已有的 `advanced_editor`（73 文件 / 1.19 万行）可作为 T1–T4 的**翻译参考**（不是替代品）：它的 `core/render/widget` 已覆盖 pieceTree 之外的核心机制，165 测试全绿，可用来校验翻译产物的行为，但最终产物仍须是 `lib/src/monaco/editor/**` 下与源码逐文件对应的 Dart 文件。
 
 计划不承诺工期。每完成一个目录子集即可验收一次；停在任一阶段都是可交付的中间状态。
@@ -257,3 +260,13 @@ semi_design_flutter/
 4. 写 `tool/ts2dart/` 转译器第一个版本，只要求把 `editor/common/core/position.ts` 翻成符合 §4 规则与文件头格式的 `position.dart`，并把它对应的测试翻成 Dart 测试通过。
 
 这一步产出的是**可复核的翻译样板**，后续每个文件照此格式推进。
+
+### T0 执行记录（2026-11-23，已完成）
+
+- [x] `lib/src/monaco/` 镜像目录骨架：689 个目录，由脚本从源码树逐一镜像生成（`editor` / `base` / `platform` / `features` / `languages` / `internal` / `deprecated` / `lsp`）。
+- [x] `tool/ts2dart/scan_sources.py`：解析全部相对 `import`，算出编辑器对 `base` + `platform` 的传递依赖闭包，生成 `manifest.json`（1688 文件）与 `PORT_PROGRESS.md`。**这一步修正了初稿的计划分母**：初稿手工估 1348 文件，实测 1688（漏了 platform 层 159 个文件、base 闭包多算）。
+- [x] `lib/src/monaco/port_baseline.dart`：固定 commit / vscodeRef / 文件计数，供翻译文件头引用。
+- [x] `tool/ts2dart/transpile.py`：规则化转译器骨架，覆盖 import/export、interface/class、字段、方法签名、类型映射、JSDoc；不可映射处输出 `// TODO(port)` 而非静默丢弃。
+- [x] `lib/src/monaco/editor/common/core/position.dart`：首个 1:1 样板，`dart analyze` 零 error/warning，行为自检通过（`tool/ts2dart/_check_position.dart`）。记录两处**语言级适配**（非算法改动）：TS 默认参数 → Dart 命名可选参数；TS 允许的 static/instance 同名在 Dart 不允许，static 方法后缀 `Static` 并在注释标注源名。
+
+> 从 T1 起，每个文件按此样板推进：转译器生成骨架 → 人工校准 → `dart analyze` → 行为自检 → 更新 `PORT_PROGRESS.md` 状态。
