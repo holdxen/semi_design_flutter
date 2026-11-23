@@ -170,7 +170,7 @@
 | 161 | editor | `editor/common/config/editorConfiguration.ts` | `lib/src/monaco/editor/common/config/editorConfiguration.dart` | pending |
 | 162 | editor | `editor/common/config/editorConfigurationSchema.ts` | `lib/src/monaco/editor/common/config/editorConfigurationSchema.dart` | pending |
 | 163 | editor | `editor/common/config/editorOptions.ts` | `lib/src/monaco/editor/common/config/editorOptions.dart` | pending |
-| 164 | editor | `editor/common/config/editorZoom.ts` | `lib/src/monaco/editor/common/config/editorZoom.dart` | pending |
+| 164 | editor | `editor/common/config/editorZoom.ts` | `lib/src/monaco/editor/common/config/editorZoom.dart` | tested |
 | 165 | editor | `editor/common/config/fontInfo.ts` | `lib/src/monaco/editor/common/config/fontInfo.dart` | pending |
 | 166 | editor | `editor/common/config/fontInfoFromSettings.ts` | `lib/src/monaco/editor/common/config/fontInfoFromSettings.dart` | pending |
 | 167 | editor | `editor/common/coordinatesConverter.ts` | `lib/src/monaco/editor/common/coordinatesConverter.dart` | pending |
@@ -275,7 +275,7 @@
 | 266 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/beforeEditPositionMapper.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/beforeEditPositionMapper.dart` | tested |
 | 267 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/bracketPairsTree.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/bracketPairsTree.dart` | pending |
 | 268 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/brackets.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/brackets.dart` | pending |
-| 269 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/combineTextEditInfos.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/combineTextEditInfos.dart` | pending |
+| 269 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/combineTextEditInfos.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/combineTextEditInfos.dart` | tested |
 | 270 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/concat23Trees.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/concat23Trees.dart` | pending |
 | 271 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/length.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/length.dart` | tested |
 | 272 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/nodeReader.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/nodeReader.dart` | pending |
@@ -286,7 +286,7 @@
 | 277 | editor | `editor/common/model/bracketPairsTextModelPart/fixBrackets.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/fixBrackets.dart` | pending |
 | 278 | editor | `editor/common/model/decorationProvider.ts` | `lib/src/monaco/editor/common/model/decorationProvider.dart` | pending |
 | 279 | editor | `editor/common/model/editStack.ts` | `lib/src/monaco/editor/common/model/editStack.dart` | pending |
-| 280 | editor | `editor/common/model/fixedArray.ts` | `lib/src/monaco/editor/common/model/fixedArray.dart` | pending |
+| 280 | editor | `editor/common/model/fixedArray.ts` | `lib/src/monaco/editor/common/model/fixedArray.dart` | tested |
 | 281 | editor | `editor/common/model/guidesTextModelPart.ts` | `lib/src/monaco/editor/common/model/guidesTextModelPart.dart` | pending |
 | 282 | editor | `editor/common/model/indentationGuesser.ts` | `lib/src/monaco/editor/common/model/indentationGuesser.dart` | pending |
 | 283 | editor | `editor/common/model/intervalTree.ts` | `lib/src/monaco/editor/common/model/intervalTree.dart` | pending |

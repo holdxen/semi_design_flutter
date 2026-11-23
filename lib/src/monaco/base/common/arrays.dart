@@ -654,10 +654,14 @@ class ArrayQueue<T> {
   }
 
   T? dequeue() {
-    // Source has no length check (JS out-of-bounds read yields `undefined`).
-    final T result = items[firstIdx];
-    firstIdx++;
-    return result;
+    // 1:1: `return this.items[this.firstIdx++];` — JS out-of-bounds read
+    // yields `undefined`, so an exhausted queue must return null rather than
+    // throwing a RangeError (Dart lists throw on out-of-range indexing).
+    final int idx = firstIdx++;
+    if (idx < 0 || idx >= items.length) {
+      return null;
+    }
+    return items[idx];
   }
 
   T? removeLast() {
