@@ -2364,6 +2364,10 @@ DomElement dollarImpl(
         if (_jsTruthy(value)) result.setAttribute(name, 'true');
       } else {
         result.setAttribute(name, value.toString());
+        // 1:1: `$('a', { tabIndex: n })` sets the *property* in the browser.
+        if (name.toLowerCase() == 'tabindex') {
+          result.tabIndex = int.tryParse(value.toString()) ?? result.tabIndex;
+        }
       }
     });
   }

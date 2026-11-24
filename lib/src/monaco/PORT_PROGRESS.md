@@ -1253,7 +1253,7 @@
 | 1244 | platform | `platform/quickinput/browser/quickInputController.ts` | `lib/src/monaco/platform/quickinput/browser/quickInputController.dart` | pending |
 | 1245 | platform | `platform/quickinput/browser/quickInputList.ts` | `lib/src/monaco/platform/quickinput/browser/quickInputList.dart` | pending |
 | 1246 | platform | `platform/quickinput/browser/quickInputService.ts` | `lib/src/monaco/platform/quickinput/browser/quickInputService.dart` | pending |
-| 1247 | platform | `platform/quickinput/browser/quickInputUtils.ts` | `lib/src/monaco/platform/quickinput/browser/quickInputUtils.dart` | pending |
+| 1247 | platform | `platform/quickinput/browser/quickInputUtils.ts` | `lib/src/monaco/platform/quickinput/browser/quickInputUtils.dart` | tested |
 | 1248 | platform | `platform/quickinput/browser/tree/quickInputDelegate.ts` | `lib/src/monaco/platform/quickinput/browser/tree/quickInputDelegate.dart` | pending |
 | 1249 | platform | `platform/quickinput/browser/tree/quickInputTree.ts` | `lib/src/monaco/platform/quickinput/browser/tree/quickInputTree.dart` | pending |
 | 1250 | platform | `platform/quickinput/browser/tree/quickInputTreeAccessibilityProvider.ts` | `lib/src/monaco/platform/quickinput/browser/tree/quickInputTreeAccessibilityProvider.dart` | pending |
@@ -1262,8 +1262,8 @@
 | 1253 | platform | `platform/quickinput/browser/tree/quickInputTreeRenderer.ts` | `lib/src/monaco/platform/quickinput/browser/tree/quickInputTreeRenderer.dart` | pending |
 | 1254 | platform | `platform/quickinput/browser/tree/quickInputTreeSorter.ts` | `lib/src/monaco/platform/quickinput/browser/tree/quickInputTreeSorter.dart` | pending |
 | 1255 | platform | `platform/quickinput/browser/tree/quickTree.ts` | `lib/src/monaco/platform/quickinput/browser/tree/quickTree.dart` | pending |
-| 1256 | platform | `platform/quickinput/common/quickAccess.ts` | `lib/src/monaco/platform/quickinput/common/quickAccess.dart` | pending |
-| 1257 | platform | `platform/quickinput/common/quickInput.ts` | `lib/src/monaco/platform/quickinput/common/quickInput.dart` | pending |
+| 1256 | platform | `platform/quickinput/common/quickAccess.ts` | `lib/src/monaco/platform/quickinput/common/quickAccess.dart` | tested |
+| 1257 | platform | `platform/quickinput/common/quickInput.ts` | `lib/src/monaco/platform/quickinput/common/quickInput.dart` | tested |
 | 1258 | platform | `platform/registry/common/platform.ts` | `lib/src/monaco/platform/registry/common/platform.dart` | tested |
 | 1259 | platform | `platform/remote/common/remoteHosts.ts` | `lib/src/monaco/platform/remote/common/remoteHosts.dart` | tested |
 | 1260 | platform | `platform/storage/common/storage.ts` | `lib/src/monaco/platform/storage/common/storage.dart` | tested |
