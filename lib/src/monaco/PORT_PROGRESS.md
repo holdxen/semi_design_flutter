@@ -8,7 +8,7 @@
 | # | 层 | 源文件 | 目标 Dart | 状态 |
 |---|---|---|---|---|
 | 1 | editor | `editor/browser/config/charWidthReader.ts` | `lib/src/monaco/editor/browser/config/charWidthReader.dart` | pending |
-| 2 | editor | `editor/browser/config/domFontInfo.ts` | `lib/src/monaco/editor/browser/config/domFontInfo.dart` | pending |
+| 2 | editor | `editor/browser/config/domFontInfo.ts` | `lib/src/monaco/editor/browser/config/domFontInfo.dart` | tested |
 | 3 | editor | `editor/browser/config/editorConfiguration.ts` | `lib/src/monaco/editor/browser/config/editorConfiguration.dart` | pending |
 | 4 | editor | `editor/browser/config/elementSizeObserver.ts` | `lib/src/monaco/editor/browser/config/elementSizeObserver.dart` | tested |
 | 5 | editor | `editor/browser/config/fontMeasurements.ts` | `lib/src/monaco/editor/browser/config/fontMeasurements.dart` | pending |
@@ -869,7 +869,7 @@
 | 860 | editor | `editor/test/common/modes/supports/onEnter.test.ts` | `lib/src/monaco/editor/test/common/modes/supports/onEnter.test.dart` | pending |
 | 861 | editor | `editor/test/common/modes/supports/onEnterRules.ts` | `lib/src/monaco/editor/test/common/modes/supports/onEnterRules.dart` | pending |
 | 862 | editor | `editor/test/common/modes/supports/richEditBrackets.test.ts` | `lib/src/monaco/editor/test/common/modes/supports/richEditBrackets.test.dart` | pending |
-| 863 | editor | `editor/test/common/modes/supports/tokenization.test.ts` | `lib/src/monaco/editor/test/common/modes/supports/tokenization.test.dart` | pending |
+| 863 | editor | `editor/test/common/modes/supports/tokenization.test.ts` | `lib/src/monaco/editor/test/common/modes/supports/tokenization.test.dart` | tested |
 | 864 | editor | `editor/test/common/modes/testLanguageConfigurationService.ts` | `lib/src/monaco/editor/test/common/modes/testLanguageConfigurationService.dart` | pending |
 | 865 | editor | `editor/test/common/modes/textToHtmlTokenizer.test.ts` | `lib/src/monaco/editor/test/common/modes/textToHtmlTokenizer.test.dart` | pending |
 | 866 | editor | `editor/test/common/modesTestUtils.ts` | `lib/src/monaco/editor/test/common/modesTestUtils.dart` | pending |

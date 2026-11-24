@@ -412,16 +412,28 @@ String generateTokensCSSForColorMap(List<Color?> colorMap) {
   return rules.map((String? rule) => rule ?? '').join('\n');
 }
 
-String generateTokensCSSForFontMap(List<IFontTokenOptions?> fontMap) {
+// The element type stays `Object?` on purpose: the official
+// `tokenization.test.ts` feeds untyped JSON (`fontSizeMultiplier: "1)");color:red"`)
+// into this typed array and relies on the runtime `typeof === 'number'` guard,
+// which TS erasure allows but Dart reified generics would reject.
+String generateTokensCSSForFontMap(List<Object?> fontMap) {
   final List<String> rules = <String>[];
   final Set<String> fonts = <String>{};
   for (int i = 1, len = fontMap.length; i < len; i++) {
-    final IFontTokenOptions? font = fontMap[i];
+    final Object? font = fontMap[i];
     if (font == null) {
       continue;
     }
-    final String? fontFamily = font.fontFamily;
-    final num? fontSizeMultiplier = font.fontSizeMultiplier;
+    // JS structural property access; the official test feeds `JSON.parse`
+    // output (plain objects) next to class instances, so both carriers are
+    // read here.
+    final String? fontFamily =
+        font is Map ? font['fontFamily'] as String? : (font as dynamic).fontFamily as String?;
+    final Object? fontSizeMultiplierRaw = font is Map
+        ? font['fontSizeMultiplier'] as Object?
+        : (font as dynamic).fontSizeMultiplier as Object?;
+    final num? fontSizeMultiplier =
+        fontSizeMultiplierRaw is num ? fontSizeMultiplierRaw : null;
     if ((fontFamily == null || fontFamily.isEmpty) &&
         (fontSizeMultiplier == null || fontSizeMultiplier == 0)) {
       continue;
@@ -436,11 +448,11 @@ String generateTokensCSSForFontMap(List<IFontTokenOptions?> fontMap) {
     if (fontFamily != null && fontFamily.isNotEmpty) {
       rule += 'font-family: ${sanitizeFontFamily(fontFamily)};';
     }
-    if (fontSizeMultiplier is num &&
-        fontSizeMultiplier.isFinite &&
-        fontSizeMultiplier > 0) {
+    if (fontSizeMultiplierRaw is num &&
+        fontSizeMultiplierRaw.isFinite &&
+        fontSizeMultiplierRaw > 0) {
       rule +=
-          'font-size: calc(var(--editor-font-size)*${_jsNum(fontSizeMultiplier)});';
+          'font-size: calc(var(--editor-font-size)*${_jsNum(fontSizeMultiplierRaw)});';
     }
     rule += '}';
     rules.add(rule);
