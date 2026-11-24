@@ -928,7 +928,7 @@
 | 919 | base | `base/browser/trustedTypes.ts` | `lib/src/monaco/base/browser/trustedTypes.dart` | tested |
 | 920 | base | `base/browser/ui/actionbar/actionViewItems.ts` | `lib/src/monaco/base/browser/ui/actionbar/actionViewItems.dart` | pending |
 | 921 | base | `base/browser/ui/actionbar/actionbar.ts` | `lib/src/monaco/base/browser/ui/actionbar/actionbar.dart` | pending |
-| 922 | base | `base/browser/ui/animations/animations.ts` | `lib/src/monaco/base/browser/ui/animations/animations.dart` | pending |
+| 922 | base | `base/browser/ui/animations/animations.ts` | `lib/src/monaco/base/browser/ui/animations/animations.dart` | tested |
 | 923 | base | `base/browser/ui/aria/aria.ts` | `lib/src/monaco/base/browser/ui/aria/aria.dart` | tested |
 | 924 | base | `base/browser/ui/breadcrumbs/breadcrumbsWidget.ts` | `lib/src/monaco/base/browser/ui/breadcrumbs/breadcrumbsWidget.dart` | pending |
 | 925 | base | `base/browser/ui/button/button.ts` | `lib/src/monaco/base/browser/ui/button/button.dart` | pending |
@@ -949,7 +949,7 @@
 | 940 | base | `base/browser/ui/hover/hoverDelegateFactory.ts` | `lib/src/monaco/base/browser/ui/hover/hoverDelegateFactory.dart` | pending |
 | 941 | base | `base/browser/ui/hover/hoverWidget.ts` | `lib/src/monaco/base/browser/ui/hover/hoverWidget.dart` | pending |
 | 942 | base | `base/browser/ui/iconLabel/iconLabel.ts` | `lib/src/monaco/base/browser/ui/iconLabel/iconLabel.dart` | pending |
-| 943 | base | `base/browser/ui/iconLabel/iconLabels.ts` | `lib/src/monaco/base/browser/ui/iconLabel/iconLabels.dart` | pending |
+| 943 | base | `base/browser/ui/iconLabel/iconLabels.ts` | `lib/src/monaco/base/browser/ui/iconLabel/iconLabels.dart` | tested |
 | 944 | base | `base/browser/ui/inputbox/inputBox.ts` | `lib/src/monaco/base/browser/ui/inputbox/inputBox.dart` | pending |
 | 945 | base | `base/browser/ui/keybindingLabel/keybindingLabel.ts` | `lib/src/monaco/base/browser/ui/keybindingLabel/keybindingLabel.dart` | pending |
 | 946 | base | `base/browser/ui/list/list.ts` | `lib/src/monaco/base/browser/ui/list/list.dart` | pending |
@@ -1005,7 +1005,7 @@
 | 996 | base | `base/common/charCode.ts` | `lib/src/monaco/base/common/charCode.dart` | tested |
 | 997 | base | `base/common/codicons.ts` | `lib/src/monaco/base/common/codicons.dart` | pending |
 | 998 | base | `base/common/codiconsLibrary.ts` | `lib/src/monaco/base/common/codiconsLibrary.dart` | pending |
-| 999 | base | `base/common/codiconsUtil.ts` | `lib/src/monaco/base/common/codiconsUtil.dart` | pending |
+| 999 | base | `base/common/codiconsUtil.ts` | `lib/src/monaco/base/common/codiconsUtil.dart` | tested |
 | 1000 | base | `base/common/collections.ts` | `lib/src/monaco/base/common/collections.dart` | tested |
 | 1001 | base | `base/common/color.ts` | `lib/src/monaco/base/common/color.dart` | tested |
 | 1002 | base | `base/common/comparers.ts` | `lib/src/monaco/base/common/comparers.dart` | tested |
@@ -1030,8 +1030,8 @@
 | 1021 | base | `base/common/history.ts` | `lib/src/monaco/base/common/history.dart` | tested |
 | 1022 | base | `base/common/hotReload.ts` | `lib/src/monaco/base/common/hotReload.dart` | tested |
 | 1023 | base | `base/common/hotReloadHelpers.ts` | `lib/src/monaco/base/common/hotReloadHelpers.dart` | tested |
-| 1024 | base | `base/common/htmlContent.ts` | `lib/src/monaco/base/common/htmlContent.dart` | pending |
-| 1025 | base | `base/common/iconLabels.ts` | `lib/src/monaco/base/common/iconLabels.dart` | pending |
+| 1024 | base | `base/common/htmlContent.ts` | `lib/src/monaco/base/common/htmlContent.dart` | tested |
+| 1025 | base | `base/common/iconLabels.ts` | `lib/src/monaco/base/common/iconLabels.dart` | tested |
 | 1026 | base | `base/common/idGenerator.ts` | `lib/src/monaco/base/common/idGenerator.dart` | tested |
 | 1027 | base | `base/common/ime.ts` | `lib/src/monaco/base/common/ime.dart` | tested |
 | 1028 | base | `base/common/iterator.ts` | `lib/src/monaco/base/common/iterator.dart` | tested |
@@ -1117,7 +1117,7 @@
 | 1108 | base | `base/common/symbols.ts` | `lib/src/monaco/base/common/symbols.dart` | tested |
 | 1109 | base | `base/common/ternarySearchTree.ts` | `lib/src/monaco/base/common/ternarySearchTree.dart` | tested |
 | 1110 | base | `base/common/tfIdf.ts` | `lib/src/monaco/base/common/tfIdf.dart` | tested |
-| 1111 | base | `base/common/themables.ts` | `lib/src/monaco/base/common/themables.dart` | pending |
+| 1111 | base | `base/common/themables.ts` | `lib/src/monaco/base/common/themables.dart` | tested |
 | 1112 | base | `base/common/types.ts` | `lib/src/monaco/base/common/types.dart` | tested |
 | 1113 | base | `base/common/uint.ts` | `lib/src/monaco/base/common/uint.dart` | tested |
 | 1114 | base | `base/common/uri.ts` | `lib/src/monaco/base/common/uri.dart` | tested |

@@ -80,8 +80,11 @@ class ThemeIcon {
     return color == null || ThemeColor.isThemeColor(color);
   }
 
-  static final RegExp _regexFromString = RegExp(
-      '^\\\$(${iconNameExpression}(?:${iconModifierExpression})?\\)\$');
+  static final RegExp _regexFromString = RegExp(r'^\$\((' +
+      iconNameExpression +
+      r'(?:' +
+      iconModifierExpression +
+      r')?)\)$');
 
   /// 1:1: `ThemeIcon.fromString`
   static ThemeIcon? fromString(String str) {
