@@ -1160,7 +1160,7 @@
 | 1151 | platform | `platform/actions/browser/actionViewItemService.ts` | `lib/src/monaco/platform/actions/browser/actionViewItemService.dart` | pending |
 | 1152 | platform | `platform/actions/browser/menuEntryActionViewItem.ts` | `lib/src/monaco/platform/actions/browser/menuEntryActionViewItem.dart` | pending |
 | 1153 | platform | `platform/actions/browser/toolbar.ts` | `lib/src/monaco/platform/actions/browser/toolbar.dart` | pending |
-| 1154 | platform | `platform/actions/common/actions.ts` | `lib/src/monaco/platform/actions/common/actions.dart` | pending |
+| 1154 | platform | `platform/actions/common/actions.ts` | `lib/src/monaco/platform/actions/common/actions.dart` | tested |
 | 1155 | platform | `platform/actions/common/menuService.ts` | `lib/src/monaco/platform/actions/common/menuService.dart` | pending |
 | 1156 | platform | `platform/backup/common/backup.ts` | `lib/src/monaco/platform/backup/common/backup.dart` | tested |
 | 1157 | platform | `platform/clipboard/browser/clipboardService.ts` | `lib/src/monaco/platform/clipboard/browser/clipboardService.dart` | tested |
@@ -1184,8 +1184,8 @@
 | 1175 | platform | `platform/dataChannel/browser/forwardingTelemetryService.ts` | `lib/src/monaco/platform/dataChannel/browser/forwardingTelemetryService.dart` | tested |
 | 1176 | platform | `platform/dataChannel/common/dataChannel.ts` | `lib/src/monaco/platform/dataChannel/common/dataChannel.dart` | tested |
 | 1177 | platform | `platform/defaultAccount/common/defaultAccount.ts` | `lib/src/monaco/platform/defaultAccount/common/defaultAccount.dart` | tested |
-| 1178 | platform | `platform/dialogs/common/dialogs.ts` | `lib/src/monaco/platform/dialogs/common/dialogs.dart` | pending |
-| 1179 | platform | `platform/dialogs/test/common/testDialogService.ts` | `lib/src/monaco/platform/dialogs/test/common/testDialogService.dart` | pending |
+| 1178 | platform | `platform/dialogs/common/dialogs.ts` | `lib/src/monaco/platform/dialogs/common/dialogs.dart` | tested |
+| 1179 | platform | `platform/dialogs/test/common/testDialogService.ts` | `lib/src/monaco/platform/dialogs/test/common/testDialogService.dart` | tested |
 | 1180 | platform | `platform/dnd/browser/dnd.ts` | `lib/src/monaco/platform/dnd/browser/dnd.dart` | pending |
 | 1181 | platform | `platform/editor/common/editor.ts` | `lib/src/monaco/platform/editor/common/editor.dart` | pending |
 | 1182 | platform | `platform/environment/common/argv.ts` | `lib/src/monaco/platform/environment/common/argv.dart` | tested |
@@ -1195,7 +1195,7 @@
 | 1186 | platform | `platform/extensions/common/extensions.ts` | `lib/src/monaco/platform/extensions/common/extensions.dart` | tested |
 | 1187 | platform | `platform/files/browser/htmlFileSystemProvider.ts` | `lib/src/monaco/platform/files/browser/htmlFileSystemProvider.dart` | pending |
 | 1188 | platform | `platform/files/browser/webFileSystemAccess.ts` | `lib/src/monaco/platform/files/browser/webFileSystemAccess.dart` | tested |
-| 1189 | platform | `platform/files/common/files.ts` | `lib/src/monaco/platform/files/common/files.dart` | pending |
+| 1189 | platform | `platform/files/common/files.ts` | `lib/src/monaco/platform/files/common/files.dart` | tested |
 | 1190 | platform | `platform/history/browser/contextScopedHistoryWidget.ts` | `lib/src/monaco/platform/history/browser/contextScopedHistoryWidget.dart` | pending |
 | 1191 | platform | `platform/history/browser/historyWidgetKeybindingHint.ts` | `lib/src/monaco/platform/history/browser/historyWidgetKeybindingHint.dart` | pending |
 | 1192 | platform | `platform/hover/browser/hover.ts` | `lib/src/monaco/platform/hover/browser/hover.dart` | pending |
