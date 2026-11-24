@@ -11,8 +11,11 @@
 //     validation helpers), 1468–1526 (_autoIndentFromString,
 //     EditorAccessibilitySupport), 5952–5957 (editorOptionsRegistry),
 //     5959–6143 (EditorOption enum).
-//   segment 2/4 (pending): lines 53–1054 (IEditorOptions, diff editor
-//     options) and 1527–2600 (option classes).
+//   segment 2/4 (this commit): lines 53–1054 (IEditorOptions — generated
+//     by `tool/ts2dart/_gen_editor_options.py` — MINIMAP_GUTTER_WIDTH,
+//     diff editor options, ValidDiffEditorBaseOptions).
+//     Still pending in this segment: option classes 1527–2600 (moved to the
+//     next segment commit).
 //   segment 3/4 (pending): lines 2600–5958 (option classes cont.).
 //   segment 4/4 (pending): lines 6144–7102 (EditorOptions registry object +
 //     type-level helpers).
@@ -96,6 +99,887 @@ class EditorAutoIndentStrategy {
   static const int full = 4;
 
   const EditorAutoIndentStrategy._();
+}
+
+//#endregion
+
+//#region IEditorOptions
+
+/// Configuration options for the editor.
+///
+/// 1:1: `export interface IEditorOptions` — generated from the source
+/// table by `tool/ts2dart/_gen_editor_options.py` (same precedent as
+/// `themes.dart` / `keyCodes.dart`): field names, optionality, doc
+/// comments and order are 1:1 (the generator asserts full coverage).
+/// Type mapping: `boolean`/`string`/`number` and pure string-literal
+/// unions map to `bool?`/`String?`/`num?`/`List<String?>?`; every other
+/// type (nested option interfaces, function types, imported types, mixed
+/// unions) is carried as `Object?` with the original type in a `// TS:`
+/// comment — these fields are structural user input, and the option
+/// classes in the following segments validate them with fully typed
+/// carriers.
+class IEditorOptions {
+  IEditorOptions();
+
+  /// This editor is used inside a diff editor.
+  bool? inDiffEditor;
+
+  /// This editor is allowed to use variable line heights.
+  bool? allowVariableLineHeights;
+
+  /// This editor is allowed to use variable font-sizes and font-families
+  bool? allowVariableFonts;
+
+  /// This editor is allowed to use variable font-sizes and font-families in accessibility mode
+  bool? allowVariableFontsInAccessibilityMode;
+
+  /// The aria label for the editor's textarea (when it is focused).
+  String? ariaLabel;
+
+  /// Whether the aria-required attribute should be set on the editors textarea.
+  bool? ariaRequired;
+
+  /// Control whether a screen reader announces inline suggestion content immediately.
+  bool? screenReaderAnnounceInlineSuggestion;
+
+  /// The `tabindex` property of the editor's textarea
+  num? tabIndex;
+
+  /// Render vertical lines at the specified columns.
+  /// Defaults to empty array.
+  // TS: (number | IRulerOption)[]
+  Object? rulers;
+
+  /// Locales used for segmenting lines into words when doing word related navigations or operations.
+  /// Specify the BCP 47 language tag of the word you wish to recognize (e.g., ja, zh-CN, zh-Hant-TW, etc.).
+  /// Defaults to empty array
+  // TS: string | string[]
+  Object? wordSegmenterLocales;
+
+  /// A string containing the word separators used when doing word navigation.
+  /// Defaults to `~!@#$%^&*()-=+[{]}\\|;:\'",.<>/?
+  String? wordSeparators;
+
+  /// Enable Linux primary clipboard.
+  /// Defaults to true.
+  bool? selectionClipboard;
+
+  /// Control the rendering of line numbers.
+  /// If it is a function, it will be invoked when rendering a line number and the return value will be rendered.
+  /// Otherwise, if it is a truthy, line numbers will be rendered normally (equivalent of using an identity function).
+  /// Otherwise, line numbers will not be rendered.
+  /// Defaults to `on`.
+  // TS: LineNumbersType
+  Object? lineNumbers;
+
+  /// Controls the minimal number of visible leading and trailing lines surrounding the cursor.
+  /// Defaults to 0.
+  num? cursorSurroundingLines;
+
+  /// Controls when `cursorSurroundingLines` should be enforced
+  /// Defaults to `default`, `cursorSurroundingLines` is not enforced when cursor position is changed
+  /// by mouse.
+  String? cursorSurroundingLinesStyle;
+
+  /// Render last line number when the file ends with a newline.
+  /// Defaults to 'on' for Windows and macOS and 'dimmed' for Linux.
+  String? renderFinalNewline;
+
+  /// Remove unusual line terminators like LINE SEPARATOR (LS), PARAGRAPH SEPARATOR (PS).
+  /// Defaults to 'prompt'.
+  String? unusualLineTerminators;
+
+  /// Should the corresponding line be selected when clicking on the line number?
+  /// Defaults to true.
+  bool? selectOnLineNumbers;
+
+  /// Control the width of line numbers, by reserving horizontal space for rendering at least an amount of digits.
+  /// Defaults to 5.
+  num? lineNumbersMinChars;
+
+  /// Enable the rendering of the glyph margin.
+  /// Defaults to true in vscode and to false in monaco-editor.
+  bool? glyphMargin;
+
+  /// The width reserved for line decorations (in px).
+  /// Line decorations are placed between line numbers and the editor content.
+  /// You can pass in a string in the format floating point followed by "ch". e.g. 1.3ch.
+  /// Defaults to 10.
+  // TS: number | string
+  Object? lineDecorationsWidth;
+
+  /// When revealing the cursor, a virtual padding (px) is added to the cursor, turning it into a rectangle.
+  /// This virtual padding ensures that the cursor gets revealed before hitting the edge of the viewport.
+  /// Defaults to 30 (px).
+  num? revealHorizontalRightPadding;
+
+  /// Render the editor selection with rounded borders.
+  /// Defaults to true.
+  bool? roundedSelection;
+
+  /// Class name to be added to the editor.
+  String? extraEditorClassName;
+
+  /// Should the editor be read only. See also `domReadOnly`.
+  /// Defaults to false.
+  bool? readOnly;
+
+  /// The message to display when the editor is readonly.
+  // TS: IMarkdownString
+  Object? readOnlyMessage;
+
+  /// Should the textarea used for input use the DOM `readonly` attribute.
+  /// Defaults to false.
+  bool? domReadOnly;
+
+  /// Enable linked editing.
+  /// Defaults to false.
+  bool? linkedEditing;
+
+  /// deprecated, use linkedEditing instead
+  bool? renameOnType;
+
+  /// Should the editor render validation decorations.
+  /// Defaults to editable.
+  String? renderValidationDecorations;
+
+  /// Control the behavior and rendering of the scrollbars.
+  // TS: IEditorScrollbarOptions
+  Object? scrollbar;
+
+  /// Control the behavior of sticky scroll options
+  // TS: IEditorStickyScrollOptions
+  Object? stickyScroll;
+
+  /// Control the behavior and rendering of the minimap.
+  // TS: IEditorMinimapOptions
+  Object? minimap;
+
+  /// Control the behavior of the find widget.
+  // TS: IEditorFindOptions
+  Object? find;
+
+  /// Display overflow widgets as `fixed`.
+  /// Defaults to `false`.
+  bool? fixedOverflowWidgets;
+
+  /// Allow content widgets and overflow widgets to overflow the editor viewport.
+  /// Defaults to `true`.
+  bool? allowOverflow;
+
+  /// The number of vertical lanes the overview ruler should render.
+  /// Defaults to 3.
+  num? overviewRulerLanes;
+
+  /// Controls if a border should be drawn around the overview ruler.
+  /// Defaults to `true`.
+  bool? overviewRulerBorder;
+
+  /// Control the cursor animation style, possible values are 'blink', 'smooth', 'phase', 'expand' and 'solid'.
+  /// Defaults to 'blink'.
+  String? cursorBlinking;
+
+  /// Zoom the font in the editor when using the mouse wheel in combination with holding Ctrl.
+  /// Defaults to false.
+  bool? mouseWheelZoom;
+
+  /// Control the mouse pointer style, either 'text' or 'default' or 'copy'
+  /// Defaults to 'text'
+  String? mouseStyle;
+
+  /// Enable smooth caret animation.
+  /// Defaults to 'off'.
+  String? cursorSmoothCaretAnimation;
+
+  /// Control the cursor style in insert mode.
+  /// Defaults to 'line'.
+  String? cursorStyle;
+
+  /// Control the cursor style in overtype mode.
+  /// Defaults to 'block'.
+  String? overtypeCursorStyle;
+
+  /// Controls whether paste in overtype mode should overwrite or insert.
+  bool? overtypeOnPaste;
+
+  /// Control the width of the cursor when cursorStyle is set to 'line'
+  num? cursorWidth;
+
+  /// Control the height of the cursor when cursorStyle is set to 'line'
+  num? cursorHeight;
+
+  /// Enable font ligatures.
+  /// Defaults to false.
+  // TS: boolean | string
+  Object? fontLigatures;
+
+  /// Enable font variations.
+  /// Defaults to false.
+  // TS: boolean | string
+  Object? fontVariations;
+
+  /// Controls whether to use default color decorations or not using the default document color provider
+  String? defaultColorDecorators;
+
+  /// Disable the use of `transform: translate3d(0px, 0px, 0px)` for the editor margin and lines layers.
+  /// The usage of `transform: translate3d(0px, 0px, 0px)` acts as a hint for browsers to create an extra layer.
+  /// Defaults to false.
+  bool? disableLayerHinting;
+
+  /// Disable the optimizations for monospace fonts.
+  /// Defaults to false.
+  bool? disableMonospaceOptimizations;
+
+  /// Should the cursor be hidden in the overview ruler.
+  /// Defaults to false.
+  bool? hideCursorInOverviewRuler;
+
+  /// Enable that scrolling can go one screen size after the last line.
+  /// Defaults to true.
+  bool? scrollBeyondLastLine;
+
+  /// Scroll editor on middle click
+  bool? scrollOnMiddleClick;
+
+  /// Enable that scrolling can go beyond the last column by a number of columns.
+  /// Defaults to 5.
+  num? scrollBeyondLastColumn;
+
+  /// Enable that the editor animates scrolling to a position.
+  /// Defaults to false.
+  bool? smoothScrolling;
+
+  /// Enable that the editor will install a ResizeObserver to check if its container dom node size has changed.
+  /// Defaults to false.
+  bool? automaticLayout;
+
+  /// Control the wrapping of the editor.
+  /// When `wordWrap` = "off", the lines will never wrap.
+  /// When `wordWrap` = "on", the lines will wrap at the viewport width.
+  /// When `wordWrap` = "wordWrapColumn", the lines will wrap at `wordWrapColumn`.
+  /// When `wordWrap` = "bounded", the lines will wrap at min(viewport width, wordWrapColumn).
+  /// Defaults to "off".
+  String? wordWrap;
+
+  /// Control whether an indicator is rendered at the wrapping column of soft wrapped lines.
+  /// Defaults to false.
+  bool? wordWrapIndicator;
+
+  /// Override the `wordWrap` setting.
+  String? wordWrapOverride1;
+
+  /// Override the `wordWrapOverride1` setting.
+  String? wordWrapOverride2;
+
+  /// Control the wrapping of the editor.
+  /// When `wordWrap` = "off", the lines will never wrap.
+  /// When `wordWrap` = "on", the lines will wrap at the viewport width.
+  /// When `wordWrap` = "wordWrapColumn", the lines will wrap at `wordWrapColumn`.
+  /// When `wordWrap` = "bounded", the lines will wrap at min(viewport width, wordWrapColumn).
+  /// Defaults to 80.
+  num? wordWrapColumn;
+
+  /// Control indentation of wrapped lines. Can be: 'none', 'same', 'indent' or 'deepIndent'.
+  /// Defaults to 'same' in vscode and to 'none' in monaco-editor.
+  String? wrappingIndent;
+
+  /// Controls the wrapping strategy to use.
+  /// Defaults to 'simple'.
+  String? wrappingStrategy;
+
+  /// Create a softwrap on every quoted "\n" literal.
+  /// Defaults to false.
+  bool? wrapOnEscapedLineFeeds;
+
+  /// Configure word wrapping characters. A break will be introduced before these characters.
+  String? wordWrapBreakBeforeCharacters;
+
+  /// Configure word wrapping characters. A break will be introduced after these characters.
+  String? wordWrapBreakAfterCharacters;
+
+  /// Sets whether line breaks appear wherever the text would otherwise overflow its content box.
+  /// When wordBreak = 'normal', Use the default line break rule.
+  /// When wordBreak = 'keepAll', Word breaks should not be used for Chinese/Japanese/Korean (CJK) text. Non-CJK text behavior is the same as for normal.
+  String? wordBreak;
+
+  /// Performance guard: Stop rendering a line after x characters.
+  /// Defaults to 10000.
+  /// Use -1 to never stop rendering
+  num? stopRenderingLineAfter;
+
+  /// Configure the editor's hover.
+  // TS: IEditorHoverOptions
+  Object? hover;
+
+  /// Controls which remote images Markdown rendered by the editor may load,
+  /// for example in hovers, suggestion details and parameter hints.
+  // TS: IEditorMarkdownImagesOptions
+  Object? markdownImages;
+
+  /// Enable detecting links and making them clickable.
+  /// Defaults to true.
+  bool? links;
+
+  /// Enable inline color decorators and color picker rendering.
+  bool? colorDecorators;
+
+  /// Controls what is the condition to spawn a color picker from a color dectorator
+  String? colorDecoratorsActivatedOn;
+
+  /// Controls the max number of color decorators that can be rendered in an editor at once.
+  num? colorDecoratorsLimit;
+
+  /// Control the behaviour of comments in the editor.
+  // TS: IEditorCommentsOptions
+  Object? comments;
+
+  /// Enable custom contextmenu.
+  /// Defaults to true.
+  bool? contextmenu;
+
+  /// A multiplier to be used on the `deltaX` and `deltaY` of mouse wheel scroll events.
+  /// Defaults to 1.
+  num? mouseWheelScrollSensitivity;
+
+  /// FastScrolling mulitplier speed when pressing `Alt`
+  /// Defaults to 5.
+  num? fastScrollSensitivity;
+
+  /// Enable that the editor scrolls only the predominant axis. Prevents horizontal drift when scrolling vertically on a trackpad.
+  /// Defaults to true.
+  bool? scrollPredominantAxis;
+
+  /// Make scrolling inertial - mostly useful with touchpad on linux.
+  bool? inertialScroll;
+
+  /// Enable that the selection with the mouse and keys is doing column selection.
+  /// Defaults to false.
+  bool? columnSelection;
+
+  /// The modifier to be used to add multiple cursors with the mouse.
+  /// Defaults to 'alt'
+  String? multiCursorModifier;
+
+  /// Merge overlapping selections.
+  /// Defaults to true
+  bool? multiCursorMergeOverlapping;
+
+  /// Configure the behaviour when pasting text with a line count equal to the cursor count or when pasting column selections into a single cursor.
+  /// Defaults to 'spread'.
+  String? multiCursorPaste;
+
+  /// Controls the max number of text cursors that can be in an active editor at once.
+  num? multiCursorLimit;
+
+  /// Enables middle mouse button to open links and Go To Definition
+  // TS: MouseMiddleClickAction
+  Object? mouseMiddleClickAction;
+
+  /// Configure the editor's accessibility support.
+  /// Defaults to 'auto'. It is best to leave this to 'auto'.
+  String? accessibilitySupport;
+
+  /// Controls the number of lines in the editor that can be read out by a screen reader
+  num? accessibilityPageSize;
+
+  /// Suggest options.
+  // TS: ISuggestOptions
+  Object? suggest;
+
+  // TS: IInlineSuggestOptions
+  Object? inlineSuggest;
+
+  /// Smart select options.
+  // TS: ISmartSelectOptions
+  Object? smartSelect;
+
+  // TS: IGotoLocationOptions
+  Object? gotoLocation;
+
+  /// Enable quick suggestions (shadow suggestions)
+  /// Defaults to true.
+  // TS: boolean | QuickSuggestionsValue | IQuickSuggestionsOptions
+  Object? quickSuggestions;
+
+  /// Quick suggestions show delay (in ms)
+  /// Defaults to 10 (ms)
+  num? quickSuggestionsDelay;
+
+  /// Controls the spacing around the editor.
+  // TS: IEditorPaddingOptions
+  Object? padding;
+
+  /// Parameter hint options.
+  // TS: IEditorParameterHintOptions
+  Object? parameterHints;
+
+  /// Options for auto closing brackets.
+  /// Defaults to language defined behavior.
+  // TS: EditorAutoClosingStrategy
+  Object? autoClosingBrackets;
+
+  /// Options for auto closing comments.
+  /// Defaults to language defined behavior.
+  // TS: EditorAutoClosingStrategy
+  Object? autoClosingComments;
+
+  /// Options for auto closing quotes.
+  /// Defaults to language defined behavior.
+  // TS: EditorAutoClosingStrategy
+  Object? autoClosingQuotes;
+
+  /// Options for pressing backspace near quotes or bracket pairs.
+  // TS: EditorAutoClosingEditStrategy
+  Object? autoClosingDelete;
+
+  /// Options for typing over closing quotes or brackets.
+  // TS: EditorAutoClosingEditStrategy
+  Object? autoClosingOvertype;
+
+  /// Options for auto surrounding.
+  /// Defaults to always allowing auto surrounding.
+  // TS: EditorAutoSurroundStrategy
+  Object? autoSurround;
+
+  /// Controls whether the editor should automatically adjust the indentation when users type, paste, move or indent lines.
+  /// Defaults to advanced.
+  String? autoIndent;
+
+  /// Boolean which controls whether to autoindent on paste
+  bool? autoIndentOnPaste;
+
+  /// Boolean which controls whether to autoindent on paste within a string when autoIndentOnPaste is enabled.
+  bool? autoIndentOnPasteWithinString;
+
+  /// Emulate selection behaviour of tab characters when using spaces for indentation.
+  /// This means selection will stick to tab stops.
+  bool? stickyTabStops;
+
+  /// Enable format on type.
+  /// Defaults to false.
+  bool? formatOnType;
+
+  /// Enable format on paste.
+  /// Defaults to false.
+  bool? formatOnPaste;
+
+  /// Controls the width used to render full-width characters.
+  /// Defaults to 'font'.
+  String? fullwidthCharacterWidth;
+
+  /// Controls whether double-clicking next to a bracket or quote selects the content inside.
+  /// Defaults to true.
+  bool? doubleClickSelectsBlock;
+
+  /// Controls if the editor should allow to move selections via drag and drop.
+  /// Defaults to false.
+  bool? dragAndDrop;
+
+  /// Enable the suggestion box to pop-up on trigger characters.
+  /// Defaults to true.
+  bool? suggestOnTriggerCharacters;
+
+  /// Accept suggestions on ENTER.
+  /// Defaults to 'on'.
+  String? acceptSuggestionOnEnter;
+
+  /// Accept suggestions on provider defined characters.
+  /// Defaults to true.
+  bool? acceptSuggestionOnCommitCharacter;
+
+  /// Enable snippet suggestions. Default to 'true'.
+  String? snippetSuggestions;
+
+  /// Copying without a selection copies the current line.
+  bool? emptySelectionClipboard;
+
+  /// Syntax highlighting is copied.
+  bool? copyWithSyntaxHighlighting;
+
+  /// The history mode for suggestions.
+  String? suggestSelection;
+
+  /// The font size for the suggest widget.
+  /// Defaults to the editor font size.
+  num? suggestFontSize;
+
+  /// The line height for the suggest widget.
+  /// Defaults to the editor line height.
+  num? suggestLineHeight;
+
+  /// Enable tab completion.
+  String? tabCompletion;
+
+  /// Enable selection highlight.
+  /// Defaults to true.
+  bool? selectionHighlight;
+
+  /// Enable selection highlight for multiline selections.
+  /// Defaults to false.
+  bool? selectionHighlightMultiline;
+
+  /// Maximum length (in characters) for selection highlights.
+  /// Set to 0 to have an unlimited length.
+  num? selectionHighlightMaxLength;
+
+  /// Controls how occurrences of selected text are matched for occurrence selection and highlighting.
+  /// Defaults to 'findOptions', which uses the Find widget's match case and whole word settings.
+  String? selectedTextMatchMode;
+
+  /// Enable semantic occurrences highlight.
+  /// Defaults to 'singleFile'.
+  /// 'off' disables occurrence highlighting
+  /// 'singleFile' triggers occurrence highlighting in the current document
+  /// 'multiFile'  triggers occurrence highlighting across valid open documents
+  String? occurrencesHighlight;
+
+  /// Controls delay for occurrences highlighting
+  /// Defaults to 250.
+  /// Minimum value is 0
+  /// Maximum value is 2000
+  num? occurrencesHighlightDelay;
+
+  /// Merge single-document highlights from all matching providers.
+  /// Defaults to false.
+  bool? occurrencesHighlightFromAllProviders;
+
+  /// Show code lens
+  /// Defaults to true.
+  bool? codeLens;
+
+  /// Code lens font family. Defaults to editor font family.
+  String? codeLensFontFamily;
+
+  /// Code lens font size. Default to 90% of the editor font size
+  num? codeLensFontSize;
+
+  /// Control the behavior and rendering of the code action lightbulb.
+  // TS: IEditorLightbulbOptions
+  Object? lightbulb;
+
+  /// Timeout for running code actions on save.
+  num? codeActionsOnSaveTimeout;
+
+  /// Enable code folding.
+  /// Defaults to true.
+  bool? folding;
+
+  /// Selects the folding strategy. 'auto' uses the strategies contributed for the current document, 'indentation' uses the indentation based folding strategy.
+  /// Defaults to 'auto'.
+  String? foldingStrategy;
+
+  /// Enable highlight for folded regions.
+  /// Defaults to true.
+  bool? foldingHighlight;
+
+  /// Auto fold imports folding regions.
+  /// Defaults to true.
+  bool? foldingImportsByDefault;
+
+  /// Maximum number of foldable regions.
+  /// Defaults to 5000.
+  num? foldingMaximumRegions;
+
+  /// Controls whether the fold actions in the gutter stay always visible or hide unless the mouse is over the gutter.
+  /// Defaults to 'mouseover'.
+  String? showFoldingControls;
+
+  /// Controls whether clicking on the empty content after a folded line will unfold the line.
+  /// Defaults to false.
+  bool? unfoldOnClickAfterEndOfLine;
+
+  /// Enable highlighting of matching brackets.
+  /// Defaults to 'always'.
+  String? matchBrackets;
+
+  /// Enable experimental rendering using WebGPU.
+  /// Defaults to 'off'.
+  String? experimentalGpuAcceleration;
+
+  /// Enable experimental whitespace rendering.
+  /// Defaults to 'svg'.
+  String? experimentalWhitespaceRendering;
+
+  /// Enable rendering of whitespace.
+  /// Defaults to 'selection'.
+  String? renderWhitespace;
+
+  /// Enable rendering of control characters.
+  /// Defaults to true.
+  bool? renderControlCharacters;
+
+  /// Enable rendering of current line highlight.
+  /// Defaults to all.
+  String? renderLineHighlight;
+
+  /// Control if the current line highlight should be rendered only the editor is focused.
+  /// Defaults to false.
+  bool? renderLineHighlightOnlyWhenFocus;
+
+  /// Inserting and deleting whitespace follows tab stops.
+  bool? useTabStops;
+
+  /// Controls whether the editor should automatically remove indentation whitespace when joining lines with Delete.
+  /// Defaults to false.
+  bool? trimWhitespaceOnDelete;
+
+  /// The font family
+  String? fontFamily;
+
+  /// The font weight
+  String? fontWeight;
+
+  /// The font size
+  num? fontSize;
+
+  /// The line height
+  num? lineHeight;
+
+  /// The letter spacing
+  num? letterSpacing;
+
+  /// Controls fading out of unused variables.
+  bool? showUnused;
+
+  /// Controls whether to focus the inline editor in the peek widget by default.
+  /// Defaults to false.
+  String? peekWidgetDefaultFocus;
+
+  /// Sets a placeholder for the editor.
+  /// If set, the placeholder is shown if the editor is empty.
+  // TS: string | undefined
+  Object? placeholder;
+
+  /// Controls whether the definition link opens element in the peek widget.
+  /// Defaults to false.
+  bool? definitionLinkOpensInPeek;
+
+  /// Controls strikethrough deprecated variables.
+  bool? showDeprecated;
+
+  /// Controls whether suggestions allow matches in the middle of the word instead of only at the beginning
+  bool? matchOnWordStartOnly;
+
+  /// Control the behavior and rendering of the inline hints.
+  // TS: IEditorInlayHintsOptions
+  Object? inlayHints;
+
+  /// Control if the editor should use shadow DOM.
+  bool? useShadowDOM;
+
+  /// Controls the behavior of editor guides.
+  // TS: IGuidesOptions
+  Object? guides;
+
+  /// Controls the behavior of the unicode highlight feature
+  /// (by default, ambiguous and invisible characters are highlighted).
+  // TS: IUnicodeHighlightOptions
+  Object? unicodeHighlight;
+
+  /// Configures bracket pair colorization (disabled by default).
+  // TS: IBracketPairColorizationOptions
+  Object? bracketPairColorization;
+
+  /// Controls dropping into the editor from an external source.
+  /// When enabled, this shows a preview of the drop location and triggers an `onDropIntoEditor` event.
+  // TS: IDropIntoEditorOptions
+  Object? dropIntoEditor;
+
+  /// Sets whether the new experimental edit context should be used instead of the text area.
+  bool? editContext;
+
+  /// Controls whether to render rich HTML screen reader content when the EditContext is enabled
+  bool? renderRichScreenReaderContent;
+
+  /// Controls support for changing how content is pasted into the editor.
+  // TS: IPasteAsOptions
+  Object? pasteAs;
+
+  /// Controls whether the editor / terminal receives tabs or defers them to the workbench for navigation.
+  bool? tabFocusMode;
+
+  /// Controls whether the accessibility hint should be provided to screen reader users when an inline completion is shown.
+  bool? inlineCompletionsAccessibilityVerbose;
+
+}
+
+//#endregion
+
+//#region diff editor options
+
+/// 1:1: `export const MINIMAP_GUTTER_WIDTH = 8`.
+const int MINIMAP_GUTTER_WIDTH = 8;
+
+/// 1:1: `export type DiffEditorViewMode = 'inline' | 'sideBySide' | 'automatic'`.
+class DiffEditorViewMode {
+  static const String inline = 'inline';
+  static const String sideBySide = 'sideBySide';
+  static const String automatic = 'automatic';
+
+  const DiffEditorViewMode._();
+}
+
+/// 1:1: `export interface IDiffEditorBaseOptions`. The two inline object
+/// types (`experimental`, `hideUnchangedRegions`) are carried as `Object?`
+/// (structural input; the diff-editor option classes in
+/// `browser/widget/diffEditor/diffEditorOptions.ts` read them dynamically).
+class IDiffEditorBaseOptions {
+  IDiffEditorBaseOptions();
+
+  /// Allow the user to resize the diff editor split view.
+  /// Defaults to true.
+  bool? enableSplitViewResizing;
+
+  /// The default ratio when rendering side-by-side editors.
+  /// Must be a number between 0 and 1, min sizes apply.
+  /// Defaults to 0.5
+  num? splitViewDefaultRatio;
+
+  /// Render the differences in two side-by-side editors.
+  /// Defaults to true.
+  bool? renderSideBySide;
+
+  /// When `renderSideBySide` is enabled, `useInlineViewWhenSpaceIsLimited` is set,
+  /// and the diff editor has a width less than `renderSideBySideInlineBreakpoint`, the inline view is used.
+  // TS: number | undefined
+  num? renderSideBySideInlineBreakpoint;
+
+  /// When `renderSideBySide` is enabled, `useInlineViewWhenSpaceIsLimited` is set,
+  /// and the diff editor has a width less than `renderSideBySideInlineBreakpoint`, the inline view is used.
+  bool? useInlineViewWhenSpaceIsLimited;
+
+  /// If set, the diff editor is optimized for small views.
+  /// Defaults to `false`.
+  bool? compactMode;
+
+  /// If set, the original editor's line numbers are hidden in the inline view.
+  /// Defaults to `false`.
+  /// @internal
+  bool? hideOriginalLineNumbers;
+
+  /// Timeout in milliseconds after which diff computation is cancelled.
+  /// Defaults to 5000.
+  num? maxComputationTime;
+
+  /// Maximum supported file size in MB.
+  /// Defaults to 50.
+  num? maxFileSize;
+
+  /// Compute the diff by ignoring leading/trailing whitespace
+  /// Defaults to true.
+  bool? ignoreTrimWhitespace;
+
+  /// Render +/- indicators for added/deleted changes.
+  /// Defaults to true.
+  bool? renderIndicators;
+
+  /// Shows icons in the glyph margin to revert changes.
+  /// Default to true.
+  bool? renderMarginRevertIcon;
+
+  /// Indicates if the gutter menu should be rendered.
+  bool? renderGutterMenu;
+
+  /// Original model should be editable?
+  /// Defaults to false.
+  bool? originalEditable;
+
+  /// Should the diff editor enable code lens?
+  /// Defaults to false.
+  bool? diffCodeLens;
+
+  /// Is the diff editor should render overview ruler
+  /// Defaults to true
+  bool? renderOverviewRuler;
+
+  /// Control the wrapping of the diff editor.
+  String? diffWordWrap;
+
+  /// Diff Algorithm
+  String? diffAlgorithm;
+
+  /// Whether the diff editor aria label should be verbose.
+  bool? accessibilityVerbose;
+
+  /// TS: `{ showMoves?: boolean; showEmptyDecorations?: boolean;
+  /// useTrueInlineView?: boolean; }`
+  Object? experimental;
+
+  /// Is the diff editor inside another editor
+  /// Defaults to false
+  bool? isInEmbeddedEditor;
+
+  /// If the diff editor should only show the difference review mode.
+  bool? onlyShowAccessibleDiffViewer;
+
+  /// TS: `{ enabled?: boolean; revealLineCount?: number; minimumLineCount?:
+  /// number; contextLineCount?: number; }`
+  Object? hideUnchangedRegions;
+}
+
+/// Configuration options for the diff editor.
+///
+/// 1:1: `export interface IDiffEditorOptions extends IEditorOptions,
+/// IDiffEditorBaseOptions` — TS interface multi-extension has no Dart
+/// equivalent, so the concrete carrier extends [IEditorOptions] and unions
+/// the [IDiffEditorBaseOptions] fields inline (documented adaptation).
+class IDiffEditorOptions extends IEditorOptions {
+  IDiffEditorOptions();
+
+  bool? enableSplitViewResizing;
+  num? splitViewDefaultRatio;
+  bool? renderSideBySide;
+  num? renderSideBySideInlineBreakpoint;
+  bool? useInlineViewWhenSpaceIsLimited;
+  bool? compactMode;
+  bool? hideOriginalLineNumbers;
+  num? maxComputationTime;
+  num? maxFileSize;
+  bool? ignoreTrimWhitespace;
+  bool? renderIndicators;
+  bool? renderMarginRevertIcon;
+  bool? renderGutterMenu;
+  bool? originalEditable;
+  bool? diffCodeLens;
+  bool? renderOverviewRuler;
+  String? diffWordWrap;
+  String? diffAlgorithm;
+  bool? accessibilityVerbose;
+  Object? experimental;
+  bool? isInEmbeddedEditor;
+  bool? onlyShowAccessibleDiffViewer;
+  Object? hideUnchangedRegions;
+}
+
+/// @internal
+/// 1:1: `export type ValidDiffEditorBaseOptions = Readonly<Required<IDiffEditorBaseOptions>>`
+/// — the `Required<>` resolution makes every field non-optional; getters are
+/// non-nullable for the primitive fields, and the two inline object types
+/// stay `Object?` carriers.
+abstract class ValidDiffEditorBaseOptions {
+  bool get enableSplitViewResizing;
+  num get splitViewDefaultRatio;
+  bool get renderSideBySide;
+  num get renderSideBySideInlineBreakpoint;
+  bool get useInlineViewWhenSpaceIsLimited;
+  bool get compactMode;
+  bool get hideOriginalLineNumbers;
+  num get maxComputationTime;
+  num get maxFileSize;
+  bool get ignoreTrimWhitespace;
+  bool get renderIndicators;
+  bool get renderMarginRevertIcon;
+  bool get renderGutterMenu;
+  bool get originalEditable;
+  bool get diffCodeLens;
+  bool get renderOverviewRuler;
+  String get diffWordWrap;
+  String get diffAlgorithm;
+  bool get accessibilityVerbose;
+  Object? get experimental;
+  bool get isInEmbeddedEditor;
+  bool get onlyShowAccessibleDiffViewer;
+  Object? get hideUnchangedRegions;
 }
 
 //#endregion

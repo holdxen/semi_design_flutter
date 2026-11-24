@@ -104,6 +104,139 @@ int _autoIndentFromString(String autoIndent) {
   return opts.EditorAutoIndentStrategy.none;
 }
 
+
+// ---------------------------------------------------------------------------
+// segment 2/4: IEditorOptions (generated), diff editor options
+// ---------------------------------------------------------------------------
+
+void _exerciseIEditorOptions() {
+  final opts.IEditorOptions options = opts.IEditorOptions();
+  // primitives
+  options.inDiffEditor = true;
+  options.ariaLabel = 'editor';
+  options.tabIndex = 0;
+  options.readOnly = false;
+  options.selectOnLineNumbers = true;
+  options.glyphMargin = false;
+  options.extraEditorClassName = 'x';
+  // pure string-literal unions -> String?
+  options.cursorSurroundingLinesStyle = 'all';
+  options.renderFinalNewline = 'on';
+  options.unusualLineTerminators = 'prompt';
+  options.wordWrapOverride1 = 'inherit';
+  // string-literal array unions -> List<String?>?
+  options.occurrencesHighlightDelay = null;
+  // carriers (nested interfaces / mixed unions / function types)
+  options.rulers = <Object?>[10, <String, Object?>{'color': 'red'}];
+  options.lineNumbers = 'on';
+  options.lineDecorationsWidth = '1.3ch';
+  options.readOnlyMessage = <String, Object?>{'value': 'locked'};
+  options.minimap = <String, Object?>{'enabled': false};
+  options.suggest = <String, Object?>{};
+  options.unicodeHighlight = <String, Object?>{};
+  options.wordSegmenterLocales = <String>['ja'];
+
+  expect(options.inDiffEditor, true);
+  expect(options.ariaLabel, 'editor');
+  expect(options.tabIndex, 0);
+  expect(options.cursorSurroundingLinesStyle, 'all');
+  expect(options.readOnlyMessage, <String, Object?>{'value': 'locked'});
+  expect(options.wordSegmenterLocales, <String>['ja']);
+}
+
+void _exerciseDiffEditorOptions() {
+  expect(opts.MINIMAP_GUTTER_WIDTH, 8);
+  expect(opts.DiffEditorViewMode.inline, 'inline');
+  expect(opts.DiffEditorViewMode.sideBySide, 'sideBySide');
+  expect(opts.DiffEditorViewMode.automatic, 'automatic');
+
+  final opts.IDiffEditorBaseOptions base = opts.IDiffEditorBaseOptions();
+  base.enableSplitViewResizing = true;
+  base.splitViewDefaultRatio = 0.5;
+  base.renderSideBySide = true;
+  base.useInlineViewWhenSpaceIsLimited = false;
+  base.maxComputationTime = 5000;
+  base.ignoreTrimWhitespace = true;
+  base.diffWordWrap = 'inherit';
+  base.diffAlgorithm = 'advanced';
+  base.experimental = <String, Object?>{'showMoves': true};
+  base.hideUnchangedRegions = <String, Object?>{'enabled': false};
+
+  expect(base.enableSplitViewResizing, true);
+  expect(base.splitViewDefaultRatio, 0.5);
+  expect(base.diffWordWrap, 'inherit');
+  expect(base.diffAlgorithm, 'advanced');
+  expect(base.experimental, <String, Object?>{'showMoves': true});
+
+  final opts.IDiffEditorOptions options = opts.IDiffEditorOptions();
+  // inherited IEditorOptions fields
+  options.readOnly = false;
+  // diff fields on the same carrier
+  options.renderSideBySide = true;
+  options.originalEditable = false;
+  options.onlyShowAccessibleDiffViewer = true;
+  expect(options.readOnly, false);
+  expect(options.renderSideBySide, true);
+  expect(options.originalEditable, false);
+  expect(options.onlyShowAccessibleDiffViewer, true);
+
+  // ValidDiffEditorBaseOptions is the Required<> resolution: compile-time
+  // check through a minimal implementation.
+  final _ValidDiffStub valid = _ValidDiffStub();
+  expect(valid.enableSplitViewResizing, true);
+  expect(valid.diffWordWrap, 'off');
+  expect(valid.experimental, isNull);
+}
+
+class _ValidDiffStub implements opts.ValidDiffEditorBaseOptions {
+  @override
+  bool get enableSplitViewResizing => true;
+  @override
+  num get splitViewDefaultRatio => 0.5;
+  @override
+  bool get renderSideBySide => true;
+  @override
+  num get renderSideBySideInlineBreakpoint => 0;
+  @override
+  bool get useInlineViewWhenSpaceIsLimited => true;
+  @override
+  bool get compactMode => false;
+  @override
+  bool get hideOriginalLineNumbers => false;
+  @override
+  num get maxComputationTime => 5000;
+  @override
+  num get maxFileSize => 50;
+  @override
+  bool get ignoreTrimWhitespace => true;
+  @override
+  bool get renderIndicators => true;
+  @override
+  bool get renderMarginRevertIcon => true;
+  @override
+  bool get renderGutterMenu => true;
+  @override
+  bool get originalEditable => false;
+  @override
+  bool get diffCodeLens => false;
+  @override
+  bool get renderOverviewRuler => true;
+  @override
+  String get diffWordWrap => 'off';
+  @override
+  String get diffAlgorithm => 'advanced';
+  @override
+  bool get accessibilityVerbose => false;
+  @override
+  Object? get experimental => null;
+  @override
+  bool get isInEmbeddedEditor => false;
+  @override
+  bool get onlyShowAccessibleDiffViewer => false;
+  @override
+  Object? get hideUnchangedRegions => null;
+}
+
 void main() {
   final Map<String, dynamic> truth = _truth();
 
@@ -314,5 +447,36 @@ void main() {
 
   test('registry stays empty until segment 4 registers the options', () {
     expect(opts.editorOptionsRegistry, isEmpty);
+  });
+
+  test('IEditorOptions generated field carrier (segment 2)', () {
+    _exerciseIEditorOptions();
+  });
+
+  test('diff editor options (segment 2)', () {
+    _exerciseDiffEditorOptions();
+  });
+
+  test('IEditorOptions field inventory matches the generated truth', () {
+    final Map<String, dynamic> inventory =
+        _map(jsonDecode(File('tool/ts2dart/editor_options_fields.json')
+            .readAsStringSync()));
+    expect(inventory['sourceFields'], 173);
+    final List<dynamic> fields = inventory['fields'] as List<dynamic>;
+    expect(fields.length, 173);
+    // representative members of each mapping category
+    expect(fields, containsAll(<String>[
+      'inDiffEditor',
+      'ariaLabel',
+      'tabIndex',
+      'cursorSurroundingLinesStyle',
+      'rulers',
+      'lineNumbers',
+      'readOnlyMessage',
+      'minimap',
+      'unicodeHighlight',
+      'wordWrapOverride2',
+      'inlineCompletionsAccessibilityVerbose',
+    ]));
   });
 }
