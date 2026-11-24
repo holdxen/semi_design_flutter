@@ -360,9 +360,9 @@
 | 351 | editor | `editor/common/tokenizationTextModelPart.ts` | `lib/src/monaco/editor/common/tokenizationTextModelPart.dart` | pending |
 | 352 | editor | `editor/common/tokens/common.ts` | `lib/src/monaco/editor/common/tokens/common.dart` | tested |
 | 353 | editor | `editor/common/tokens/contiguousMultilineTokens.ts` | `lib/src/monaco/editor/common/tokens/contiguousMultilineTokens.dart` | tested |
-| 354 | editor | `editor/common/tokens/contiguousMultilineTokensBuilder.ts` | `lib/src/monaco/editor/common/tokens/contiguousMultilineTokensBuilder.dart` | pending |
+| 354 | editor | `editor/common/tokens/contiguousMultilineTokensBuilder.ts` | `lib/src/monaco/editor/common/tokens/contiguousMultilineTokensBuilder.dart` | tested |
 | 355 | editor | `editor/common/tokens/contiguousTokensEditing.ts` | `lib/src/monaco/editor/common/tokens/contiguousTokensEditing.dart` | tested |
-| 356 | editor | `editor/common/tokens/contiguousTokensStore.ts` | `lib/src/monaco/editor/common/tokens/contiguousTokensStore.dart` | pending |
+| 356 | editor | `editor/common/tokens/contiguousTokensStore.ts` | `lib/src/monaco/editor/common/tokens/contiguousTokensStore.dart` | tested |
 | 357 | editor | `editor/common/tokens/lineTokens.ts` | `lib/src/monaco/editor/common/tokens/lineTokens.dart` | tested |
 | 358 | editor | `editor/common/tokens/sparseMultilineTokens.ts` | `lib/src/monaco/editor/common/tokens/sparseMultilineTokens.dart` | pending |
 | 359 | editor | `editor/common/tokens/sparseTokensStore.ts` | `lib/src/monaco/editor/common/tokens/sparseTokensStore.dart` | pending |

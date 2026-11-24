@@ -90,7 +90,7 @@ class ContiguousMultilineTokens {
         throw StateError('Not supported!');
       }
       result += 4; // 4 bytes for the byte count
-      result += lineTokens.buffer.lengthInBytes;
+      result += lineTokens.lengthInBytes;
     }
     return result;
   }
@@ -105,11 +105,13 @@ class ContiguousMultilineTokens {
       if (lineTokens is! Uint32List) {
         throw StateError('Not supported!');
       }
+      // TS copies `new Uint8Array(lineTokens.buffer)` (the whole buffer) but
+      // advances by `lineTokens.byteLength`; reproduced verbatim.
       final Uint8List bytes = Uint8List.view(lineTokens.buffer);
-      buffer.writeUInt32BE_(destination, bytes.length, offset);
+      buffer.writeUInt32BE_(destination, lineTokens.lengthInBytes, offset);
       offset += 4;
       destination.setRange(offset, offset + bytes.length, bytes);
-      offset += bytes.length;
+      offset += lineTokens.lengthInBytes;
     }
     return offset;
   }

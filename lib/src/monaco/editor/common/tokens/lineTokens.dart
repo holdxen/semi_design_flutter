@@ -494,6 +494,12 @@ class SliceLineTokens implements IViewLineTokens {
 /// `getStandardTokenTypeAtPosition` reads.
 abstract class ITextModel {
   ITokenizationTextModelPart get tokenization;
+
+  /// Used by `contiguousTokensStore.setMultilineTokens`.
+  String getLanguageId();
+
+  /// Used by `contiguousTokensStore.setMultilineTokens`.
+  int getLineLength(int lineNumber);
 }
 
 /// 1:1: `ITextModel['tokenization']` shape used by
