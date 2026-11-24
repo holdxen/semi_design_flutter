@@ -4,7 +4,6 @@ import '../../../common/keybindingLabels.dart' show UILabelProvider;
 import '../../../common/keybindings.dart' show ResolvedChord, ResolvedKeybinding;
 import '../../../common/lifecycle.dart' as lifecycle;
 import '../../../common/objects.dart' as objects;
-import '../../../common/platform.dart' show OperatingSystem;
 import '../../../../nls.dart' as nls;
 import '../hover/hover.dart' as h;
 import '../hover/hoverDelegate2.dart' show getBaseLayerHoverDelegate;

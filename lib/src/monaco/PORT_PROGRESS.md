@@ -315,7 +315,7 @@
 | 306 | editor | `editor/common/model/utils.ts` | `lib/src/monaco/editor/common/model/utils.dart` | tested |
 | 307 | editor | `editor/common/model.ts` | `lib/src/monaco/editor/common/model.dart` | pending |
 | 308 | editor | `editor/common/modelLineProjectionData.ts` | `lib/src/monaco/editor/common/modelLineProjectionData.dart` | pending |
-| 309 | editor | `editor/common/multiDiffEditor.ts` | `lib/src/monaco/editor/common/multiDiffEditor.dart` | pending |
+| 309 | editor | `editor/common/multiDiffEditor.ts` | `lib/src/monaco/editor/common/multiDiffEditor.dart` | tested |
 | 310 | editor | `editor/common/services/completionsEnablement.ts` | `lib/src/monaco/editor/common/services/completionsEnablement.dart` | tested |
 | 311 | editor | `editor/common/services/editorBaseApi.ts` | `lib/src/monaco/editor/common/services/editorBaseApi.dart` | pending |
 | 312 | editor | `editor/common/services/editorWebWorker.ts` | `lib/src/monaco/editor/common/services/editorWebWorker.dart` | pending |
@@ -942,16 +942,16 @@
 | 933 | base | `base/browser/ui/findinput/findInput.ts` | `lib/src/monaco/base/browser/ui/findinput/findInput.dart` | pending |
 | 934 | base | `base/browser/ui/findinput/findInputToggles.ts` | `lib/src/monaco/base/browser/ui/findinput/findInputToggles.dart` | pending |
 | 935 | base | `base/browser/ui/findinput/replaceInput.ts` | `lib/src/monaco/base/browser/ui/findinput/replaceInput.dart` | pending |
-| 936 | base | `base/browser/ui/highlightedlabel/highlightedLabel.ts` | `lib/src/monaco/base/browser/ui/highlightedlabel/highlightedLabel.dart` | pending |
+| 936 | base | `base/browser/ui/highlightedlabel/highlightedLabel.ts` | `lib/src/monaco/base/browser/ui/highlightedlabel/highlightedLabel.dart` | tested |
 | 937 | base | `base/browser/ui/hover/hover.ts` | `lib/src/monaco/base/browser/ui/hover/hover.dart` | tested |
 | 938 | base | `base/browser/ui/hover/hoverDelegate.ts` | `lib/src/monaco/base/browser/ui/hover/hoverDelegate.dart` | tested |
 | 939 | base | `base/browser/ui/hover/hoverDelegate2.ts` | `lib/src/monaco/base/browser/ui/hover/hoverDelegate2.dart` | tested |
 | 940 | base | `base/browser/ui/hover/hoverDelegateFactory.ts` | `lib/src/monaco/base/browser/ui/hover/hoverDelegateFactory.dart` | tested |
 | 941 | base | `base/browser/ui/hover/hoverWidget.ts` | `lib/src/monaco/base/browser/ui/hover/hoverWidget.dart` | tested |
-| 942 | base | `base/browser/ui/iconLabel/iconLabel.ts` | `lib/src/monaco/base/browser/ui/iconLabel/iconLabel.dart` | pending |
+| 942 | base | `base/browser/ui/iconLabel/iconLabel.ts` | `lib/src/monaco/base/browser/ui/iconLabel/iconLabel.dart` | tested |
 | 943 | base | `base/browser/ui/iconLabel/iconLabels.ts` | `lib/src/monaco/base/browser/ui/iconLabel/iconLabels.dart` | tested |
 | 944 | base | `base/browser/ui/inputbox/inputBox.ts` | `lib/src/monaco/base/browser/ui/inputbox/inputBox.dart` | pending |
-| 945 | base | `base/browser/ui/keybindingLabel/keybindingLabel.ts` | `lib/src/monaco/base/browser/ui/keybindingLabel/keybindingLabel.dart` | pending |
+| 945 | base | `base/browser/ui/keybindingLabel/keybindingLabel.ts` | `lib/src/monaco/base/browser/ui/keybindingLabel/keybindingLabel.dart` | tested |
 | 946 | base | `base/browser/ui/list/list.ts` | `lib/src/monaco/base/browser/ui/list/list.dart` | pending |
 | 947 | base | `base/browser/ui/list/listPaging.ts` | `lib/src/monaco/base/browser/ui/list/listPaging.dart` | pending |
 | 948 | base | `base/browser/ui/list/listView.ts` | `lib/src/monaco/base/browser/ui/list/listView.dart` | pending |
@@ -1187,7 +1187,7 @@
 | 1178 | platform | `platform/dialogs/common/dialogs.ts` | `lib/src/monaco/platform/dialogs/common/dialogs.dart` | tested |
 | 1179 | platform | `platform/dialogs/test/common/testDialogService.ts` | `lib/src/monaco/platform/dialogs/test/common/testDialogService.dart` | tested |
 | 1180 | platform | `platform/dnd/browser/dnd.ts` | `lib/src/monaco/platform/dnd/browser/dnd.dart` | pending |
-| 1181 | platform | `platform/editor/common/editor.ts` | `lib/src/monaco/platform/editor/common/editor.dart` | pending |
+| 1181 | platform | `platform/editor/common/editor.ts` | `lib/src/monaco/platform/editor/common/editor.dart` | tested |
 | 1182 | platform | `platform/environment/common/argv.ts` | `lib/src/monaco/platform/environment/common/argv.dart` | tested |
 | 1183 | platform | `platform/environment/common/environment.ts` | `lib/src/monaco/platform/environment/common/environment.dart` | tested |
 | 1184 | platform | `platform/extensionManagement/common/extensionGalleryManifest.ts` | `lib/src/monaco/platform/extensionManagement/common/extensionGalleryManifest.dart` | tested |
@@ -1224,7 +1224,7 @@
 | 1215 | platform | `platform/list/browser/listService.ts` | `lib/src/monaco/platform/list/browser/listService.dart` | pending |
 | 1216 | platform | `platform/log/common/log.ts` | `lib/src/monaco/platform/log/common/log.dart` | tested |
 | 1217 | platform | `platform/log/common/logService.ts` | `lib/src/monaco/platform/log/common/logService.dart` | tested |
-| 1218 | platform | `platform/markdown/browser/markdownRenderer.ts` | `lib/src/monaco/platform/markdown/browser/markdownRenderer.dart` | pending |
+| 1218 | platform | `platform/markdown/browser/markdownRenderer.ts` | `lib/src/monaco/platform/markdown/browser/markdownRenderer.dart` | tested |
 | 1219 | platform | `platform/markers/common/markerService.ts` | `lib/src/monaco/platform/markers/common/markerService.dart` | tested |
 | 1220 | platform | `platform/markers/common/markers.ts` | `lib/src/monaco/platform/markers/common/markers.dart` | tested |
 | 1221 | platform | `platform/notification/common/notification.ts` | `lib/src/monaco/platform/notification/common/notification.dart` | tested |
@@ -1236,8 +1236,8 @@
 | 1227 | platform | `platform/observable/common/wrapInHotClass.ts` | `lib/src/monaco/platform/observable/common/wrapInHotClass.dart` | tested |
 | 1228 | platform | `platform/observable/common/wrapInReloadableClass.ts` | `lib/src/monaco/platform/observable/common/wrapInReloadableClass.dart` | tested |
 | 1229 | platform | `platform/opener/browser/link.ts` | `lib/src/monaco/platform/opener/browser/link.dart` | pending |
-| 1230 | platform | `platform/opener/common/opener.ts` | `lib/src/monaco/platform/opener/common/opener.dart` | pending |
-| 1231 | platform | `platform/opener/test/common/nullOpenerService.ts` | `lib/src/monaco/platform/opener/test/common/nullOpenerService.dart` | pending |
+| 1230 | platform | `platform/opener/common/opener.ts` | `lib/src/monaco/platform/opener/common/opener.dart` | tested |
+| 1231 | platform | `platform/opener/test/common/nullOpenerService.ts` | `lib/src/monaco/platform/opener/test/common/nullOpenerService.dart` | tested |
 | 1232 | platform | `platform/policy/common/copilotManagedSettings.ts` | `lib/src/monaco/platform/policy/common/copilotManagedSettings.dart` | tested |
 | 1233 | platform | `platform/policy/common/managedSettingsFreshness.ts` | `lib/src/monaco/platform/policy/common/managedSettingsFreshness.dart` | tested |
 | 1234 | platform | `platform/policy/common/policy.ts` | `lib/src/monaco/platform/policy/common/policy.dart` | tested |
@@ -1299,7 +1299,7 @@
 | 1290 | platform | `platform/webWorker/browser/webWorkerDescriptor.ts` | `lib/src/monaco/platform/webWorker/browser/webWorkerDescriptor.dart` | tested |
 | 1291 | platform | `platform/webWorker/browser/webWorkerService.ts` | `lib/src/monaco/platform/webWorker/browser/webWorkerService.dart` | tested |
 | 1292 | platform | `platform/webWorker/browser/webWorkerServiceImpl.ts` | `lib/src/monaco/platform/webWorker/browser/webWorkerServiceImpl.dart` | tested |
-| 1293 | platform | `platform/window/common/window.ts` | `lib/src/monaco/platform/window/common/window.dart` | pending |
+| 1293 | platform | `platform/window/common/window.ts` | `lib/src/monaco/platform/window/common/window.dart` | tested |
 | 1294 | platform | `platform/workspace/common/workspace.ts` | `lib/src/monaco/platform/workspace/common/workspace.dart` | tested |
 | 1295 | platform | `platform/workspace/common/workspaceTrust.ts` | `lib/src/monaco/platform/workspace/common/workspaceTrust.dart` | tested |
 | 1296 | platform | `platform/workspace/test/common/testWorkspace.ts` | `lib/src/monaco/platform/workspace/test/common/testWorkspace.dart` | tested |

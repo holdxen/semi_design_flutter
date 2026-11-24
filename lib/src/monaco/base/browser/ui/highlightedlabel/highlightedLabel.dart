@@ -150,7 +150,7 @@ class HighlightedLabel extends lifecycle.Disposable {
     int total = 0;
     int extra = 0;
 
-    return text.replaceAllMapped(RegExp(r'\r\n|\r|\n'), (RegExpMatch match) {
+    return text.replaceAllMapped(RegExp(r'\r\n|\r|\n'), (Match match) {
       extra = match.group(0) == '\r\n' ? -1 : 0;
       int offset = match.start + total;
 
