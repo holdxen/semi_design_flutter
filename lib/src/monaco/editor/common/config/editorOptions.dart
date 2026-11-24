@@ -49,6 +49,8 @@
 //    `Object? get(Object id)`.
 // ---------------------------------------------------------------------------
 
+import 'dart:math' as math;
+
 import '../../../base/common/arrays.dart' as arrays;
 import '../../../nls.dart' show localize;
 import '../../../platform/accessibility/common/accessibility.dart'
@@ -1042,10 +1044,9 @@ abstract class IEnvironmentalOptions {
 /// @internal
 /// 1:1: `export class ComputeOptionsMemory`.
 class ComputeOptionsMemory {
-  /// TS: `IMinimapLayoutInput | null` — carrier until segment 2.
-  Object? stableMinimapLayoutInput;
-  double stableFitMaxMinimapScale = 0;
-  double stableFitRemainingWidth = 0;
+  EditorMinimapLayoutInput? stableMinimapLayoutInput;
+  num stableFitMaxMinimapScale = 0;
+  num stableFitRemainingWidth = 0;
 
   ComputeOptionsMemory() {
     stableMinimapLayoutInput = null;
@@ -2901,6 +2902,156 @@ class EditorMarkdownImages extends BaseEditorOption<EditorMarkdownImagesOptions>
 //#endregion
 
 //#endregion (segment 3a ends; layoutInfo region follows in segment 3b)
+
+class OverviewRulerPosition {
+  final num width, height, top, right;
+  const OverviewRulerPosition({required this.width, required this.height, required this.top, required this.right});
+}
+
+class RenderMinimap {
+  static const int none = 0;
+  static const int text = 1;
+  static const int blocks = 2;
+  const RenderMinimap._();
+}
+
+class EditorMinimapLayoutInfo {
+  final int renderMinimap;
+  final num minimapLeft, minimapWidth;
+  final bool minimapHeightIsEditorHeight, minimapIsSampling;
+  final num minimapScale, minimapLineHeight;
+  final num minimapCanvasInnerWidth, minimapCanvasInnerHeight;
+  final num minimapCanvasOuterWidth, minimapCanvasOuterHeight;
+  const EditorMinimapLayoutInfo({required this.renderMinimap, required this.minimapLeft, required this.minimapWidth, required this.minimapHeightIsEditorHeight, required this.minimapIsSampling, required this.minimapScale, required this.minimapLineHeight, required this.minimapCanvasInnerWidth, required this.minimapCanvasInnerHeight, required this.minimapCanvasOuterWidth, required this.minimapCanvasOuterHeight});
+}
+
+class EditorLayoutInfo {
+  final num width, height, glyphMarginLeft, glyphMarginWidth, glyphMarginDecorationLaneCount;
+  final num lineNumbersLeft, lineNumbersWidth, decorationsLeft, decorationsWidth;
+  final num contentLeft, contentWidth, viewportColumn;
+  final bool isWordWrapMinified, isViewportWrapping;
+  final num wrappingColumn, verticalScrollbarWidth, horizontalScrollbarHeight;
+  final EditorMinimapLayoutInfo minimap;
+  final OverviewRulerPosition overviewRuler;
+  const EditorLayoutInfo({required this.width, required this.height, required this.glyphMarginLeft, required this.glyphMarginWidth, required this.glyphMarginDecorationLaneCount, required this.lineNumbersLeft, required this.lineNumbersWidth, required this.decorationsLeft, required this.decorationsWidth, required this.contentLeft, required this.contentWidth, required this.minimap, required this.viewportColumn, required this.isWordWrapMinified, required this.isViewportWrapping, required this.wrappingColumn, required this.verticalScrollbarWidth, required this.horizontalScrollbarHeight, required this.overviewRuler});
+}
+
+class EditorMinimapLayoutInput {
+  final num outerWidth, outerHeight, lineHeight, typicalHalfwidthCharacterWidth, pixelRatio;
+  final bool scrollBeyondLastLine;
+  final num paddingTop, paddingBottom;
+  final EditorMinimapOptions minimap;
+  final num verticalScrollbarWidth, viewLineCount, remainingWidth;
+  final bool isViewportWrapping;
+  const EditorMinimapLayoutInput({required this.outerWidth, required this.outerHeight, required this.lineHeight, required this.typicalHalfwidthCharacterWidth, required this.pixelRatio, required this.scrollBeyondLastLine, required this.paddingTop, required this.paddingBottom, required this.minimap, required this.verticalScrollbarWidth, required this.viewLineCount, required this.remainingWidth, required this.isViewportWrapping});
+}
+
+class EditorMinimapOptions {
+  final bool enabled, renderCharacters;
+  final String size, side, showSlider;
+  final num maxColumn, scale;
+  const EditorMinimapOptions({required this.enabled, required this.size, required this.side, required this.showSlider, required this.renderCharacters, required this.maxColumn, required this.scale});
+}
+
+class InternalEditorScrollbarOptions {
+  final num arrowSize, verticalScrollbarSize, horizontalScrollbarSize;
+  final bool verticalHasArrows;
+  const InternalEditorScrollbarOptions({required this.arrowSize, required this.verticalScrollbarSize, required this.horizontalScrollbarSize, required this.verticalHasArrows});
+}
+
+class InternalEditorRenderLineNumbersOptions {
+  final int renderType;
+  const InternalEditorRenderLineNumbersOptions(this.renderType);
+}
+
+class EditorPaddingOptions {
+  final num top, bottom;
+  const EditorPaddingOptions({required this.top, required this.bottom});
+}
+
+class EditorLayoutInfoComputer {
+  static Map<String, num> computeContainedMinimapLineCount({required num viewLineCount, required bool scrollBeyondLastLine, required num paddingTop, required num paddingBottom, required num height, required num lineHeight, required num pixelRatio}) {
+    final num typicalViewportLineCount = height / lineHeight;
+    final num extraLinesBeforeFirstLine = (paddingTop / lineHeight).floor();
+    num extraLinesBeyondLastLine = (paddingBottom / lineHeight).floor();
+    if (scrollBeyondLastLine) extraLinesBeyondLastLine = math.max(extraLinesBeyondLastLine, typicalViewportLineCount - 1);
+    final num desiredRatio = (extraLinesBeforeFirstLine + viewLineCount + extraLinesBeyondLastLine) / (pixelRatio * height);
+    return {'typicalViewportLineCount': typicalViewportLineCount, 'extraLinesBeforeFirstLine': extraLinesBeforeFirstLine, 'extraLinesBeyondLastLine': extraLinesBeyondLastLine, 'desiredRatio': desiredRatio, 'minimapLineCount': (viewLineCount / desiredRatio).floor()};
+  }
+
+  static num _computeMinimapScale(num configuredScale, num pixelRatio) => pixelRatio >= 2 ? (configuredScale * 2).round() : math.max(configuredScale, (configuredScale * pixelRatio + .125).floor());
+
+  static EditorMinimapLayoutInfo _computeMinimapLayout(EditorMinimapLayoutInput input, ComputeOptionsMemory memory) {
+    final num pixelRatio = input.pixelRatio;
+    if (!input.minimap.enabled) return EditorMinimapLayoutInfo(renderMinimap: RenderMinimap.none, minimapLeft: 0, minimapWidth: 0, minimapHeightIsEditorHeight: false, minimapIsSampling: false, minimapScale: 1, minimapLineHeight: 1, minimapCanvasInnerWidth: 0, minimapCanvasInnerHeight: (pixelRatio * input.outerHeight).floor(), minimapCanvasOuterWidth: 0, minimapCanvasOuterHeight: input.outerHeight);
+    final EditorMinimapLayoutInput? stable = memory.stableMinimapLayoutInput;
+    final bool couldUseMemory = stable != null && input.outerHeight == stable.outerHeight && input.lineHeight == stable.lineHeight && input.typicalHalfwidthCharacterWidth == stable.typicalHalfwidthCharacterWidth && input.pixelRatio == stable.pixelRatio && input.scrollBeyondLastLine == stable.scrollBeyondLastLine && input.paddingTop == stable.paddingTop && input.paddingBottom == stable.paddingBottom && input.minimap.enabled == stable.minimap.enabled && input.minimap.side == stable.minimap.side && input.minimap.size == stable.minimap.size && input.minimap.showSlider == stable.minimap.showSlider && input.minimap.renderCharacters == stable.minimap.renderCharacters && input.minimap.maxColumn == stable.minimap.maxColumn && input.minimap.scale == stable.minimap.scale && input.verticalScrollbarWidth == stable.verticalScrollbarWidth && input.isViewportWrapping == stable.isViewportWrapping;
+    final num baseCharHeight = input.minimap.renderCharacters ? 2 : 3;
+    num canvasInnerHeight = (pixelRatio * input.outerHeight).floor();
+    final num canvasOuterHeight = canvasInnerHeight / pixelRatio;
+    bool heightIsEditor = false, sampling = false;
+    num minimapScale = _computeMinimapScale(input.minimap.scale, pixelRatio), minimapLineHeight = baseCharHeight * minimapScale;
+    num minimapCharWidth = minimapScale / pixelRatio, widthMultiplier = 1;
+    if (input.minimap.size == 'fill' || input.minimap.size == 'fit') {
+      final c = computeContainedMinimapLineCount(viewLineCount: input.viewLineCount, scrollBeyondLastLine: input.scrollBeyondLastLine, paddingTop: input.paddingTop, paddingBottom: input.paddingBottom, height: input.outerHeight, lineHeight: input.lineHeight, pixelRatio: pixelRatio);
+      final num ratio = input.viewLineCount / c['minimapLineCount']!;
+      if (ratio > 1) { heightIsEditor = true; sampling = true; minimapScale = 1; minimapLineHeight = 1; minimapCharWidth = 1 / pixelRatio; }
+      else {
+        bool fitBecomesFill = false; num maxScale = minimapScale + 1;
+        if (input.minimap.size == 'fit') {
+          final num effectiveHeight = ((c['extraLinesBeforeFirstLine']! + input.viewLineCount + c['extraLinesBeyondLastLine']!) * minimapLineHeight).ceil();
+          if (input.isViewportWrapping && couldUseMemory && input.remainingWidth <= memory.stableFitRemainingWidth) { fitBecomesFill = true; maxScale = memory.stableFitMaxMinimapScale; } else fitBecomesFill = effectiveHeight > canvasInnerHeight;
+        }
+        if (input.minimap.size == 'fill' || fitBecomesFill) {
+          heightIsEditor = true; final num configuredScale = minimapScale;
+          minimapLineHeight = math.min(input.lineHeight * pixelRatio, math.max(1, (1 / c['desiredRatio']!).floor()));
+          if (input.isViewportWrapping && couldUseMemory && input.remainingWidth <= memory.stableFitRemainingWidth) maxScale = memory.stableFitMaxMinimapScale;
+          minimapScale = math.min(maxScale, math.max(1, (minimapLineHeight / baseCharHeight).floor()));
+          if (minimapScale > configuredScale) widthMultiplier = math.min(2, minimapScale / configuredScale);
+          minimapCharWidth = minimapScale / pixelRatio / widthMultiplier;
+          canvasInnerHeight = (math.max(c['typicalViewportLineCount']!, c['extraLinesBeforeFirstLine']! + input.viewLineCount + c['extraLinesBeyondLastLine']!) * minimapLineHeight).ceil();
+          if (input.isViewportWrapping) { memory.stableMinimapLayoutInput = input; memory.stableFitRemainingWidth = input.remainingWidth; memory.stableFitMaxMinimapScale = minimapScale; } else { memory.stableMinimapLayoutInput = null; memory.stableFitRemainingWidth = 0; }
+        }
+      }
+    }
+    final num maxWidth = (input.minimap.maxColumn * minimapCharWidth).floor();
+    final num width = math.min(maxWidth, math.max(0, (((input.remainingWidth - input.verticalScrollbarWidth - 2) * minimapCharWidth) / (input.typicalHalfwidthCharacterWidth + minimapCharWidth)).floor()) + MINIMAP_GUTTER_WIDTH);
+    num canvasInnerWidth = (pixelRatio * width).floor(); final num canvasOuterWidth = canvasInnerWidth / pixelRatio; canvasInnerWidth = (canvasInnerWidth * widthMultiplier).floor();
+    return EditorMinimapLayoutInfo(renderMinimap: input.minimap.renderCharacters ? RenderMinimap.text : RenderMinimap.blocks, minimapLeft: input.minimap.side == 'left' ? 0 : input.outerWidth - width - input.verticalScrollbarWidth, minimapWidth: width, minimapHeightIsEditorHeight: heightIsEditor, minimapIsSampling: sampling, minimapScale: minimapScale, minimapLineHeight: minimapLineHeight, minimapCanvasInnerWidth: canvasInnerWidth, minimapCanvasInnerHeight: canvasInnerHeight, minimapCanvasOuterWidth: canvasOuterWidth, minimapCanvasOuterHeight: canvasOuterHeight);
+  }
+
+  static EditorLayoutInfo computeLayout(IComputedEditorOptions options, {required ComputeOptionsMemory? memory, required num outerWidth, required num outerHeight, required bool isDominatedByLongLines, required num lineHeight, required num viewLineCount, required num lineNumbersDigitCount, required num typicalHalfwidthCharacterWidth, required num maxDigitWidth, required num pixelRatio, required num glyphMarginDecorationLaneCount}) {
+    final int width = outerWidth.toInt(), height = outerHeight.toInt(), lh = lineHeight.toInt(), digits = lineNumbersDigitCount.toInt();
+    final String? override2 = options.get(EditorOption.wordWrapOverride2) as String?;
+    final String? override1 = override2 == 'inherit' ? options.get(EditorOption.wordWrapOverride1) as String? : override2;
+    final String? wordWrap = override1 == 'inherit' ? options.get(EditorOption.wordWrap) as String? : override1;
+    final num wordWrapColumn = (options.get(EditorOption.wordWrapColumn) as num?) ?? 80;
+    final bool indicator = (options.get(EditorOption.wordWrapIndicator) as bool?) ?? false;
+    final bool glyph = (options.get(EditorOption.glyphMargin) as bool?) ?? false;
+    final bool numbers = (options.get(EditorOption.lineNumbers) as InternalEditorRenderLineNumbersOptions).renderType != 0;
+    final num minChars = (options.get(EditorOption.lineNumbersMinChars) as num?) ?? 5;
+    final bool beyond = (options.get(EditorOption.scrollBeyondLastLine) as bool?) ?? true;
+    final EditorPaddingOptions padding = options.get(EditorOption.padding) as EditorPaddingOptions;
+    final EditorMinimapOptions minimap = options.get(EditorOption.minimap) as EditorMinimapOptions;
+    final InternalEditorScrollbarOptions scrollbar = options.get(EditorOption.scrollbar) as InternalEditorScrollbarOptions;
+    final bool folding = (options.get(EditorOption.folding) as bool?) ?? true;
+    num decorations = (options.get(EditorOption.lineDecorationsWidth) as num?) ?? 10;
+    if (folding && options.get(EditorOption.showFoldingControls) != 'never') decorations += 16;
+    final num numbersWidth = numbers ? math.max(digits, minChars).round() * maxDigitWidth : 0;
+    final num glyphWidth = glyph ? lh * glyphMarginDecorationLaneCount : 0;
+    num glyphLeft = 0, numbersLeft = glyphWidth, decorationsLeft = numbersLeft + numbersWidth, contentLeft = decorationsLeft + decorations;
+    final num remaining = width - glyphWidth - numbersWidth - decorations;
+    bool minified = false, viewport = false; num wrapping = -1;
+    if ((options.get(EditorOption.accessibilitySupport) == AccessibilitySupport.Enabled) && override1 == 'inherit' && isDominatedByLongLines) { minified = true; viewport = true; } else if (wordWrap == 'on' || wordWrap == 'bounded') viewport = true; else if (wordWrap == 'wordWrapColumn') wrapping = wordWrapColumn;
+    final EditorMinimapLayoutInfo mini = _computeMinimapLayout(EditorMinimapLayoutInput(outerWidth: width, outerHeight: height, lineHeight: lh, typicalHalfwidthCharacterWidth: typicalHalfwidthCharacterWidth, pixelRatio: pixelRatio, scrollBeyondLastLine: beyond, paddingTop: padding.top, paddingBottom: padding.bottom, minimap: minimap, verticalScrollbarWidth: scrollbar.verticalScrollbarSize, viewLineCount: viewLineCount, remainingWidth: remaining, isViewportWrapping: viewport), memory ?? ComputeOptionsMemory());
+    if (mini.renderMinimap != RenderMinimap.none && mini.minimapLeft == 0) { glyphLeft += mini.minimapWidth; numbersLeft += mini.minimapWidth; decorationsLeft += mini.minimapWidth; contentLeft += mini.minimapWidth; }
+    final num contentWidth = remaining - mini.minimapWidth;
+    final num viewportColumn = math.max(1, ((contentWidth - scrollbar.verticalScrollbarSize - 2) / typicalHalfwidthCharacterWidth).floor());
+    if (viewport) { wrapping = math.max(1, viewportColumn - (indicator ? 1 : 0)); if (wordWrap == 'bounded') wrapping = math.min(wrapping, wordWrapColumn); }
+    final num arrow = scrollbar.verticalHasArrows ? scrollbar.arrowSize : 0;
+    return EditorLayoutInfo(width: width, height: height, glyphMarginLeft: glyphLeft, glyphMarginWidth: glyphWidth, glyphMarginDecorationLaneCount: glyphMarginDecorationLaneCount, lineNumbersLeft: numbersLeft, lineNumbersWidth: numbersWidth, decorationsLeft: decorationsLeft, decorationsWidth: decorations, contentLeft: contentLeft, contentWidth: contentWidth, minimap: mini, viewportColumn: viewportColumn, isWordWrapMinified: minified, isViewportWrapping: viewport, wrappingColumn: wrapping, verticalScrollbarWidth: scrollbar.verticalScrollbarSize, horizontalScrollbarHeight: scrollbar.horizontalScrollbarSize, overviewRuler: OverviewRulerPosition(top: arrow, width: scrollbar.verticalScrollbarSize, height: height - 2 * arrow, right: 0));
+  }
+}
 
 //#region EditorOption enum
 
