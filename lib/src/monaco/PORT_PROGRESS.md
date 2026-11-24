@@ -171,7 +171,7 @@
 | 162 | editor | `editor/common/config/editorConfigurationSchema.ts` | `lib/src/monaco/editor/common/config/editorConfigurationSchema.dart` | pending |
 | 163 | editor | `editor/common/config/editorOptions.ts` | `lib/src/monaco/editor/common/config/editorOptions.dart` | pending |
 | 164 | editor | `editor/common/config/editorZoom.ts` | `lib/src/monaco/editor/common/config/editorZoom.dart` | tested |
-| 165 | editor | `editor/common/config/fontInfo.ts` | `lib/src/monaco/editor/common/config/fontInfo.dart` | pending |
+| 165 | editor | `editor/common/config/fontInfo.ts` | `lib/src/monaco/editor/common/config/fontInfo.dart` | tested |
 | 166 | editor | `editor/common/config/fontInfoFromSettings.ts` | `lib/src/monaco/editor/common/config/fontInfoFromSettings.dart` | pending |
 | 167 | editor | `editor/common/coordinatesConverter.ts` | `lib/src/monaco/editor/common/coordinatesConverter.dart` | pending |
 | 168 | editor | `editor/common/core/2d/dimension.ts` | `lib/src/monaco/editor/common/core/2d/dimension.dart` | tested |
