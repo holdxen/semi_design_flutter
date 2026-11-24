@@ -397,6 +397,11 @@ class DomNode {
     list.removeWhere((_DomListenerEntry e) => identical(e.handler, handler));
   }
 
+  /// Number of listeners registered for [type]. The browser has no such API;
+  /// the carrier exposes it so tests can observe wiring (same spirit as
+  /// [FileReader.instances]).
+  int listenerCount(String type) => (_listeners[type] ?? const <_DomListenerEntry>[]).length;
+
   void dispatchEvent(String type, DomEvent event) {
     (_listeners[type] ?? <_DomListenerEntry>[])
         .toList()
@@ -446,6 +451,8 @@ class DomElement extends DomNode {
   int scrollLeft = 0;
   int clientWidth = 0;
   int clientHeight = 0;
+  int clientLeft = 0;
+  int clientTop = 0;
   int scrollWidth = 0;
   int scrollHeight = 0;
   int offsetWidth = 0;
@@ -832,8 +839,14 @@ class DomResizeObserverEntry {
 }
 
 class DomResizeObserver {
+  /// Every observer created (the browser delivers notifications out of band,
+  /// so hosts/tests read/drive this list).
+  static final List<DomResizeObserver> instances = <DomResizeObserver>[];
+
   DomResizeObserverCallback callback;
-  DomResizeObserver(this.callback);
+  DomResizeObserver(this.callback) {
+    instances.add(this);
+  }
   final List<DomElement> observed = <DomElement>[];
   void observe(DomElement target, [Object? options]) => observed.add(target);
   void unobserve(DomElement target) => observed.remove(target);

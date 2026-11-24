@@ -1200,7 +1200,7 @@
 | 1191 | platform | `platform/history/browser/historyWidgetKeybindingHint.ts` | `lib/src/monaco/platform/history/browser/historyWidgetKeybindingHint.dart` | tested |
 | 1192 | platform | `platform/hover/browser/hover.ts` | `lib/src/monaco/platform/hover/browser/hover.dart` | tested |
 | 1193 | platform | `platform/hover/browser/hoverService.ts` | `lib/src/monaco/platform/hover/browser/hoverService.dart` | pending |
-| 1194 | platform | `platform/hover/browser/hoverWidget.ts` | `lib/src/monaco/platform/hover/browser/hoverWidget.dart` | pending |
+| 1194 | platform | `platform/hover/browser/hoverWidget.ts` | `lib/src/monaco/platform/hover/browser/hoverWidget.dart` | tested |
 | 1195 | platform | `platform/hover/browser/updatableHoverWidget.ts` | `lib/src/monaco/platform/hover/browser/updatableHoverWidget.dart` | tested |
 | 1196 | platform | `platform/hover/test/browser/nullHoverService.ts` | `lib/src/monaco/platform/hover/test/browser/nullHoverService.dart` | tested |
 | 1197 | platform | `platform/instantiation/common/descriptors.ts` | `lib/src/monaco/platform/instantiation/common/descriptors.dart` | tested |
