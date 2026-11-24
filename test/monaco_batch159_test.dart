@@ -708,7 +708,7 @@ void _enableObserver() {
     'FileSystemObserver': (dynamic callback) {
       final _Observer observer =
           _Observer(callback as void Function(List<dynamic> records));
-      observers.add(observer);
+      _observers.add(observer);
       return observer;
     },
   };

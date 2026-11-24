@@ -108,8 +108,8 @@ abstract class ISmoothScrollPosition implements IScrollPosition {
 
 /// 1:1: `export interface INewScrollPosition`
 class NewScrollPosition {
-  final num? scrollLeft;
-  final num? scrollTop;
+  num? scrollLeft;
+  num? scrollTop;
 
   NewScrollPosition({this.scrollLeft, this.scrollTop});
 }

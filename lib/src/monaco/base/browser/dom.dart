@@ -67,6 +67,13 @@ class DomEvent implements UIEventLike, EventLike {
   bool metaKey = false;
   bool repeat = false;
   int buttons = 0;
+  int button = 0;
+  num pageX = 0;
+  num pageY = 0;
+  num offsetX = 0;
+  num offsetY = 0;
+  int pointerId = 0;
+  String? pointerType;
   int keyCode = 0;
   double timeStamp = 0;
   bool Function(String)? getModifierState;
@@ -94,10 +101,13 @@ class DomEvent implements UIEventLike, EventLike {
 class DomMouseEvent extends DomEvent {
   @override
   Object? view;
+  @override
   int button = 0;
   int detail = 0;
-  double pageX = 0;
-  double pageY = 0;
+  @override
+  num pageX = 0;
+  @override
+  num pageY = 0;
   DomMouseEvent(String type) : super(type);
 }
 
@@ -367,16 +377,23 @@ class DomElement extends DomNode {
   int scrollLeft = 0;
   int clientWidth = 0;
   int clientHeight = 0;
+  int scrollWidth = 0;
+  int scrollHeight = 0;
   int offsetWidth = 0;
   int offsetHeight = 0;
   int offsetTop = 0;
   int offsetLeft = 0;
-  int scrollWidth = 0;
   bool hidden = false;
   bool editContext = false;
   DomRect? rect;
   DomStyle? computedStyle;
   DomShadowRoot? shadowRoot;
+
+  /// 1:1 DOM `element.getClientRects()`. Defaults to a single rect seeded from
+  /// [rect] (or zeros), overridable in tests via [clientRectsOverride].
+  List<DomRect>? clientRectsOverride;
+  List<DomRect> getClientRects() =>
+      clientRectsOverride ?? <DomRect>[rect ?? DomRect()];
 
   /// 1:1: DOM `element.getAnimations()`.
   final List<DomAnimation> animations = <DomAnimation>[];
