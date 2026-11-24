@@ -1,0 +1,26 @@
+[
+  {
+    "id": "81b9fc3aefa2474295b863590f089299",
+    "userID": "hw_008613025669512_01",
+    "domainID": "hw_008613025669512_01",
+    "type": "Language preference",
+    "content": "Prefers interacting in Chinese for technical discussions and task instructions.",
+    "remark": "new",
+    "namespace": "DevMate",
+    "createTime": "2026-11-24T09:57:34.271Z",
+    "updateTime": "2026-11-24T09:57:34.271Z",
+    "isDeleted": false
+  },
+  {
+    "id": "f41f5798d38944a3b47ed8270b98e827",
+    "userID": "hw_008613025669512_01",
+    "domainID": "hw_008613025669512_01",
+    "type": "Programming language",
+    "content": "Prefers continuing the TypeScript-to-Dart 1:1 migration/porting work.",
+    "remark": "new",
+    "namespace": "DevMate",
+    "createTime": "2026-11-24T09:57:34.272Z",
+    "updateTime": "2026-11-24T09:57:34.272Z",
+    "isDeleted": false
+  }
+]

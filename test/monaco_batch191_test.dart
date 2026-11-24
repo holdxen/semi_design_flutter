@@ -48,7 +48,7 @@ dom.DomDataTransfer _dataTransfer({
   List<String>? types,
   Map<String, String>? data,
   List<dom.DomFile?>? files,
-  List<dom.DomFile?>? items,
+  List<dom.DomDataTransferItem?>? items,
 }) {
   final dom.DomDataTransfer transfer = dom.DomDataTransfer();
   transfer.types.addAll(types ?? const <String>[]);
@@ -57,6 +57,17 @@ dom.DomDataTransfer _dataTransfer({
   transfer.items = items;
   return transfer;
 }
+
+/// Wraps `File` carriers the way a DOM drop exposes them on `items`.
+List<dom.DomDataTransferItem?> _asItems(List<dom.DomFile?> files) =>
+    files.map((dom.DomFile? file) {
+      if (file == null) {
+        return null;
+      }
+      return dom.DomDataTransferItem(kind: 'file', type: 'Files')
+        ..getAsFile = (() => file)
+        ..getAsFileSystemHandle = file.getAsFileSystemHandle;
+    }).toList();
 
 dom.DomDragEvent _dragEvent([dom.DomDataTransfer? dataTransfer]) {
   final dom.DomDragEvent event = dom.DomDragEvent('drop');
@@ -575,7 +586,7 @@ void main() {
     final dom.DomDataTransfer transfer = _dataTransfer(
       types: <String>[baseDnd.DataTransfers.FILES],
       files: files,
-      items: files,
+      items: _asItems(files),
     );
 
     // The ported function awaits every read; drive the fake readers the way
@@ -642,7 +653,7 @@ void main() {
         <dom.DomFile?>[fileHandle, dirHandle, noHandle, null];
     final dom.DomDataTransfer transfer = _dataTransfer(
       types: <String>[baseDnd.DataTransfers.FILES],
-      items: items,
+      items: _asItems(items),
       files: items,
     );
 

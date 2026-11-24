@@ -138,9 +138,23 @@ class DomDataTransfer {
   }
 
   /// 1:1: DOM `DataTransfer.files` (nullable: absent until a drag carries
-  /// files) and `DataTransfer.items`. Both are read by `dnd.ts`.
+  /// files) and `DataTransfer.items`. Both are read by `dnd.ts`; `items` is
+  /// also read by `editor/browser/dataTransfer.ts`.
   List<DomFile?>? files;
-  List<DomFile?>? items;
+  List<DomDataTransferItem?>? items;
+}
+
+/// 1:1: DOM `DataTransferItem`: `kind` (`'string' | 'file'`), `type`,
+/// `getAsString`, `getAsFile` and `getAsFileSystemHandle`. The DOM delivers
+/// strings through a callback, so the carrier mirrors that signature.
+class DomDataTransferItem {
+  String kind;
+  String type;
+  void Function(void Function(String value) resolve)? getAsString;
+  DomFile? Function()? getAsFile;
+  Future<Object?> Function()? getAsFileSystemHandle;
+
+  DomDataTransferItem({this.kind = '', this.type = ''});
 }
 
 /// 1:1: DOM `File` subset consumed by dnd.ts (`name`, `size`,
@@ -151,6 +165,10 @@ class DomFile {
 
   /// DOM `DataTransferItem.getAsFileSystemHandle()`.
   Future<Object?> Function()? getAsFileSystemHandle;
+
+  /// DOM `File.arrayBuffer()` — the carrier yields the raw bytes.
+  Future<List<int>> Function()? arrayBuffer;
+
   DomFile({required this.name, this.size = 0});
 }
 

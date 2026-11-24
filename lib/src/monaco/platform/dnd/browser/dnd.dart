@@ -235,7 +235,7 @@ Future<List<Object?>> extractEditorsAndFilesDropData(
   if (e.dataTransfer != null &&
       platform.isWeb &&
       containsDragType(e, <String>[DataTransfers.FILES])) {
-    final List<dom.DomFile?>? files = e.dataTransfer!.items;
+    final List<dom.DomDataTransferItem?>? files = e.dataTransfer!.items;
     if (files != null) {
       final instantiation.IInstantiationServiceType instantiationService =
           accessor.get(instantiation.IInstantiationService)
@@ -315,7 +315,7 @@ Future<List<IFileTransferData>> extractFilesDropData(
 ) async {
   // Try to extract via `FileSystemHandle`
   if (WebFileSystemAccess.supported(mainWindow)) {
-    final List<dom.DomFile?>? items = event.dataTransfer?.items;
+    final List<dom.DomDataTransferItem?>? items = event.dataTransfer?.items;
     if (items != null) {
       return extractFileTransferData(accessor, items);
     }
@@ -332,7 +332,7 @@ Future<List<IFileTransferData>> extractFilesDropData(
 
 Future<List<IFileTransferData>> extractFileTransferData(
   instantiation.ServicesAccessor accessor,
-  List<dom.DomFile?> items,
+  List<dom.DomDataTransferItem?> items,
 ) async {
   // TS: `accessor.get(IFileService).getProvider(Schemas.file)` — `getProvider`
   // is absent from this port's `IFileServiceType` (pre-existing scope), so the
@@ -347,7 +347,7 @@ Future<List<IFileTransferData>> extractFileTransferData(
       <DeferredPromise<IFileTransferData?>>[];
 
   for (int i = 0; i < items.length; i++) {
-    final dom.DomFile? file = items[i];
+    final dom.DomDataTransferItem? file = items[i];
     if (file != null) {
       final DeferredPromise<IFileTransferData?> result =
           DeferredPromise<IFileTransferData?>();

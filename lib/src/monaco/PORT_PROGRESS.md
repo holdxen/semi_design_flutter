@@ -35,7 +35,7 @@
 | 26 | editor | `editor/browser/controller/mouseTarget.ts` | `lib/src/monaco/editor/browser/controller/mouseTarget.dart` | pending |
 | 27 | editor | `editor/browser/controller/pointerHandler.ts` | `lib/src/monaco/editor/browser/controller/pointerHandler.dart` | pending |
 | 28 | editor | `editor/browser/coreCommands.ts` | `lib/src/monaco/editor/browser/coreCommands.dart` | pending |
-| 29 | editor | `editor/browser/dataTransfer.ts` | `lib/src/monaco/editor/browser/dataTransfer.dart` | pending |
+| 29 | editor | `editor/browser/dataTransfer.ts` | `lib/src/monaco/editor/browser/dataTransfer.dart` | tested |
 | 30 | editor | `editor/browser/editorBrowser.ts` | `lib/src/monaco/editor/browser/editorBrowser.dart` | pending |
 | 31 | editor | `editor/browser/editorDom.ts` | `lib/src/monaco/editor/browser/editorDom.dart` | pending |
 | 32 | editor | `editor/browser/editorExtensions.ts` | `lib/src/monaco/editor/browser/editorExtensions.dart` | pending |
