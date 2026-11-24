@@ -977,7 +977,7 @@
 | 968 | base | `base/browser/ui/selectBox/selectBox.ts` | `lib/src/monaco/base/browser/ui/selectBox/selectBox.dart` | pending |
 | 969 | base | `base/browser/ui/selectBox/selectBoxCustom.ts` | `lib/src/monaco/base/browser/ui/selectBox/selectBoxCustom.dart` | pending |
 | 970 | base | `base/browser/ui/selectBox/selectBoxNative.ts` | `lib/src/monaco/base/browser/ui/selectBox/selectBoxNative.dart` | pending |
-| 971 | base | `base/browser/ui/severityIcon/severityIcon.ts` | `lib/src/monaco/base/browser/ui/severityIcon/severityIcon.dart` | pending |
+| 971 | base | `base/browser/ui/severityIcon/severityIcon.ts` | `lib/src/monaco/base/browser/ui/severityIcon/severityIcon.dart` | tested |
 | 972 | base | `base/browser/ui/splitview/splitview.ts` | `lib/src/monaco/base/browser/ui/splitview/splitview.dart` | pending |
 | 973 | base | `base/browser/ui/table/table.ts` | `lib/src/monaco/base/browser/ui/table/table.dart` | pending |
 | 974 | base | `base/browser/ui/table/tableWidget.ts` | `lib/src/monaco/base/browser/ui/table/tableWidget.dart` | pending |
@@ -1003,8 +1003,8 @@
 | 994 | base | `base/common/cache.ts` | `lib/src/monaco/base/common/cache.dart` | tested |
 | 995 | base | `base/common/cancellation.ts` | `lib/src/monaco/base/common/cancellation.dart` | tested |
 | 996 | base | `base/common/charCode.ts` | `lib/src/monaco/base/common/charCode.dart` | tested |
-| 997 | base | `base/common/codicons.ts` | `lib/src/monaco/base/common/codicons.dart` | pending |
-| 998 | base | `base/common/codiconsLibrary.ts` | `lib/src/monaco/base/common/codiconsLibrary.dart` | pending |
+| 997 | base | `base/common/codicons.ts` | `lib/src/monaco/base/common/codicons.dart` | tested |
+| 998 | base | `base/common/codiconsLibrary.ts` | `lib/src/monaco/base/common/codiconsLibrary.dart` | tested |
 | 999 | base | `base/common/codiconsUtil.ts` | `lib/src/monaco/base/common/codiconsUtil.dart` | tested |
 | 1000 | base | `base/common/collections.ts` | `lib/src/monaco/base/common/collections.dart` | tested |
 | 1001 | base | `base/common/color.ts` | `lib/src/monaco/base/common/color.dart` | tested |
@@ -1286,7 +1286,7 @@
 | 1277 | platform | `platform/theme/common/colors/miscColors.ts` | `lib/src/monaco/platform/theme/common/colors/miscColors.dart` | pending |
 | 1278 | platform | `platform/theme/common/colors/quickpickColors.ts` | `lib/src/monaco/platform/theme/common/colors/quickpickColors.dart` | pending |
 | 1279 | platform | `platform/theme/common/colors/searchColors.ts` | `lib/src/monaco/platform/theme/common/colors/searchColors.dart` | pending |
-| 1280 | platform | `platform/theme/common/iconRegistry.ts` | `lib/src/monaco/platform/theme/common/iconRegistry.dart` | pending |
+| 1280 | platform | `platform/theme/common/iconRegistry.ts` | `lib/src/monaco/platform/theme/common/iconRegistry.dart` | tested |
 | 1281 | platform | `platform/theme/common/theme.ts` | `lib/src/monaco/platform/theme/common/theme.dart` | tested |
 | 1282 | platform | `platform/theme/common/themeService.ts` | `lib/src/monaco/platform/theme/common/themeService.dart` | pending |
 | 1283 | platform | `platform/theme/test/common/testThemeService.ts` | `lib/src/monaco/platform/theme/test/common/testThemeService.dart` | pending |
