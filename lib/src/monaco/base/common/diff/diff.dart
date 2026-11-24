@@ -908,13 +908,13 @@ class LcsDiff {
     if (left.isEmpty || right.isEmpty) {
       return right.isNotEmpty ? right : left;
     } else if (ChangesOverlap(left[left.length - 1], right[0], mergedChangeArr)) {
-      final List<DiffChange> result = List<DiffChange>.filled(left.length + right.length - 1, left[0], growable: false);
+      final List<DiffChange> result = List<DiffChange>.filled(left.length + right.length - 1, left[0], growable: true);
       MyArray.Copy(left, 0, result, 0, left.length - 1);
       result[left.length - 1] = mergedChangeArr.value!;
       MyArray.Copy(right, 1, result, left.length, right.length - 1);
       return result;
     } else {
-      final List<DiffChange> result = List<DiffChange>.filled(left.length + right.length, left[0], growable: false);
+      final List<DiffChange> result = List<DiffChange>.filled(left.length + right.length, left[0], growable: true);
       MyArray.Copy(left, 0, result, 0, left.length);
       MyArray.Copy(right, 0, result, left.length, right.length);
       return result;

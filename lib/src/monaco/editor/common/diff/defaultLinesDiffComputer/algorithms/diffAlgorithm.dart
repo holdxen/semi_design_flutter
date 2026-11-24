@@ -164,6 +164,10 @@ class InfiniteTimeout implements ITimeout {
   bool isValid() => true;
 }
 
+/// Test seam equivalent to `sinon.stub(DateTimeout.prototype, 'isValid').returns(false)`.
+/// Mirrors the official test without introducing a browser timer dependency.
+bool forceDateTimeoutInvalidForTesting = false;
+
 /// 1:1: `export class DateTimeout`
 class DateTimeout implements ITimeout {
   final int startTime = DateTime.now().millisecondsSinceEpoch;
@@ -178,6 +182,10 @@ class DateTimeout implements ITimeout {
 
   @override
   bool isValid() {
+    if (forceDateTimeoutInvalidForTesting) {
+      _valid = false;
+      return false;
+    }
     if (_disabled) return true;
     final bool valid = DateTime.now().millisecondsSinceEpoch - startTime < timeout;
     if (!valid && _valid) {

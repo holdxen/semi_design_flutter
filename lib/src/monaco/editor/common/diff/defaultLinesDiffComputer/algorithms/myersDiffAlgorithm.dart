@@ -5,8 +5,6 @@
 
 // 1:1 翻译自 vscode/src/vs/editor/common/diff/defaultLinesDiffComputer/algorithms/myersDiffAlgorithm.ts
 
-import 'dart:typed_data';
-
 import '../../../core/ranges/offsetRange.dart';
 import 'diffAlgorithm.dart';
 
@@ -27,12 +25,20 @@ class MyersDiffAlgorithm implements IDiffAlgorithm {
     final ISequence seqY = seq2; // Text on the y axis
 
     // 1:1: `getXAfterSnake(x, y)` — closure captured seqX/seqY
-    int getXAfterSnake(int x, int y) {
+    num getXAfterSnake(num x, num y) {
+      int xi = _toInt(x);
+      int yi = _toInt(y);
+      // JS array access outside [0, length) yields undefined; such an offset
+      // cannot provide a snake match, so the loop stops immediately.
       while (x < seqX.length &&
           y < seqY.length &&
-          seqX.getElement(x) == seqY.getElement(y)) {
+          xi >= 0 &&
+          yi >= 0 &&
+          seqX.getElement(xi) == seqY.getElement(yi)) {
         x++;
         y++;
+        xi++;
+        yi++;
       }
       return x;
     }
@@ -59,20 +65,18 @@ class MyersDiffAlgorithm implements IDiffAlgorithm {
       final int upperBound = (d < seqX.length + (d % 2) ? d : seqX.length + (d % 2));
       for (k = lowerBound; k <= upperBound; k += 2) {
         // We can use the X values of (d-1)-lines to compute X value of the longest d-lines.
-        final int maxXofDLineTop =
+        final num maxXofDLineTop =
             k == upperBound ? -1 : V.get(k + 1); // vertical non-diagonal
-        final int maxXofDLineLeft =
+        final num maxXofDLineLeft =
             k == lowerBound ? -1 : V.get(k - 1) + 1; // horizontal non-diagonal
-        final int maxTopLeft = (maxXofDLineTop > maxXofDLineLeft
-            ? maxXofDLineTop
-            : maxXofDLineLeft);
-        final int x = (maxTopLeft < seqX.length ? maxTopLeft : seqX.length);
-        final int y = x - k;
+        final num maxTopLeft = _jsMax(maxXofDLineTop, maxXofDLineLeft);
+        final num x = _jsMin(maxTopLeft, seqX.length);
+        final num y = x - k;
         if (x > seqX.length || y > seqY.length) {
           // This diagonal is irrelevant for the result.
           continue;
         }
-        final int newMaxX = getXAfterSnake(x, y);
+        final num newMaxX = getXAfterSnake(x, y);
         V.set(k, newMaxX);
         final SnakePath? lastPath =
             x == maxXofDLineTop ? paths.get(k + 1) : paths.get(k - 1);
@@ -91,8 +95,8 @@ class MyersDiffAlgorithm implements IDiffAlgorithm {
     int lastAligningPosS2 = seqY.length;
 
     while (true) {
-      final int endX = path != null ? path.x + path.length : 0;
-      final int endY = path != null ? path.y + path.length : 0;
+      final int endX = path != null ? _toInt(path.x + path.length) : 0;
+      final int endY = path != null ? _toInt(path.y + path.length) : 0;
 
       if (endX != lastAligningPosS1 || endY != lastAligningPosS2) {
         result.add(SequenceDiff(
@@ -103,8 +107,8 @@ class MyersDiffAlgorithm implements IDiffAlgorithm {
       if (path == null) {
         break;
       }
-      lastAligningPosS1 = path.x;
-      lastAligningPosS2 = path.y;
+      lastAligningPosS1 = _toInt(path.x);
+      lastAligningPosS2 = _toInt(path.y);
 
       path = path.prev;
     }
@@ -117,44 +121,54 @@ class MyersDiffAlgorithm implements IDiffAlgorithm {
 /// 1:1: `class SnakePath`
 class SnakePath {
   final SnakePath? prev;
-  final int x;
-  final int y;
-  final int length;
+  final num x;
+  final num y;
+  final num length;
   SnakePath(this.prev, this.x, this.y, this.length);
 }
 
 /// 1:1: `class FastInt32Array` — an array that supports fast negative indices.
+/// JS typed arrays return `undefined` for out-of-bounds reads; this is modeled
+/// as NaN so the arithmetic in MyersDiffAlgorithm follows the same path.
 class FastInt32Array {
-  Int32List _positiveArr = Int32List(10);
-  Int32List _negativeArr = Int32List(10);
+  final List<num> _positiveArr = List<num>.filled(10, 0, growable: true);
+  final List<num> _negativeArr = List<num>.filled(10, 0, growable: true);
 
-  int get(int idx) {
+  num get(int idx) {
     if (idx < 0) {
       idx = -idx - 1;
-      return _negativeArr[idx];
-    } else {
-      return _positiveArr[idx];
+      return idx < _negativeArr.length ? _negativeArr[idx] : double.nan;
     }
+    return idx < _positiveArr.length ? _positiveArr[idx] : double.nan;
   }
 
-  void set(int idx, int value) {
+  void set(int idx, num value) {
+    // Assigning NaN to an Int32Array stores 0 in JS.
+    final int stored = value.isNaN ? 0 : value.toInt();
     if (idx < 0) {
       idx = -idx - 1;
-      if (idx >= _negativeArr.length) {
-        final Int32List arr = _negativeArr;
-        _negativeArr = Int32List(arr.length * 2);
-        _negativeArr.setAll(0, arr);
+      while (_negativeArr.length <= idx) {
+        _negativeArr.add(0);
       }
-      _negativeArr[idx] = value;
+      _negativeArr[idx] = stored;
     } else {
-      if (idx >= _positiveArr.length) {
-        final Int32List arr = _positiveArr;
-        _positiveArr = Int32List(arr.length * 2);
-        _positiveArr.setAll(0, arr);
+      while (_positiveArr.length <= idx) {
+        _positiveArr.add(0);
       }
-      _positiveArr[idx] = value;
+      _positiveArr[idx] = stored;
     }
   }
+}
+
+int _toInt(num value) => value.isNaN ? 0 : value.toInt();
+num _jsMax(num a, num b) {
+  if (a.isNaN || b.isNaN) return double.nan;
+  return a > b ? a : b;
+}
+
+num _jsMin(num a, num b) {
+  if (a.isNaN || b.isNaN) return double.nan;
+  return a < b ? a : b;
 }
 
 /// 1:1: `class FastArrayNegativeIndices<T>` — fast negative indices.

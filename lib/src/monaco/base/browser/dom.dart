@@ -384,6 +384,11 @@ class DomElement extends DomNode {
   int offsetTop = 0;
   int offsetLeft = 0;
   bool hidden = false;
+
+  /// 1:1: `HTMLButtonElement.disabled` (and the shared DOM carrier field used
+  /// by button-like elements). Kept as a property rather than an attribute so
+  /// callers observe the same state as browser DOM code.
+  bool disabled = false;
   bool editContext = false;
   DomRect? rect;
   DomStyle? computedStyle;
@@ -508,6 +513,7 @@ class DomElement extends DomNode {
       ..tabIndex = tabIndex
       ..type = type
       ..media = media
+      ..disabled = disabled
       ..textContent = textContent;
     if (copy.localName == 'style') copy.sheet = DomStyleSheet();
     _attributes.forEach(copy.setAttribute);
