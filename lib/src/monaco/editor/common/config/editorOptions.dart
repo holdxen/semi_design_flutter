@@ -3312,3 +3312,223 @@ class EditorAccessibilitySupport extends BaseEditorOption<int> {
 }
 
 //#endregion
+
+//#region wrappingStrategy
+
+/// 1:1: `class WrappingStrategy extends BaseEditorOption<...>`.
+class WrappingStrategy extends BaseEditorOption<String> {
+  WrappingStrategy()
+      : super(
+          EditorOption.wrappingStrategy,
+          'wrappingStrategy',
+          'simple',
+          <String, dynamic>{
+            'editor.wrappingStrategy': <String, Object?>{
+              'enumDescriptions': <Object?>[
+                localize('wrappingStrategy.simple',
+                    'Assumes that all characters are of the same width. This is a fast algorithm that works correctly for monospace fonts and certain scripts (like Latin characters) where glyphs are of equal width.'),
+                localize('wrappingStrategy.advanced',
+                    'Delegates wrapping points computation to the browser. This is a slow algorithm, that might cause freezes for large files, but it works correctly in all cases.'),
+              ],
+              'type': 'string',
+              'enum': <Object?>['simple', 'advanced'],
+              'default': 'simple',
+              'description': localize('wrappingStrategy',
+                  'Controls the algorithm that computes wrapping points. Note that when in accessibility mode, advanced will be used for the best experience.'),
+            },
+          },
+        );
+
+  @override
+  String validate(Object? input) {
+    return stringSet<String>(
+        input, 'simple', <String>['simple', 'advanced']);
+  }
+
+  @override
+  String compute(IEnvironmentalOptions env, IComputedEditorOptions options,
+      String value) {
+    final int accessibilitySupport =
+        options.get(EditorOption.accessibilitySupport) as int;
+    if (accessibilitySupport == AccessibilitySupport.Enabled) {
+      // if we know for a fact that a screen reader is attached, we switch our
+      // strategy to advanced to help that the editor's wrapping points match
+      // the textarea's wrapping points
+      return 'advanced';
+    }
+    return value;
+  }
+}
+
+//#endregion
+
+//#region lightbulb
+
+/// 1:1: `export enum ShowLightbulbIconMode`.
+class ShowLightbulbIconMode {
+  static const String Off = 'off';
+  static const String OnCode = 'onCode';
+  static const String On = 'on';
+
+  const ShowLightbulbIconMode._();
+}
+
+/// 1:1: `export interface IEditorLightbulbOptions` plus its
+/// `Readonly<Required<...>>` alias: the port carries one value class with the
+/// required field (defaults are always complete).
+class EditorLightbulbOptions {
+  final String enabled;
+  const EditorLightbulbOptions({required this.enabled});
+}
+
+/// 1:1: `class EditorLightbulb extends BaseEditorOption<...>`.
+class EditorLightbulb extends BaseEditorOption<EditorLightbulbOptions> {
+  EditorLightbulb()
+      : super(
+          EditorOption.lightbulb,
+          'lightbulb',
+          const EditorLightbulbOptions(
+              enabled: ShowLightbulbIconMode.OnCode),
+          <String, dynamic>{
+            'editor.lightbulb.enabled': <String, Object?>{
+              'type': 'string',
+              'enum': <Object?>[
+                ShowLightbulbIconMode.Off,
+                ShowLightbulbIconMode.OnCode,
+                ShowLightbulbIconMode.On,
+              ],
+              'default': ShowLightbulbIconMode.OnCode,
+              'enumDescriptions': <Object?>[
+                localize('editor.lightbulb.enabled.off',
+                    'Disable the code action menu.'),
+                localize('editor.lightbulb.enabled.onCode',
+                    'Show the code action menu when the cursor is on lines with code.'),
+                localize('editor.lightbulb.enabled.on',
+                    'Show the code action menu when the cursor is on lines with code or on empty lines.'),
+              ],
+              'description': localize('enabled',
+                  'Enables the Code Action lightbulb in the editor.'),
+            },
+          },
+        );
+
+  @override
+  EditorLightbulbOptions validate(Object? _input) {
+    if (_input is! Map) {
+      return defaultValue;
+    }
+    return EditorLightbulbOptions(
+      enabled: stringSet<String>(
+        _input['enabled'],
+        defaultValue.enabled,
+        <String>[
+          ShowLightbulbIconMode.Off,
+          ShowLightbulbIconMode.OnCode,
+          ShowLightbulbIconMode.On,
+        ],
+      ),
+    );
+  }
+}
+
+//#endregion
+
+//#region stickyScroll
+
+/// 1:1: `export interface IEditorStickyScrollOptions` (resolved form; defaults
+/// are always complete, so the port carries the required fields).
+class EditorStickyScrollOptions {
+  final bool enabled;
+  final num maxLineCount;
+  final String defaultModel;
+  final bool scrollWithEditor;
+
+  const EditorStickyScrollOptions({
+    required this.enabled,
+    required this.maxLineCount,
+    required this.defaultModel,
+    required this.scrollWithEditor,
+  });
+}
+
+/// The three values accepted by `defaultModel`.
+class EditorStickyScrollDefaultModel {
+  static const String outlineModel = 'outlineModel';
+  static const String foldingProviderModel = 'foldingProviderModel';
+  static const String indentationModel = 'indentationModel';
+
+  const EditorStickyScrollDefaultModel._();
+}
+
+/// 1:1: `class EditorStickyScroll extends BaseEditorOption<...>`.
+class EditorStickyScroll extends BaseEditorOption<EditorStickyScrollOptions> {
+  EditorStickyScroll()
+      : super(
+          EditorOption.stickyScroll,
+          'stickyScroll',
+          const EditorStickyScrollOptions(
+            enabled: true,
+            maxLineCount: 5,
+            defaultModel: EditorStickyScrollDefaultModel.outlineModel,
+            scrollWithEditor: true,
+          ),
+          <String, dynamic>{
+            'editor.stickyScroll.enabled': <String, Object?>{
+              'type': 'boolean',
+              'default': true,
+              'description': localize('editor.stickyScroll.enabled',
+                  'Shows the nested current scopes during the scroll at the top of the editor.'),
+            },
+            'editor.stickyScroll.maxLineCount': <String, Object?>{
+              'type': 'number',
+              'default': 5,
+              'minimum': 1,
+              'maximum': 20,
+              'description': localize('editor.stickyScroll.maxLineCount',
+                  'Defines the maximum number of sticky lines to show.'),
+            },
+            'editor.stickyScroll.defaultModel': <String, Object?>{
+              'type': 'string',
+              'enum': <Object?>[
+                EditorStickyScrollDefaultModel.outlineModel,
+                EditorStickyScrollDefaultModel.foldingProviderModel,
+                EditorStickyScrollDefaultModel.indentationModel,
+              ],
+              'default': EditorStickyScrollDefaultModel.outlineModel,
+              'description': localize('editor.stickyScroll.defaultModel',
+                  'Defines the model to use for determining which lines to stick. If the outline model does not exist, it will fall back on the folding provider model which falls back on the indentation model. This order is respected in all three cases.'),
+            },
+            'editor.stickyScroll.scrollWithEditor': <String, Object?>{
+              'type': 'boolean',
+              'default': true,
+              'description': localize('editor.stickyScroll.scrollWithEditor',
+                  "Enable scrolling of Sticky Scroll with the editor's horizontal scrollbar."),
+            },
+          },
+        );
+
+  @override
+  EditorStickyScrollOptions validate(Object? _input) {
+    if (_input is! Map) {
+      return defaultValue;
+    }
+    return EditorStickyScrollOptions(
+      enabled: boolean(_input['enabled'], defaultValue.enabled),
+      maxLineCount: EditorIntOption.clampedIntStatic(
+          _input['maxLineCount'], defaultValue.maxLineCount, 1, 20) as num,
+      defaultModel: stringSet<String>(
+        _input['defaultModel'],
+        defaultValue.defaultModel,
+        <String>[
+          EditorStickyScrollDefaultModel.outlineModel,
+          EditorStickyScrollDefaultModel.foldingProviderModel,
+          EditorStickyScrollDefaultModel.indentationModel,
+        ],
+      ),
+      scrollWithEditor:
+          boolean(_input['scrollWithEditor'], defaultValue.scrollWithEditor),
+    );
+  }
+}
+
+//#endregion
