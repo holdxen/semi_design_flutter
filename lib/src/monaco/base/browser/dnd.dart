@@ -2,7 +2,7 @@
 import 'dart:async' show Timer;
 
 import 'dom.dart' show DomEvent, DomNode, addDisposableListener;
-import '../common/lifecycle.dart' show Disposable, IDisposable;
+import '../common/lifecycle.dart' show Disposable;
 import '../common/mime.dart' show Mimes;
 
 /// Test/runtime seam mirroring the browser `setTimeout` / `clearTimeout` pair.

@@ -129,14 +129,30 @@ final int _platform = (() {
   return 0;
 })();
 
+/// TS computes these flags once at module load from the host environment. The
+/// Dart port mirrors that, but a few ports (dnd.ts web/native branches) need
+/// both branches exercisable in tests, so the two environment flags are
+/// injectable — same pattern as `keyboardEvent.dart`'s browser-flag overrides.
+/// `null` clears the override and restores the detected value.
+bool? _isNativeOverride;
+bool? _isWebOverride;
+
+bool get isNative => _isNativeOverride ?? _isNative;
+set isNativeOverride(bool? value) {
+  _isNativeOverride = value;
+}
+
+bool get isWeb => _isWebOverride ?? _isWeb;
+set isWebOverride(bool? value) {
+  _isWebOverride = value;
+}
+
 final bool isWindows = _isWindows;
 final bool isMacintosh = _isMacintosh;
 final bool isLinux = _isLinux;
 final bool isLinuxSnap = _isLinuxSnap;
 final bool isChromeOS = _isChromeOS;
-final bool isNative = _isNative;
 final bool isElectron = _isElectron;
-final bool isWeb = _isWeb;
 final bool isWebWorker = false;
 final Object? webWorkerOrigin = null;
 final bool isIOS = _isIOS;

@@ -123,6 +123,57 @@ class DomDataTransfer {
   final List<Object?> setDragImageCalls = <Object?>[];
   void setDragImage(DomElement element, int x, int y) =>
       setDragImageCalls.add(<Object?>[element, x, y]);
+
+  /// 1:1: DOM `DataTransfer.types`.
+  final List<String> types = <String>[];
+
+  /// 1:1: DOM `DataTransfer.getData` / `setData`. Missing kinds return `''`
+  /// exactly like the browser. `dnd.ts` reads and writes drag payloads here.
+  final Map<String, String> data = <String, String>{};
+  String getData(String kind) =>
+      data.containsKey(kind) ? data[kind]! : '';
+  void setData(String kind, String value) {
+    data[kind] = value;
+    if (!types.contains(kind)) types.add(kind);
+  }
+
+  /// 1:1: DOM `DataTransfer.files` (nullable: absent until a drag carries
+  /// files) and `DataTransfer.items`. Both are read by `dnd.ts`.
+  List<DomFile?>? files;
+  List<DomFile?>? items;
+}
+
+/// 1:1: DOM `File` subset consumed by dnd.ts (`name`, `size`,
+/// `getAsFileSystemHandle`).
+class DomFile {
+  final String name;
+  final int size;
+
+  /// DOM `DataTransferItem.getAsFileSystemHandle()`.
+  Future<Object?> Function()? getAsFileSystemHandle;
+  DomFile({required this.name, this.size = 0});
+}
+
+/// 1:1: DOM `FileReader` subset used by dnd.ts: `readAsArrayBuffer` plus the
+/// `onerror` / `onabort` / `onload` handlers and `result`. The carrier only
+/// records the read request; hosts/tests drive the handlers, mirroring how the
+/// browser delivers them asynchronously.
+class FileReader {
+  /// Every reader created, newest last — the browser delivers reads out of
+  /// band, so tests/hosts drive [onload]/[onerror]/[onabort] via this list.
+  static final List<FileReader> instances = <FileReader>[];
+
+  void Function(Object event)? onerror;
+  void Function(Object event)? onabort;
+  void Function(Object event)? onload;
+  Object? result;
+  final List<Object> readAsArrayBufferCalls = <Object>[];
+  FileReader() {
+    instances.add(this);
+  }
+  void readAsArrayBuffer(Object file) {
+    readAsArrayBufferCalls.add(file);
+  }
 }
 
 class DomDragEvent extends DomEvent {

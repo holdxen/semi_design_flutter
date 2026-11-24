@@ -1186,7 +1186,7 @@
 | 1177 | platform | `platform/defaultAccount/common/defaultAccount.ts` | `lib/src/monaco/platform/defaultAccount/common/defaultAccount.dart` | tested |
 | 1178 | platform | `platform/dialogs/common/dialogs.ts` | `lib/src/monaco/platform/dialogs/common/dialogs.dart` | tested |
 | 1179 | platform | `platform/dialogs/test/common/testDialogService.ts` | `lib/src/monaco/platform/dialogs/test/common/testDialogService.dart` | tested |
-| 1180 | platform | `platform/dnd/browser/dnd.ts` | `lib/src/monaco/platform/dnd/browser/dnd.dart` | pending |
+| 1180 | platform | `platform/dnd/browser/dnd.ts` | `lib/src/monaco/platform/dnd/browser/dnd.dart` | tested |
 | 1181 | platform | `platform/editor/common/editor.ts` | `lib/src/monaco/platform/editor/common/editor.dart` | tested |
 | 1182 | platform | `platform/environment/common/argv.ts` | `lib/src/monaco/platform/environment/common/argv.dart` | tested |
 | 1183 | platform | `platform/environment/common/environment.ts` | `lib/src/monaco/platform/environment/common/environment.dart` | tested |
