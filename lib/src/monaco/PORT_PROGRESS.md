@@ -1169,9 +1169,9 @@
 | 1160 | platform | `platform/commands/common/commands.ts` | `lib/src/monaco/platform/commands/common/commands.dart` | tested |
 | 1161 | platform | `platform/commands/test/common/nullCommandService.ts` | `lib/src/monaco/platform/commands/test/common/nullCommandService.dart` | tested |
 | 1162 | platform | `platform/configuration/common/configuration.ts` | `lib/src/monaco/platform/configuration/common/configuration.dart` | tested |
-| 1163 | platform | `platform/configuration/common/configurationModels.ts` | `lib/src/monaco/platform/configuration/common/configurationModels.dart` | pending |
+| 1163 | platform | `platform/configuration/common/configurationModels.ts` | `lib/src/monaco/platform/configuration/common/configurationModels.dart` | tested |
 | 1164 | platform | `platform/configuration/common/configurationRegistry.ts` | `lib/src/monaco/platform/configuration/common/configurationRegistry.dart` | tested |
-| 1165 | platform | `platform/configuration/common/configurations.ts` | `lib/src/monaco/platform/configuration/common/configurations.dart` | pending |
+| 1165 | platform | `platform/configuration/common/configurations.ts` | `lib/src/monaco/platform/configuration/common/configurations.dart` | tested |
 | 1166 | platform | `platform/configuration/test/common/testConfigurationService.ts` | `lib/src/monaco/platform/configuration/test/common/testConfigurationService.dart` | tested |
 | 1167 | platform | `platform/contextkey/browser/contextKeyService.ts` | `lib/src/monaco/platform/contextkey/browser/contextKeyService.dart` | tested |
 | 1168 | platform | `platform/contextkey/common/contextkey.ts` | `lib/src/monaco/platform/contextkey/common/contextkey.dart` | tested |
@@ -1211,7 +1211,7 @@
 | 1202 | platform | `platform/instantiation/common/serviceCollection.ts` | `lib/src/monaco/platform/instantiation/common/serviceCollection.dart` | tested |
 | 1203 | platform | `platform/instantiation/test/common/instantiationServiceMock.ts` | `lib/src/monaco/platform/instantiation/test/common/instantiationServiceMock.dart` | tested |
 | 1204 | platform | `platform/jsonschemas/common/jsonContributionRegistry.ts` | `lib/src/monaco/platform/jsonschemas/common/jsonContributionRegistry.dart` | tested |
-| 1205 | platform | `platform/keybinding/common/abstractKeybindingService.ts` | `lib/src/monaco/platform/keybinding/common/abstractKeybindingService.dart` | pending |
+| 1205 | platform | `platform/keybinding/common/abstractKeybindingService.ts` | `lib/src/monaco/platform/keybinding/common/abstractKeybindingService.dart` | tested |
 | 1206 | platform | `platform/keybinding/common/baseResolvedKeybinding.ts` | `lib/src/monaco/platform/keybinding/common/baseResolvedKeybinding.dart` | tested |
 | 1207 | platform | `platform/keybinding/common/keybinding.ts` | `lib/src/monaco/platform/keybinding/common/keybinding.dart` | tested |
 | 1208 | platform | `platform/keybinding/common/keybindingResolver.ts` | `lib/src/monaco/platform/keybinding/common/keybindingResolver.dart` | tested |
