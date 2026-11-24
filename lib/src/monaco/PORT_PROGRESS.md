@@ -9,7 +9,7 @@
 |---|---|---|---|---|
 | 1 | editor | `editor/browser/config/charWidthReader.ts` | `lib/src/monaco/editor/browser/config/charWidthReader.dart` | tested |
 | 2 | editor | `editor/browser/config/domFontInfo.ts` | `lib/src/monaco/editor/browser/config/domFontInfo.dart` | tested |
-| 3 | editor | `editor/browser/config/editorConfiguration.ts` | `lib/src/monaco/editor/browser/config/editorConfiguration.dart` | pending |
+| 3 | editor | `editor/browser/config/editorConfiguration.ts` | `lib/src/monaco/editor/browser/config/editorConfiguration.dart` | tested |
 | 4 | editor | `editor/browser/config/elementSizeObserver.ts` | `lib/src/monaco/editor/browser/config/elementSizeObserver.dart` | tested |
 | 5 | editor | `editor/browser/config/fontMeasurements.ts` | `lib/src/monaco/editor/browser/config/fontMeasurements.dart` | tested |
 | 6 | editor | `editor/browser/config/migrateOptions.ts` | `lib/src/monaco/editor/browser/config/migrateOptions.dart` | tested |
@@ -114,7 +114,7 @@
 | 105 | editor | `editor/browser/viewParts/viewLines/domReadingContext.ts` | `lib/src/monaco/editor/browser/viewParts/viewLines/domReadingContext.dart` | tested |
 | 106 | editor | `editor/browser/viewParts/viewLines/rangeUtil.ts` | `lib/src/monaco/editor/browser/viewParts/viewLines/rangeUtil.dart` | pending |
 | 107 | editor | `editor/browser/viewParts/viewLines/viewLine.ts` | `lib/src/monaco/editor/browser/viewParts/viewLines/viewLine.dart` | pending |
-| 108 | editor | `editor/browser/viewParts/viewLines/viewLineOptions.ts` | `lib/src/monaco/editor/browser/viewParts/viewLines/viewLineOptions.dart` | pending |
+| 108 | editor | `editor/browser/viewParts/viewLines/viewLineOptions.ts` | `lib/src/monaco/editor/browser/viewParts/viewLines/viewLineOptions.dart` | tested |
 | 109 | editor | `editor/browser/viewParts/viewLines/viewLines.ts` | `lib/src/monaco/editor/browser/viewParts/viewLines/viewLines.dart` | pending |
 | 110 | editor | `editor/browser/viewParts/viewLinesGpu/viewLinesGpu.ts` | `lib/src/monaco/editor/browser/viewParts/viewLinesGpu/viewLinesGpu.dart` | pending |
 | 111 | editor | `editor/browser/viewParts/viewZones/viewZones.ts` | `lib/src/monaco/editor/browser/viewParts/viewZones/viewZones.dart` | pending |
@@ -166,13 +166,13 @@
 | 157 | editor | `editor/common/commands/shiftCommand.ts` | `lib/src/monaco/editor/common/commands/shiftCommand.dart` | pending |
 | 158 | editor | `editor/common/commands/surroundSelectionCommand.ts` | `lib/src/monaco/editor/common/commands/surroundSelectionCommand.dart` | pending |
 | 159 | editor | `editor/common/commands/trimTrailingWhitespaceCommand.ts` | `lib/src/monaco/editor/common/commands/trimTrailingWhitespaceCommand.dart` | pending |
-| 160 | editor | `editor/common/config/diffEditor.ts` | `lib/src/monaco/editor/common/config/diffEditor.dart` | pending |
+| 160 | editor | `editor/common/config/diffEditor.ts` | `lib/src/monaco/editor/common/config/diffEditor.dart` | tested |
 | 161 | editor | `editor/common/config/editorConfiguration.ts` | `lib/src/monaco/editor/common/config/editorConfiguration.dart` | tested |
-| 162 | editor | `editor/common/config/editorConfigurationSchema.ts` | `lib/src/monaco/editor/common/config/editorConfigurationSchema.dart` | pending |
-| 163 | editor | `editor/common/config/editorOptions.ts` | `lib/src/monaco/editor/common/config/editorOptions.dart` | pending |
+| 162 | editor | `editor/common/config/editorConfigurationSchema.ts` | `lib/src/monaco/editor/common/config/editorConfigurationSchema.dart` | tested |
+| 163 | editor | `editor/common/config/editorOptions.ts` | `lib/src/monaco/editor/common/config/editorOptions.dart` | tested |
 | 164 | editor | `editor/common/config/editorZoom.ts` | `lib/src/monaco/editor/common/config/editorZoom.dart` | tested |
 | 165 | editor | `editor/common/config/fontInfo.ts` | `lib/src/monaco/editor/common/config/fontInfo.dart` | tested |
-| 166 | editor | `editor/common/config/fontInfoFromSettings.ts` | `lib/src/monaco/editor/common/config/fontInfoFromSettings.dart` | pending |
+| 166 | editor | `editor/common/config/fontInfoFromSettings.ts` | `lib/src/monaco/editor/common/config/fontInfoFromSettings.dart` | tested |
 | 167 | editor | `editor/common/coordinatesConverter.ts` | `lib/src/monaco/editor/common/coordinatesConverter.dart` | pending |
 | 168 | editor | `editor/common/core/2d/dimension.ts` | `lib/src/monaco/editor/common/core/2d/dimension.dart` | tested |
 | 169 | editor | `editor/common/core/2d/point.ts` | `lib/src/monaco/editor/common/core/2d/point.dart` | tested |
@@ -241,7 +241,7 @@
 | 232 | editor | `editor/common/diff/rangeMapping.ts` | `lib/src/monaco/editor/common/diff/rangeMapping.dart` | tested |
 | 233 | editor | `editor/common/diff/verifyLinesDiff.ts` | `lib/src/monaco/editor/common/diff/verifyLinesDiff.dart` | tested |
 | 234 | editor | `editor/common/editorAction.ts` | `lib/src/monaco/editor/common/editorAction.dart` | pending |
-| 235 | editor | `editor/common/editorCommon.ts` | `lib/src/monaco/editor/common/editorCommon.dart` | pending |
+| 235 | editor | `editor/common/editorCommon.ts` | `lib/src/monaco/editor/common/editorCommon.dart` | tested |
 | 236 | editor | `editor/common/editorContextKeys.ts` | `lib/src/monaco/editor/common/editorContextKeys.dart` | tested |
 | 237 | editor | `editor/common/editorFeatures.ts` | `lib/src/monaco/editor/common/editorFeatures.dart` | tested |
 | 238 | editor | `editor/common/editorTheme.ts` | `lib/src/monaco/editor/common/editorTheme.dart` | tested |
@@ -356,7 +356,7 @@
 | 347 | editor | `editor/common/textModelEditSource.ts` | `lib/src/monaco/editor/common/textModelEditSource.dart` | pending |
 | 348 | editor | `editor/common/textModelEvents.ts` | `lib/src/monaco/editor/common/textModelEvents.dart` | pending |
 | 349 | editor | `editor/common/textModelGuides.ts` | `lib/src/monaco/editor/common/textModelGuides.dart` | tested |
-| 350 | editor | `editor/common/tokenizationRegistry.ts` | `lib/src/monaco/editor/common/tokenizationRegistry.dart` | pending |
+| 350 | editor | `editor/common/tokenizationRegistry.ts` | `lib/src/monaco/editor/common/tokenizationRegistry.dart` | tested |
 | 351 | editor | `editor/common/tokenizationTextModelPart.ts` | `lib/src/monaco/editor/common/tokenizationTextModelPart.dart` | pending |
 | 352 | editor | `editor/common/tokens/common.ts` | `lib/src/monaco/editor/common/tokens/common.dart` | tested |
 | 353 | editor | `editor/common/tokens/contiguousMultilineTokens.ts` | `lib/src/monaco/editor/common/tokens/contiguousMultilineTokens.dart` | tested |
@@ -770,7 +770,7 @@
 | 761 | editor | `editor/test/browser/commands/sideEditing.test.ts` | `lib/src/monaco/editor/test/browser/commands/sideEditing.test.dart` | pending |
 | 762 | editor | `editor/test/browser/commands/trimTrailingWhitespaceCommand.test.ts` | `lib/src/monaco/editor/test/browser/commands/trimTrailingWhitespaceCommand.test.dart` | pending |
 | 763 | editor | `editor/test/browser/config/editorConfiguration.test.ts` | `lib/src/monaco/editor/test/browser/config/editorConfiguration.test.dart` | pending |
-| 764 | editor | `editor/test/browser/config/editorLayoutProvider.test.ts` | `lib/src/monaco/editor/test/browser/config/editorLayoutProvider.test.dart` | pending |
+| 764 | editor | `editor/test/browser/config/editorLayoutProvider.test.ts` | `lib/src/monaco/editor/test/browser/config/editorLayoutProvider.test.dart` | tested |
 | 765 | editor | `editor/test/browser/config/fontMeasurements.test.ts` | `lib/src/monaco/editor/test/browser/config/fontMeasurements.test.dart` | pending |
 | 766 | editor | `editor/test/browser/config/testConfiguration.ts` | `lib/src/monaco/editor/test/browser/config/testConfiguration.dart` | pending |
 | 767 | editor | `editor/test/browser/controller/clipboardUtils.test.ts` | `lib/src/monaco/editor/test/browser/controller/clipboardUtils.test.dart` | pending |
