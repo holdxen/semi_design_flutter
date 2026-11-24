@@ -760,8 +760,8 @@
 | 751 | editor | `editor/standalone/common/monarch/monarchCompile.ts` | `lib/src/monaco/editor/standalone/common/monarch/monarchCompile.dart` | tested |
 | 752 | editor | `editor/standalone/common/monarch/monarchLexer.ts` | `lib/src/monaco/editor/standalone/common/monarch/monarchLexer.dart` | pending |
 | 753 | editor | `editor/standalone/common/monarch/monarchTypes.ts` | `lib/src/monaco/editor/standalone/common/monarch/monarchTypes.dart` | tested |
-| 754 | editor | `editor/standalone/common/standaloneTheme.ts` | `lib/src/monaco/editor/standalone/common/standaloneTheme.dart` | pending |
-| 755 | editor | `editor/standalone/common/themes.ts` | `lib/src/monaco/editor/standalone/common/themes.dart` | pending |
+| 754 | editor | `editor/standalone/common/standaloneTheme.ts` | `lib/src/monaco/editor/standalone/common/standaloneTheme.dart` | tested |
+| 755 | editor | `editor/standalone/common/themes.ts` | `lib/src/monaco/editor/standalone/common/themes.dart` | tested |
 | 756 | editor | `editor/standalone/test/browser/monarch.test.ts` | `lib/src/monaco/editor/standalone/test/browser/monarch.test.dart` | pending |
 | 757 | editor | `editor/standalone/test/browser/standaloneCodeEditor.test.ts` | `lib/src/monaco/editor/standalone/test/browser/standaloneCodeEditor.test.dart` | pending |
 | 758 | editor | `editor/standalone/test/browser/standaloneLanguages.test.ts` | `lib/src/monaco/editor/standalone/test/browser/standaloneLanguages.test.dart` | pending |

@@ -1,0 +1,256 @@
+// ---------------------------------------------------------------------------
+// Port of vscode/src/vs/editor/standalone/common/themes.ts @bfbf12b
+// Translated 1:1 from TypeScript. Do not refactor.
+//
+// The four theme tables are pure data. To avoid hand-transcription drift they
+// were generated from `tool/ts2dart/batch207_truth.json`, which is the output
+// of executing the real `themes.ts`
+// (`tool/ts2dart/_batch207_truth.cjs`); the generator reproduces the source's
+// field order (token/foreground/background/fontStyle) and its color-id
+// references.
+//
+// Adaptations (documented inline):
+//  * Computed color-id keys (`[editorBackground]: ...`) → the ported
+//    `editorColors.dart` / `editorColorRegistry.dart` constants.
+//  * `IStandaloneThemeData` object literals → named-argument constructors.
+// ---------------------------------------------------------------------------
+import '../../../platform/theme/common/colors/editorColors.dart'
+    show editorBackground, editorForeground, editorInactiveSelection,
+        editorSelectionHighlight;
+import '../../common/core/editorColorRegistry.dart'
+    show editorActiveIndentGuide1, editorIndentGuide1;
+import '../../common/languages/supports/tokenization.dart'
+    show ITokenThemeRule;
+import './standaloneTheme.dart' show IStandaloneThemeData;
+
+/// 1:1: `export const vs: IStandaloneThemeData`.
+final IStandaloneThemeData vs = IStandaloneThemeData(
+  base: 'vs',
+  inherit: false,
+  rules: <ITokenThemeRule>[
+      ITokenThemeRule(token: '', foreground: '000000', background: 'fffffe'),
+      ITokenThemeRule(token: 'invalid', foreground: 'cd3131'),
+      ITokenThemeRule(token: 'emphasis', fontStyle: 'italic'),
+      ITokenThemeRule(token: 'strong', fontStyle: 'bold'),
+      ITokenThemeRule(token: 'variable', foreground: '001188'),
+      ITokenThemeRule(token: 'variable.predefined', foreground: '4864AA'),
+      ITokenThemeRule(token: 'constant', foreground: 'dd0000'),
+      ITokenThemeRule(token: 'comment', foreground: '008000'),
+      ITokenThemeRule(token: 'number', foreground: '098658'),
+      ITokenThemeRule(token: 'number.hex', foreground: '3030c0'),
+      ITokenThemeRule(token: 'regexp', foreground: '800000'),
+      ITokenThemeRule(token: 'annotation', foreground: '808080'),
+      ITokenThemeRule(token: 'type', foreground: '008080'),
+      ITokenThemeRule(token: 'delimiter', foreground: '000000'),
+      ITokenThemeRule(token: 'delimiter.html', foreground: '383838'),
+      ITokenThemeRule(token: 'delimiter.xml', foreground: '0000FF'),
+      ITokenThemeRule(token: 'tag', foreground: '800000'),
+      ITokenThemeRule(token: 'tag.id.pug', foreground: '4F76AC'),
+      ITokenThemeRule(token: 'tag.class.pug', foreground: '4F76AC'),
+      ITokenThemeRule(token: 'meta.scss', foreground: '800000'),
+      ITokenThemeRule(token: 'metatag', foreground: 'e00000'),
+      ITokenThemeRule(token: 'metatag.content.html', foreground: 'FF0000'),
+      ITokenThemeRule(token: 'metatag.html', foreground: '808080'),
+      ITokenThemeRule(token: 'metatag.xml', foreground: '808080'),
+      ITokenThemeRule(token: 'metatag.php', fontStyle: 'bold'),
+      ITokenThemeRule(token: 'key', foreground: '863B00'),
+      ITokenThemeRule(token: 'string.key.json', foreground: 'A31515'),
+      ITokenThemeRule(token: 'string.value.json', foreground: '0451A5'),
+      ITokenThemeRule(token: 'attribute.name', foreground: 'FF0000'),
+      ITokenThemeRule(token: 'attribute.value', foreground: '0451A5'),
+      ITokenThemeRule(token: 'attribute.value.number', foreground: '098658'),
+      ITokenThemeRule(token: 'attribute.value.unit', foreground: '098658'),
+      ITokenThemeRule(token: 'attribute.value.html', foreground: '0000FF'),
+      ITokenThemeRule(token: 'attribute.value.xml', foreground: '0000FF'),
+      ITokenThemeRule(token: 'string', foreground: 'A31515'),
+      ITokenThemeRule(token: 'string.html', foreground: '0000FF'),
+      ITokenThemeRule(token: 'string.sql', foreground: 'FF0000'),
+      ITokenThemeRule(token: 'string.yaml', foreground: '0451A5'),
+      ITokenThemeRule(token: 'keyword', foreground: '0000FF'),
+      ITokenThemeRule(token: 'keyword.json', foreground: '0451A5'),
+      ITokenThemeRule(token: 'keyword.flow', foreground: 'AF00DB'),
+      ITokenThemeRule(token: 'keyword.flow.scss', foreground: '0000FF'),
+      ITokenThemeRule(token: 'operator.scss', foreground: '666666'),
+      ITokenThemeRule(token: 'operator.sql', foreground: '778899'),
+      ITokenThemeRule(token: 'operator.swift', foreground: '666666'),
+      ITokenThemeRule(token: 'predefined.sql', foreground: 'C700C7'),
+  ],
+  colors: <String, String>{
+    editorBackground: '#FFFFFE',
+    editorForeground: '#000000',
+    editorInactiveSelection: '#E5EBF1',
+    editorSelectionHighlight: '#ADD6FF4D',
+    editorActiveIndentGuide1: '#939393',
+    editorIndentGuide1: '#D3D3D3',
+  },
+);
+
+/// 1:1: `export const vs_dark: IStandaloneThemeData`.
+final IStandaloneThemeData vs_dark = IStandaloneThemeData(
+  base: 'vs-dark',
+  inherit: false,
+  rules: <ITokenThemeRule>[
+      ITokenThemeRule(token: '', foreground: 'D4D4D4', background: '1E1E1E'),
+      ITokenThemeRule(token: 'invalid', foreground: 'f44747'),
+      ITokenThemeRule(token: 'emphasis', fontStyle: 'italic'),
+      ITokenThemeRule(token: 'strong', fontStyle: 'bold'),
+      ITokenThemeRule(token: 'variable', foreground: '74B0DF'),
+      ITokenThemeRule(token: 'variable.predefined', foreground: '4864AA'),
+      ITokenThemeRule(token: 'variable.parameter', foreground: '9CDCFE'),
+      ITokenThemeRule(token: 'constant', foreground: '569CD6'),
+      ITokenThemeRule(token: 'comment', foreground: '608B4E'),
+      ITokenThemeRule(token: 'number', foreground: 'B5CEA8'),
+      ITokenThemeRule(token: 'number.hex', foreground: '5BB498'),
+      ITokenThemeRule(token: 'regexp', foreground: 'B46695'),
+      ITokenThemeRule(token: 'annotation', foreground: 'cc6666'),
+      ITokenThemeRule(token: 'type', foreground: '3DC9B0'),
+      ITokenThemeRule(token: 'delimiter', foreground: 'DCDCDC'),
+      ITokenThemeRule(token: 'delimiter.html', foreground: '808080'),
+      ITokenThemeRule(token: 'delimiter.xml', foreground: '808080'),
+      ITokenThemeRule(token: 'tag', foreground: '569CD6'),
+      ITokenThemeRule(token: 'tag.id.pug', foreground: '4F76AC'),
+      ITokenThemeRule(token: 'tag.class.pug', foreground: '4F76AC'),
+      ITokenThemeRule(token: 'meta.scss', foreground: 'A79873'),
+      ITokenThemeRule(token: 'meta.tag', foreground: 'CE9178'),
+      ITokenThemeRule(token: 'metatag', foreground: 'DD6A6F'),
+      ITokenThemeRule(token: 'metatag.content.html', foreground: '9CDCFE'),
+      ITokenThemeRule(token: 'metatag.html', foreground: '569CD6'),
+      ITokenThemeRule(token: 'metatag.xml', foreground: '569CD6'),
+      ITokenThemeRule(token: 'metatag.php', fontStyle: 'bold'),
+      ITokenThemeRule(token: 'key', foreground: '9CDCFE'),
+      ITokenThemeRule(token: 'string.key.json', foreground: '9CDCFE'),
+      ITokenThemeRule(token: 'string.value.json', foreground: 'CE9178'),
+      ITokenThemeRule(token: 'attribute.name', foreground: '9CDCFE'),
+      ITokenThemeRule(token: 'attribute.value', foreground: 'CE9178'),
+      ITokenThemeRule(
+        token: 'attribute.value.number.css',
+        foreground: 'B5CEA8',
+      ),
+      ITokenThemeRule(
+        token: 'attribute.value.unit.css',
+        foreground: 'B5CEA8',
+      ),
+      ITokenThemeRule(
+        token: 'attribute.value.hex.css',
+        foreground: 'D4D4D4',
+      ),
+      ITokenThemeRule(token: 'string', foreground: 'CE9178'),
+      ITokenThemeRule(token: 'string.sql', foreground: 'FF0000'),
+      ITokenThemeRule(token: 'keyword', foreground: '569CD6'),
+      ITokenThemeRule(token: 'keyword.flow', foreground: 'C586C0'),
+      ITokenThemeRule(token: 'keyword.json', foreground: 'CE9178'),
+      ITokenThemeRule(token: 'keyword.flow.scss', foreground: '569CD6'),
+      ITokenThemeRule(token: 'operator.scss', foreground: '909090'),
+      ITokenThemeRule(token: 'operator.sql', foreground: '778899'),
+      ITokenThemeRule(token: 'operator.swift', foreground: '909090'),
+      ITokenThemeRule(token: 'predefined.sql', foreground: 'FF00FF'),
+  ],
+  colors: <String, String>{
+    editorBackground: '#1E1E1E',
+    editorForeground: '#D4D4D4',
+    editorInactiveSelection: '#3A3D41',
+    editorSelectionHighlight: '#ADD6FF26',
+    editorActiveIndentGuide1: '#707070',
+    editorIndentGuide1: '#404040',
+  },
+);
+
+/// 1:1: `export const hc_black: IStandaloneThemeData`.
+final IStandaloneThemeData hc_black = IStandaloneThemeData(
+  base: 'hc-black',
+  inherit: false,
+  rules: <ITokenThemeRule>[
+      ITokenThemeRule(token: '', foreground: 'FFFFFF', background: '000000'),
+      ITokenThemeRule(token: 'invalid', foreground: 'f44747'),
+      ITokenThemeRule(token: 'emphasis', fontStyle: 'italic'),
+      ITokenThemeRule(token: 'strong', fontStyle: 'bold'),
+      ITokenThemeRule(token: 'variable', foreground: '1AEBFF'),
+      ITokenThemeRule(token: 'variable.parameter', foreground: '9CDCFE'),
+      ITokenThemeRule(token: 'constant', foreground: '569CD6'),
+      ITokenThemeRule(token: 'comment', foreground: '608B4E'),
+      ITokenThemeRule(token: 'number', foreground: 'FFFFFF'),
+      ITokenThemeRule(token: 'regexp', foreground: 'C0C0C0'),
+      ITokenThemeRule(token: 'annotation', foreground: '569CD6'),
+      ITokenThemeRule(token: 'type', foreground: '3DC9B0'),
+      ITokenThemeRule(token: 'delimiter', foreground: 'FFFF00'),
+      ITokenThemeRule(token: 'delimiter.html', foreground: 'FFFF00'),
+      ITokenThemeRule(token: 'tag', foreground: '569CD6'),
+      ITokenThemeRule(token: 'tag.id.pug', foreground: '4F76AC'),
+      ITokenThemeRule(token: 'tag.class.pug', foreground: '4F76AC'),
+      ITokenThemeRule(token: 'meta', foreground: 'D4D4D4'),
+      ITokenThemeRule(token: 'meta.tag', foreground: 'CE9178'),
+      ITokenThemeRule(token: 'metatag', foreground: '569CD6'),
+      ITokenThemeRule(token: 'metatag.content.html', foreground: '1AEBFF'),
+      ITokenThemeRule(token: 'metatag.html', foreground: '569CD6'),
+      ITokenThemeRule(token: 'metatag.xml', foreground: '569CD6'),
+      ITokenThemeRule(token: 'metatag.php', fontStyle: 'bold'),
+      ITokenThemeRule(token: 'key', foreground: '9CDCFE'),
+      ITokenThemeRule(token: 'string.key', foreground: '9CDCFE'),
+      ITokenThemeRule(token: 'string.value', foreground: 'CE9178'),
+      ITokenThemeRule(token: 'attribute.name', foreground: '569CD6'),
+      ITokenThemeRule(token: 'attribute.value', foreground: '3FF23F'),
+      ITokenThemeRule(token: 'string', foreground: 'CE9178'),
+      ITokenThemeRule(token: 'string.sql', foreground: 'FF0000'),
+      ITokenThemeRule(token: 'keyword', foreground: '569CD6'),
+      ITokenThemeRule(token: 'keyword.flow', foreground: 'C586C0'),
+      ITokenThemeRule(token: 'operator.sql', foreground: '778899'),
+      ITokenThemeRule(token: 'operator.swift', foreground: '909090'),
+      ITokenThemeRule(token: 'predefined.sql', foreground: 'FF00FF'),
+  ],
+  colors: <String, String>{
+    editorBackground: '#000000',
+    editorForeground: '#FFFFFF',
+    editorActiveIndentGuide1: '#FFFFFF',
+    editorIndentGuide1: '#FFFFFF',
+  },
+);
+
+/// 1:1: `export const hc_light: IStandaloneThemeData`.
+final IStandaloneThemeData hc_light = IStandaloneThemeData(
+  base: 'hc-light',
+  inherit: false,
+  rules: <ITokenThemeRule>[
+      ITokenThemeRule(token: '', foreground: '292929', background: 'FFFFFF'),
+      ITokenThemeRule(token: 'invalid', foreground: 'B5200D'),
+      ITokenThemeRule(token: 'emphasis', fontStyle: 'italic'),
+      ITokenThemeRule(token: 'strong', fontStyle: 'bold'),
+      ITokenThemeRule(token: 'variable', foreground: '264F70'),
+      ITokenThemeRule(token: 'variable.predefined', foreground: '4864AA'),
+      ITokenThemeRule(token: 'constant', foreground: 'dd0000'),
+      ITokenThemeRule(token: 'comment', foreground: '008000'),
+      ITokenThemeRule(token: 'number', foreground: '098658'),
+      ITokenThemeRule(token: 'number.hex', foreground: '3030c0'),
+      ITokenThemeRule(token: 'regexp', foreground: '800000'),
+      ITokenThemeRule(token: 'annotation', foreground: '808080'),
+      ITokenThemeRule(token: 'type', foreground: '008080'),
+      ITokenThemeRule(token: 'delimiter', foreground: '000000'),
+      ITokenThemeRule(token: 'delimiter.html', foreground: '383838'),
+      ITokenThemeRule(token: 'tag', foreground: '800000'),
+      ITokenThemeRule(token: 'tag.id.pug', foreground: '4F76AC'),
+      ITokenThemeRule(token: 'tag.class.pug', foreground: '4F76AC'),
+      ITokenThemeRule(token: 'meta.scss', foreground: '800000'),
+      ITokenThemeRule(token: 'metatag', foreground: 'e00000'),
+      ITokenThemeRule(token: 'metatag.content.html', foreground: 'B5200D'),
+      ITokenThemeRule(token: 'metatag.html', foreground: '808080'),
+      ITokenThemeRule(token: 'metatag.xml', foreground: '808080'),
+      ITokenThemeRule(token: 'metatag.php', fontStyle: 'bold'),
+      ITokenThemeRule(token: 'key', foreground: '863B00'),
+      ITokenThemeRule(token: 'string.key.json', foreground: 'A31515'),
+      ITokenThemeRule(token: 'string.value.json', foreground: '0451A5'),
+      ITokenThemeRule(token: 'attribute.name', foreground: '264F78'),
+      ITokenThemeRule(token: 'attribute.value', foreground: '0451A5'),
+      ITokenThemeRule(token: 'string', foreground: 'A31515'),
+      ITokenThemeRule(token: 'string.sql', foreground: 'B5200D'),
+      ITokenThemeRule(token: 'keyword', foreground: '0000FF'),
+      ITokenThemeRule(token: 'keyword.flow', foreground: 'AF00DB'),
+      ITokenThemeRule(token: 'operator.sql', foreground: '778899'),
+      ITokenThemeRule(token: 'operator.swift', foreground: '666666'),
+      ITokenThemeRule(token: 'predefined.sql', foreground: 'C700C7'),
+  ],
+  colors: <String, String>{
+    editorBackground: '#FFFFFF',
+    editorForeground: '#292929',
+    editorActiveIndentGuide1: '#292929',
+    editorIndentGuide1: '#292929',
+  },
+);
