@@ -7,12 +7,12 @@
 
 | # | 层 | 源文件 | 目标 Dart | 状态 |
 |---|---|---|---|---|
-| 1 | editor | `editor/browser/config/charWidthReader.ts` | `lib/src/monaco/editor/browser/config/charWidthReader.dart` | pending |
+| 1 | editor | `editor/browser/config/charWidthReader.ts` | `lib/src/monaco/editor/browser/config/charWidthReader.dart` | tested |
 | 2 | editor | `editor/browser/config/domFontInfo.ts` | `lib/src/monaco/editor/browser/config/domFontInfo.dart` | tested |
 | 3 | editor | `editor/browser/config/editorConfiguration.ts` | `lib/src/monaco/editor/browser/config/editorConfiguration.dart` | pending |
 | 4 | editor | `editor/browser/config/elementSizeObserver.ts` | `lib/src/monaco/editor/browser/config/elementSizeObserver.dart` | tested |
-| 5 | editor | `editor/browser/config/fontMeasurements.ts` | `lib/src/monaco/editor/browser/config/fontMeasurements.dart` | pending |
-| 6 | editor | `editor/browser/config/migrateOptions.ts` | `lib/src/monaco/editor/browser/config/migrateOptions.dart` | pending |
+| 5 | editor | `editor/browser/config/fontMeasurements.ts` | `lib/src/monaco/editor/browser/config/fontMeasurements.dart` | tested |
+| 6 | editor | `editor/browser/config/migrateOptions.ts` | `lib/src/monaco/editor/browser/config/migrateOptions.dart` | tested |
 | 7 | editor | `editor/browser/config/tabFocus.ts` | `lib/src/monaco/editor/browser/config/tabFocus.dart` | tested |
 | 8 | editor | `editor/browser/controller/dragScrolling.ts` | `lib/src/monaco/editor/browser/controller/dragScrolling.dart` | pending |
 | 9 | editor | `editor/browser/controller/editContext/clipboardUtils.ts` | `lib/src/monaco/editor/browser/controller/editContext/clipboardUtils.dart` | pending |
@@ -25,7 +25,7 @@
 | 16 | editor | `editor/browser/controller/editContext/native/screenReaderContentRich.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/screenReaderContentRich.dart` | pending |
 | 17 | editor | `editor/browser/controller/editContext/native/screenReaderContentSimple.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/screenReaderContentSimple.dart` | pending |
 | 18 | editor | `editor/browser/controller/editContext/native/screenReaderSupport.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/screenReaderSupport.dart` | pending |
-| 19 | editor | `editor/browser/controller/editContext/native/screenReaderUtils.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/screenReaderUtils.dart` | pending |
+| 19 | editor | `editor/browser/controller/editContext/native/screenReaderUtils.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/screenReaderUtils.dart` | tested |
 | 20 | editor | `editor/browser/controller/editContext/screenReaderUtils.ts` | `lib/src/monaco/editor/browser/controller/editContext/screenReaderUtils.dart` | pending |
 | 21 | editor | `editor/browser/controller/editContext/textArea/textAreaEditContext.ts` | `lib/src/monaco/editor/browser/controller/editContext/textArea/textAreaEditContext.dart` | pending |
 | 22 | editor | `editor/browser/controller/editContext/textArea/textAreaEditContextInput.ts` | `lib/src/monaco/editor/browser/controller/editContext/textArea/textAreaEditContextInput.dart` | pending |
@@ -167,7 +167,7 @@
 | 158 | editor | `editor/common/commands/surroundSelectionCommand.ts` | `lib/src/monaco/editor/common/commands/surroundSelectionCommand.dart` | pending |
 | 159 | editor | `editor/common/commands/trimTrailingWhitespaceCommand.ts` | `lib/src/monaco/editor/common/commands/trimTrailingWhitespaceCommand.dart` | pending |
 | 160 | editor | `editor/common/config/diffEditor.ts` | `lib/src/monaco/editor/common/config/diffEditor.dart` | pending |
-| 161 | editor | `editor/common/config/editorConfiguration.ts` | `lib/src/monaco/editor/common/config/editorConfiguration.dart` | pending |
+| 161 | editor | `editor/common/config/editorConfiguration.ts` | `lib/src/monaco/editor/common/config/editorConfiguration.dart` | tested |
 | 162 | editor | `editor/common/config/editorConfigurationSchema.ts` | `lib/src/monaco/editor/common/config/editorConfigurationSchema.dart` | pending |
 | 163 | editor | `editor/common/config/editorOptions.ts` | `lib/src/monaco/editor/common/config/editorOptions.dart` | pending |
 | 164 | editor | `editor/common/config/editorZoom.ts` | `lib/src/monaco/editor/common/config/editorZoom.dart` | tested |

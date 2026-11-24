@@ -25,7 +25,10 @@ Map<int, Object?> _values({bool minimap = true, String size = 'proportional', St
   opts.EditorOption.glyphMargin: true, opts.EditorOption.lineNumbers: const opts.InternalEditorRenderLineNumbersOptions(1), opts.EditorOption.lineNumbersMinChars: 5, opts.EditorOption.scrollBeyondLastLine: true, opts.EditorOption.padding: const opts.EditorPaddingOptions(top: 10, bottom: 20), opts.EditorOption.lineDecorationsWidth: 10, opts.EditorOption.minimap: opts.EditorMinimapOptions(enabled: minimap, size: size, side: side, showSlider: 'mouseover', renderCharacters: chars, maxColumn: 120, scale: 1), opts.EditorOption.scrollbar: const opts.InternalEditorScrollbarOptions(arrowSize: 11, verticalScrollbarSize: 14, horizontalScrollbarSize: 12, verticalHasArrows: false), opts.EditorOption.folding: true, opts.EditorOption.showFoldingControls: 'mouseover', opts.EditorOption.wordWrapOverride2: 'inherit', opts.EditorOption.wordWrapOverride1: 'inherit', opts.EditorOption.wordWrap: wrap, opts.EditorOption.wordWrapColumn: 80, opts.EditorOption.wordWrapIndicator: false, opts.EditorOption.accessibilitySupport: accessibility,
 };
 
-Map<int, Object?> _boundedValues() => <int, Object?>{..._values(wrap: 'bounded', accessibility: AccessibilitySupport.Enabled), opts.EditorOption.wordWrapOverride1: 'inherit'};
+Map<int, Object?> _boundedValues() => <int, Object?>{..._values(wrap: 'bounded', accessibility: AccessibilitySupport.Enabled),
+  // Must mirror the truth harness inputs: `wordWrapColumn: 40` and
+  // `wordWrapIndicator: true` (the bounded clamp + indicator offset).
+  opts.EditorOption.wordWrapOverride1: 'inherit', opts.EditorOption.wordWrapColumn: 40, opts.EditorOption.wordWrapIndicator: true};
 
 void main() {
   final truth = _truth();
