@@ -14,8 +14,13 @@
 //   segment 2/4 (this commit): lines 53–1054 (IEditorOptions — generated
 //     by `tool/ts2dart/_gen_editor_options.py` — MINIMAP_GUTTER_WIDTH,
 //     diff editor options, ValidDiffEditorBaseOptions).
-//     Still pending in this segment: option classes 1527–2600 (moved to the
-//     next segment commit).
+//   segment 3a/4 (this commit): option classes 1527–2555 (comments,
+//     cursorBlinking, cursorStyle, editorClassName, emptySelectionClipboard,
+//     find, fontLigatures, fontVariations, fontInfo, the five effective*
+//     computed options, fontSize, fontWeight, gotoLocation, hover,
+//     markdownImages + getUrlOrigin/isMarkdownImageAllowed).
+//   segment 3b/4 (pending): lines 2556–5958 (layoutInfo computer, minimap,
+//     suggest, scrollbar, unicodeHighlight, inlineSuggest, ...).
 //   segment 3/4 (pending): lines 2600–5958 (option classes cont.).
 //   segment 4/4 (pending): lines 6144–7102 (EditorOptions registry object +
 //     type-level helpers).
@@ -50,7 +55,14 @@ import '../../../platform/accessibility/common/accessibility.dart'
     show AccessibilitySupport;
 import '../../../platform/configuration/common/configurationRegistry.dart'
     show IConfigurationPropertySchema;
-import 'fontInfo.dart' show FontInfo;
+import '../../../base/common/platform.dart' as platform;
+import 'fontInfo.dart'
+    show
+        EDITOR_FONT_DEFAULTS,
+        FONT_VARIATION_OFF,
+        FONT_VARIATION_TRANSLATE,
+        FontInfo,
+        FontInfoOptions;
 
 //#region typed options
 
@@ -1494,6 +1506,1401 @@ int _autoIndentFromString(
 }
 
 //#endregion
+
+//#region segment 3a: option classes (source lines 1527-2555)
+
+/// JS truthiness helper (`Boolean(value)`): `undefined`/`null`/`false`/`0`/
+/// `NaN`/`''` are falsy, everything else truthy. The Dart carrier merges
+/// `undefined` and `null` into one `null` (same convention as `boolean`).
+bool _truthy(Object? value) {
+  if (value == null || value == false) {
+    return false;
+  }
+  if (value is num) {
+    return value != 0 && !value.isNaN;
+  }
+  if (value is String) {
+    return value.isNotEmpty;
+  }
+  return true;
+}
+
+/// JS `String(number)` semantics: integer-valued numbers carry no `.0`
+/// (third reuse of this helper — see `fontInfo.dart`, `domFontInfo.dart`).
+String _jsNum(num value) {
+  if (value is int) {
+    return value.toString();
+  }
+  final double asDouble = value.toDouble();
+  if (asDouble.isFinite && asDouble == asDouble.truncateToDouble()) {
+    return asDouble.toInt().toString();
+  }
+  return asDouble.toString();
+}
+
+/// The option `validate` implementations read the structural user input
+/// (`Unknown<T>` in TS — every field `unknown`) through plain property
+/// access. User settings arrive as JSON maps and programmatic use passes the
+/// typed carrier class, so both carriers are normalized to a field map here
+/// (TS structural typing makes the two interchangeable; Dart needs the
+/// explicit union read).
+Map<String, Object?> _readOptionFields(
+    Object? input, Map<String, Object?> Function() fromCarrier) {
+  if (input is Map) {
+    return input.cast<String, Object?>();
+  }
+  // Lazy: the typed-carrier conversion must only run for carrier inputs —
+  // Dart evaluates call arguments eagerly, unlike the TS `?:` fallback this
+  // mirrors (found by the truth replay: eager cast crashed on map inputs).
+  return fromCarrier();
+}
+
+//#region comments
+
+/// 1:1: `export interface IEditorCommentsOptions`.
+class IEditorCommentsOptions {
+  IEditorCommentsOptions({this.insertSpace, this.ignoreEmptyLines});
+
+  /// Insert a space after the line comment token and inside the block comments tokens.
+  /// Defaults to true.
+  bool? insertSpace;
+
+  /// Ignore empty lines when inserting line comments.
+  /// Defaults to true.
+  bool? ignoreEmptyLines;
+
+  Map<String, Object?> _fields() => <String, Object?>{
+        'insertSpace': insertSpace,
+        'ignoreEmptyLines': ignoreEmptyLines,
+      };
+}
+
+/// @internal
+/// 1:1: `export type EditorCommentsOptions = Readonly<Required<IEditorCommentsOptions>>`.
+class EditorCommentsOptions {
+  EditorCommentsOptions({required this.insertSpace, required this.ignoreEmptyLines});
+
+  final bool insertSpace;
+  final bool ignoreEmptyLines;
+}
+
+/// 1:1: `class EditorComments extends BaseEditorOption<...>`.
+class EditorComments extends BaseEditorOption<EditorCommentsOptions> {
+  EditorComments()
+      : super(
+          EditorOption.comments,
+          'comments',
+          EditorCommentsOptions(insertSpace: true, ignoreEmptyLines: true),
+          <String, Object?>{
+            'editor.comments.insertSpace': <String, Object?>{
+              'type': 'boolean',
+              'default': true,
+              'description': localize('comments.insertSpace',
+                  'Controls whether a space character is inserted when commenting.'),
+            },
+            'editor.comments.ignoreEmptyLines': <String, Object?>{
+              'type': 'boolean',
+              'default': true,
+              'description': localize('comments.ignoreEmptyLines',
+                  'Controls if empty lines should be ignored with toggle, add or remove actions for line comments.'),
+            },
+          },
+        );
+
+  @override
+  EditorCommentsOptions validate(Object? _input) {
+    if (_input == null || (_input is! Map && _input is! IEditorCommentsOptions)) {
+      return defaultValue;
+    }
+    final Map<String, Object?> input =
+        _readOptionFields(_input, () => (_input as IEditorCommentsOptions)._fields());
+    return EditorCommentsOptions(
+      insertSpace: boolean(input['insertSpace'], defaultValue.insertSpace),
+      ignoreEmptyLines:
+          boolean(input['ignoreEmptyLines'], defaultValue.ignoreEmptyLines),
+    );
+  }
+}
+
+//#endregion
+
+//#region cursorBlinking
+
+/// The kind of animation in which the editor's cursor should be rendered.
+/// 1:1: `export const enum TextEditorCursorBlinkingStyle`.
+class TextEditorCursorBlinkingStyle {
+  /// Hidden
+  static const int Hidden = 0;
+
+  /// Blinking
+  static const int Blink = 1;
+
+  /// Blinking with smooth fading
+  static const int Smooth = 2;
+
+  /// Blinking with prolonged filled state and smooth fading
+  static const int Phase = 3;
+
+  /// Expand collapse animation on the y axis
+  static const int Expand = 4;
+
+  /// No-Blinking
+  static const int Solid = 5;
+
+  const TextEditorCursorBlinkingStyle._();
+}
+
+/// @internal
+/// 1:1: `export function cursorBlinkingStyleFromString`. TS's exhaustive
+/// switch over the string union has no runtime fallthrough; the Dart switch
+/// is non-exhaustive over `String`, so the impossible branch throws.
+int cursorBlinkingStyleFromString(String cursorBlinkingStyle) {
+  switch (cursorBlinkingStyle) {
+    case 'blink':
+      return TextEditorCursorBlinkingStyle.Blink;
+    case 'smooth':
+      return TextEditorCursorBlinkingStyle.Smooth;
+    case 'phase':
+      return TextEditorCursorBlinkingStyle.Phase;
+    case 'expand':
+      return TextEditorCursorBlinkingStyle.Expand;
+    case 'solid':
+      return TextEditorCursorBlinkingStyle.Solid;
+  }
+  throw StateError('Unexpected cursor blinking style: $cursorBlinkingStyle');
+}
+
+//#endregion
+
+//#region cursorStyle
+
+/// The style in which the editor's cursor should be rendered.
+/// 1:1: `export enum TextEditorCursorStyle`.
+class TextEditorCursorStyle {
+  /// As a vertical line (sitting between two characters).
+  static const int Line = 1;
+
+  /// As a block (sitting on top of a character).
+  static const int Block = 2;
+
+  /// As a horizontal line (sitting under a character).
+  static const int Underline = 3;
+
+  /// As a thin vertical line (sitting between two characters).
+  static const int LineThin = 4;
+
+  /// As an outlined block (sitting on top of a character).
+  static const int BlockOutline = 5;
+
+  /// As a thin horizontal line (sitting under a character).
+  static const int UnderlineThin = 6;
+
+  const TextEditorCursorStyle._();
+}
+
+/// @internal
+/// 1:1: `export function cursorStyleToString`.
+String cursorStyleToString(int cursorStyle) {
+  switch (cursorStyle) {
+    case TextEditorCursorStyle.Line:
+      return 'line';
+    case TextEditorCursorStyle.Block:
+      return 'block';
+    case TextEditorCursorStyle.Underline:
+      return 'underline';
+    case TextEditorCursorStyle.LineThin:
+      return 'line-thin';
+    case TextEditorCursorStyle.BlockOutline:
+      return 'block-outline';
+    case TextEditorCursorStyle.UnderlineThin:
+      return 'underline-thin';
+  }
+  throw StateError('Unexpected cursor style: $cursorStyle');
+}
+
+/// @internal
+/// 1:1: `export function cursorStyleFromString`.
+int cursorStyleFromString(String cursorStyle) {
+  switch (cursorStyle) {
+    case 'line':
+      return TextEditorCursorStyle.Line;
+    case 'block':
+      return TextEditorCursorStyle.Block;
+    case 'underline':
+      return TextEditorCursorStyle.Underline;
+    case 'line-thin':
+      return TextEditorCursorStyle.LineThin;
+    case 'block-outline':
+      return TextEditorCursorStyle.BlockOutline;
+    case 'underline-thin':
+      return TextEditorCursorStyle.UnderlineThin;
+  }
+  throw StateError('Unexpected cursor style: $cursorStyle');
+}
+
+//#endregion
+
+//#region editorClassName
+
+/// 1:1: `class EditorClassName extends ComputedEditorOption<...>`.
+class EditorClassName extends ComputedEditorOption<String> {
+  EditorClassName() : super(EditorOption.editorClassName, '');
+
+  @override
+  String compute(
+      IEnvironmentalOptions env, IComputedEditorOptions options, Object? _) {
+    final List<String> classNames = <String>['monaco-editor'];
+    if (_truthy(options.get(EditorOption.extraEditorClassName))) {
+      classNames.add(options.get(EditorOption.extraEditorClassName) as String);
+    }
+    if (_truthy(env.extraEditorClassName)) {
+      classNames.add(env.extraEditorClassName);
+    }
+    if (options.get(EditorOption.mouseStyle) == 'default') {
+      classNames.add('mouse-default');
+    } else if (options.get(EditorOption.mouseStyle) == 'copy') {
+      classNames.add('mouse-copy');
+    }
+
+    if (_truthy(options.get(EditorOption.showUnused))) {
+      classNames.add('showUnused');
+    }
+
+    if (_truthy(options.get(EditorOption.showDeprecated))) {
+      classNames.add('showDeprecated');
+    }
+
+    return classNames.join(' ');
+  }
+}
+
+//#endregion
+
+//#region emptySelectionClipboard
+
+/// 1:1: `class EditorEmptySelectionClipboard extends EditorBooleanOption<...>`.
+class EditorEmptySelectionClipboard extends EditorBooleanOption {
+  EditorEmptySelectionClipboard()
+      : super(
+          EditorOption.emptySelectionClipboard,
+          'emptySelectionClipboard',
+          true,
+          <String, Object?>{
+            'description': localize('emptySelectionClipboard',
+                'Controls whether copying without a selection copies the current line.'),
+          },
+        );
+
+  @override
+  bool compute(
+      IEnvironmentalOptions env, IComputedEditorOptions options, bool value) {
+    return value && env.emptySelectionClipboard;
+  }
+}
+
+//#endregion
+
+//#region find
+
+/// Configuration options for editor find widget
+/// 1:1: `export interface IEditorFindOptions`.
+class IEditorFindOptions {
+  IEditorFindOptions({
+    this.cursorMoveOnType,
+    this.findOnType,
+    this.seedSearchStringFromSelection,
+    this.autoFindInSelection,
+    this.addExtraSpaceOnTop,
+    this.globalFindClipboard,
+    this.loop,
+    this.closeOnResult,
+    this.history,
+    this.replaceHistory,
+  });
+
+  /// Controls whether the cursor should move to find matches while typing.
+  bool? cursorMoveOnType;
+
+  /// Controls whether the find widget should search as you type.
+  bool? findOnType;
+
+  /// Controls if we seed search string in the Find Widget with editor selection.
+  String? seedSearchStringFromSelection;
+
+  /// Controls if Find in Selection flag is turned on in the editor.
+  String? autoFindInSelection;
+
+  /// Controls whether the Find Widget should add extra lines on top of the editor.
+  bool? addExtraSpaceOnTop;
+
+  /// @internal
+  /// Controls if the Find Widget should read or modify the shared find clipboard on macOS
+  bool? globalFindClipboard;
+
+  /// Controls whether the search result and diff result automatically restarts from the beginning (or the end) when no further matches can be found
+  bool? loop;
+
+  /// Controls whether to close the Find Widget after an explicit find navigation command lands on a match.
+  bool? closeOnResult;
+
+  /// @internal
+  /// Controls how the find widget search history should be stored
+  String? history;
+
+  /// @internal
+  /// Controls how the replace widget search history should be stored
+  String? replaceHistory;
+
+  Map<String, Object?> _fields() => <String, Object?>{
+        'cursorMoveOnType': cursorMoveOnType,
+        'findOnType': findOnType,
+        'seedSearchStringFromSelection': seedSearchStringFromSelection,
+        'autoFindInSelection': autoFindInSelection,
+        'addExtraSpaceOnTop': addExtraSpaceOnTop,
+        'globalFindClipboard': globalFindClipboard,
+        'loop': loop,
+        'closeOnResult': closeOnResult,
+        'history': history,
+        'replaceHistory': replaceHistory,
+      };
+}
+
+/// @internal
+/// 1:1: `export type EditorFindOptions = Readonly<Required<IEditorFindOptions>>`.
+class EditorFindOptions {
+  EditorFindOptions({
+    required this.cursorMoveOnType,
+    required this.findOnType,
+    required this.seedSearchStringFromSelection,
+    required this.autoFindInSelection,
+    required this.globalFindClipboard,
+    required this.addExtraSpaceOnTop,
+    required this.loop,
+    required this.closeOnResult,
+    required this.history,
+    required this.replaceHistory,
+  });
+
+  final bool cursorMoveOnType;
+  final bool findOnType;
+  final String seedSearchStringFromSelection;
+  final String autoFindInSelection;
+  final bool globalFindClipboard;
+  final bool addExtraSpaceOnTop;
+  final bool loop;
+  final bool closeOnResult;
+  final String history;
+  final String replaceHistory;
+}
+
+/// 1:1: `class EditorFind extends BaseEditorOption<...>`.
+class EditorFind extends BaseEditorOption<EditorFindOptions> {
+  EditorFind()
+      : super(
+          EditorOption.find,
+          'find',
+          EditorFindOptions(
+            cursorMoveOnType: true,
+            findOnType: true,
+            seedSearchStringFromSelection: 'always',
+            autoFindInSelection: 'never',
+            globalFindClipboard: false,
+            addExtraSpaceOnTop: true,
+            loop: true,
+            closeOnResult: false,
+            history: 'workspace',
+            replaceHistory: 'workspace',
+          ),
+          <String, Object?>{
+            'editor.find.cursorMoveOnType': <String, Object?>{
+              'type': 'boolean',
+              'default': true,
+              'description': localize('find.cursorMoveOnType',
+                  'Controls whether the cursor should jump to find matches while typing.'),
+            },
+            'editor.find.seedSearchStringFromSelection': <String, Object?>{
+              'type': 'string',
+              'enum': <String>['never', 'always', 'selection'],
+              'default': 'always',
+              'enumDescriptions': <String>[
+                localize('editor.find.seedSearchStringFromSelection.never',
+                    'Never seed search string from the editor selection.'),
+                localize('editor.find.seedSearchStringFromSelection.always',
+                    'Always seed search string from the editor selection, including word at cursor position.'),
+                localize('editor.find.seedSearchStringFromSelection.selection',
+                    'Only seed search string from the editor selection.'),
+              ],
+              'description': localize('find.seedSearchStringFromSelection',
+                  'Controls whether the search string in the Find Widget is seeded from the editor selection.'),
+            },
+            'editor.find.autoFindInSelection': <String, Object?>{
+              'type': 'string',
+              'enum': <String>['never', 'always', 'multiline'],
+              'default': 'never',
+              'enumDescriptions': <String>[
+                localize('editor.find.autoFindInSelection.never',
+                    'Never turn on Find in Selection automatically (default).'),
+                localize('editor.find.autoFindInSelection.always',
+                    'Always turn on Find in Selection automatically.'),
+                localize('editor.find.autoFindInSelection.multiline',
+                    'Turn on Find in Selection automatically when multiple lines of content are selected.'),
+              ],
+              'description': localize('find.autoFindInSelection',
+                  'Controls the condition for turning on Find in Selection automatically.'),
+            },
+            'editor.find.globalFindClipboard': <String, Object?>{
+              'type': 'boolean',
+              'default': false,
+              'description': localize('find.globalFindClipboard',
+                  'Controls whether the Find Widget should read or modify the shared find clipboard on macOS.'),
+              'included': platform.isMacintosh,
+            },
+            'editor.find.addExtraSpaceOnTop': <String, Object?>{
+              'type': 'boolean',
+              'default': true,
+              'description': localize('find.addExtraSpaceOnTop',
+                  'Controls whether the Find Widget should add extra lines on top of the editor. When true, you can scroll beyond the first line when the Find Widget is visible.'),
+            },
+            'editor.find.loop': <String, Object?>{
+              'type': 'boolean',
+              'default': true,
+              'description': localize('find.loop',
+                  'Controls whether the search automatically restarts from the beginning (or the end) when no further matches can be found.'),
+            },
+            'editor.find.closeOnResult': <String, Object?>{
+              'type': 'boolean',
+              'default': false,
+              'description': localize('find.closeOnResult',
+                  'Controls whether the Find Widget closes after an explicit find navigation command lands on a result.'),
+            },
+            'editor.find.history': <String, Object?>{
+              'type': 'string',
+              'enum': <String>['never', 'workspace'],
+              'default': 'workspace',
+              'enumDescriptions': <String>[
+                localize('editor.find.history.never',
+                    'Do not store search history from the find widget.'),
+                localize('editor.find.history.workspace',
+                    'Store search history across the active workspace'),
+              ],
+              'description': localize('find.history',
+                  'Controls how the find widget history should be stored'),
+            },
+            'editor.find.replaceHistory': <String, Object?>{
+              'type': 'string',
+              'enum': <String>['never', 'workspace'],
+              'default': 'workspace',
+              'enumDescriptions': <String>[
+                localize('editor.find.replaceHistory.never',
+                    'Do not store history from the replace widget.'),
+                localize('editor.find.replaceHistory.workspace',
+                    'Store replace history across the active workspace'),
+              ],
+              'description': localize('find.replaceHistory',
+                  'Controls how the replace widget history should be stored'),
+            },
+            'editor.find.findOnType': <String, Object?>{
+              'type': 'boolean',
+              'default': true,
+              'description': localize('find.findOnType',
+                  'Controls whether the Find Widget should search as you type.'),
+            },
+          },
+        );
+
+  /// TS: `typeof input.x === 'boolean' ? (input.x ? 'always' : 'never') :
+  /// stringSet(...)`.
+  static String _stringOrBool(
+      Object? raw, String defaultValue, List<String> allowed) {
+    if (raw is bool) {
+      return raw ? 'always' : 'never';
+    }
+    return stringSet<String>(raw, defaultValue, allowed);
+  }
+
+  @override
+  EditorFindOptions validate(Object? _input) {
+    if (_input == null || (_input is! Map && _input is! IEditorFindOptions)) {
+      return defaultValue;
+    }
+    final Map<String, Object?> input =
+        _readOptionFields(_input, () => (_input as IEditorFindOptions)._fields());
+
+    return EditorFindOptions(
+      cursorMoveOnType:
+          boolean(input['cursorMoveOnType'], defaultValue.cursorMoveOnType),
+      findOnType: boolean(input['findOnType'], defaultValue.findOnType),
+      seedSearchStringFromSelection: _stringOrBool(
+          input['seedSearchStringFromSelection'],
+          defaultValue.seedSearchStringFromSelection,
+          <String>['never', 'always', 'selection']),
+      autoFindInSelection: _stringOrBool(
+          input['autoFindInSelection'],
+          defaultValue.autoFindInSelection,
+          <String>['never', 'always', 'multiline']),
+      globalFindClipboard:
+          boolean(input['globalFindClipboard'], defaultValue.globalFindClipboard),
+      addExtraSpaceOnTop:
+          boolean(input['addExtraSpaceOnTop'], defaultValue.addExtraSpaceOnTop),
+      loop: boolean(input['loop'], defaultValue.loop),
+      closeOnResult: boolean(input['closeOnResult'], defaultValue.closeOnResult),
+      history: stringSet<String>(
+          input['history'], defaultValue.history, <String>['never', 'workspace']),
+      replaceHistory: stringSet<String>(input['replaceHistory'],
+          defaultValue.replaceHistory, <String>['never', 'workspace']),
+    );
+  }
+}
+
+//#endregion
+
+//#region fontLigatures
+
+/// @internal
+/// 1:1: `export class EditorFontLigatures extends BaseEditorOption<...>`.
+class EditorFontLigatures extends BaseEditorOption<String> {
+  static const String OFF = '"liga" off, "calt" off';
+  static const String ON = '"liga" on, "calt" on';
+
+  EditorFontLigatures()
+      : super(
+          EditorOption.fontLigatures,
+          'fontLigatures',
+          EditorFontLigatures.OFF,
+          <String, Object?>{
+            'anyOf': <Object?>[
+              <String, Object?>{
+                'type': 'boolean',
+                'description': localize('fontLigatures',
+                    "Enables/Disables font ligatures ('calt' and 'liga' font features). Change this to a string for fine-grained control of the 'font-feature-settings' CSS property."),
+              },
+              <String, Object?>{
+                'type': 'string',
+                'description': localize('fontFeatureSettings',
+                    "Explicit 'font-feature-settings' CSS property. A boolean can be passed instead if one only needs to turn on/off ligatures."),
+              },
+            ],
+            'description': localize('fontLigaturesGeneral',
+                "Configures font ligatures or font features. Can be either a boolean to enable/disable ligatures or a string for the value of the CSS 'font-feature-settings' property."),
+            'default': false,
+          },
+        );
+
+  @override
+  String validate(Object? input) {
+    if (input == null) {
+      return defaultValue;
+    }
+    if (input is String) {
+      if (input == 'false' || input.isEmpty) {
+        return EditorFontLigatures.OFF;
+      }
+      if (input == 'true') {
+        return EditorFontLigatures.ON;
+      }
+      return input;
+    }
+    if (_truthy(input)) {
+      return EditorFontLigatures.ON;
+    }
+    return EditorFontLigatures.OFF;
+  }
+}
+
+//#endregion
+
+//#region fontVariations
+
+/// @internal
+/// 1:1: `export class EditorFontVariations extends BaseEditorOption<...>`.
+class EditorFontVariations extends BaseEditorOption<String> {
+  // Text is laid out using default settings.
+  static const String OFF = FONT_VARIATION_OFF;
+
+  // Translate `fontWeight` config to the `font-variation-settings` CSS property.
+  static const String TRANSLATE = FONT_VARIATION_TRANSLATE;
+
+  EditorFontVariations()
+      : super(
+          EditorOption.fontVariations,
+          'fontVariations',
+          EditorFontVariations.OFF,
+          <String, Object?>{
+            'anyOf': <Object?>[
+              <String, Object?>{
+                'type': 'boolean',
+                'description': localize('fontVariations',
+                    "Enables/Disables the translation from font-weight to font-variation-settings. Change this to a string for fine-grained control of the 'font-variation-settings' CSS property."),
+              },
+              <String, Object?>{
+                'type': 'string',
+                'description': localize('fontVariationSettings',
+                    "Explicit 'font-variation-settings' CSS property. A boolean can be passed instead if one only needs to translate font-weight to font-variation-settings."),
+              },
+            ],
+            'description': localize('fontVariationsGeneral',
+                "Configures font variations. Can be either a boolean to enable/disable the translation from font-weight to font-variation-settings or a string for the value of the CSS 'font-variation-settings' property."),
+            'default': false,
+          },
+        );
+
+  @override
+  String validate(Object? input) {
+    if (input == null) {
+      return defaultValue;
+    }
+    if (input is String) {
+      if (input == 'false') {
+        return EditorFontVariations.OFF;
+      }
+      if (input == 'true') {
+        return EditorFontVariations.TRANSLATE;
+      }
+      return input;
+    }
+    if (_truthy(input)) {
+      return EditorFontVariations.TRANSLATE;
+    }
+    return EditorFontVariations.OFF;
+  }
+
+  @override
+  String compute(
+      IEnvironmentalOptions env, IComputedEditorOptions options, String value) {
+    // The value is computed from the fontWeight if it is true.
+    // So take the result from env.fontInfo
+    return env.fontInfo.fontVariationSettings;
+  }
+}
+
+//#endregion
+
+//#region fontInfo
+
+/// 1:1: `class EditorFontInfo extends ComputedEditorOption<...>`.
+class EditorFontInfo extends ComputedEditorOption<FontInfo> {
+  EditorFontInfo()
+      : super(
+          EditorOption.fontInfo,
+          FontInfo(
+            FontInfoOptions(
+              pixelRatio: 0,
+              fontFamily: '',
+              fontWeight: '',
+              fontSize: 0,
+              fontFeatureSettings: '',
+              fontVariationSettings: '',
+              lineHeight: 0,
+              letterSpacing: 0,
+              isMonospace: false,
+              typicalHalfwidthCharacterWidth: 0,
+              typicalFullwidthCharacterWidth: 0,
+              canUseHalfwidthRightwardsArrow: false,
+              spaceWidth: 0,
+              middotWidth: 0,
+              wsmiddotWidth: 0,
+              maxDigitWidth: 0,
+            ),
+            false,
+          ),
+        );
+
+  @override
+  FontInfo compute(
+      IEnvironmentalOptions env, IComputedEditorOptions options, Object? _) {
+    return env.fontInfo;
+  }
+}
+
+//#endregion
+
+//#region effectiveCursorStyle
+
+/// 1:1: `class EffectiveCursorStyle extends ComputedEditorOption<...>`.
+class EffectiveCursorStyle extends ComputedEditorOption<int> {
+  EffectiveCursorStyle()
+      : super(EditorOption.effectiveCursorStyle, TextEditorCursorStyle.Line);
+
+  @override
+  int compute(
+      IEnvironmentalOptions env, IComputedEditorOptions options, Object? _) {
+    return env.inputMode == 'overtype'
+        ? options.get(EditorOption.overtypeCursorStyle) as int
+        : options.get(EditorOption.cursorStyle) as int;
+  }
+}
+
+//#endregion
+
+//#region effectiveExperimentalEditContext
+
+/// 1:1: `class EffectiveEditContextEnabled extends ComputedEditorOption<...>`.
+class EffectiveEditContextEnabled extends ComputedEditorOption<bool> {
+  EffectiveEditContextEnabled()
+      : super(EditorOption.effectiveEditContext, false);
+
+  @override
+  bool compute(
+      IEnvironmentalOptions env, IComputedEditorOptions options, Object? _) {
+    return env.editContextSupported &&
+        _truthy(options.get(EditorOption.editContext));
+  }
+}
+
+//#endregion
+
+//#region effectiveAllowVariableFonts
+
+/// 1:1: `class EffectiveAllowVariableFonts extends ComputedEditorOption<...>`.
+class EffectiveAllowVariableFonts extends ComputedEditorOption<bool> {
+  EffectiveAllowVariableFonts()
+      : super(EditorOption.effectiveAllowVariableFonts, false);
+
+  @override
+  bool compute(
+      IEnvironmentalOptions env, IComputedEditorOptions options, Object? _) {
+    final int accessibilitySupport = env.accessibilitySupport;
+    if (accessibilitySupport == AccessibilitySupport.Enabled) {
+      return _truthy(
+          options.get(EditorOption.allowVariableFontsInAccessibilityMode));
+    } else {
+      return _truthy(options.get(EditorOption.allowVariableFonts));
+    }
+  }
+}
+
+//#endregion
+
+//#region effectiveFullwidthCharacterWidth
+
+/// 1:1: `class EffectiveFullwidthCharacterWidth extends ComputedEditorOption<...>`.
+class EffectiveFullwidthCharacterWidth extends ComputedEditorOption<String> {
+  EffectiveFullwidthCharacterWidth()
+      : super(EditorOption.effectiveFullwidthCharacterWidth, 'font');
+
+  @override
+  String compute(
+      IEnvironmentalOptions env, IComputedEditorOptions options, Object? _) {
+    if (options.get(EditorOption.fullwidthCharacterWidth) == 'twoCells' &&
+        env.fontInfo.isMonospace) {
+      return 'twoCells';
+    }
+    return 'font';
+  }
+}
+
+//#endregion
+
+//#region fontSize
+
+/// 1:1: `class EditorFontSize extends SimpleEditorOption<...>`.
+class EditorFontSize extends SimpleEditorOption<num> {
+  EditorFontSize()
+      : super(
+          EditorOption.fontSize,
+          'fontSize',
+          EDITOR_FONT_DEFAULTS.fontSize,
+          <String, Object?>{
+            'type': 'number',
+            'minimum': 6,
+            'maximum': 100,
+            'default': EDITOR_FONT_DEFAULTS.fontSize,
+            'description': localize('fontSize', 'Controls the font size in pixels.'),
+          },
+        );
+
+  @override
+  num validate(Object? input) {
+    final num r = EditorFloatOption.float(input, defaultValue);
+    if (r == 0) {
+      return EDITOR_FONT_DEFAULTS.fontSize;
+    }
+    return EditorFloatOption.clamp(r, 6, 100);
+  }
+
+  @override
+  num compute(
+      IEnvironmentalOptions env, IComputedEditorOptions options, num value) {
+    // The final fontSize respects the editor zoom level.
+    // So take the result from env.fontInfo
+    return env.fontInfo.fontSize;
+  }
+}
+
+//#endregion
+
+//#region fontWeight
+
+/// 1:1: `class EditorFontWeight extends BaseEditorOption<...>`.
+class EditorFontWeight extends BaseEditorOption<String> {
+  static const List<String> SUGGESTION_VALUES = <String>[
+    'normal',
+    'bold',
+    '100',
+    '200',
+    '300',
+    '400',
+    '500',
+    '600',
+    '700',
+    '800',
+    '900',
+  ];
+  static const int MINIMUM_VALUE = 1;
+  static const int MAXIMUM_VALUE = 1000;
+
+  EditorFontWeight()
+      : super(
+          EditorOption.fontWeight,
+          'fontWeight',
+          EDITOR_FONT_DEFAULTS.fontWeight,
+          <String, Object?>{
+            'anyOf': <Object?>[
+              <String, Object?>{
+                'type': 'number',
+                'minimum': MINIMUM_VALUE,
+                'maximum': MAXIMUM_VALUE,
+                'errorMessage': localize('fontWeightErrorMessage',
+                    'Only "normal" and "bold" keywords or numbers between 1 and 1000 are allowed.'),
+              },
+              <String, Object?>{
+                'type': 'string',
+                'pattern': r'^(normal|bold|1000|[1-9][0-9]{0,2})$',
+              },
+              <String, Object?>{
+                'enum': SUGGESTION_VALUES,
+              },
+            ],
+            'default': EDITOR_FONT_DEFAULTS.fontWeight,
+            'description': localize('fontWeight',
+                'Controls the font weight. Accepts "normal" and "bold" keywords or numbers between 1 and 1000.'),
+          },
+        );
+
+  @override
+  String validate(Object? input) {
+    if (input == 'normal' || input == 'bold') {
+      return input as String;
+    }
+    final Object r = EditorIntOption.clampedIntStatic(input,
+        EDITOR_FONT_DEFAULTS.fontWeight, MINIMUM_VALUE, MAXIMUM_VALUE);
+    // JS `String(clampedInt(...))`: the clamped number goes through the JS
+    // number stringification; an invalid input returns the string default
+    // ('normal') unchanged. A blanket `as num` cast would throw there.
+    return r is num ? _jsNum(r) : r.toString();
+  }
+}
+
+//#endregion
+
+//#region gotoLocation
+
+/// 1:1: `export type GoToLocationValues = 'peek' | 'gotoAndPeek' | 'goto'`.
+class GoToLocationValues {
+  static const String peek = 'peek';
+  static const String gotoAndPeek = 'gotoAndPeek';
+  static const String goto = 'goto';
+
+  const GoToLocationValues._();
+}
+
+/// Configuration options for go to location
+/// 1:1: `export interface IGotoLocationOptions`.
+class IGotoLocationOptions {
+  IGotoLocationOptions({
+    this.multiple,
+    this.multipleDefinitions,
+    this.multipleTypeDefinitions,
+    this.multipleDeclarations,
+    this.multipleImplementations,
+    this.multipleReferences,
+    this.multipleTests,
+    this.alternativeDefinitionCommand,
+    this.alternativeTypeDefinitionCommand,
+    this.alternativeDeclarationCommand,
+    this.alternativeImplementationCommand,
+    this.alternativeReferenceCommand,
+    this.alternativeTestsCommand,
+  });
+
+  String? multiple;
+  String? multipleDefinitions;
+  String? multipleTypeDefinitions;
+  String? multipleDeclarations;
+  String? multipleImplementations;
+  String? multipleReferences;
+  String? multipleTests;
+  String? alternativeDefinitionCommand;
+  String? alternativeTypeDefinitionCommand;
+  String? alternativeDeclarationCommand;
+  String? alternativeImplementationCommand;
+  String? alternativeReferenceCommand;
+  String? alternativeTestsCommand;
+
+  Map<String, Object?> _fields() => <String, Object?>{
+        'multiple': multiple,
+        'multipleDefinitions': multipleDefinitions,
+        'multipleTypeDefinitions': multipleTypeDefinitions,
+        'multipleDeclarations': multipleDeclarations,
+        'multipleImplementations': multipleImplementations,
+        'multipleReferences': multipleReferences,
+        'multipleTests': multipleTests,
+        'alternativeDefinitionCommand': alternativeDefinitionCommand,
+        'alternativeTypeDefinitionCommand': alternativeTypeDefinitionCommand,
+        'alternativeDeclarationCommand': alternativeDeclarationCommand,
+        'alternativeImplementationCommand': alternativeImplementationCommand,
+        'alternativeReferenceCommand': alternativeReferenceCommand,
+        'alternativeTestsCommand': alternativeTestsCommand,
+      };
+}
+
+/// @internal
+/// 1:1: `export type GoToLocationOptions = Readonly<Required<IGotoLocationOptions>>`.
+class GoToLocationOptions {
+  GoToLocationOptions({
+    required this.multiple,
+    required this.multipleDefinitions,
+    required this.multipleTypeDefinitions,
+    required this.multipleDeclarations,
+    required this.multipleImplementations,
+    required this.multipleReferences,
+    required this.multipleTests,
+    required this.alternativeDefinitionCommand,
+    required this.alternativeTypeDefinitionCommand,
+    required this.alternativeDeclarationCommand,
+    required this.alternativeImplementationCommand,
+    required this.alternativeReferenceCommand,
+    required this.alternativeTestsCommand,
+  });
+
+  final String multiple;
+  final String multipleDefinitions;
+  final String multipleTypeDefinitions;
+  final String multipleDeclarations;
+  final String multipleImplementations;
+  final String multipleReferences;
+  final String multipleTests;
+  final String alternativeDefinitionCommand;
+  final String alternativeTypeDefinitionCommand;
+  final String alternativeDeclarationCommand;
+  final String alternativeImplementationCommand;
+  final String alternativeReferenceCommand;
+  final String alternativeTestsCommand;
+}
+
+/// 1:1: `class EditorGoToLocation extends BaseEditorOption<...>`.
+class EditorGoToLocation extends BaseEditorOption<GoToLocationOptions> {
+  EditorGoToLocation()
+      : super(
+          EditorOption.gotoLocation,
+          'gotoLocation',
+          GoToLocationOptions(
+            multiple: 'peek',
+            multipleDefinitions: 'peek',
+            multipleTypeDefinitions: 'peek',
+            multipleDeclarations: 'peek',
+            multipleImplementations: 'peek',
+            multipleReferences: 'peek',
+            multipleTests: 'peek',
+            alternativeDefinitionCommand: 'editor.action.goToReferences',
+            alternativeTypeDefinitionCommand: 'editor.action.goToReferences',
+            alternativeDeclarationCommand: 'editor.action.goToReferences',
+            alternativeImplementationCommand: '',
+            alternativeReferenceCommand: '',
+            alternativeTestsCommand: '',
+          ),
+          _buildSchema(),
+        );
+
+  static Map<String, Object?> _buildSchema() {
+    final Map<String, Object?> jsonSubset = <String, Object?>{
+      'type': 'string',
+      'enum': <String>['peek', 'gotoAndPeek', 'goto'],
+      'default': 'peek',
+      'enumDescriptions': <String>[
+        localize('editor.gotoLocation.multiple.peek',
+            'Show Peek view of the results (default)'),
+        localize('editor.gotoLocation.multiple.gotoAndPeek',
+            'Go to the primary result and show a Peek view'),
+        localize('editor.gotoLocation.multiple.goto',
+            'Go to the primary result and enable Peek-less navigation to others'),
+      ],
+    };
+    const List<String> alternativeCommandOptions = <String>[
+      '',
+      'editor.action.referenceSearch.trigger',
+      'editor.action.goToReferences',
+      'editor.action.peekImplementation',
+      'editor.action.goToImplementation',
+      'editor.action.peekTypeDefinition',
+      'editor.action.goToTypeDefinition',
+      'editor.action.peekDeclaration',
+      'editor.action.revealDeclaration',
+      'editor.action.peekDefinition',
+      'editor.action.revealDefinitionAside',
+      'editor.action.revealDefinition',
+    ];
+
+    // TS: `{ description, ...jsonSubset }` — the spread keeps `description`
+    // from the outer literal; Dart has no spread, so build the merged map.
+    Map<String, Object?> subset(String description) => <String, Object?>{
+          ...jsonSubset,
+          'description': description,
+        };
+
+    return <String, Object?>{
+      'editor.gotoLocation.multiple': <String, Object?>{
+        'deprecationMessage': localize('editor.gotoLocation.multiple.deprecated',
+            "This setting is deprecated, please use separate settings like 'editor.editor.gotoLocation.multipleDefinitions' or 'editor.editor.gotoLocation.multipleImplementations' instead."),
+      },
+      'editor.gotoLocation.multipleDefinitions': subset(localize(
+          'editor.editor.gotoLocation.multipleDefinitions',
+          "Controls the behavior the 'Go to Definition'-command when multiple target locations exist.")),
+      'editor.gotoLocation.multipleTypeDefinitions': subset(localize(
+          'editor.editor.gotoLocation.multipleTypeDefinitions',
+          "Controls the behavior the 'Go to Type Definition'-command when multiple target locations exist.")),
+      'editor.gotoLocation.multipleDeclarations': subset(localize(
+          'editor.editor.gotoLocation.multipleDeclarations',
+          "Controls the behavior the 'Go to Declaration'-command when multiple target locations exist.")),
+      'editor.gotoLocation.multipleImplementations': subset(localize(
+          'editor.editor.gotoLocation.multipleImplemenattions',
+          "Controls the behavior the 'Go to Implementations'-command when multiple target locations exist.")),
+      'editor.gotoLocation.multipleReferences': subset(localize(
+          'editor.editor.gotoLocation.multipleReferences',
+          "Controls the behavior the 'Go to References'-command when multiple target locations exist.")),
+      'editor.gotoLocation.alternativeDefinitionCommand': <String, Object?>{
+        'type': 'string',
+        'default': 'editor.action.goToReferences',
+        'enum': alternativeCommandOptions,
+        'description': localize('alternativeDefinitionCommand',
+            "Alternative command id that is being executed when the result of 'Go to Definition' is the current location."),
+      },
+      'editor.gotoLocation.alternativeTypeDefinitionCommand': <String, Object?>{
+        'type': 'string',
+        'default': 'editor.action.goToReferences',
+        'enum': alternativeCommandOptions,
+        'description': localize('alternativeTypeDefinitionCommand',
+            "Alternative command id that is being executed when the result of 'Go to Type Definition' is the current location."),
+      },
+      'editor.gotoLocation.alternativeDeclarationCommand': <String, Object?>{
+        'type': 'string',
+        'default': 'editor.action.goToReferences',
+        'enum': alternativeCommandOptions,
+        'description': localize('alternativeDeclarationCommand',
+            "Alternative command id that is being executed when the result of 'Go to Declaration' is the current location."),
+      },
+      'editor.gotoLocation.alternativeImplementationCommand': <String, Object?>{
+        'type': 'string',
+        'default': '',
+        'enum': alternativeCommandOptions,
+        'description': localize('alternativeImplementationCommand',
+            "Alternative command id that is being executed when the result of 'Go to Implementation' is the current location."),
+      },
+      'editor.gotoLocation.alternativeReferenceCommand': <String, Object?>{
+        'type': 'string',
+        'default': '',
+        'enum': alternativeCommandOptions,
+        'description': localize('alternativeReferenceCommand',
+            "Alternative command id that is being executed when the result of 'Go to Reference' is the current location."),
+      },
+    };
+  }
+
+  @override
+  GoToLocationOptions validate(Object? _input) {
+    if (_input == null || (_input is! Map && _input is! IGotoLocationOptions)) {
+      return defaultValue;
+    }
+    final Map<String, Object?> input =
+        _readOptionFields(_input, () => (_input as IGotoLocationOptions)._fields());
+
+    return GoToLocationOptions(
+      multiple: stringSet<String>(
+          input['multiple'], defaultValue.multiple,
+          <String>['peek', 'gotoAndPeek', 'goto']),
+      multipleDefinitions: stringSet<String>(input['multipleDefinitions'],
+          'peek', <String>['peek', 'gotoAndPeek', 'goto']),
+      multipleTypeDefinitions: stringSet<String>(
+          input['multipleTypeDefinitions'], 'peek',
+          <String>['peek', 'gotoAndPeek', 'goto']),
+      multipleDeclarations: stringSet<String>(input['multipleDeclarations'],
+          'peek', <String>['peek', 'gotoAndPeek', 'goto']),
+      multipleImplementations: stringSet<String>(
+          input['multipleImplementations'], 'peek',
+          <String>['peek', 'gotoAndPeek', 'goto']),
+      multipleReferences: stringSet<String>(input['multipleReferences'],
+          'peek', <String>['peek', 'gotoAndPeek', 'goto']),
+      multipleTests: stringSet<String>(input['multipleTests'], 'peek',
+          <String>['peek', 'gotoAndPeek', 'goto']),
+      alternativeDefinitionCommand: EditorStringOption.string(
+          input['alternativeDefinitionCommand'],
+          defaultValue.alternativeDefinitionCommand),
+      alternativeTypeDefinitionCommand: EditorStringOption.string(
+          input['alternativeTypeDefinitionCommand'],
+          defaultValue.alternativeTypeDefinitionCommand),
+      alternativeDeclarationCommand: EditorStringOption.string(
+          input['alternativeDeclarationCommand'],
+          defaultValue.alternativeDeclarationCommand),
+      alternativeImplementationCommand: EditorStringOption.string(
+          input['alternativeImplementationCommand'],
+          defaultValue.alternativeImplementationCommand),
+      alternativeReferenceCommand: EditorStringOption.string(
+          input['alternativeReferenceCommand'],
+          defaultValue.alternativeReferenceCommand),
+      alternativeTestsCommand: EditorStringOption.string(
+          input['alternativeTestsCommand'], defaultValue.alternativeTestsCommand),
+    );
+  }
+}
+
+//#endregion
+
+//#region hover
+
+/// Configuration options for editor hover
+/// 1:1: `export interface IEditorHoverOptions`.
+class IEditorHoverOptions {
+  IEditorHoverOptions({
+    this.enabled,
+    this.delay,
+    this.sticky,
+    this.hidingDelay,
+    this.above,
+    this.showLongLineWarning,
+  });
+
+  /// Enable the hover.
+  /// Defaults to 'on'.
+  String? enabled;
+
+  /// Delay for showing the hover.
+  /// Defaults to 300.
+  num? delay;
+
+  /// Is the hover sticky such that it can be clicked and its contents selected?
+  /// Defaults to true.
+  bool? sticky;
+
+  /// Controls how long the hover is visible after you hovered out of it.
+  /// Require sticky setting to be true.
+  num? hidingDelay;
+
+  /// Should the hover be shown above the line if possible?
+  /// Defaults to false.
+  bool? above;
+
+  /// Should long line warning hovers be shown (tokenization skipped, rendering paused)?
+  /// Defaults to true.
+  bool? showLongLineWarning;
+
+  Map<String, Object?> _fields() => <String, Object?>{
+        'enabled': enabled,
+        'delay': delay,
+        'sticky': sticky,
+        'hidingDelay': hidingDelay,
+        'above': above,
+        'showLongLineWarning': showLongLineWarning,
+      };
+}
+
+/// @internal
+/// 1:1: `export type EditorHoverOptions = Readonly<Required<IEditorHoverOptions>>`.
+class EditorHoverOptions {
+  EditorHoverOptions({
+    required this.enabled,
+    required this.delay,
+    required this.sticky,
+    required this.hidingDelay,
+    required this.above,
+    required this.showLongLineWarning,
+  });
+
+  final String enabled;
+  final num delay;
+  final bool sticky;
+  final num hidingDelay;
+  final bool above;
+  final bool showLongLineWarning;
+}
+
+/// 1:1: `class EditorHover extends BaseEditorOption<...>`.
+class EditorHover extends BaseEditorOption<EditorHoverOptions> {
+  EditorHover()
+      : super(
+          EditorOption.hover,
+          'hover',
+          EditorHoverOptions(
+            enabled: 'on',
+            delay: 300,
+            hidingDelay: 300,
+            sticky: true,
+            above: true,
+            showLongLineWarning: true,
+          ),
+          <String, Object?>{
+            'editor.hover.enabled': <String, Object?>{
+              'type': 'string',
+              'enum': <String>['on', 'off', 'onKeyboardModifier'],
+              'default': 'on',
+              'markdownEnumDescriptions': <String>[
+                localize('hover.enabled.on', 'Hover is enabled.'),
+                localize('hover.enabled.off', 'Hover is disabled.'),
+                localize('hover.enabled.onKeyboardModifier',
+                    'Hover is shown when holding `{0}` or `Alt` (the opposite modifier of `#editor.multiCursorModifier#`)',
+                    <Object?>[platform.isMacintosh ? 'Command' : 'Control']),
+              ],
+              'description':
+                  localize('hover.enabled', 'Controls whether the hover is shown.'),
+              'keywords': <String>['hint', 'info', 'tooltip'],
+            },
+            'editor.hover.delay': <String, Object?>{
+              'type': 'number',
+              'default': 300,
+              'minimum': 0,
+              'maximum': 10000,
+              'description': localize('hover.delay',
+                  'Controls the delay in milliseconds after which the hover is shown.'),
+            },
+            'editor.hover.sticky': <String, Object?>{
+              'type': 'boolean',
+              'default': true,
+              'description': localize('hover.sticky',
+                  'Controls whether the hover should remain visible when mouse is moved over it.'),
+            },
+            'editor.hover.hidingDelay': <String, Object?>{
+              'type': 'integer',
+              'minimum': 0,
+              'default': 300,
+              'markdownDescription': localize('hover.hidingDelay',
+                  'Controls the delay in milliseconds after which the hover is hidden. Requires `#editor.hover.sticky#` to be enabled.'),
+            },
+            'editor.hover.above': <String, Object?>{
+              'type': 'boolean',
+              'default': true,
+              'description': localize('hover.above',
+                  "Prefer showing hovers above the line, if there's space."),
+            },
+            'editor.hover.showLongLineWarning': <String, Object?>{
+              'type': 'boolean',
+              'default': true,
+              'description': localize('hover.showLongLineWarning',
+                  'Controls whether long line warning hovers are shown, such as when tokenization is skipped or rendering is paused.'),
+            },
+          },
+        );
+
+  @override
+  EditorHoverOptions validate(Object? _input) {
+    if (_input == null || (_input is! Map && _input is! IEditorHoverOptions)) {
+      return defaultValue;
+    }
+    final Map<String, Object?> input =
+        _readOptionFields(_input, () => (_input as IEditorHoverOptions)._fields());
+
+    return EditorHoverOptions(
+      enabled: stringSet<String>(input['enabled'], defaultValue.enabled,
+          <String>['on', 'off', 'onKeyboardModifier']),
+      delay: EditorIntOption.clampedIntStatic(
+              input['delay'], defaultValue.delay, 0, 10000) as num,
+      sticky: boolean(input['sticky'], defaultValue.sticky),
+      hidingDelay: EditorIntOption.clampedIntStatic(
+              input['hidingDelay'], defaultValue.hidingDelay, 0, 600000) as num,
+      above: boolean(input['above'], defaultValue.above),
+      showLongLineWarning:
+          boolean(input['showLongLineWarning'], defaultValue.showLongLineWarning),
+    );
+  }
+}
+
+//#endregion
+
+//#region markdownImages
+
+/// Configuration options for images in Markdown rendered by the editor
+/// 1:1: `export interface IEditorMarkdownImagesOptions`.
+class IEditorMarkdownImagesOptions {
+  IEditorMarkdownImagesOptions({this.allowedOrigins});
+
+  /// Origins from which remote images may be loaded, for example `['https://img.shields.io']`,
+  /// or `true` to allow images from all origins. An origin consists of scheme, host and port.
+  /// `data:` images are always allowed.
+  /// Defaults to `true`, except in the standalone editor, where it defaults to `[]`.
+  // TS: true | string[]
+  Object? allowedOrigins;
+}
+
+/// The `allowedOrigins` are `true` or normalized origins (see [getUrlOrigin]).
+/// @internal
+/// 1:1: `export type EditorMarkdownImagesOptions = Readonly<Required<IEditorMarkdownImagesOptions>>`.
+class EditorMarkdownImagesOptions {
+  EditorMarkdownImagesOptions({required this.allowedOrigins});
+
+  // TS: true | string[] (Required<> makes it non-optional)
+  Object? allowedOrigins;
+}
+
+/// Returns the origin of an absolute URL, or `undefined` if it has none (for
+/// example `data:` URLs).
+/// @internal
+/// 1:1: `export function getUrlOrigin`. JS `new URL(...)` throws for
+/// unparseable URLs and yields the literal `'null'` origin for opaque URLs;
+/// Dart's `Uri.parse` is lenient and `Uri.origin` throws `StateError` in the
+/// same cases — both funnel to the `null` return.
+String? getUrlOrigin(String url) {
+  try {
+    final String origin = Uri.parse(url).origin;
+    return origin == 'null' ? null : origin;
+  } catch (_) {
+    return null;
+  }
+}
+
+/// @internal
+/// 1:1: `export function isMarkdownImageAllowed`.
+bool isMarkdownImageAllowed(EditorMarkdownImagesOptions options, String url) {
+  if (options.allowedOrigins == true) {
+    return true;
+  }
+  final String? origin = getUrlOrigin(url);
+  final Object? allowed = options.allowedOrigins;
+  return origin != null && allowed is List && allowed.contains(origin);
+}
+
+/// 1:1: `class EditorMarkdownImages extends BaseEditorOption<...>`.
+class EditorMarkdownImages extends BaseEditorOption<EditorMarkdownImagesOptions> {
+  EditorMarkdownImages()
+      : super(EditorOption.markdownImages, 'markdownImages',
+          EditorMarkdownImagesOptions(allowedOrigins: true));
+
+  @override
+  EditorMarkdownImagesOptions validate(Object? _input) {
+    if (_input == null ||
+        (_input is! Map && _input is! IEditorMarkdownImagesOptions)) {
+      return defaultValue;
+    }
+    final Object? rawAllowedOrigins = _input is Map
+        ? _input['allowedOrigins'] // promoted to Map by the condition
+        : (_input as IEditorMarkdownImagesOptions).allowedOrigins;
+    if (rawAllowedOrigins == true) {
+      return EditorMarkdownImagesOptions(allowedOrigins: true);
+    }
+    if (rawAllowedOrigins is! List) {
+      return defaultValue;
+    }
+    final List<String> allowedOrigins = <String>[];
+    for (final Object? value in rawAllowedOrigins) {
+      final String? origin = value is String ? getUrlOrigin(value) : null;
+      if (origin != null && !allowedOrigins.contains(origin)) {
+        allowedOrigins.add(origin);
+      }
+    }
+    return EditorMarkdownImagesOptions(allowedOrigins: allowedOrigins);
+  }
+}
+
+//#endregion
+
+//#endregion (segment 3a ends; layoutInfo region follows in segment 3b)
 
 //#region EditorOption enum
 
