@@ -37,7 +37,11 @@ class IQuickAccessProviderRunOptions {
 
   /// A handler to invoke when an item is accepted for this particular showing
   /// of the quick access.
-  final void Function(IQuickPickItem item, bool isBackgroundAccept)?
+  ///
+  /// TS declares `item: IQuickPickItem`, but the single call site
+  /// (`pickerQuickAccess.ts`) passes `picker.activeItems[0]`, which is
+  /// `undefined` for an empty list; the port keeps that possibility.
+  final void Function(IQuickPickItem? item, bool isBackgroundAccept)?
       handleAccept;
 }
 

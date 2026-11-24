@@ -1081,8 +1081,16 @@ class Emitter<T> implements lifecycle.IDisposable {
 
       // Source: `if (thisArgs) callback = callback.bind(thisArgs)`.
       // Dart has no `this` rebinding; keep callback as-is.
+      // TS listeners are `(e: T) => any`, i.e. contravariant in `e`. Dart
+      // closures with a narrower parameter type (e.g. `(String e) => void`
+      // for `Event<String>`) cannot be cast to `void Function(dynamic)`, so
+      // adapt them by forwarding through `dynamic` instead of failing.
+      final void Function(dynamic) listener =
+          callback is void Function(dynamic)
+              ? callback
+              : (dynamic e) => (callback as dynamic)(e);
       final UniqueContainer<void Function(dynamic)> contained =
-          UniqueContainer<void Function(dynamic)>(callback as void Function(dynamic));
+          UniqueContainer<void Function(dynamic)>(listener);
 
       void Function()? removeMonitor;
       if (_leakWarningThreshold != null &&
