@@ -26,7 +26,7 @@
 | 17 | editor | `editor/browser/controller/editContext/native/screenReaderContentSimple.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/screenReaderContentSimple.dart` | pending |
 | 18 | editor | `editor/browser/controller/editContext/native/screenReaderSupport.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/screenReaderSupport.dart` | pending |
 | 19 | editor | `editor/browser/controller/editContext/native/screenReaderUtils.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/screenReaderUtils.dart` | tested |
-| 20 | editor | `editor/browser/controller/editContext/screenReaderUtils.ts` | `lib/src/monaco/editor/browser/controller/editContext/screenReaderUtils.dart` | pending |
+| 20 | editor | `editor/browser/controller/editContext/screenReaderUtils.ts` | `lib/src/monaco/editor/browser/controller/editContext/screenReaderUtils.dart` | tested |
 | 21 | editor | `editor/browser/controller/editContext/textArea/textAreaEditContext.ts` | `lib/src/monaco/editor/browser/controller/editContext/textArea/textAreaEditContext.dart` | pending |
 | 22 | editor | `editor/browser/controller/editContext/textArea/textAreaEditContextInput.ts` | `lib/src/monaco/editor/browser/controller/editContext/textArea/textAreaEditContextInput.dart` | pending |
 | 23 | editor | `editor/browser/controller/editContext/textArea/textAreaEditContextRegistry.ts` | `lib/src/monaco/editor/browser/controller/editContext/textArea/textAreaEditContextRegistry.dart` | pending |
@@ -382,7 +382,7 @@
 | 373 | editor | `editor/common/viewModel/modelLineProjection.ts` | `lib/src/monaco/editor/common/viewModel/modelLineProjection.dart` | pending |
 | 374 | editor | `editor/common/viewModel/monospaceLineBreaksComputer.ts` | `lib/src/monaco/editor/common/viewModel/monospaceLineBreaksComputer.dart` | pending |
 | 375 | editor | `editor/common/viewModel/overviewZoneManager.ts` | `lib/src/monaco/editor/common/viewModel/overviewZoneManager.dart` | tested |
-| 376 | editor | `editor/common/viewModel/screenReaderSimpleModel.ts` | `lib/src/monaco/editor/common/viewModel/screenReaderSimpleModel.dart` | pending |
+| 376 | editor | `editor/common/viewModel/screenReaderSimpleModel.ts` | `lib/src/monaco/editor/common/viewModel/screenReaderSimpleModel.dart` | tested |
 | 377 | editor | `editor/common/viewModel/viewContext.ts` | `lib/src/monaco/editor/common/viewModel/viewContext.dart` | pending |
 | 378 | editor | `editor/common/viewModel/viewModelDecoration.ts` | `lib/src/monaco/editor/common/viewModel/viewModelDecoration.dart` | pending |
 | 379 | editor | `editor/common/viewModel/viewModelDecorations.ts` | `lib/src/monaco/editor/common/viewModel/viewModelDecorations.dart` | pending |
