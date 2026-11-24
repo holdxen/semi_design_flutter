@@ -457,6 +457,11 @@ class DomElement extends DomNode {
     if (name == 'class') className = '';
   }
 
+  /// 1:1: `HTMLAnchorElement.href`. Reflected onto the `href` attribute so the
+  /// property and the attribute stay consistent (same treatment as [id]).
+  String get href => _attributes['href'] ?? '';
+  set href(String value) => setAttribute('href', value);
+
   String? getAttribute(String name) => _attributes[name];
   bool hasAttribute(String name) => _attributes.containsKey(name);
   List<MapEntry<String, String>> get attributes => _attributes.entries.toList();

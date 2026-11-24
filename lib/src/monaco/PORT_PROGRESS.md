@@ -1235,7 +1235,7 @@
 | 1226 | platform | `platform/observable/common/platformObservableUtils.ts` | `lib/src/monaco/platform/observable/common/platformObservableUtils.dart` | tested |
 | 1227 | platform | `platform/observable/common/wrapInHotClass.ts` | `lib/src/monaco/platform/observable/common/wrapInHotClass.dart` | tested |
 | 1228 | platform | `platform/observable/common/wrapInReloadableClass.ts` | `lib/src/monaco/platform/observable/common/wrapInReloadableClass.dart` | tested |
-| 1229 | platform | `platform/opener/browser/link.ts` | `lib/src/monaco/platform/opener/browser/link.dart` | pending |
+| 1229 | platform | `platform/opener/browser/link.ts` | `lib/src/monaco/platform/opener/browser/link.dart` | tested |
 | 1230 | platform | `platform/opener/common/opener.ts` | `lib/src/monaco/platform/opener/common/opener.dart` | tested |
 | 1231 | platform | `platform/opener/test/common/nullOpenerService.ts` | `lib/src/monaco/platform/opener/test/common/nullOpenerService.dart` | tested |
 | 1232 | platform | `platform/policy/common/copilotManagedSettings.ts` | `lib/src/monaco/platform/policy/common/copilotManagedSettings.dart` | tested |

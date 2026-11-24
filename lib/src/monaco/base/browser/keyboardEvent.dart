@@ -11,6 +11,7 @@ import '../common/keyCodes.dart'
 import '../common/keybindings.dart' show KeyCodeChord;
 import '../common/platform.dart' as platform;
 import 'browser.dart' as browser;
+import 'dom.dart' show EventLike;
 
 /// 1:1: `KeyboardEvent` carrier. Every DOM property used by the ported code is
 /// an injectable field; functions mirror the optional DOM methods.
@@ -123,7 +124,11 @@ int extractKeyCode(KeyboardEvent e) {
 }
 
 /// 1:1: `interface IKeyboardEvent`
-abstract class IKeyboardEvent {
+/// In TS, `IKeyboardEvent` structurally satisfies `dom.EventLike`
+/// (`preventDefault` + `stopPropagation`), which is why `EventHelper.stop(e)`
+/// compiles at every call site. Dart has no structural typing, so the
+/// relationship is declared explicitly here.
+abstract class IKeyboardEvent implements EventLike {
   /// 1:1: `readonly _standardKeyboardEventBrand: true` (structural brand).
   bool get standardKeyboardEventBrand;
   KeyboardEvent get browserEvent;
@@ -137,7 +142,9 @@ abstract class IKeyboardEvent {
   String get code;
   KeyCodeChord toKeyCodeChord();
   bool equals(int keybinding);
+  @override
   void preventDefault();
+  @override
   void stopPropagation();
 }
 
