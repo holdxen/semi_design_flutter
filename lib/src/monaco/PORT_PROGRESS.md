@@ -69,7 +69,7 @@
 | 60 | editor | `editor/browser/services/codeEditorService.ts` | `lib/src/monaco/editor/browser/services/codeEditorService.dart` | pending |
 | 61 | editor | `editor/browser/services/contribution.ts` | `lib/src/monaco/editor/browser/services/contribution.dart` | pending |
 | 62 | editor | `editor/browser/services/editorWorkerService.ts` | `lib/src/monaco/editor/browser/services/editorWorkerService.dart` | pending |
-| 63 | editor | `editor/browser/services/inlineCompletionsService.ts` | `lib/src/monaco/editor/browser/services/inlineCompletionsService.dart` | pending |
+| 63 | editor | `editor/browser/services/inlineCompletionsService.ts` | `lib/src/monaco/editor/browser/services/inlineCompletionsService.dart` | tested |
 | 64 | editor | `editor/browser/services/markerDecorations.ts` | `lib/src/monaco/editor/browser/services/markerDecorations.dart` | pending |
 | 65 | editor | `editor/browser/services/openerService.ts` | `lib/src/monaco/editor/browser/services/openerService.dart` | pending |
 | 66 | editor | `editor/browser/services/renameSymbolTrackerService.ts` | `lib/src/monaco/editor/browser/services/renameSymbolTrackerService.dart` | pending |
@@ -1146,8 +1146,8 @@
 | 1137 | base | `base/test/common/virtualScheduling/virtualClock.ts` | `lib/src/monaco/base/test/common/virtualScheduling/virtualClock.dart` | tested |
 | 1138 | base | `base/test/common/virtualScheduling/virtualTimeApi.ts` | `lib/src/monaco/base/test/common/virtualScheduling/virtualTimeApi.dart` | tested |
 | 1139 | platform | `platform/accessibility/browser/accessibilityService.ts` | `lib/src/monaco/platform/accessibility/browser/accessibilityService.dart` | tested |
-| 1140 | platform | `platform/accessibility/browser/accessibleView.ts` | `lib/src/monaco/platform/accessibility/browser/accessibleView.dart` | pending |
-| 1141 | platform | `platform/accessibility/browser/accessibleViewRegistry.ts` | `lib/src/monaco/platform/accessibility/browser/accessibleViewRegistry.dart` | pending |
+| 1140 | platform | `platform/accessibility/browser/accessibleView.ts` | `lib/src/monaco/platform/accessibility/browser/accessibleView.dart` | tested |
+| 1141 | platform | `platform/accessibility/browser/accessibleViewRegistry.ts` | `lib/src/monaco/platform/accessibility/browser/accessibleViewRegistry.dart` | tested |
 | 1142 | platform | `platform/accessibility/common/accessibility.ts` | `lib/src/monaco/platform/accessibility/common/accessibility.dart` | tested |
 | 1143 | platform | `platform/accessibility/test/common/testAccessibilityService.ts` | `lib/src/monaco/platform/accessibility/test/common/testAccessibilityService.dart` | tested |
 | 1144 | platform | `platform/accessibilitySignal/browser/accessibilitySignalService.ts` | `lib/src/monaco/platform/accessibilitySignal/browser/accessibilitySignalService.dart` | tested |
@@ -1247,7 +1247,7 @@
 | 1238 | platform | `platform/quickinput/browser/commandsQuickAccess.ts` | `lib/src/monaco/platform/quickinput/browser/commandsQuickAccess.dart` | pending |
 | 1239 | platform | `platform/quickinput/browser/helpQuickAccess.ts` | `lib/src/monaco/platform/quickinput/browser/helpQuickAccess.dart` | pending |
 | 1240 | platform | `platform/quickinput/browser/pickerQuickAccess.ts` | `lib/src/monaco/platform/quickinput/browser/pickerQuickAccess.dart` | tested |
-| 1241 | platform | `platform/quickinput/browser/quickAccess.ts` | `lib/src/monaco/platform/quickinput/browser/quickAccess.dart` | pending |
+| 1241 | platform | `platform/quickinput/browser/quickAccess.ts` | `lib/src/monaco/platform/quickinput/browser/quickAccess.dart` | tested |
 | 1242 | platform | `platform/quickinput/browser/quickInput.ts` | `lib/src/monaco/platform/quickinput/browser/quickInput.dart` | pending |
 | 1243 | platform | `platform/quickinput/browser/quickInputBox.ts` | `lib/src/monaco/platform/quickinput/browser/quickInputBox.dart` | pending |
 | 1244 | platform | `platform/quickinput/browser/quickInputController.ts` | `lib/src/monaco/platform/quickinput/browser/quickInputController.dart` | pending |
