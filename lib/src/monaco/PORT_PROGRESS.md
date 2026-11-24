@@ -742,7 +742,7 @@
 | 733 | editor | `editor/standalone/browser/quickAccess/standaloneCommandsQuickAccess.ts` | `lib/src/monaco/editor/standalone/browser/quickAccess/standaloneCommandsQuickAccess.dart` | pending |
 | 734 | editor | `editor/standalone/browser/quickAccess/standaloneGotoLineQuickAccess.ts` | `lib/src/monaco/editor/standalone/browser/quickAccess/standaloneGotoLineQuickAccess.dart` | pending |
 | 735 | editor | `editor/standalone/browser/quickAccess/standaloneGotoSymbolQuickAccess.ts` | `lib/src/monaco/editor/standalone/browser/quickAccess/standaloneGotoSymbolQuickAccess.dart` | pending |
-| 736 | editor | `editor/standalone/browser/quickAccess/standaloneHelpQuickAccess.ts` | `lib/src/monaco/editor/standalone/browser/quickAccess/standaloneHelpQuickAccess.dart` | pending |
+| 736 | editor | `editor/standalone/browser/quickAccess/standaloneHelpQuickAccess.ts` | `lib/src/monaco/editor/standalone/browser/quickAccess/standaloneHelpQuickAccess.dart` | tested |
 | 737 | editor | `editor/standalone/browser/quickInput/standaloneQuickInputService.ts` | `lib/src/monaco/editor/standalone/browser/quickInput/standaloneQuickInputService.dart` | pending |
 | 738 | editor | `editor/standalone/browser/referenceSearch/standaloneReferenceSearch.ts` | `lib/src/monaco/editor/standalone/browser/referenceSearch/standaloneReferenceSearch.dart` | pending |
 | 739 | editor | `editor/standalone/browser/services/standaloneWebWorkerService.ts` | `lib/src/monaco/editor/standalone/browser/services/standaloneWebWorkerService.dart` | tested |
@@ -1244,7 +1244,7 @@
 | 1235 | platform | `platform/product/common/product.ts` | `lib/src/monaco/platform/product/common/product.dart` | tested |
 | 1236 | platform | `platform/product/common/productService.ts` | `lib/src/monaco/platform/product/common/productService.dart` | tested |
 | 1237 | platform | `platform/progress/common/progress.ts` | `lib/src/monaco/platform/progress/common/progress.dart` | tested |
-| 1238 | platform | `platform/quickinput/browser/commandsQuickAccess.ts` | `lib/src/monaco/platform/quickinput/browser/commandsQuickAccess.dart` | pending |
+| 1238 | platform | `platform/quickinput/browser/commandsQuickAccess.ts` | `lib/src/monaco/platform/quickinput/browser/commandsQuickAccess.dart` | tested |
 | 1239 | platform | `platform/quickinput/browser/helpQuickAccess.ts` | `lib/src/monaco/platform/quickinput/browser/helpQuickAccess.dart` | tested |
 | 1240 | platform | `platform/quickinput/browser/pickerQuickAccess.ts` | `lib/src/monaco/platform/quickinput/browser/pickerQuickAccess.dart` | tested |
 | 1241 | platform | `platform/quickinput/browser/quickAccess.ts` | `lib/src/monaco/platform/quickinput/browser/quickAccess.dart` | tested |
