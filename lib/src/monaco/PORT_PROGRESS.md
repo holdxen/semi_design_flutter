@@ -41,8 +41,8 @@
 | 32 | editor | `editor/browser/editorExtensions.ts` | `lib/src/monaco/editor/browser/editorExtensions.dart` | pending |
 | 33 | editor | `editor/browser/editorMarkdownSanitizer.ts` | `lib/src/monaco/editor/browser/editorMarkdownSanitizer.dart` | pending |
 | 34 | editor | `editor/browser/gpu/atlas/atlas.ts` | `lib/src/monaco/editor/browser/gpu/atlas/atlas.dart` | tested |
-| 35 | editor | `editor/browser/gpu/atlas/textureAtlas.ts` | `lib/src/monaco/editor/browser/gpu/atlas/textureAtlas.dart` | pending |
-| 36 | editor | `editor/browser/gpu/atlas/textureAtlasPage.ts` | `lib/src/monaco/editor/browser/gpu/atlas/textureAtlasPage.dart` | pending |
+| 35 | editor | `editor/browser/gpu/atlas/textureAtlas.ts` | `lib/src/monaco/editor/browser/gpu/atlas/textureAtlas.dart` | tested |
+| 36 | editor | `editor/browser/gpu/atlas/textureAtlasPage.ts` | `lib/src/monaco/editor/browser/gpu/atlas/textureAtlasPage.dart` | tested |
 | 37 | editor | `editor/browser/gpu/atlas/textureAtlasShelfAllocator.ts` | `lib/src/monaco/editor/browser/gpu/atlas/textureAtlasShelfAllocator.dart` | tested |
 | 38 | editor | `editor/browser/gpu/atlas/textureAtlasSlabAllocator.ts` | `lib/src/monaco/editor/browser/gpu/atlas/textureAtlasSlabAllocator.dart` | tested |
 | 39 | editor | `editor/browser/gpu/bufferDirtyTracker.ts` | `lib/src/monaco/editor/browser/gpu/bufferDirtyTracker.dart` | tested |
@@ -148,7 +148,7 @@
 | 139 | editor | `editor/browser/widget/diffEditor/utils/editorGutter.ts` | `lib/src/monaco/editor/browser/widget/diffEditor/utils/editorGutter.dart` | pending |
 | 140 | editor | `editor/browser/widget/diffEditor/utils.ts` | `lib/src/monaco/editor/browser/widget/diffEditor/utils.dart` | pending |
 | 141 | editor | `editor/browser/widget/markdownRenderer/browser/editorMarkdownCodeBlockRenderer.ts` | `lib/src/monaco/editor/browser/widget/markdownRenderer/browser/editorMarkdownCodeBlockRenderer.dart` | pending |
-| 142 | editor | `editor/browser/widget/multiDiffEditor/colors.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/colors.dart` | pending |
+| 142 | editor | `editor/browser/widget/multiDiffEditor/colors.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/colors.dart` | tested |
 | 143 | editor | `editor/browser/widget/multiDiffEditor/compressedVirtualizedScrollLayout.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/compressedVirtualizedScrollLayout.dart` | tested |
 | 144 | editor | `editor/browser/widget/multiDiffEditor/compressedVirtualizedScrollView.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/compressedVirtualizedScrollView.dart` | pending |
 | 145 | editor | `editor/browser/widget/multiDiffEditor/diffEditorItemTemplate.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/diffEditorItemTemplate.dart` | pending |
@@ -181,7 +181,7 @@
 | 172 | editor | `editor/common/core/characterClassifier.ts` | `lib/src/monaco/editor/common/core/characterClassifier.dart` | tested |
 | 173 | editor | `editor/common/core/cursorColumns.ts` | `lib/src/monaco/editor/common/core/cursorColumns.dart` | tested |
 | 174 | editor | `editor/common/core/editOperation.ts` | `lib/src/monaco/editor/common/core/editOperation.dart` | tested |
-| 175 | editor | `editor/common/core/editorColorRegistry.ts` | `lib/src/monaco/editor/common/core/editorColorRegistry.dart` | pending |
+| 175 | editor | `editor/common/core/editorColorRegistry.ts` | `lib/src/monaco/editor/common/core/editorColorRegistry.dart` | tested |
 | 176 | editor | `editor/common/core/edits/arrayEdit.ts` | `lib/src/monaco/editor/common/core/edits/arrayEdit.dart` | tested |
 | 177 | editor | `editor/common/core/edits/edit.ts` | `lib/src/monaco/editor/common/core/edits/edit.dart` | tested |
 | 178 | editor | `editor/common/core/edits/lengthEdit.ts` | `lib/src/monaco/editor/common/core/edits/lengthEdit.dart` | tested |
@@ -244,7 +244,7 @@
 | 235 | editor | `editor/common/editorCommon.ts` | `lib/src/monaco/editor/common/editorCommon.dart` | pending |
 | 236 | editor | `editor/common/editorContextKeys.ts` | `lib/src/monaco/editor/common/editorContextKeys.dart` | tested |
 | 237 | editor | `editor/common/editorFeatures.ts` | `lib/src/monaco/editor/common/editorFeatures.dart` | tested |
-| 238 | editor | `editor/common/editorTheme.ts` | `lib/src/monaco/editor/common/editorTheme.dart` | pending |
+| 238 | editor | `editor/common/editorTheme.ts` | `lib/src/monaco/editor/common/editorTheme.dart` | tested |
 | 239 | editor | `editor/common/encodedTokenAttributes.ts` | `lib/src/monaco/editor/common/encodedTokenAttributes.dart` | tested |
 | 240 | editor | `editor/common/inputMode.ts` | `lib/src/monaco/editor/common/inputMode.dart` | tested |
 | 241 | editor | `editor/common/languageFeatureRegistry.ts` | `lib/src/monaco/editor/common/languageFeatureRegistry.dart` | pending |
@@ -715,7 +715,7 @@
 | 706 | editor | `editor/contrib/suggest/test/browser/suggestWidget.test.ts` | `lib/src/monaco/editor/contrib/suggest/test/browser/suggestWidget.test.dart` | pending |
 | 707 | editor | `editor/contrib/suggest/test/browser/suggestWidgetColors.test.ts` | `lib/src/monaco/editor/contrib/suggest/test/browser/suggestWidgetColors.test.dart` | pending |
 | 708 | editor | `editor/contrib/suggest/test/browser/wordDistance.test.ts` | `lib/src/monaco/editor/contrib/suggest/test/browser/wordDistance.test.dart` | pending |
-| 709 | editor | `editor/contrib/symbolIcons/browser/symbolIcons.ts` | `lib/src/monaco/editor/contrib/symbolIcons/browser/symbolIcons.dart` | pending |
+| 709 | editor | `editor/contrib/symbolIcons/browser/symbolIcons.ts` | `lib/src/monaco/editor/contrib/symbolIcons/browser/symbolIcons.dart` | tested |
 | 710 | editor | `editor/contrib/toggleTabFocusMode/browser/toggleTabFocusMode.ts` | `lib/src/monaco/editor/contrib/toggleTabFocusMode/browser/toggleTabFocusMode.dart` | tested |
 | 711 | editor | `editor/contrib/tokenization/browser/tokenization.ts` | `lib/src/monaco/editor/contrib/tokenization/browser/tokenization.dart` | pending |
 | 712 | editor | `editor/contrib/unicodeHighlighter/browser/bannerController.ts` | `lib/src/monaco/editor/contrib/unicodeHighlighter/browser/bannerController.dart` | pending |
@@ -785,7 +785,7 @@
 | 776 | editor | `editor/test/browser/diff/testDiffProviderFactoryService.ts` | `lib/src/monaco/editor/test/browser/diff/testDiffProviderFactoryService.dart` | pending |
 | 777 | editor | `editor/test/browser/editorMarkdownSanitizer.test.ts` | `lib/src/monaco/editor/test/browser/editorMarkdownSanitizer.test.dart` | pending |
 | 778 | editor | `editor/test/browser/editorTestServices.ts` | `lib/src/monaco/editor/test/browser/editorTestServices.dart` | pending |
-| 779 | editor | `editor/test/browser/gpu/atlas/testUtil.ts` | `lib/src/monaco/editor/test/browser/gpu/atlas/testUtil.dart` | pending |
+| 779 | editor | `editor/test/browser/gpu/atlas/testUtil.ts` | `lib/src/monaco/editor/test/browser/gpu/atlas/testUtil.dart` | tested |
 | 780 | editor | `editor/test/browser/gpu/atlas/textureAtlas.test.ts` | `lib/src/monaco/editor/test/browser/gpu/atlas/textureAtlas.test.dart` | pending |
 | 781 | editor | `editor/test/browser/gpu/atlas/textureAtlasAllocator.test.ts` | `lib/src/monaco/editor/test/browser/gpu/atlas/textureAtlasAllocator.test.dart` | pending |
 | 782 | editor | `editor/test/browser/gpu/bufferDirtyTracker.test.ts` | `lib/src/monaco/editor/test/browser/gpu/bufferDirtyTracker.test.dart` | tested |
@@ -1272,7 +1272,7 @@
 | 1263 | platform | `platform/telemetry/common/telemetry.ts` | `lib/src/monaco/platform/telemetry/common/telemetry.dart` | tested |
 | 1264 | platform | `platform/telemetry/common/telemetryUtils.ts` | `lib/src/monaco/platform/telemetry/common/telemetryUtils.dart` | tested |
 | 1265 | platform | `platform/theme/browser/defaultStyles.ts` | `lib/src/monaco/platform/theme/browser/defaultStyles.dart` | pending |
-| 1266 | platform | `platform/theme/browser/iconsStyleSheet.ts` | `lib/src/monaco/platform/theme/browser/iconsStyleSheet.dart` | pending |
+| 1266 | platform | `platform/theme/browser/iconsStyleSheet.ts` | `lib/src/monaco/platform/theme/browser/iconsStyleSheet.dart` | tested |
 | 1267 | platform | `platform/theme/common/colorRegistry.ts` | `lib/src/monaco/platform/theme/common/colorRegistry.dart` | tested |
 | 1268 | platform | `platform/theme/common/colorUtils.ts` | `lib/src/monaco/platform/theme/common/colorUtils.dart` | tested |
 | 1269 | platform | `platform/theme/common/colors/baseColors.ts` | `lib/src/monaco/platform/theme/common/colors/baseColors.dart` | tested |
@@ -1289,7 +1289,7 @@
 | 1280 | platform | `platform/theme/common/iconRegistry.ts` | `lib/src/monaco/platform/theme/common/iconRegistry.dart` | tested |
 | 1281 | platform | `platform/theme/common/theme.ts` | `lib/src/monaco/platform/theme/common/theme.dart` | tested |
 | 1282 | platform | `platform/theme/common/themeService.ts` | `lib/src/monaco/platform/theme/common/themeService.dart` | tested |
-| 1283 | platform | `platform/theme/test/common/testThemeService.ts` | `lib/src/monaco/platform/theme/test/common/testThemeService.dart` | pending |
+| 1283 | platform | `platform/theme/test/common/testThemeService.ts` | `lib/src/monaco/platform/theme/test/common/testThemeService.dart` | tested |
 | 1284 | platform | `platform/undoRedo/common/undoRedo.ts` | `lib/src/monaco/platform/undoRedo/common/undoRedo.dart` | tested |
 | 1285 | platform | `platform/undoRedo/common/undoRedoService.ts` | `lib/src/monaco/platform/undoRedo/common/undoRedoService.dart` | tested |
 | 1286 | platform | `platform/uriIdentity/common/uriIdentity.ts` | `lib/src/monaco/platform/uriIdentity/common/uriIdentity.dart` | tested |

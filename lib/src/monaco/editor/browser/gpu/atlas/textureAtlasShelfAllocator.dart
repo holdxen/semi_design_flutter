@@ -45,8 +45,10 @@ abstract class AtlasContext2D {
 
 /// DOM bridge of `OffscreenCanvas`: dimensions + 2D context + blob export.
 class AtlasCanvas {
-  final int width;
-  final int height;
+  // Source OffscreenCanvas.width/height are mutable (the page sets them to 1
+  // on dispose), so these cannot be final.
+  int width;
+  int height;
   final AtlasContext2D Function(String contextId,
       [Map<String, Object?>? options]) getContext;
   final Future<Blob> Function() convertToBlob;
