@@ -716,7 +716,7 @@
 | 707 | editor | `editor/contrib/suggest/test/browser/suggestWidgetColors.test.ts` | `lib/src/monaco/editor/contrib/suggest/test/browser/suggestWidgetColors.test.dart` | pending |
 | 708 | editor | `editor/contrib/suggest/test/browser/wordDistance.test.ts` | `lib/src/monaco/editor/contrib/suggest/test/browser/wordDistance.test.dart` | pending |
 | 709 | editor | `editor/contrib/symbolIcons/browser/symbolIcons.ts` | `lib/src/monaco/editor/contrib/symbolIcons/browser/symbolIcons.dart` | pending |
-| 710 | editor | `editor/contrib/toggleTabFocusMode/browser/toggleTabFocusMode.ts` | `lib/src/monaco/editor/contrib/toggleTabFocusMode/browser/toggleTabFocusMode.dart` | pending |
+| 710 | editor | `editor/contrib/toggleTabFocusMode/browser/toggleTabFocusMode.ts` | `lib/src/monaco/editor/contrib/toggleTabFocusMode/browser/toggleTabFocusMode.dart` | tested |
 | 711 | editor | `editor/contrib/tokenization/browser/tokenization.ts` | `lib/src/monaco/editor/contrib/tokenization/browser/tokenization.dart` | pending |
 | 712 | editor | `editor/contrib/unicodeHighlighter/browser/bannerController.ts` | `lib/src/monaco/editor/contrib/unicodeHighlighter/browser/bannerController.dart` | pending |
 | 713 | editor | `editor/contrib/unicodeHighlighter/browser/unicodeHighlighter.ts` | `lib/src/monaco/editor/contrib/unicodeHighlighter/browser/unicodeHighlighter.dart` | pending |
@@ -1191,7 +1191,7 @@
 | 1182 | platform | `platform/environment/common/argv.ts` | `lib/src/monaco/platform/environment/common/argv.dart` | tested |
 | 1183 | platform | `platform/environment/common/environment.ts` | `lib/src/monaco/platform/environment/common/environment.dart` | tested |
 | 1184 | platform | `platform/extensionManagement/common/extensionGalleryManifest.ts` | `lib/src/monaco/platform/extensionManagement/common/extensionGalleryManifest.dart` | tested |
-| 1185 | platform | `platform/extensionManagement/common/extensionManagement.ts` | `lib/src/monaco/platform/extensionManagement/common/extensionManagement.dart` | pending |
+| 1185 | platform | `platform/extensionManagement/common/extensionManagement.ts` | `lib/src/monaco/platform/extensionManagement/common/extensionManagement.dart` | tested |
 | 1186 | platform | `platform/extensions/common/extensions.ts` | `lib/src/monaco/platform/extensions/common/extensions.dart` | tested |
 | 1187 | platform | `platform/files/browser/htmlFileSystemProvider.ts` | `lib/src/monaco/platform/files/browser/htmlFileSystemProvider.dart` | pending |
 | 1188 | platform | `platform/files/browser/webFileSystemAccess.ts` | `lib/src/monaco/platform/files/browser/webFileSystemAccess.dart` | tested |
@@ -1227,11 +1227,11 @@
 | 1218 | platform | `platform/markdown/browser/markdownRenderer.ts` | `lib/src/monaco/platform/markdown/browser/markdownRenderer.dart` | pending |
 | 1219 | platform | `platform/markers/common/markerService.ts` | `lib/src/monaco/platform/markers/common/markerService.dart` | tested |
 | 1220 | platform | `platform/markers/common/markers.ts` | `lib/src/monaco/platform/markers/common/markers.dart` | tested |
-| 1221 | platform | `platform/notification/common/notification.ts` | `lib/src/monaco/platform/notification/common/notification.dart` | pending |
+| 1221 | platform | `platform/notification/common/notification.ts` | `lib/src/monaco/platform/notification/common/notification.dart` | tested |
 | 1222 | platform | `platform/notification/common/notificationLegacy.ts` | `lib/src/monaco/platform/notification/common/notificationLegacy.dart` | tested |
 | 1223 | platform | `platform/notification/common/notificationMessage.ts` | `lib/src/monaco/platform/notification/common/notificationMessage.dart` | tested |
-| 1224 | platform | `platform/notification/common/notificationTelemetry.ts` | `lib/src/monaco/platform/notification/common/notificationTelemetry.dart` | pending |
-| 1225 | platform | `platform/notification/test/common/testNotificationService.ts` | `lib/src/monaco/platform/notification/test/common/testNotificationService.dart` | pending |
+| 1224 | platform | `platform/notification/common/notificationTelemetry.ts` | `lib/src/monaco/platform/notification/common/notificationTelemetry.dart` | tested |
+| 1225 | platform | `platform/notification/test/common/testNotificationService.ts` | `lib/src/monaco/platform/notification/test/common/testNotificationService.dart` | tested |
 | 1226 | platform | `platform/observable/common/platformObservableUtils.ts` | `lib/src/monaco/platform/observable/common/platformObservableUtils.dart` | tested |
 | 1227 | platform | `platform/observable/common/wrapInHotClass.ts` | `lib/src/monaco/platform/observable/common/wrapInHotClass.dart` | tested |
 | 1228 | platform | `platform/observable/common/wrapInReloadableClass.ts` | `lib/src/monaco/platform/observable/common/wrapInReloadableClass.dart` | tested |
@@ -1243,7 +1243,7 @@
 | 1234 | platform | `platform/policy/common/policy.ts` | `lib/src/monaco/platform/policy/common/policy.dart` | tested |
 | 1235 | platform | `platform/product/common/product.ts` | `lib/src/monaco/platform/product/common/product.dart` | tested |
 | 1236 | platform | `platform/product/common/productService.ts` | `lib/src/monaco/platform/product/common/productService.dart` | tested |
-| 1237 | platform | `platform/progress/common/progress.ts` | `lib/src/monaco/platform/progress/common/progress.dart` | pending |
+| 1237 | platform | `platform/progress/common/progress.ts` | `lib/src/monaco/platform/progress/common/progress.dart` | tested |
 | 1238 | platform | `platform/quickinput/browser/commandsQuickAccess.ts` | `lib/src/monaco/platform/quickinput/browser/commandsQuickAccess.dart` | pending |
 | 1239 | platform | `platform/quickinput/browser/helpQuickAccess.ts` | `lib/src/monaco/platform/quickinput/browser/helpQuickAccess.dart` | pending |
 | 1240 | platform | `platform/quickinput/browser/pickerQuickAccess.ts` | `lib/src/monaco/platform/quickinput/browser/pickerQuickAccess.dart` | pending |
