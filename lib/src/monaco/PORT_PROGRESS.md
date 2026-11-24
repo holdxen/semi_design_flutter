@@ -21,7 +21,7 @@
 | 12 | editor | `editor/browser/controller/editContext/native/editContextFactory.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/editContextFactory.dart` | tested |
 | 13 | editor | `editor/browser/controller/editContext/native/nativeEditContext.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/nativeEditContext.dart` | pending |
 | 14 | editor | `editor/browser/controller/editContext/native/nativeEditContextRegistry.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/nativeEditContextRegistry.dart` | pending |
-| 15 | editor | `editor/browser/controller/editContext/native/nativeEditContextUtils.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/nativeEditContextUtils.dart` | pending |
+| 15 | editor | `editor/browser/controller/editContext/native/nativeEditContextUtils.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/nativeEditContextUtils.dart` | tested |
 | 16 | editor | `editor/browser/controller/editContext/native/screenReaderContentRich.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/screenReaderContentRich.dart` | pending |
 | 17 | editor | `editor/browser/controller/editContext/native/screenReaderContentSimple.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/screenReaderContentSimple.dart` | pending |
 | 18 | editor | `editor/browser/controller/editContext/native/screenReaderSupport.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/screenReaderSupport.dart` | pending |
@@ -61,7 +61,7 @@
 | 52 | editor | `editor/browser/gpu/renderStrategy/fullFileRenderStrategy.ts` | `lib/src/monaco/editor/browser/gpu/renderStrategy/fullFileRenderStrategy.dart` | pending |
 | 53 | editor | `editor/browser/gpu/renderStrategy/fullFileRenderStrategy.wgsl.ts` | `lib/src/monaco/editor/browser/gpu/renderStrategy/fullFileRenderStrategy.wgsl.dart` | pending |
 | 54 | editor | `editor/browser/gpu/renderStrategy/viewportRenderStrategy.ts` | `lib/src/monaco/editor/browser/gpu/renderStrategy/viewportRenderStrategy.dart` | pending |
-| 55 | editor | `editor/browser/gpu/taskQueue.ts` | `lib/src/monaco/editor/browser/gpu/taskQueue.dart` | pending |
+| 55 | editor | `editor/browser/gpu/taskQueue.ts` | `lib/src/monaco/editor/browser/gpu/taskQueue.dart` | tested |
 | 56 | editor | `editor/browser/gpu/viewGpuContext.ts` | `lib/src/monaco/editor/browser/gpu/viewGpuContext.dart` | pending |
 | 57 | editor | `editor/browser/observableCodeEditor.ts` | `lib/src/monaco/editor/browser/observableCodeEditor.dart` | pending |
 | 58 | editor | `editor/browser/services/abstractCodeEditorService.ts` | `lib/src/monaco/editor/browser/services/abstractCodeEditorService.dart` | pending |
@@ -779,7 +779,7 @@
 | 770 | editor | `editor/test/browser/controller/cursor.test.ts` | `lib/src/monaco/editor/test/browser/controller/cursor.test.dart` | pending |
 | 771 | editor | `editor/test/browser/controller/cursorMoveCommand.test.ts` | `lib/src/monaco/editor/test/browser/controller/cursorMoveCommand.test.dart` | pending |
 | 772 | editor | `editor/test/browser/controller/imeRecordedTypes.ts` | `lib/src/monaco/editor/test/browser/controller/imeRecordedTypes.dart` | pending |
-| 773 | editor | `editor/test/browser/controller/nativeEditContextUtils.test.ts` | `lib/src/monaco/editor/test/browser/controller/nativeEditContextUtils.test.dart` | pending |
+| 773 | editor | `editor/test/browser/controller/nativeEditContextUtils.test.ts` | `lib/src/monaco/editor/test/browser/controller/nativeEditContextUtils.test.dart` | tested |
 | 774 | editor | `editor/test/browser/controller/textAreaInput.test.ts` | `lib/src/monaco/editor/test/browser/controller/textAreaInput.test.dart` | pending |
 | 775 | editor | `editor/test/browser/controller/textAreaState.test.ts` | `lib/src/monaco/editor/test/browser/controller/textAreaState.test.dart` | pending |
 | 776 | editor | `editor/test/browser/diff/testDiffProviderFactoryService.ts` | `lib/src/monaco/editor/test/browser/diff/testDiffProviderFactoryService.dart` | pending |
@@ -1163,7 +1163,7 @@
 | 1154 | platform | `platform/actions/common/actions.ts` | `lib/src/monaco/platform/actions/common/actions.dart` | pending |
 | 1155 | platform | `platform/actions/common/menuService.ts` | `lib/src/monaco/platform/actions/common/menuService.dart` | pending |
 | 1156 | platform | `platform/backup/common/backup.ts` | `lib/src/monaco/platform/backup/common/backup.dart` | tested |
-| 1157 | platform | `platform/clipboard/browser/clipboardService.ts` | `lib/src/monaco/platform/clipboard/browser/clipboardService.dart` | pending |
+| 1157 | platform | `platform/clipboard/browser/clipboardService.ts` | `lib/src/monaco/platform/clipboard/browser/clipboardService.dart` | tested |
 | 1158 | platform | `platform/clipboard/common/clipboardService.ts` | `lib/src/monaco/platform/clipboard/common/clipboardService.dart` | tested |
 | 1159 | platform | `platform/clipboard/test/common/testClipboardService.ts` | `lib/src/monaco/platform/clipboard/test/common/testClipboardService.dart` | tested |
 | 1160 | platform | `platform/commands/common/commands.ts` | `lib/src/monaco/platform/commands/common/commands.dart` | tested |
@@ -1173,7 +1173,7 @@
 | 1164 | platform | `platform/configuration/common/configurationRegistry.ts` | `lib/src/monaco/platform/configuration/common/configurationRegistry.dart` | tested |
 | 1165 | platform | `platform/configuration/common/configurations.ts` | `lib/src/monaco/platform/configuration/common/configurations.dart` | pending |
 | 1166 | platform | `platform/configuration/test/common/testConfigurationService.ts` | `lib/src/monaco/platform/configuration/test/common/testConfigurationService.dart` | tested |
-| 1167 | platform | `platform/contextkey/browser/contextKeyService.ts` | `lib/src/monaco/platform/contextkey/browser/contextKeyService.dart` | pending |
+| 1167 | platform | `platform/contextkey/browser/contextKeyService.ts` | `lib/src/monaco/platform/contextkey/browser/contextKeyService.dart` | tested |
 | 1168 | platform | `platform/contextkey/common/contextkey.ts` | `lib/src/monaco/platform/contextkey/common/contextkey.dart` | tested |
 | 1169 | platform | `platform/contextkey/common/contextkeys.ts` | `lib/src/monaco/platform/contextkey/common/contextkeys.dart` | tested |
 | 1170 | platform | `platform/contextkey/common/scanner.ts` | `lib/src/monaco/platform/contextkey/common/scanner.dart` | tested |
@@ -1192,7 +1192,7 @@
 | 1183 | platform | `platform/environment/common/environment.ts` | `lib/src/monaco/platform/environment/common/environment.dart` | tested |
 | 1184 | platform | `platform/extensionManagement/common/extensionGalleryManifest.ts` | `lib/src/monaco/platform/extensionManagement/common/extensionGalleryManifest.dart` | tested |
 | 1185 | platform | `platform/extensionManagement/common/extensionManagement.ts` | `lib/src/monaco/platform/extensionManagement/common/extensionManagement.dart` | pending |
-| 1186 | platform | `platform/extensions/common/extensions.ts` | `lib/src/monaco/platform/extensions/common/extensions.dart` | pending |
+| 1186 | platform | `platform/extensions/common/extensions.ts` | `lib/src/monaco/platform/extensions/common/extensions.dart` | tested |
 | 1187 | platform | `platform/files/browser/htmlFileSystemProvider.ts` | `lib/src/monaco/platform/files/browser/htmlFileSystemProvider.dart` | pending |
 | 1188 | platform | `platform/files/browser/webFileSystemAccess.ts` | `lib/src/monaco/platform/files/browser/webFileSystemAccess.dart` | tested |
 | 1189 | platform | `platform/files/common/files.ts` | `lib/src/monaco/platform/files/common/files.dart` | pending |
@@ -1222,8 +1222,8 @@
 | 1213 | platform | `platform/label/common/label.ts` | `lib/src/monaco/platform/label/common/label.dart` | tested |
 | 1214 | platform | `platform/layout/browser/layoutService.ts` | `lib/src/monaco/platform/layout/browser/layoutService.dart` | tested |
 | 1215 | platform | `platform/list/browser/listService.ts` | `lib/src/monaco/platform/list/browser/listService.dart` | pending |
-| 1216 | platform | `platform/log/common/log.ts` | `lib/src/monaco/platform/log/common/log.dart` | pending |
-| 1217 | platform | `platform/log/common/logService.ts` | `lib/src/monaco/platform/log/common/logService.dart` | pending |
+| 1216 | platform | `platform/log/common/log.ts` | `lib/src/monaco/platform/log/common/log.dart` | tested |
+| 1217 | platform | `platform/log/common/logService.ts` | `lib/src/monaco/platform/log/common/logService.dart` | tested |
 | 1218 | platform | `platform/markdown/browser/markdownRenderer.ts` | `lib/src/monaco/platform/markdown/browser/markdownRenderer.dart` | pending |
 | 1219 | platform | `platform/markers/common/markerService.ts` | `lib/src/monaco/platform/markers/common/markerService.dart` | tested |
 | 1220 | platform | `platform/markers/common/markers.ts` | `lib/src/monaco/platform/markers/common/markers.dart` | tested |
@@ -1270,7 +1270,7 @@
 | 1261 | platform | `platform/telemetry/common/commonProperties.ts` | `lib/src/monaco/platform/telemetry/common/commonProperties.dart` | tested |
 | 1262 | platform | `platform/telemetry/common/gdprTypings.ts` | `lib/src/monaco/platform/telemetry/common/gdprTypings.dart` | tested |
 | 1263 | platform | `platform/telemetry/common/telemetry.ts` | `lib/src/monaco/platform/telemetry/common/telemetry.dart` | tested |
-| 1264 | platform | `platform/telemetry/common/telemetryUtils.ts` | `lib/src/monaco/platform/telemetry/common/telemetryUtils.dart` | pending |
+| 1264 | platform | `platform/telemetry/common/telemetryUtils.ts` | `lib/src/monaco/platform/telemetry/common/telemetryUtils.dart` | tested |
 | 1265 | platform | `platform/theme/browser/defaultStyles.ts` | `lib/src/monaco/platform/theme/browser/defaultStyles.dart` | pending |
 | 1266 | platform | `platform/theme/browser/iconsStyleSheet.ts` | `lib/src/monaco/platform/theme/browser/iconsStyleSheet.dart` | pending |
 | 1267 | platform | `platform/theme/common/colorRegistry.ts` | `lib/src/monaco/platform/theme/common/colorRegistry.dart` | pending |
@@ -1303,7 +1303,7 @@
 | 1294 | platform | `platform/workspace/common/workspace.ts` | `lib/src/monaco/platform/workspace/common/workspace.dart` | tested |
 | 1295 | platform | `platform/workspace/common/workspaceTrust.ts` | `lib/src/monaco/platform/workspace/common/workspaceTrust.dart` | tested |
 | 1296 | platform | `platform/workspace/test/common/testWorkspace.ts` | `lib/src/monaco/platform/workspace/test/common/testWorkspace.dart` | tested |
-| 1297 | platform | `platform/workspaces/common/workspaces.ts` | `lib/src/monaco/platform/workspaces/common/workspaces.dart` | pending |
+| 1297 | platform | `platform/workspaces/common/workspaces.ts` | `lib/src/monaco/platform/workspaces/common/workspaces.dart` | tested |
 | 1298 | vs | `amdX.ts` | `lib/src/monaco/amdX.dart` | tested |
 | 1299 | vs | `nls.ts` | `lib/src/monaco/nls.dart` | tested |
 | 1300 | monaco | `deprecated/basic-languages/monaco.contribution.ts` | `lib/src/monaco/deprecated/basic-languages/monaco.contribution.dart` | tested |
