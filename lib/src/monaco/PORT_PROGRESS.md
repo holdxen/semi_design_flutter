@@ -1245,7 +1245,7 @@
 | 1236 | platform | `platform/product/common/productService.ts` | `lib/src/monaco/platform/product/common/productService.dart` | tested |
 | 1237 | platform | `platform/progress/common/progress.ts` | `lib/src/monaco/platform/progress/common/progress.dart` | tested |
 | 1238 | platform | `platform/quickinput/browser/commandsQuickAccess.ts` | `lib/src/monaco/platform/quickinput/browser/commandsQuickAccess.dart` | pending |
-| 1239 | platform | `platform/quickinput/browser/helpQuickAccess.ts` | `lib/src/monaco/platform/quickinput/browser/helpQuickAccess.dart` | pending |
+| 1239 | platform | `platform/quickinput/browser/helpQuickAccess.ts` | `lib/src/monaco/platform/quickinput/browser/helpQuickAccess.dart` | tested |
 | 1240 | platform | `platform/quickinput/browser/pickerQuickAccess.ts` | `lib/src/monaco/platform/quickinput/browser/pickerQuickAccess.dart` | tested |
 | 1241 | platform | `platform/quickinput/browser/quickAccess.ts` | `lib/src/monaco/platform/quickinput/browser/quickAccess.dart` | tested |
 | 1242 | platform | `platform/quickinput/browser/quickInput.ts` | `lib/src/monaco/platform/quickinput/browser/quickInput.dart` | pending |
