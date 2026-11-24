@@ -266,7 +266,7 @@
 | 257 | editor | `editor/common/languages/supports/languageBracketsConfiguration.ts` | `lib/src/monaco/editor/common/languages/supports/languageBracketsConfiguration.dart` | pending |
 | 258 | editor | `editor/common/languages/supports/onEnter.ts` | `lib/src/monaco/editor/common/languages/supports/onEnter.dart` | pending |
 | 259 | editor | `editor/common/languages/supports/richEditBrackets.ts` | `lib/src/monaco/editor/common/languages/supports/richEditBrackets.dart` | pending |
-| 260 | editor | `editor/common/languages/supports/tokenization.ts` | `lib/src/monaco/editor/common/languages/supports/tokenization.dart` | pending |
+| 260 | editor | `editor/common/languages/supports/tokenization.ts` | `lib/src/monaco/editor/common/languages/supports/tokenization.dart` | tested |
 | 261 | editor | `editor/common/languages/supports.ts` | `lib/src/monaco/editor/common/languages/supports.dart` | pending |
 | 262 | editor | `editor/common/languages/textToHtmlTokenizer.ts` | `lib/src/monaco/editor/common/languages/textToHtmlTokenizer.dart` | pending |
 | 263 | editor | `editor/common/languages.ts` | `lib/src/monaco/editor/common/languages.dart` | pending |
