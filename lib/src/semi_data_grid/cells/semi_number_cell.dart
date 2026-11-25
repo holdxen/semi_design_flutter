@@ -69,7 +69,7 @@ class SemiNumberCellRenderer extends SemiCellRenderer {
   /// `onDelete` (`number-cell.tsx`): `{ ...c, data: undefined }`.
   @override
   SemiGridCell? onDelete(SemiGridCell cell) =>
-      (cell as SemiNumberCell).copyWith(data: null);
+      (cell as SemiNumberCell).copyWith(clearData: true, displayData: '');
 
   /// `onPaste` (`number-cell.tsx`): raw number or `parseFloat`, falling back to
   /// the previous value when the paste is not numeric.

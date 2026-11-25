@@ -340,7 +340,7 @@
 | 331 | editor | `editor/common/services/semanticTokensDto.ts` | `lib/src/monaco/editor/common/services/semanticTokensDto.dart` | tested |
 | 332 | editor | `editor/common/services/semanticTokensProviderStyling.ts` | `lib/src/monaco/editor/common/services/semanticTokensProviderStyling.dart` | tested |
 | 333 | editor | `editor/common/services/semanticTokensStyling.ts` | `lib/src/monaco/editor/common/services/semanticTokensStyling.dart` | tested |
-| 334 | editor | `editor/common/services/semanticTokensStylingService.ts` | `lib/src/monaco/editor/common/services/semanticTokensStylingService.dart` | pending |
+| 334 | editor | `editor/common/services/semanticTokensStylingService.ts` | `lib/src/monaco/editor/common/services/semanticTokensStylingService.dart` | tested |
 | 335 | editor | `editor/common/services/textModelSync/textModelSync.impl.ts` | `lib/src/monaco/editor/common/services/textModelSync/textModelSync.impl.dart` | pending |
 | 336 | editor | `editor/common/services/textModelSync/textModelSync.protocol.ts` | `lib/src/monaco/editor/common/services/textModelSync/textModelSync.protocol.dart` | tested |
 | 337 | editor | `editor/common/services/textResourceConfiguration.ts` | `lib/src/monaco/editor/common/services/textResourceConfiguration.dart` | tested |

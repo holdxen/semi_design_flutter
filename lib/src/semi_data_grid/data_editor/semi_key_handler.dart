@@ -827,13 +827,14 @@ class SemiKeyHandler {
   }
 
   /// `deleteRange` (`data-editor.tsx:3148-3184`).
-  void deleteRange(SemiRectangle r) {
+  void deleteRange(SemiRectangle r, {bool respectReadonly = false}) {
     final editList = <SemiEditListItem>[];
     for (var x = r.x.toInt(); x < r.x + r.width; x++) {
       for (var y = r.y.toInt(); y < r.y + r.height; y++) {
         final cellValue = getCellContent(
           SemiItem(x - rowMarkerOffset, y),
         );
+        if (respectReadonly && cellValue.isReadonly) continue;
         if (!cellValue.allowOverlay &&
             cellValue.kind != SemiCellKind.boolean) {
           continue;

@@ -1786,6 +1786,8 @@ void main() {
       void Function()? onRowAppended,
       Object? Function()? onColumnAppended,
       SemiGetCellsForSelection? cellsForSelection,
+      SemiDeleteCallback? onDelete,
+      SemiPasteCallback? onPaste,
       SemiSpanRangeBehavior spanRangeBehavior =
           SemiSpanRangeBehavior.standard,
       void Function(List<SemiItem> results, int navIndex)?
@@ -1868,6 +1870,8 @@ void main() {
             rowHeight: const SemiRowHeight.fixed(32),
             headerHeight: 32,
             onKeyDown: (_) {},
+            onDelete: onDelete,
+            onPaste: onPaste,
             onCellsEdited: (items) {
               edits.addAll(items);
               return true;
@@ -2035,6 +2039,245 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
       await tester.pumpAndSettle();
       expect(selectionLog.last.current!.cell, const SemiItem(2, 1));
+    });
+
+    void mockGridClipboard({
+      String? text,
+      Future<void> Function(String text)? write,
+    }) {
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+        if (call.method == 'Clipboard.getData' &&
+            call.arguments == Clipboard.kTextPlain &&
+            text != null) {
+          return {'text': text};
+        }
+        if (call.method == 'Clipboard.setData') {
+          await write?.call((call.arguments as Map)['text'] as String);
+        }
+        return null;
+      });
+      addTearDown(() {
+        messenger.setMockMethodCallHandler(SystemChannels.platform, null);
+      });
+    }
+
+    Future<void> focusClipboardCell(WidgetTester tester, double x) async {
+      final gesture = await tester.startGesture(
+        Offset(x, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> sendClipboardShortcut(
+      WidgetTester tester,
+      LogicalKeyboardKey key,
+    ) async {
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(key);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets(
+      'cut writes before clearing text and numbers, but skips readonly cells',
+      (tester) async {
+        const cells = <SemiGridCell>[
+          SemiTextCell(data: 'source', displayData: 'source'),
+          SemiNumberCell(data: 42, displayData: '42'),
+          SemiTextCell(
+            data: 'readonly',
+            displayData: 'readonly',
+            readonly: true,
+          ),
+        ];
+        final writeCompleted = Completer<void>();
+        final writes = <String>[];
+        mockGridClipboard(
+          write: (text) {
+            writes.add(text);
+            return writeCompleted.future;
+          },
+        );
+        await tester.pumpWidget(
+          buildEditor(
+            rows: 1,
+            columnCount: cells.length,
+            rowMarkers: const SemiRowMarkerOptions(width: 40),
+            content: (item) => cells[item.col],
+            cellsForSelection: (r) => [
+              cells.sublist(r.x.toInt(), (r.x + r.width).toInt()),
+            ],
+          ),
+        );
+        await tester.pumpAndSettle();
+        await focusClipboardCell(tester, 70);
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.pumpAndSettle();
+
+        await sendClipboardShortcut(tester, LogicalKeyboardKey.keyX);
+        expect(writes, ['source\t42\treadonly']);
+        expect(edits, isEmpty);
+
+        writeCompleted.complete();
+        await tester.pumpAndSettle();
+        expect(edits.map((edit) => edit.location), [
+          const SemiItem(0, 0),
+          const SemiItem(1, 0),
+        ]);
+        expect((edits[0].value as SemiTextCell).data, isEmpty);
+        final clearedNumber = edits[1].value as SemiNumberCell;
+        expect(clearedNumber.data, isNull);
+        expect(clearedNumber.displayData, isEmpty);
+      },
+    );
+
+    testWidgets('cut copies but does not clear when onDelete rejects it', (
+      tester,
+    ) async {
+      final writes = <String>[];
+      final deleteRequests = <SemiGridSelection>[];
+      mockGridClipboard(write: (text) async => writes.add(text));
+      await tester.pumpWidget(
+        buildEditor(
+          onDelete: (selection) {
+            deleteRequests.add(selection);
+            return false;
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+      await focusClipboardCell(tester, 50);
+      await sendClipboardShortcut(tester, LogicalKeyboardKey.keyX);
+
+      expect(writes, ['r0 c0']);
+      expect(deleteRequests.single.current!.cell, const SemiItem(0, 0));
+      expect(edits, isEmpty);
+    });
+
+    testWidgets('cut clears the replacement range returned by onDelete', (
+      tester,
+    ) async {
+      final writes = <String>[];
+      mockGridClipboard(write: (text) async => writes.add(text));
+      await tester.pumpWidget(
+        buildEditor(
+          onDelete: (_) {
+            return SemiGridSelection(
+              current: SemiGridSelectionCurrent(
+                cell: const SemiItem(1, 0),
+                range: const SemiRectangle(x: 1, y: 0, width: 1, height: 1),
+                rangeStack: const [],
+              ),
+              rows: const SemiCompactSelection.empty(),
+              columns: const SemiCompactSelection.empty(),
+            );
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+      await focusClipboardCell(tester, 50);
+      await sendClipboardShortcut(tester, LogicalKeyboardKey.keyX);
+
+      expect(writes, ['r0 c0']);
+      expect(edits.single.location, const SemiItem(1, 0));
+      expect((edits.single.value as SemiTextCell).data, isEmpty);
+    });
+
+    for (final missingData in [false, true]) {
+      testWidgets(
+        missingData
+            ? 'cut does not clear when source data is unavailable'
+            : 'cut does not clear when the clipboard write fails',
+        (tester) async {
+          var writes = 0;
+          var deleteRequests = 0;
+          mockGridClipboard(
+            write: (_) async {
+              writes++;
+              throw PlatformException(code: 'clipboard-unavailable');
+            },
+          );
+          await tester.pumpWidget(
+            buildEditor(
+              cellsForSelection: missingData ? (_) => null : null,
+              onDelete: (_) {
+                deleteRequests++;
+                return true;
+              },
+            ),
+          );
+          await tester.pumpAndSettle();
+          await focusClipboardCell(tester, 50);
+          await sendClipboardShortcut(tester, LogicalKeyboardKey.keyX);
+
+          expect(writes, missingData ? 0 : 1);
+          expect(deleteRequests, 0);
+          expect(edits, isEmpty);
+        },
+      );
+    }
+
+    testWidgets(
+      'single-cell paste reads the first data column with row markers',
+      (tester) async {
+        const cells = <SemiGridCell>[
+          SemiTextCell(data: 'old', displayData: 'old'),
+          SemiNumberCell(data: 1, displayData: '1'),
+        ];
+        mockGridClipboard(text: 'new text');
+        await tester.pumpWidget(
+          buildEditor(
+            columnCount: cells.length,
+            rowMarkers: const SemiRowMarkerOptions(width: 40),
+            content: (item) => cells[item.col],
+          ),
+        );
+        await tester.pumpAndSettle();
+        await focusClipboardCell(tester, 70);
+        await sendClipboardShortcut(tester, LogicalKeyboardKey.keyV);
+
+        expect(edits.single.location, const SemiItem(0, 0));
+        expect((edits.single.value as SemiTextCell).data, 'new text');
+      },
+    );
+
+    testWidgets('batch paste reaches the last data column with row markers', (
+      tester,
+    ) async {
+      const cells = <SemiGridCell>[
+        SemiTextCell(data: 'old', displayData: 'old'),
+        SemiNumberCell(data: 1, displayData: '1'),
+      ];
+      final pasteTargets = <SemiItem>[];
+      mockGridClipboard(text: '42\toverflow');
+      await tester.pumpWidget(
+        buildEditor(
+          columnCount: cells.length,
+          rowMarkers: const SemiRowMarkerOptions(width: 40),
+          content: (item) => cells[item.col],
+          onPaste: (target, data) {
+            pasteTargets.add(target);
+            expect(data, [
+              ['42', 'overflow'],
+            ]);
+            return true;
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+      await focusClipboardCell(tester, 190);
+      await sendClipboardShortcut(tester, LogicalKeyboardKey.keyV);
+
+      expect(pasteTargets.single, const SemiItem(1, 0));
+      expect(edits.single.location, const SemiItem(1, 0));
+      expect((edits.single.value as SemiNumberCell).data, 42);
     });
 
     testWidgets('ctrl+a selects the whole table', (tester) async {

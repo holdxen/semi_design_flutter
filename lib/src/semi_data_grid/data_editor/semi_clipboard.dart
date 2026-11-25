@@ -231,12 +231,38 @@ Future<void> semiCopy({
   bool copyHeaders = false,
   SemiClipboard clipboard = const SemiClipboard(),
 }) async {
-  if (!copyEnabled || !focused) return;
+  await _copyToClipboard(
+    focused: focused,
+    copyEnabled: copyEnabled,
+    selection: selection,
+    rows: rows,
+    rowMarkerOffset: rowMarkerOffset,
+    columns: columns,
+    getCellsForSelection: getCellsForSelection,
+    copyHeaders: copyHeaders,
+    clipboard: clipboard,
+    forCut: false,
+  );
+}
+
+Future<bool> _copyToClipboard({
+  required bool focused,
+  required bool copyEnabled,
+  required SemiGridSelection selection,
+  required int rows,
+  required int rowMarkerOffset,
+  required List<SemiGridColumn> columns,
+  required SemiGetCellsForSelection getCellsForSelection,
+  required bool copyHeaders,
+  required SemiClipboard clipboard,
+  required bool forCut,
+}) async {
+  if (!copyEnabled || !focused) return false;
 
   final selectedColumns = selection.columns;
   final selectedRows = selection.rows;
 
-  Future<void> copyWithHeaders(
+  Future<bool> copyWithHeaders(
     List<List<SemiGridCell>> cells,
     List<int> columnIndexes,
   ) async {
@@ -253,18 +279,32 @@ Future<void> semiCopy({
       payload = [headers, ...cells];
     }
     final contents = semiGetCopyBufferContents(payload, columnIndexes);
-    await clipboard.write(
-      textPlain: contents.textPlain,
-      textHtml: contents.textHtml,
-    );
+    try {
+      await clipboard.write(
+        textPlain: contents.textPlain,
+        textHtml: contents.textHtml,
+      );
+    } catch (_) {
+      if (forCut) return false;
+      rethrow;
+    }
+    return true;
   }
 
   final current = selection.current;
   if (current != null) {
     final range = current.range;
     final cells = getCellsForSelection(range);
-    if (cells == null) return;
-    await copyWithHeaders(cells, [
+    if (cells == null) return false;
+    // A partial clipboard payload must not clear the full source range.
+    if (forCut &&
+        (range.width <= 0 ||
+            range.height <= 0 ||
+            cells.length != range.height ||
+            cells.any((row) => row.length != range.width))) {
+      return false;
+    }
+    return copyWithHeaders(cells, [
       for (var i = range.x.toInt() - rowMarkerOffset;
           i < range.x + range.width - rowMarkerOffset;
           i++)
@@ -284,8 +324,8 @@ Future<void> semiCopy({
       if (row == null || row.isEmpty) continue;
       cells.add(row.first);
     }
-    if (cells.isEmpty) return;
-    await copyWithHeaders(cells, [
+    if (cells.isEmpty) return false;
+    return copyWithHeaders(cells, [
       for (var i = 0; i < columns.length; i++) i,
     ]);
   } else if (selectedColumns.length > 0) {
@@ -304,23 +344,22 @@ Future<void> semiCopy({
       results.add(cells);
       cols.add(col - rowMarkerOffset);
     }
-    if (results.isEmpty) return;
+    if (results.isEmpty) return false;
     if (results.length == 1) {
-      await copyWithHeaders(results.first, cols);
-    } else {
-      // FIXME: upstream calls this dumb too — zip the per-column results
-      // row by row.
-      final width = results.first.length;
-      final zipped = <List<SemiGridCell>>[
-        for (var r = 0; r < width; r++)
-          [
-            for (final column in results)
-              if (r < column.length) ...column[r],
-          ],
-      ];
-      await copyWithHeaders(zipped, cols);
+      return copyWithHeaders(results.first, cols);
     }
+    // Zip the per-column results row by row.
+    final width = results.first.length;
+    final zipped = <List<SemiGridCell>>[
+      for (var r = 0; r < width; r++)
+        [
+          for (final column in results)
+            if (r < column.length) ...column[r],
+        ],
+    ];
+    return copyWithHeaders(zipped, cols);
   }
+  return false;
 }
 
 /// `onCut` (`data-editor.tsx:3879-...`): copy, then delete the primary range.
@@ -333,14 +372,13 @@ Future<void> semiCut({
   required List<SemiGridColumn> columns,
   required SemiGetCellsForSelection getCellsForSelection,
   required SemiDeleteCallback onDelete,
+  void Function(SemiRectangle range)? deleteRange,
   bool copyHeaders = false,
   SemiClipboard clipboard = const SemiClipboard(),
 }) async {
-  if (!cutEnabled || !focused) return;
-
-  await semiCopy(
+  final copied = await _copyToClipboard(
     focused: focused,
-    copyEnabled: true,
+    copyEnabled: cutEnabled,
     selection: selection,
     rows: rows,
     rowMarkerOffset: rowMarkerOffset,
@@ -348,12 +386,14 @@ Future<void> semiCut({
     getCellsForSelection: getCellsForSelection,
     copyHeaders: copyHeaders,
     clipboard: clipboard,
+    forCut: true,
   );
+  if (!copied) return;
 
   final current = selection.current;
   if (current == null) return;
 
-  var effective = SemiGridSelection(
+  final effective = SemiGridSelection(
     current: SemiGridSelectionCurrent(
       cell: current.cell,
       range: current.range,
@@ -365,6 +405,8 @@ Future<void> semiCut({
 
   final onDeleteResult = onDelete(effective);
   if (onDeleteResult == false) return;
-  if (onDeleteResult is SemiGridSelection) effective = onDeleteResult;
-  if (effective.current == null) return;
+  final target = onDeleteResult is SemiGridSelection
+      ? onDeleteResult.current
+      : effective.current;
+  if (target != null) deleteRange?.call(target.range);
 }

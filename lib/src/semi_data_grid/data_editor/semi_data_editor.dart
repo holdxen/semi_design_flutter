@@ -1428,7 +1428,14 @@ class _SemiDataEditorState extends State<SemiDataEditor>
 
   /// `getMangledCellContent` (`data-editor.tsx:1309-1381`), wrapped by
   /// `DataGridDnd`'s row-remap (`data-grid-dnd.tsx:347-363`).
-  SemiGridCell _getCellContent(SemiItem item, [bool? forceStrict]) {
+  SemiGridCell _getCellContent(SemiItem item, [bool? forceStrict]) =>
+      _readCellContent(item, forceStrict: forceStrict);
+
+  SemiGridCell _readCellContent(
+    SemiItem item, {
+    bool? forceStrict,
+    bool forClipboard = false,
+  }) {
     var col = item.col;
     var row = item.row;
 
@@ -1451,7 +1458,9 @@ class _SemiDataEditorState extends State<SemiDataEditor>
     }
 
     final outerCol = col - _markerOffset;
-    if ((forceStrict == true || widget.props.strict) &&
+    // Clipboard edits may reach beyond the rendered viewport.
+    if (!forClipboard &&
+        (forceStrict == true || widget.props.strict) &&
         _isOutsideVisibleArea(col, row)) {
       return const SemiLoadingCell();
     }
@@ -2781,7 +2790,12 @@ class _SemiDataEditorState extends State<SemiDataEditor>
       rowMarkerOffset: _markerOffset,
       columns: widget.props.columns,
       getCellsForSelection: _getCellsForSelection,
-      onDelete: (selection) => widget.props.onDelete?.call(selection) ?? true,
+      onDelete: (selection) =>
+          mounted ? widget.props.onDelete?.call(selection) ?? true : false,
+      deleteRange: (range) {
+        if (!mounted) return;
+        _makeKeyHandler().deleteRange(range, respectReadonly: true);
+      },
       copyHeaders: widget.props.copyHeaders,
     );
   }
@@ -2808,7 +2822,7 @@ class _SemiDataEditorState extends State<SemiDataEditor>
       rows: _mangledRows,
       columnCount: _mangledColumns.length,
       rowMarkerOffset: _markerOffset,
-      getCellContent: widget.props.getCellContent,
+      getCellContent: (item) => _readCellContent(item, forClipboard: true),
       getCellRenderer: _renderers.forCell,
       onCellsEdited: _onCellsEdited,
       onPaste: widget.props.onPaste,

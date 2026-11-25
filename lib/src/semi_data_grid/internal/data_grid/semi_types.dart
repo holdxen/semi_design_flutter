@@ -486,13 +486,14 @@ class SemiNumberCell extends SemiGridCell {
 
   SemiNumberCell copyWith({
     num? data,
+    bool clearData = false,
     String? displayData,
     bool? readonly,
     SemiContentAlign? contentAlign,
     SemiSpan? span,
     bool? allowOverlay,
   }) => SemiNumberCell(
-    data: data ?? this.data,
+    data: clearData ? null : data ?? this.data,
     displayData: displayData ?? this.displayData,
     readonly: readonly ?? this.readonly,
     fixedDecimals: fixedDecimals,
