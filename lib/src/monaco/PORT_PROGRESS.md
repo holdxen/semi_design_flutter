@@ -663,7 +663,7 @@
 | 654 | editor | `editor/contrib/semanticTokens/browser/documentSemanticTokens.ts` | `lib/src/monaco/editor/contrib/semanticTokens/browser/documentSemanticTokens.dart` | pending |
 | 655 | editor | `editor/contrib/semanticTokens/browser/viewportSemanticTokens.ts` | `lib/src/monaco/editor/contrib/semanticTokens/browser/viewportSemanticTokens.dart` | pending |
 | 656 | editor | `editor/contrib/semanticTokens/common/getSemanticTokens.ts` | `lib/src/monaco/editor/contrib/semanticTokens/common/getSemanticTokens.dart` | tested |
-| 657 | editor | `editor/contrib/semanticTokens/common/semanticTokensConfig.ts` | `lib/src/monaco/editor/contrib/semanticTokens/common/semanticTokensConfig.dart` | pending |
+| 657 | editor | `editor/contrib/semanticTokens/common/semanticTokensConfig.ts` | `lib/src/monaco/editor/contrib/semanticTokens/common/semanticTokensConfig.dart` | tested |
 | 658 | editor | `editor/contrib/semanticTokens/test/browser/documentSemanticTokens.test.ts` | `lib/src/monaco/editor/contrib/semanticTokens/test/browser/documentSemanticTokens.test.dart` | pending |
 | 659 | editor | `editor/contrib/semanticTokens/test/browser/getSemanticTokens.test.ts` | `lib/src/monaco/editor/contrib/semanticTokens/test/browser/getSemanticTokens.test.dart` | pending |
 | 660 | editor | `editor/contrib/semanticTokens/test/browser/viewportSemanticTokens.test.ts` | `lib/src/monaco/editor/contrib/semanticTokens/test/browser/viewportSemanticTokens.test.dart` | pending |
