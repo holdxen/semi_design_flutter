@@ -240,7 +240,7 @@
 | 231 | editor | `editor/common/diff/linesDiffWithFallback.ts` | `lib/src/monaco/editor/common/diff/linesDiffWithFallback.dart` | pending |
 | 232 | editor | `editor/common/diff/rangeMapping.ts` | `lib/src/monaco/editor/common/diff/rangeMapping.dart` | tested |
 | 233 | editor | `editor/common/diff/verifyLinesDiff.ts` | `lib/src/monaco/editor/common/diff/verifyLinesDiff.dart` | tested |
-| 234 | editor | `editor/common/editorAction.ts` | `lib/src/monaco/editor/common/editorAction.dart` | pending |
+| 234 | editor | `editor/common/editorAction.ts` | `lib/src/monaco/editor/common/editorAction.dart` | tested |
 | 235 | editor | `editor/common/editorCommon.ts` | `lib/src/monaco/editor/common/editorCommon.dart` | tested |
 | 236 | editor | `editor/common/editorContextKeys.ts` | `lib/src/monaco/editor/common/editorContextKeys.dart` | tested |
 | 237 | editor | `editor/common/editorFeatures.ts` | `lib/src/monaco/editor/common/editorFeatures.dart` | tested |
@@ -651,7 +651,7 @@
 | 642 | editor | `editor/contrib/peekView/browser/peekView.ts` | `lib/src/monaco/editor/contrib/peekView/browser/peekView.dart` | pending |
 | 643 | editor | `editor/contrib/placeholderText/browser/placeholderText.contribution.ts` | `lib/src/monaco/editor/contrib/placeholderText/browser/placeholderText.contribution.dart` | pending |
 | 644 | editor | `editor/contrib/placeholderText/browser/placeholderTextContribution.ts` | `lib/src/monaco/editor/contrib/placeholderText/browser/placeholderTextContribution.dart` | pending |
-| 645 | editor | `editor/contrib/quickAccess/browser/commandsQuickAccess.ts` | `lib/src/monaco/editor/contrib/quickAccess/browser/commandsQuickAccess.dart` | pending |
+| 645 | editor | `editor/contrib/quickAccess/browser/commandsQuickAccess.ts` | `lib/src/monaco/editor/contrib/quickAccess/browser/commandsQuickAccess.dart` | tested |
 | 646 | editor | `editor/contrib/quickAccess/browser/editorNavigationQuickAccess.ts` | `lib/src/monaco/editor/contrib/quickAccess/browser/editorNavigationQuickAccess.dart` | pending |
 | 647 | editor | `editor/contrib/quickAccess/browser/gotoLineQuickAccess.ts` | `lib/src/monaco/editor/contrib/quickAccess/browser/gotoLineQuickAccess.dart` | pending |
 | 648 | editor | `editor/contrib/quickAccess/browser/gotoSymbolQuickAccess.ts` | `lib/src/monaco/editor/contrib/quickAccess/browser/gotoSymbolQuickAccess.dart` | pending |
@@ -771,7 +771,7 @@
 | 762 | editor | `editor/test/browser/commands/trimTrailingWhitespaceCommand.test.ts` | `lib/src/monaco/editor/test/browser/commands/trimTrailingWhitespaceCommand.test.dart` | pending |
 | 763 | editor | `editor/test/browser/config/editorConfiguration.test.ts` | `lib/src/monaco/editor/test/browser/config/editorConfiguration.test.dart` | pending |
 | 764 | editor | `editor/test/browser/config/editorLayoutProvider.test.ts` | `lib/src/monaco/editor/test/browser/config/editorLayoutProvider.test.dart` | tested |
-| 765 | editor | `editor/test/browser/config/fontMeasurements.test.ts` | `lib/src/monaco/editor/test/browser/config/fontMeasurements.test.dart` | pending |
+| 765 | editor | `editor/test/browser/config/fontMeasurements.test.ts` | `lib/src/monaco/editor/test/browser/config/fontMeasurements.test.dart` | tested |
 | 766 | editor | `editor/test/browser/config/testConfiguration.ts` | `lib/src/monaco/editor/test/browser/config/testConfiguration.dart` | pending |
 | 767 | editor | `editor/test/browser/controller/clipboardUtils.test.ts` | `lib/src/monaco/editor/test/browser/controller/clipboardUtils.test.dart` | pending |
 | 768 | editor | `editor/test/browser/controller/columnSelectionPaste.test.ts` | `lib/src/monaco/editor/test/browser/controller/columnSelectionPaste.test.dart` | pending |

@@ -8845,3 +8845,4 @@ class EditorOptions {
 // `EditorStringEnumOption<String>` used by `mouseMiddleClickAction` above.
 
 //#endregion
+
