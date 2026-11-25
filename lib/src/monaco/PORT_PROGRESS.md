@@ -20,7 +20,7 @@
 | 11 | editor | `editor/browser/controller/editContext/native/debugEditContext.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/debugEditContext.dart` | tested |
 | 12 | editor | `editor/browser/controller/editContext/native/editContextFactory.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/editContextFactory.dart` | tested |
 | 13 | editor | `editor/browser/controller/editContext/native/nativeEditContext.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/nativeEditContext.dart` | pending |
-| 14 | editor | `editor/browser/controller/editContext/native/nativeEditContextRegistry.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/nativeEditContextRegistry.dart` | pending |
+| 14 | editor | `editor/browser/controller/editContext/native/nativeEditContextRegistry.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/nativeEditContextRegistry.dart` | tested |
 | 15 | editor | `editor/browser/controller/editContext/native/nativeEditContextUtils.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/nativeEditContextUtils.dart` | tested |
 | 16 | editor | `editor/browser/controller/editContext/native/screenReaderContentRich.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/screenReaderContentRich.dart` | pending |
 | 17 | editor | `editor/browser/controller/editContext/native/screenReaderContentSimple.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/screenReaderContentSimple.dart` | pending |
@@ -29,7 +29,7 @@
 | 20 | editor | `editor/browser/controller/editContext/screenReaderUtils.ts` | `lib/src/monaco/editor/browser/controller/editContext/screenReaderUtils.dart` | tested |
 | 21 | editor | `editor/browser/controller/editContext/textArea/textAreaEditContext.ts` | `lib/src/monaco/editor/browser/controller/editContext/textArea/textAreaEditContext.dart` | pending |
 | 22 | editor | `editor/browser/controller/editContext/textArea/textAreaEditContextInput.ts` | `lib/src/monaco/editor/browser/controller/editContext/textArea/textAreaEditContextInput.dart` | pending |
-| 23 | editor | `editor/browser/controller/editContext/textArea/textAreaEditContextRegistry.ts` | `lib/src/monaco/editor/browser/controller/editContext/textArea/textAreaEditContextRegistry.dart` | pending |
+| 23 | editor | `editor/browser/controller/editContext/textArea/textAreaEditContextRegistry.ts` | `lib/src/monaco/editor/browser/controller/editContext/textArea/textAreaEditContextRegistry.dart` | tested |
 | 24 | editor | `editor/browser/controller/editContext/textArea/textAreaEditContextState.ts` | `lib/src/monaco/editor/browser/controller/editContext/textArea/textAreaEditContextState.dart` | tested |
 | 25 | editor | `editor/browser/controller/mouseHandler.ts` | `lib/src/monaco/editor/browser/controller/mouseHandler.dart` | pending |
 | 26 | editor | `editor/browser/controller/mouseTarget.ts` | `lib/src/monaco/editor/browser/controller/mouseTarget.dart` | pending |
