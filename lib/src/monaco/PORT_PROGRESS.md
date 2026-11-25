@@ -268,7 +268,7 @@
 | 259 | editor | `editor/common/languages/supports/richEditBrackets.ts` | `lib/src/monaco/editor/common/languages/supports/richEditBrackets.dart` | pending |
 | 260 | editor | `editor/common/languages/supports/tokenization.ts` | `lib/src/monaco/editor/common/languages/supports/tokenization.dart` | tested |
 | 261 | editor | `editor/common/languages/supports.ts` | `lib/src/monaco/editor/common/languages/supports.dart` | pending |
-| 262 | editor | `editor/common/languages/textToHtmlTokenizer.ts` | `lib/src/monaco/editor/common/languages/textToHtmlTokenizer.dart` | pending |
+| 262 | editor | `editor/common/languages/textToHtmlTokenizer.ts` | `lib/src/monaco/editor/common/languages/textToHtmlTokenizer.dart` | tested |
 | 263 | editor | `editor/common/languages.ts` | `lib/src/monaco/editor/common/languages.dart` | tested |
 | 264 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsImpl.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsImpl.dart` | pending |
 | 265 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/ast.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/ast.dart` | pending |
@@ -344,7 +344,7 @@
 | 335 | editor | `editor/common/services/textModelSync/textModelSync.impl.ts` | `lib/src/monaco/editor/common/services/textModelSync/textModelSync.impl.dart` | pending |
 | 336 | editor | `editor/common/services/textModelSync/textModelSync.protocol.ts` | `lib/src/monaco/editor/common/services/textModelSync/textModelSync.protocol.dart` | tested |
 | 337 | editor | `editor/common/services/textResourceConfiguration.ts` | `lib/src/monaco/editor/common/services/textResourceConfiguration.dart` | tested |
-| 338 | editor | `editor/common/services/textResourceConfigurationService.ts` | `lib/src/monaco/editor/common/services/textResourceConfigurationService.dart` | pending |
+| 338 | editor | `editor/common/services/textResourceConfigurationService.ts` | `lib/src/monaco/editor/common/services/textResourceConfigurationService.dart` | tested |
 | 339 | editor | `editor/common/services/treeSitter/treeSitterLibraryService.ts` | `lib/src/monaco/editor/common/services/treeSitter/treeSitterLibraryService.dart` | tested |
 | 340 | editor | `editor/common/services/treeSitter/treeSitterThemeService.ts` | `lib/src/monaco/editor/common/services/treeSitter/treeSitterThemeService.dart` | tested |
 | 341 | editor | `editor/common/services/treeViewsDnd.ts` | `lib/src/monaco/editor/common/services/treeViewsDnd.dart` | tested |
@@ -368,7 +368,7 @@
 | 359 | editor | `editor/common/tokens/sparseTokensStore.ts` | `lib/src/monaco/editor/common/tokens/sparseTokensStore.dart` | pending |
 | 360 | editor | `editor/common/tokens/tokenWithTextArray.ts` | `lib/src/monaco/editor/common/tokens/tokenWithTextArray.dart` | pending |
 | 361 | editor | `editor/common/viewEventHandler.ts` | `lib/src/monaco/editor/common/viewEventHandler.dart` | pending |
-| 362 | editor | `editor/common/viewEvents.ts` | `lib/src/monaco/editor/common/viewEvents.dart` | pending |
+| 362 | editor | `editor/common/viewEvents.ts` | `lib/src/monaco/editor/common/viewEvents.dart` | tested |
 | 363 | editor | `editor/common/viewLayout/lineDecorations.ts` | `lib/src/monaco/editor/common/viewLayout/lineDecorations.dart` | pending |
 | 364 | editor | `editor/common/viewLayout/lineHeights.ts` | `lib/src/monaco/editor/common/viewLayout/lineHeights.dart` | tested |
 | 365 | editor | `editor/common/viewLayout/linePart.ts` | `lib/src/monaco/editor/common/viewLayout/linePart.dart` | tested |
@@ -646,7 +646,7 @@
 | 637 | editor | `editor/contrib/parameterHints/browser/parameterHints.ts` | `lib/src/monaco/editor/contrib/parameterHints/browser/parameterHints.dart` | pending |
 | 638 | editor | `editor/contrib/parameterHints/browser/parameterHintsModel.ts` | `lib/src/monaco/editor/contrib/parameterHints/browser/parameterHintsModel.dart` | pending |
 | 639 | editor | `editor/contrib/parameterHints/browser/parameterHintsWidget.ts` | `lib/src/monaco/editor/contrib/parameterHints/browser/parameterHintsWidget.dart` | pending |
-| 640 | editor | `editor/contrib/parameterHints/browser/provideSignatureHelp.ts` | `lib/src/monaco/editor/contrib/parameterHints/browser/provideSignatureHelp.dart` | pending |
+| 640 | editor | `editor/contrib/parameterHints/browser/provideSignatureHelp.ts` | `lib/src/monaco/editor/contrib/parameterHints/browser/provideSignatureHelp.dart` | tested |
 | 641 | editor | `editor/contrib/parameterHints/test/browser/parameterHintsModel.test.ts` | `lib/src/monaco/editor/contrib/parameterHints/test/browser/parameterHintsModel.test.dart` | pending |
 | 642 | editor | `editor/contrib/peekView/browser/peekView.ts` | `lib/src/monaco/editor/contrib/peekView/browser/peekView.dart` | pending |
 | 643 | editor | `editor/contrib/placeholderText/browser/placeholderText.contribution.ts` | `lib/src/monaco/editor/contrib/placeholderText/browser/placeholderText.contribution.dart` | pending |
