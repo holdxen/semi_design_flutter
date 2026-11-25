@@ -662,7 +662,9 @@ class SemiKeyHandler {
               height: (bottom - top).toDouble(),
             ),
           );
-          if (cells != null) disallowed = semiGetSpanStops(cells);
+          // Span stops need the cells now; an async sample is skipped rather
+          // than blocking the key handler.
+          if (cells is SemiCellArray) disallowed = semiGetSpanStops(cells);
         }
 
         if (x == 1) {

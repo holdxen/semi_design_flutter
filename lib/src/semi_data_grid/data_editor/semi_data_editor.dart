@@ -1152,15 +1152,17 @@ class _SemiDataEditorState extends State<SemiDataEditor>
     if (identical(_sizedKeyColumns, p.columns) &&
         _sizedKeyWidth == _viewportWidth &&
         _sizedKeyRows == p.rows) {
+      _resolveSizerSample();
       return;
     }
     _sizedKeyColumns = p.columns;
     _sizedKeyWidth = _viewportWidth;
     _sizedKeyRows = p.rows;
+    _sizerResolved.clear();
     _sizedColumns = useColumnSizer(
       columns: p.columns,
       rows: p.rows,
-      getCellsForSelection: _getCellsForSelection,
+      getCellsForSelection: _sizerFetchSample,
       clientWidth: _viewportWidth,
       minColumnWidth: _minColumnWidth,
       // `useColumnSizer`'s `maxColumnWidth` parameter is fed
@@ -1171,6 +1173,53 @@ class _SemiDataEditorState extends State<SemiDataEditor>
       metrics: _metrics,
       memo: _columnSizeMemo,
     );
+    _resolveSizerSample();
+  }
+
+  /// Synchronous shim for [useColumnSizer]: remote data parks its sample here
+  /// and [_resolveSizerSample] re-runs the sizer once it arrives, mirroring
+  /// upstream's deferred layout-effect measurement. Resolved regions are
+  /// remembered so the re-run cannot fetch them (and park them) again.
+  SemiCellArray? _sizerFetchSample(SemiRectangle region) {
+    final cached = _sizerResolved[region];
+    if (cached != null) return cached;
+    final result = widget.props.getCellsForSelection?.call(region);
+    if (result is! Future<SemiCellArray?>) return result;
+    _pendingSizerSample = result.then((cells) {
+      final value = cells ?? const <List<SemiGridCell>>[];
+      _sizerResolved[region] = value;
+      return (region, value);
+    });
+    return null;
+  }
+
+  final Map<SemiRectangle, SemiCellArray> _sizerResolved = {};
+  Future<(SemiRectangle, SemiCellArray)>? _pendingSizerSample;
+  int _sizerGeneration = 0;
+
+  void _resolveSizerSample() {
+    final pending = _pendingSizerSample;
+    if (pending == null) return;
+    _pendingSizerSample = null;
+    final generation = ++_sizerGeneration;
+    pending.then((_) {
+      if (!mounted || generation != _sizerGeneration) return;
+      setState(() {
+        _sizedColumns = useColumnSizer(
+          columns: widget.props.columns,
+          rows: widget.props.rows,
+          getCellsForSelection: _sizerFetchSample,
+          clientWidth: _viewportWidth,
+          minColumnWidth: _minColumnWidth,
+          maxColumnWidth: _maxColumnAutoWidth,
+          theme: _theme,
+          getCellRenderer: _renderers.forCell,
+          metrics: _metrics,
+          memo: _columnSizeMemo,
+        );
+        _rebuildMangledColumns();
+      });
+    });
   }
 
   List<SemiGridColumn>? _mangledKeySized;
@@ -1634,7 +1683,10 @@ class _SemiDataEditorState extends State<SemiDataEditor>
   );
 
   /// `getCellsForSelectionMangled` (`use-cells-for-selection.ts:42-67`).
-  SemiCellArray? _getCellsForSelection(SemiRectangle region) {
+  ///
+  /// The marker column is inserted synchronously; an asynchronous sample is
+  /// forwarded as-is and the caller awaits it.
+  FutureOr<SemiCellArray?> _getCellsForSelection(SemiRectangle region) {
     final direct = widget.props.getCellsForSelection;
     if (direct == null) return null;
     final offset = _markerOffset;
@@ -1643,10 +1695,10 @@ class _SemiDataEditorState extends State<SemiDataEditor>
     final newX = region.x - offset;
     if (newX < 0) {
       final r = direct(region.copyWith(x: 0, width: region.width - 1));
-      if (r == null) return null;
-      return [
-        for (final row in r) [const SemiLoadingCell(), ...row],
-      ];
+      SemiCellArray? prefix(SemiCellArray? cells) => cells == null
+          ? null
+          : [for (final row in cells) [const SemiLoadingCell(), ...row]];
+      return r is Future<SemiCellArray?> ? r.then(prefix) : prefix(r);
     }
     return direct(region.copyWith(x: newX));
   }
@@ -2129,11 +2181,12 @@ class _SemiDataEditorState extends State<SemiDataEditor>
   // Fill (`data-editor.tsx:2245-2330`)
   // -------------------------------------------------------------------------
 
-  /// `fillPattern` (`data-editor.tsx:2245-2296`).
-  void _fillPattern(
+  /// `fillPattern` (`data-editor.tsx:2245-2296`). The pattern may arrive
+  /// asynchronously, which is why upstream marks this callback `async`.
+  Future<void> _fillPattern(
     SemiGridSelection previousSelection,
     SemiGridSelection currentSelection,
-  ) {
+  ) async {
     final getCells = widget.props.getCellsForSelection;
     final patternRange = previousSelection.current?.range;
     final currentRange = currentSelection.current?.range;
@@ -2154,7 +2207,7 @@ class _SemiDataEditorState extends State<SemiDataEditor>
       if (canceled) return;
     }
 
-    final pattern = getCells(patternRange);
+    final pattern = await getCells(patternRange);
     if (pattern == null || pattern.isEmpty) return;
 
     final edits = <SemiEditListItem>[];
@@ -2180,10 +2233,10 @@ class _SemiDataEditorState extends State<SemiDataEditor>
 
   /// `fillDown` (`data-editor.tsx:2315-2330`): the first row of the range is
   /// the pattern, the whole range is the destination.
-  void _fillDown() {
+  Future<void> _fillDown() async {
     final current = _selection.current;
     if (current == null || current.range.height <= 1) return;
-    _fillPattern(
+    await _fillPattern(
       _selection.copyWith(
         current: current.copyWith(range: current.range.copyWith(height: 1)),
       ),
@@ -2191,10 +2244,10 @@ class _SemiDataEditorState extends State<SemiDataEditor>
     );
   }
 
-  void _fillRight() {
+  Future<void> _fillRight() async {
     final current = _selection.current;
     if (current == null || current.range.width <= 1) return;
-    _fillPattern(
+    await _fillPattern(
       _selection.copyWith(
         current: current.copyWith(range: current.range.copyWith(width: 1)),
       ),
@@ -2433,13 +2486,13 @@ class _SemiDataEditorState extends State<SemiDataEditor>
     _dragRowActive = false;
   }
 
-  /// `normalSizeColumn` (`data-editor.tsx:2193-2241`).
-  /// `normalSizeColumn` (`data-editor.tsx:2193-2236`): [col] is the
+  /// `normalSizeColumn` (`data-editor.tsx:2193-2241`): [col] is the
   /// marker-inclusive grid index, which is what `getCellsForSelection` and
   /// the header hit-test report. The column itself and the emitted
   /// `onColumnResize` index are business columns
-  /// (`columns[col - rowMarkerOffset]` upstream).
-  void _normalSizeColumn(int col) {
+  /// (`columns[col - rowMarkerOffset]` upstream). The sample may arrive
+  /// asynchronously, so this resolves before measuring.
+  Future<void> _normalSizeColumn(int col) async {
     final p = widget.props;
     final getCells = _getCellsForSelection;
     final onResize = p.onColumnResize;
@@ -2452,7 +2505,7 @@ class _SemiDataEditorState extends State<SemiDataEditor>
       _visible?.height ?? 1,
       math.max(1, _groupedRows - start),
     );
-    final cells = getCells(
+    final cells = await getCells(
       SemiRectangle(
         x: col.toDouble(),
         y: start.toDouble(),
@@ -2460,11 +2513,15 @@ class _SemiDataEditorState extends State<SemiDataEditor>
         height: height.toDouble(),
       ),
     );
-    if (cells == null) return;
+    if (cells == null || !mounted) return;
+    // The sample may have arrived a frame later; re-read the current props.
+    final current = widget.props;
+    final resize = current.onColumnResize;
+    if (resize == null || userCol >= current.columns.length) return;
 
     final newWidth = semiMeasureColumn(
       theme: _theme,
-      column: p.columns[userCol],
+      column: current.columns[userCol],
       colIndex: userCol,
       selectedData: cells,
       minColumnWidth: _minColumnWidth,
@@ -2473,7 +2530,7 @@ class _SemiDataEditorState extends State<SemiDataEditor>
       getCellRenderer: _renderers.forCell,
       metrics: _metrics,
     );
-    onResize(p.columns[userCol], newWidth, userCol, newWidth);
+    resize(current.columns[userCol], newWidth, userCol, newWidth);
   }
 
   // -------------------------------------------------------------------------
@@ -2538,7 +2595,7 @@ class _SemiDataEditorState extends State<SemiDataEditor>
 
   void _remeasureColumns(SemiCompactSelection cols) {
     for (final col in cols.indices) {
-      _normalSizeColumn(col + _markerOffset);
+      unawaited(_normalSizeColumn(col + _markerOffset));
     }
   }
 
@@ -3032,7 +3089,7 @@ class _SemiDataEditorState extends State<SemiDataEditor>
             range: combineRects(previous!.current!.range, highlight),
           ),
         );
-        _fillPattern(previous, newRange);
+        unawaited(_fillPattern(previous, newRange));
         _setGridSelection(newRange, true);
         return;
       }
@@ -3075,7 +3132,7 @@ class _SemiDataEditorState extends State<SemiDataEditor>
           // Double-clicking a header edge re-measures the column
           // (`data-editor.tsx:2489-2492`).
           if (header.isDoubleClick == true) {
-            _normalSizeColumn(header.location.col);
+            unawaited(_normalSizeColumn(header.location.col));
           }
         } else if (!wasResizing) {
           final col = header.location.col - _markerOffset;

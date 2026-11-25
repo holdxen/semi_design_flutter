@@ -294,7 +294,7 @@ Future<bool> _copyToClipboard({
   final current = selection.current;
   if (current != null) {
     final range = current.range;
-    final cells = getCellsForSelection(range);
+    final cells = await getCellsForSelection(range);
     if (cells == null) return false;
     // A partial clipboard payload must not clear the full source range.
     if (forCut &&
@@ -313,7 +313,7 @@ Future<bool> _copyToClipboard({
   } else if (selectedRows.length > 0) {
     final cells = <List<SemiGridCell>>[];
     for (final rowIndex in selectedRows.indices) {
-      final row = getCellsForSelection(
+      final row = await getCellsForSelection(
         SemiRectangle(
           x: rowMarkerOffset.toDouble(),
           y: rowIndex.toDouble(),
@@ -332,7 +332,7 @@ Future<bool> _copyToClipboard({
     final results = <List<List<SemiGridCell>>>[];
     final cols = <int>[];
     for (final col in selectedColumns.indices) {
-      final cells = getCellsForSelection(
+      final cells = await getCellsForSelection(
         SemiRectangle(
           x: col.toDouble(),
           y: 0,

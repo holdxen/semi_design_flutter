@@ -5,7 +5,6 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 
 import '../cells/semi_cell_types.dart';
-import 'semi_data_editor_fns.dart';
 
 /// `defaultSize` (`use-column-sizer.ts:15`): the stand-in width for cells a
 /// renderer cannot measure.
@@ -94,12 +93,15 @@ class SemiSizedColumns {
 ///
 /// Upstream samples the first ~10 rows in a layout effect and only measures
 /// once the cells for the current `columns` identity have arrived, so the
-/// first frame shows `defaultSize` placeholders. The Flutter version measures
-/// synchronously because `getCellsForSelection` is not a thunk here.
+/// first frame shows `defaultSize` placeholders.
+///
+/// The sample is fetched synchronously here: an asynchronous
+/// `getCellsForSelection` is parked by the owner, which re-runs the sizer
+/// once the cells resolve.
 SemiSizedColumns useColumnSizer({
   required List<SemiGridColumn> columns,
   required int rows,
-  required SemiGetCellsForSelection? getCellsForSelection,
+  required SemiCellArray? Function(SemiRectangle region) getCellsForSelection,
   required double clientWidth,
   required double minColumnWidth,
   required double maxColumnWidth,
@@ -117,7 +119,7 @@ SemiSizedColumns useColumnSizer({
   }
   // Sample rows (`use-column-sizer.ts:123-141`): ten rows, plus the last.
   List<List<SemiGridCell>>? selectedData;
-  if (!allSized && getCellsForSelection != null && rows > 0) {
+  if (!allSized && rows > 0) {
     var computeRows = math.max(1, 10 - (columns.length ~/ 10000));
     var tailRows = 0;
     if (computeRows < rows && computeRows > 1) {
@@ -133,7 +135,7 @@ SemiSizedColumns useColumnSizer({
       ),
     );
     selectedData = head;
-    if (tailRows > 0 && selectedData != null) {
+    if (tailRows > 0) {
       final tail = getCellsForSelection(
         SemiRectangle(
           x: 0,
@@ -142,7 +144,7 @@ SemiSizedColumns useColumnSizer({
           height: 1,
         ),
       );
-      if (tail != null) selectedData = [...selectedData, ...tail];
+      if (tail != null) selectedData = [...?selectedData, ...tail];
     }
   }
 

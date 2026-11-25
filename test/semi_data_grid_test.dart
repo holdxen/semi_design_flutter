@@ -1287,6 +1287,32 @@ void main() {
       expect(expanded.current!.range.width, 4);
     });
 
+    test('expandSelection leaves the selection alone for an async sample', () {
+      const selection = SemiGridSelection(
+        current: SemiGridSelectionCurrent(
+          cell: SemiItem(1, 0),
+          range: SemiRectangle(x: 1, y: 0, width: 1, height: 1),
+        ),
+      );
+      final expanded = semiExpandSelection(
+        newVal: selection,
+        // A thunk has no synchronous answer; upstream returns the input
+        // instead of blocking (`data-editor-fns.ts:31-33`).
+        getCellsForSelection: (region) async => <List<SemiGridCell>>[
+          [
+            const SemiTextCell(
+              data: 'wide',
+              displayData: 'wide',
+              span: (start: 0, end: 3),
+            ),
+          ],
+        ],
+        rowMarkerOffset: 0,
+        allowPartial: false,
+      );
+      expect(identical(expanded, selection), isTrue);
+    });
+
     test('shiftSelection moves columns for the public API', () {
       const selection = SemiGridSelection(
         current: SemiGridSelectionCurrent(
@@ -4417,6 +4443,83 @@ void main() {
       await tester.pumpAndSettle();
       expect(regions.last.y, greaterThan(afterDrag.y));
       expect(selectionLog, isEmpty);
+    });
+
+    testWidgets('an async getCellsForSelection still drives copy', (
+      tester,
+    ) async {
+      final writes = <String>[];
+      mockGridClipboard(write: (text) async => writes.add(text));
+      await tester.pumpWidget(
+        buildEditor(
+          rows: 2,
+          columnCount: 2,
+          cellsForSelection: (region) async => [
+            for (
+              var y = region.y.toInt();
+              y < region.y + region.height;
+              y++
+            )
+              [
+                for (
+                  var x = region.x.toInt();
+                  x < region.x + region.width;
+                  x++
+                )
+                  SemiTextCell(data: 'async $x/$y', displayData: 'async $x/$y'),
+              ],
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final gesture = await tester.startGesture(
+        const Offset(50, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      await sendClipboardShortcut(tester, LogicalKeyboardKey.keyC);
+      await tester.pumpAndSettle();
+
+      expect(writes, ['async 0/0']);
+    });
+
+    testWidgets('unsized columns resolve their width from an async sample', (
+      tester,
+    ) async {
+      final controller = SemiDataEditorController();
+      final wide = 'x' * 400;
+      await tester.pumpWidget(
+        buildEditor(
+          controller: controller,
+          rows: 4,
+          columnCount: 2,
+          unsizedColumns: true,
+          cellsForSelection: (region) async => [
+            for (
+              var y = region.y.toInt();
+              y < region.y + region.height;
+              y++
+            )
+              [
+                for (
+                  var x = region.x.toInt();
+                  x < region.x + region.width;
+                  x++
+                )
+                  SemiTextCell(data: wide, displayData: wide),
+              ],
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // `semiDefaultCellMeasure` (150) + the one-pixel grid line is the
+      // placeholder; the resolved sample measures up to `maxColumnWidth`.
+      final width = controller.getBounds(0, 0)!.width;
+      expect(width, greaterThan(151));
     });
 
     testWidgets('unsized columns are measured and become hit-testable', (

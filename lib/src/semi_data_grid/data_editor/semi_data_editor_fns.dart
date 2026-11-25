@@ -3,12 +3,20 @@
 // `getSpanStops` (`data-editor.tsx:168-176`) and the abort-signal-shaped
 // `getCellsForSelection` callback type
 // (`internal/data-grid-search/data-grid-search.ts`).
+import 'dart:async';
+
 import '../internal/data_grid/semi_types.dart';
 
 /// `getCellsForSelection` (`data-grid-search.ts`): returns the cells inside
-/// `region`, or `null` when the caller is async (the Web API can return a
-/// thunk; Flutter callers are expected to resolve it before calling in).
-typedef SemiGetCellsForSelection = SemiCellArray? Function(
+/// [region].
+///
+/// Upstream's callback is `CellArray | (() => Promise<CellArray>)`; Dart
+/// spells that union as [FutureOr], so an existing synchronous callback stays
+/// assignable. Consumers that are already asynchronous (copy, search, fill,
+/// column measuring) await the result; the ones that must stay synchronous
+/// (span expansion, keyboard span stops) bail out when handed a [Future],
+/// exactly as upstream does when it sees a thunk.
+typedef SemiGetCellsForSelection = FutureOr<SemiCellArray?> Function(
   SemiRectangle region,
 );
 
@@ -65,7 +73,9 @@ SemiGridSelection semiExpandSelection({
       final leftCells = getCellsForSelection(
         SemiRectangle(x: r.x, y: r.y, width: 1, height: r.height),
       );
-      if (leftCells == null) return origVal;
+      // An async sample has no synchronous answer; upstream returns the input
+      // selection instead of blocking (`data-editor-fns.ts:31-33`).
+      if (leftCells is! SemiCellArray) return origVal;
       cells.addAll(leftCells);
 
       final rightCells = getCellsForSelection(
@@ -76,11 +86,11 @@ SemiGridSelection semiExpandSelection({
           height: r.height,
         ),
       );
-      if (rightCells == null) return origVal;
+      if (rightCells is! SemiCellArray) return origVal;
       cells.addAll(rightCells);
     } else {
       final rCells = getCellsForSelection(r);
-      if (rCells == null) return origVal;
+      if (rCells is! SemiCellArray) return origVal;
       cells.addAll(rCells);
     }
 

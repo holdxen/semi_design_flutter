@@ -113,7 +113,7 @@ class SemiSearchRunner {
       final height = math.min(searchStride, math.min(rowsLeft, rows - searchY));
       if (height <= 0) break;
 
-      final data = getCells(
+      final data = await getCells(
         SemiRectangle(
           x: 0,
           y: searchY.toDouble(),
