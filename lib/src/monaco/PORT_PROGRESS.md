@@ -252,11 +252,11 @@
 | 243 | editor | `editor/common/languages/autoIndent.ts` | `lib/src/monaco/editor/common/languages/autoIndent.dart` | pending |
 | 244 | editor | `editor/common/languages/defaultDocumentColorsComputer.ts` | `lib/src/monaco/editor/common/languages/defaultDocumentColorsComputer.dart` | tested |
 | 245 | editor | `editor/common/languages/enterAction.ts` | `lib/src/monaco/editor/common/languages/enterAction.dart` | pending |
-| 246 | editor | `editor/common/languages/language.ts` | `lib/src/monaco/editor/common/languages/language.dart` | pending |
+| 246 | editor | `editor/common/languages/language.ts` | `lib/src/monaco/editor/common/languages/language.dart` | tested |
 | 247 | editor | `editor/common/languages/languageConfiguration.ts` | `lib/src/monaco/editor/common/languages/languageConfiguration.dart` | pending |
 | 248 | editor | `editor/common/languages/languageConfigurationRegistry.ts` | `lib/src/monaco/editor/common/languages/languageConfigurationRegistry.dart` | pending |
 | 249 | editor | `editor/common/languages/linkComputer.ts` | `lib/src/monaco/editor/common/languages/linkComputer.dart` | tested |
-| 250 | editor | `editor/common/languages/modesRegistry.ts` | `lib/src/monaco/editor/common/languages/modesRegistry.dart` | pending |
+| 250 | editor | `editor/common/languages/modesRegistry.ts` | `lib/src/monaco/editor/common/languages/modesRegistry.dart` | tested |
 | 251 | editor | `editor/common/languages/nullTokenize.ts` | `lib/src/monaco/editor/common/languages/nullTokenize.dart` | tested |
 | 252 | editor | `editor/common/languages/supports/characterPair.ts` | `lib/src/monaco/editor/common/languages/supports/characterPair.dart` | pending |
 | 253 | editor | `editor/common/languages/supports/electricCharacter.ts` | `lib/src/monaco/editor/common/languages/supports/electricCharacter.dart` | pending |
@@ -333,10 +333,10 @@
 | 324 | editor | `editor/common/services/languagesRegistry.ts` | `lib/src/monaco/editor/common/services/languagesRegistry.dart` | pending |
 | 325 | editor | `editor/common/services/markerDecorations.ts` | `lib/src/monaco/editor/common/services/markerDecorations.dart` | tested |
 | 326 | editor | `editor/common/services/markerDecorationsService.ts` | `lib/src/monaco/editor/common/services/markerDecorationsService.dart` | pending |
-| 327 | editor | `editor/common/services/model.ts` | `lib/src/monaco/editor/common/services/model.dart` | pending |
+| 327 | editor | `editor/common/services/model.ts` | `lib/src/monaco/editor/common/services/model.dart` | tested |
 | 328 | editor | `editor/common/services/modelService.ts` | `lib/src/monaco/editor/common/services/modelService.dart` | pending |
 | 329 | editor | `editor/common/services/modelUndoRedoParticipant.ts` | `lib/src/monaco/editor/common/services/modelUndoRedoParticipant.dart` | pending |
-| 330 | editor | `editor/common/services/resolverService.ts` | `lib/src/monaco/editor/common/services/resolverService.dart` | pending |
+| 330 | editor | `editor/common/services/resolverService.ts` | `lib/src/monaco/editor/common/services/resolverService.dart` | tested |
 | 331 | editor | `editor/common/services/semanticTokensDto.ts` | `lib/src/monaco/editor/common/services/semanticTokensDto.dart` | tested |
 | 332 | editor | `editor/common/services/semanticTokensProviderStyling.ts` | `lib/src/monaco/editor/common/services/semanticTokensProviderStyling.dart` | pending |
 | 333 | editor | `editor/common/services/semanticTokensStyling.ts` | `lib/src/monaco/editor/common/services/semanticTokensStyling.dart` | pending |
