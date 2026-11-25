@@ -68,6 +68,21 @@ class _SemiDataGridPageState extends State<SemiDataGridPage> {
     });
   }
 
+  /// Upstream expects the consumer to write resized widths back into
+  /// `columns`; without these callbacks `allowResize` stays false and
+  /// dragging a header edge does nothing.
+  void _onColumnResize(
+    SemiGridColumn column,
+    double newSize,
+    int col,
+    double newSizeWithGrow,
+  ) {
+    setState(() {
+      _columns[col] = column.copyWith(width: newSize);
+      _status = '拖拽调整 ${column.title} 列宽：$newSize px';
+    });
+  }
+
   SemiGridCell _makeCell(int col, int row) {
     if (row % 25 == 24) return const SemiLoadingCell(skeletonWidth: 80);
     if (row % 25 == 23) return const SemiProtectedCell();
@@ -103,9 +118,7 @@ class _SemiDataGridPageState extends State<SemiDataGridPage> {
     return SemiTextCell(
       data: 'cell $col-$row',
       displayData: 'cell $col-$row',
-      contentAlign: col.isEven
-          ? SemiContentAlign.left
-          : SemiContentAlign.right,
+      contentAlign: col.isEven ? SemiContentAlign.left : SemiContentAlign.right,
     );
   }
 
@@ -212,6 +225,7 @@ class _SemiDataGridPageState extends State<SemiDataGridPage> {
                   onGroupHeaderRenamed: _renameGroup,
                   onCellsEdited: _onCellsEdited,
                   onGridSelectionChange: _onSelectionChanged,
+                  onColumnResize: _onColumnResize,
                   onHeaderMenuClick: _onHeaderMenuClick,
                   onHeaderIndicatorClick: _onHeaderIndicatorClick,
                 ),

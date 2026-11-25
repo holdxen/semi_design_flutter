@@ -1896,9 +1896,10 @@ class _SemiDataEditorState extends State<SemiDataEditor>
       widget.props.onColumnResizeEnd != null ||
       widget.props.onColumnResizeStart != null;
 
-  /// `offsetColumnSize` (`data-grid-dnd.tsx:85-87`).
+  /// `offsetColumnSize` (`data-grid-dnd.tsx:85-87`). [col] is a mangled
+  /// (marker-inclusive) index, because the grid reports events in that space.
   double _offsetColumnSize(int col, double width) {
-    final column = widget.props.columns[col];
+    final column = _mangledColumns[col];
     return clampDouble(
       (width - (column.extension?.growOffset ?? 0)).roundToDouble(),
       _minColumnWidth.ceilToDouble(),
@@ -1906,23 +1907,48 @@ class _SemiDataEditorState extends State<SemiDataEditor>
     );
   }
 
+  /// Upstream's `DataEditor` strips the marker offset before forwarding the
+  /// resize callbacks (`data-editor.tsx:1018-1046`). Grid events and
+  /// [_resizeCol] stay mangled; callers see user columns and indices.
+  void _emitResize(
+    void Function(
+      SemiGridColumn column,
+      double newSize,
+      int colIndex,
+      double newSizeWithGrow,
+    )?
+    callback,
+    int mangledCol,
+    double newSize,
+  ) {
+    final col = mangledCol - _markerOffset;
+    if (col < 0 || col >= widget.props.columns.length) return;
+    final column = widget.props.columns[col];
+    callback?.call(
+      column,
+      newSize,
+      col,
+      newSize + (column.extension?.growOffset ?? 0).toDouble(),
+    );
+  }
+
   void _detectResizeStart(SemiGridMouseArgs args) {
-    final columns = widget.props.columns;
     if (args.kind == SemiGridCellKind.outOfBounds && args.isEdge) {
-      final bounds = _gridController.getBounds(
-        columns.length - 1,
-        SemiItem.headerRow,
-      );
+      // `data-grid-dnd.tsx:154`: the trailing edge is only a resize handle
+      // when resizing is enabled, and `columns` there are mangled.
+      if (!_canResize) return;
+      final last = _mangledColumns.length - 1;
+      final bounds = _gridController.getBounds(last, SemiItem.headerRow);
       if (bounds != null) {
         _resizeColStartX = bounds.x;
-        _resizeCol = columns.length - 1;
+        _resizeCol = last;
       }
       return;
     }
     if (args.kind != SemiGridCellKind.header) return;
     final header = args as SemiGridHeaderMouseArgs;
     final col = header.location.col;
-    if (col < _lockColumns || col < 0 || col >= columns.length) {
+    if (col < _lockColumns || col < 0 || col >= _mangledColumns.length) {
       return;
     }
 
@@ -1940,13 +1966,7 @@ class _SemiDataEditorState extends State<SemiDataEditor>
 
     _resizeColStartX = header.bounds.x;
     _resizeCol = col;
-    final width = header.bounds.width;
-    widget.props.onColumnResizeStart?.call(
-      columns[col],
-      width,
-      col,
-      width + (columns[col].extension?.growOffset ?? 0).toDouble(),
-    );
+    _emitResize(widget.props.onColumnResizeStart, col, header.bounds.width);
   }
 
   /// Window `mousemove` (`data-grid-dnd.tsx:299-330`).
@@ -1972,33 +1992,25 @@ class _SemiDataEditorState extends State<SemiDataEditor>
     final col = _resizeCol;
     final startX = _resizeColStartX;
     if (col == null || startX == null) return;
-    if (col < 0 || col >= widget.props.columns.length) return;
+    if (col < 0 || col >= _mangledColumns.length) return;
 
     final newWidth = position.dx - startX;
-    final column = widget.props.columns[col];
     final ns = _offsetColumnSize(col, newWidth);
-    widget.props.onColumnResize?.call(
-      column,
-      ns,
-      col,
-      ns + (column.extension?.growOffset ?? 0).toDouble(),
-    );
+    _emitResize(widget.props.onColumnResize, col, ns);
     _lastResizeWidth = newWidth;
 
     // Resizing a column that is part of a multi-column selection resizes the
-    // whole selection (`data-grid-dnd.tsx:321-331`).
+    // whole selection (`data-grid-dnd.tsx:321-331`). Selection columns share
+    // the grid's mangled coordinate space.
     final selected = _selection.columns;
     if (selected.firstIndex == col) {
       for (final c in selected.indices) {
         if (c == col) continue;
-        if (c < 0 || c >= widget.props.columns.length) continue;
-        final other = widget.props.columns[c];
-        final s = _offsetColumnSize(c, _lastResizeWidth);
-        widget.props.onColumnResize?.call(
-          other,
-          s,
+        if (c < 0 || c >= _mangledColumns.length) continue;
+        _emitResize(
+          widget.props.onColumnResize,
           c,
-          s + (other.extension?.growOffset ?? 0).toDouble(),
+          _offsetColumnSize(c, _lastResizeWidth),
         );
       }
     }
@@ -2009,33 +2021,26 @@ class _SemiDataEditorState extends State<SemiDataEditor>
     final col = _resizeCol;
     _resizeCol = null;
     _resizeColStartX = null;
-    if (col == null || col < 0 || col >= widget.props.columns.length) {
+    if (col == null || col < 0 || col >= _mangledColumns.length) {
       _lastResizeWidth = -1;
       return;
     }
 
-    final columns = widget.props.columns;
-    final column = columns[col];
-    final ns = _offsetColumnSize(col, _lastResizeWidth);
-    widget.props.onColumnResizeEnd?.call(
-      column,
-      ns,
+    _emitResize(
+      widget.props.onColumnResizeEnd,
       col,
-      ns + (column.extension?.growOffset ?? 0).toDouble(),
+      _offsetColumnSize(col, _lastResizeWidth),
     );
 
     final selected = _selection.columns;
     if (selected.hasIndex(col)) {
       for (final c in selected.indices) {
         if (c == col) continue;
-        if (c < 0 || c >= columns.length) continue;
-        final other = columns[c];
-        final s = _offsetColumnSize(c, _lastResizeWidth);
-        widget.props.onColumnResizeEnd?.call(
-          other,
-          s,
+        if (c < 0 || c >= _mangledColumns.length) continue;
+        _emitResize(
+          widget.props.onColumnResizeEnd,
           c,
-          s + (other.extension?.growOffset ?? 0).toDouble(),
+          _offsetColumnSize(c, _lastResizeWidth),
         );
       }
     }

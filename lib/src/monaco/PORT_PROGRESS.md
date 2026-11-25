@@ -15,7 +15,7 @@
 | 6 | editor | `editor/browser/config/migrateOptions.ts` | `lib/src/monaco/editor/browser/config/migrateOptions.dart` | tested |
 | 7 | editor | `editor/browser/config/tabFocus.ts` | `lib/src/monaco/editor/browser/config/tabFocus.dart` | tested |
 | 8 | editor | `editor/browser/controller/dragScrolling.ts` | `lib/src/monaco/editor/browser/controller/dragScrolling.dart` | pending |
-| 9 | editor | `editor/browser/controller/editContext/clipboardUtils.ts` | `lib/src/monaco/editor/browser/controller/editContext/clipboardUtils.dart` | pending |
+| 9 | editor | `editor/browser/controller/editContext/clipboardUtils.ts` | `lib/src/monaco/editor/browser/controller/editContext/clipboardUtils.dart` | tested |
 | 10 | editor | `editor/browser/controller/editContext/editContext.ts` | `lib/src/monaco/editor/browser/controller/editContext/editContext.dart` | pending |
 | 11 | editor | `editor/browser/controller/editContext/native/debugEditContext.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/debugEditContext.dart` | tested |
 | 12 | editor | `editor/browser/controller/editContext/native/editContextFactory.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/editContextFactory.dart` | tested |
@@ -383,7 +383,7 @@
 | 374 | editor | `editor/common/viewModel/monospaceLineBreaksComputer.ts` | `lib/src/monaco/editor/common/viewModel/monospaceLineBreaksComputer.dart` | tested |
 | 375 | editor | `editor/common/viewModel/overviewZoneManager.ts` | `lib/src/monaco/editor/common/viewModel/overviewZoneManager.dart` | tested |
 | 376 | editor | `editor/common/viewModel/screenReaderSimpleModel.ts` | `lib/src/monaco/editor/common/viewModel/screenReaderSimpleModel.dart` | tested |
-| 377 | editor | `editor/common/viewModel/viewContext.ts` | `lib/src/monaco/editor/common/viewModel/viewContext.dart` | pending |
+| 377 | editor | `editor/common/viewModel/viewContext.ts` | `lib/src/monaco/editor/common/viewModel/viewContext.dart` | tested |
 | 378 | editor | `editor/common/viewModel/viewModelDecoration.ts` | `lib/src/monaco/editor/common/viewModel/viewModelDecoration.dart` | pending |
 | 379 | editor | `editor/common/viewModel/viewModelDecorations.ts` | `lib/src/monaco/editor/common/viewModel/viewModelDecorations.dart` | pending |
 | 380 | editor | `editor/common/viewModel/viewModelImpl.ts` | `lib/src/monaco/editor/common/viewModel/viewModelImpl.dart` | pending |
@@ -508,7 +508,7 @@
 | 499 | editor | `editor/contrib/gotoSymbol/browser/peek/referencesController.ts` | `lib/src/monaco/editor/contrib/gotoSymbol/browser/peek/referencesController.dart` | pending |
 | 500 | editor | `editor/contrib/gotoSymbol/browser/peek/referencesTree.ts` | `lib/src/monaco/editor/contrib/gotoSymbol/browser/peek/referencesTree.dart` | pending |
 | 501 | editor | `editor/contrib/gotoSymbol/browser/peek/referencesWidget.ts` | `lib/src/monaco/editor/contrib/gotoSymbol/browser/peek/referencesWidget.dart` | pending |
-| 502 | editor | `editor/contrib/gotoSymbol/browser/referencesModel.ts` | `lib/src/monaco/editor/contrib/gotoSymbol/browser/referencesModel.dart` | pending |
+| 502 | editor | `editor/contrib/gotoSymbol/browser/referencesModel.ts` | `lib/src/monaco/editor/contrib/gotoSymbol/browser/referencesModel.dart` | tested |
 | 503 | editor | `editor/contrib/gotoSymbol/browser/symbolNavigation.ts` | `lib/src/monaco/editor/contrib/gotoSymbol/browser/symbolNavigation.dart` | pending |
 | 504 | editor | `editor/contrib/gotoSymbol/test/browser/referencesModel.test.ts` | `lib/src/monaco/editor/contrib/gotoSymbol/test/browser/referencesModel.test.dart` | pending |
 | 505 | editor | `editor/contrib/gpu/browser/gpuActions.ts` | `lib/src/monaco/editor/contrib/gpu/browser/gpuActions.dart` | pending |

@@ -2427,6 +2427,53 @@ void main() {
       expect(selectionLog, isEmpty);
     });
 
+    testWidgets('resize callbacks report user columns with markers', (
+      tester,
+    ) async {
+      final titles = <String>[];
+      final indices = <int>[];
+      final widths = <double>[];
+
+      await tester.pumpWidget(
+        buildEditor(
+          rowMarkers: const SemiRowMarkerOptions(),
+          onColumnResizeStart: (column, width, col, _) {
+            titles.add(column.title);
+            indices.add(col);
+            widths.add(width);
+          },
+          onColumnResize: (column, width, col, _) {
+            titles.add(column.title);
+            indices.add(col);
+            widths.add(width);
+          },
+          onColumnResizeEnd: (column, width, col, _) {
+            titles.add(column.title);
+            indices.add(col);
+            widths.add(width);
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // The marker column occupies x=0..36 (200 rows); column 0 runs from
+      // x=36 to 136 and its resize edge starts five pixels before x=136.
+      final drag = await tester.startGesture(
+        const Offset(133, 15),
+        kind: PointerDeviceKind.mouse,
+      );
+      await tester.pump();
+      await drag.moveTo(const Offset(186, 15));
+      await tester.pump();
+      await drag.up();
+      await tester.pumpAndSettle();
+
+      expect(titles, everyElement('C0'));
+      expect(indices, everyElement(0));
+      expect(widths.first, 101); // bounds.width carries the +1 grid line.
+      expect(widths.last, 150);
+    });
+
     testWidgets('dragging a header reorders the column', (tester) async {
       final moved = <(int, int)>[];
       await tester.pumpWidget(
