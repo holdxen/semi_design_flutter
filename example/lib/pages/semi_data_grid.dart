@@ -21,7 +21,7 @@ class _SemiDataGridPageState extends State<SemiDataGridPage> {
   /// Three groups of four columns; renamed through the group-header action.
   final List<String> _groupNames = ['Group A', 'Group B', 'Group C'];
 
-  String _status = '点击单元格，第二次点击或回车进入编辑';
+  String _status = '点击单元格，第二次点击或回车进入编辑；拖动表头边缘可调整列宽';
 
   @override
   void initState() {
@@ -71,6 +71,17 @@ class _SemiDataGridPageState extends State<SemiDataGridPage> {
   /// Upstream expects the consumer to write resized widths back into
   /// `columns`; without these callbacks `allowResize` stays false and
   /// dragging a header edge does nothing.
+  void _onColumnResizeStart(
+    SemiGridColumn column,
+    double newSize,
+    int col,
+    double newSizeWithGrow,
+  ) {
+    setState(() {
+      _status = '开始拖拽调整 ${column.title} 列宽';
+    });
+  }
+
   void _onColumnResize(
     SemiGridColumn column,
     double newSize,
@@ -80,6 +91,17 @@ class _SemiDataGridPageState extends State<SemiDataGridPage> {
     setState(() {
       _columns[col] = column.copyWith(width: newSize);
       _status = '拖拽调整 ${column.title} 列宽：$newSize px';
+    });
+  }
+
+  void _onColumnResizeEnd(
+    SemiGridColumn column,
+    double newSize,
+    int col,
+    double newSizeWithGrow,
+  ) {
+    setState(() {
+      _status = '${column.title} 列宽已调整为 $newSize px';
     });
   }
 
@@ -225,7 +247,9 @@ class _SemiDataGridPageState extends State<SemiDataGridPage> {
                   onGroupHeaderRenamed: _renameGroup,
                   onCellsEdited: _onCellsEdited,
                   onGridSelectionChange: _onSelectionChanged,
+                  onColumnResizeStart: _onColumnResizeStart,
                   onColumnResize: _onColumnResize,
+                  onColumnResizeEnd: _onColumnResizeEnd,
                   onHeaderMenuClick: _onHeaderMenuClick,
                   onHeaderIndicatorClick: _onHeaderIndicatorClick,
                 ),

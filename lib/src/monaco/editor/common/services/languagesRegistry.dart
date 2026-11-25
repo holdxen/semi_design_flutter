@@ -150,15 +150,15 @@ class LanguagesRegistry extends Disposable {
       ...ModesRegistry.getLanguages(),
       ..._dynamicLanguages,
     ];
-    _registerLanguages(desc);
+    registerLanguages(desc);
   }
 
   /// 1:1: `registerLanguage(desc)`.
   IDisposable registerLanguage(ILanguageExtensionPoint desc) =>
       ModesRegistry.registerLanguage(desc);
 
-  /// 1:1: `_registerLanguages(desc)`.
-  void _registerLanguages(List<ILanguageExtensionPoint> desc) {
+  /// 1:1: `_registerLanguages(desc)` (TS `_` is naming only, not private).
+  void registerLanguages(List<ILanguageExtensionPoint> desc) {
     for (final ILanguageExtensionPoint d in desc) {
       _registerLanguage(d);
     }
@@ -180,8 +180,12 @@ class LanguagesRegistry extends Disposable {
       }
     }
 
-    (Registry.as(config.Extensions.Configuration) as config.IConfigurationRegistry)
-        .registerOverrideIdentifiers(getRegisteredLanguageIds());
+    final Object? configurationRegistry =
+        Registry.as(config.Extensions.Configuration);
+    if (configurationRegistry is config.IConfigurationRegistry) {
+      configurationRegistry.registerOverrideIdentifiers(
+          getRegisteredLanguageIds());
+    }
 
     _onDidChange.fire(null);
   }
@@ -315,7 +319,7 @@ class LanguagesRegistry extends Disposable {
   List<ILanguageNameIdPair> getSortedRegisteredLanguageNames() {
     final List<ILanguageNameIdPair> result = <ILanguageNameIdPair>[];
     for (final String languageName in _nameMap.keys) {
-      result.add(ILanguageNameIdPair(_nameMap[languageName]!, languageName));
+      result.add(ILanguageNameIdPair(languageName, _nameMap[languageName]!));
     }
     result.sort((a, b) => compareIgnoreCase(a.languageName, b.languageName));
     return result;
