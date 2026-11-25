@@ -42,6 +42,7 @@ import 'package:example/pages/popconfirm.dart';
 import 'package:example/pages/progress.dart';
 import 'package:example/pages/radio.dart';
 import 'package:example/pages/rating.dart';
+import 'package:example/pages/scroll_bar.dart';
 import 'package:example/pages/scroll_list.dart';
 import 'package:example/pages/select.dart';
 import 'package:example/pages/side_sheet.dart';
@@ -273,6 +274,12 @@ const List<DemoGroup> demoGroups = [
       'ScrollList 滚动列表',
       'doc-scrolllist.svg',
       ScrollListPage(),
+    ),
+    DemoSpec(
+      'scrollBar',
+      'ScrollBar 滚动条',
+      'doc-scrolllist.svg',
+      ScrollBarPage(),
     ),
     DemoSpec('tag', 'Tag 标签', 'doc-tag.svg', TagPage()),
     DemoSpec(

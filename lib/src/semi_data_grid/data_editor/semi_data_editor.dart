@@ -3648,6 +3648,9 @@ class _SemiDataEditorState extends State<SemiDataEditor>
           columns: _mangledColumns,
           rows: _mangledRows,
           hasAppendRow: _showTrailingBlankRow,
+          // The row-marker column is chrome, so it is not exposed to readers
+          // (`data-grid.tsx:1742-1744`).
+          firstColAccessible: !_hasRowMarkers,
           rowHeight: _effectiveRowHeight,
           headerHeight: _remAdjustment.headerHeight,
           // `data-editor.tsx:4276` forwards 0 when groups are off, which is

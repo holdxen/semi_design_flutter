@@ -52,6 +52,8 @@ abstract class ITextModelForCommand {
 
   int getLineMaxColumn(int lineNumber);
 
+  String getEOL();
+
   String getValueInRange(IRange range);
 
   ITokenizationForCommand get tokenization;

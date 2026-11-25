@@ -539,7 +539,7 @@
 | 530 | editor | `editor/contrib/hover/test/browser/hoverUtils.test.ts` | `lib/src/monaco/editor/contrib/hover/test/browser/hoverUtils.test.dart` | pending |
 | 531 | editor | `editor/contrib/hover/test/browser/markerHoverParticipant.test.ts` | `lib/src/monaco/editor/contrib/hover/test/browser/markerHoverParticipant.test.dart` | pending |
 | 532 | editor | `editor/contrib/inPlaceReplace/browser/inPlaceReplace.ts` | `lib/src/monaco/editor/contrib/inPlaceReplace/browser/inPlaceReplace.dart` | pending |
-| 533 | editor | `editor/contrib/inPlaceReplace/browser/inPlaceReplaceCommand.ts` | `lib/src/monaco/editor/contrib/inPlaceReplace/browser/inPlaceReplaceCommand.dart` | pending |
+| 533 | editor | `editor/contrib/inPlaceReplace/browser/inPlaceReplaceCommand.ts` | `lib/src/monaco/editor/contrib/inPlaceReplace/browser/inPlaceReplaceCommand.dart` | tested |
 | 534 | editor | `editor/contrib/indentation/browser/indentation.ts` | `lib/src/monaco/editor/contrib/indentation/browser/indentation.dart` | pending |
 | 535 | editor | `editor/contrib/indentation/common/indentUtils.ts` | `lib/src/monaco/editor/contrib/indentation/common/indentUtils.dart` | tested |
 | 536 | editor | `editor/contrib/indentation/common/indentation.ts` | `lib/src/monaco/editor/contrib/indentation/common/indentation.dart` | pending |
@@ -621,7 +621,7 @@
 | 612 | editor | `editor/contrib/inlineCompletions/test/browser/utils.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/test/browser/utils.dart` | pending |
 | 613 | editor | `editor/contrib/inlineProgress/browser/inlineProgress.ts` | `lib/src/monaco/editor/contrib/inlineProgress/browser/inlineProgress.dart` | pending |
 | 614 | editor | `editor/contrib/insertFinalNewLine/browser/insertFinalNewLine.ts` | `lib/src/monaco/editor/contrib/insertFinalNewLine/browser/insertFinalNewLine.dart` | pending |
-| 615 | editor | `editor/contrib/insertFinalNewLine/browser/insertFinalNewLineCommand.ts` | `lib/src/monaco/editor/contrib/insertFinalNewLine/browser/insertFinalNewLineCommand.dart` | pending |
+| 615 | editor | `editor/contrib/insertFinalNewLine/browser/insertFinalNewLineCommand.ts` | `lib/src/monaco/editor/contrib/insertFinalNewLine/browser/insertFinalNewLineCommand.dart` | tested |
 | 616 | editor | `editor/contrib/lineSelection/browser/lineSelection.ts` | `lib/src/monaco/editor/contrib/lineSelection/browser/lineSelection.dart` | pending |
 | 617 | editor | `editor/contrib/lineSelection/test/browser/lineSelection.test.ts` | `lib/src/monaco/editor/contrib/lineSelection/test/browser/lineSelection.test.dart` | pending |
 | 618 | editor | `editor/contrib/linesOperations/browser/copyLinesCommand.ts` | `lib/src/monaco/editor/contrib/linesOperations/browser/copyLinesCommand.dart` | tested |

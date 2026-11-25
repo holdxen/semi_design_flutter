@@ -119,6 +119,9 @@ class _MockModel implements ITextModelForCommand {
   int getLineMaxColumn(int lineNumber) => _lines[lineNumber - 1].length + 1;
 
   @override
+  String getEOL() => '\n';
+
+  @override
   String getValueInRange(IRange range) {
     if (range.startLineNumber != range.endLineNumber) {
       return _lines.sublist(range.startLineNumber - 1, range.endLineNumber).join('\n');

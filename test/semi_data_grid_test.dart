@@ -5794,6 +5794,72 @@ void main() {
       handle.dispose();
     });
 
+    testWidgets('semantics carry the real cell geometry', (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        buildEditor(rows: 3, columnCount: 6, scrollOffsetX: 200),
+      );
+      await tester.pumpAndSettle();
+
+      // Only the columns the painter walks are exposed.
+      expect(find.bySemanticsLabel('C0'), findsNothing);
+      expect(find.bySemanticsLabel('C2'), findsOneWidget);
+
+      // The node sits on the cell instead of collapsing to 1x1 at the origin.
+      final cell = tester.getSemantics(find.bySemanticsLabel('r0 c2'));
+      expect(cell.rect, const Rect.fromLTWH(0, 32, 100, 32));
+      handle.dispose();
+    });
+
+    testWidgets('frozen trailing rows stay exposed to readers', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        buildEditor(rows: 30, columnCount: 2, freezeTrailingRows: 1),
+      );
+      await tester.pumpAndSettle();
+
+      // Row 30 (the last data row) is pinned below the viewport; the painter
+      // still draws it, so it needs a node.
+      expect(find.bySemanticsLabel('Row 30'), findsOneWidget);
+      // Row 12 is neither visible nor frozen.
+      expect(find.bySemanticsLabel('Row 12'), findsNothing);
+      handle.dispose();
+    });
+
+    testWidgets('the row-marker column is not exposed to readers', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        buildEditor(
+          rows: 3,
+          columnCount: 2,
+          rowMarkers: const SemiRowMarkerOptions(width: 40),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        tester.widget<SemiDataGrid>(find.byType(SemiDataGrid)).props
+            .firstColAccessible,
+        isFalse,
+      );
+      // The marker column is chrome with an empty title; no header node is
+      // emitted for it, so the tree's headers are exactly the data columns.
+      final headers = tester.getSemantics(find.bySemanticsLabel('Column headers'));
+      final titles = [
+        for (final child
+            in headers.debugListChildrenInOrder(
+              DebugSemanticsDumpOrder.traversalOrder,
+            ))
+          child.label,
+      ];
+      expect(titles, ['C0', 'C1']);
+      handle.dispose();
+    });
+
     testWidgets('an edit refreshes the accessibility labels', (tester) async {
       final handle = tester.ensureSemantics();
 

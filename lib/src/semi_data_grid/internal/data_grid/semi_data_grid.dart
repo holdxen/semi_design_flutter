@@ -1037,25 +1037,41 @@ class _SemiDataGridState extends State<SemiDataGrid>
   Widget? _accessibilityTreeCache;
   ({Object? key})? _accessibilityTreeKey;
 
-  /// The `<table role="grid">` (`data-grid.tsx:1737-1856`), limited to the
-  /// visible columns and rows exactly like the upstream virtualized tree.
-  Widget _accessibilityTree(
-    SemiDataGridProps p,
-    List<SemiMappedColumn> effectiveCols,
-  ) {
+  /// The `<table role="grid">` (`data-grid.tsx:1737-1856`).
+  ///
+  /// The tree is built from the *effective* columns the painter walks and from
+  /// the same row geometry, so every node's rect lands on the cell a reader
+  /// would touch instead of piling up at the origin.
+  Widget _accessibilityTree(SemiDataGridProps p) {
+    final effectiveCols = getEffectiveColumns(
+      _mappedColumnsOf(p),
+      p.cellXOffset,
+      p.width,
+      p.dragAndDropState,
+      p.translateX,
+    );
     final key = (
       p.width,
+      p.height,
       p.cellXOffset,
       p.cellYOffset,
       p.translateX,
+      p.translateY,
       p.rows,
+      p.rowHeight,
+      p.headerHeight,
+      p.groupHeaderHeight,
+      p.enableGroups,
+      p.freezeTrailingRows,
       p.selection,
       p.firstColAccessible,
       p.disableAccessibilityTree,
       p.getCellContent,
       p.getCellRenderer,
       p.a11yRevision,
-      Object.hashAll([for (final c in effectiveCols) c.sourceIndex]),
+      Object.hashAll([
+        for (final c in effectiveCols) (c.sourceIndex, c.title, c.width),
+      ]),
     );
     final cached = _accessibilityTreeCache;
     if (cached != null && _accessibilityTreeKey?.key == key) return cached;
@@ -1073,6 +1089,7 @@ class _SemiDataGridState extends State<SemiDataGrid>
       return const SizedBox.shrink();
     }
 
+    // The row-marker column is chrome, not data (`data-grid.tsx:1742-1744`).
     final cols = [...effectiveCols];
     if (!p.firstColAccessible &&
         cols.isNotEmpty &&
@@ -1080,12 +1097,44 @@ class _SemiDataGridState extends State<SemiDataGrid>
       cols.removeAt(0);
     }
 
-    var endRow = p.cellYOffset;
-    var y = p.translateY;
-    while (endRow < p.rows && y <= p.height) {
-      y += p.rowHeight(endRow);
-      endRow++;
+    final totalHeaderHeight = p.enableGroups
+        ? p.groupHeaderHeight + p.headerHeight
+        : p.headerHeight;
+
+    // Column x, mirroring `walkColumns` (`semi_render_walk.dart:76-93`).
+    final colX = <int, double>{};
+    var x = 0.0;
+    var clipX = 0.0;
+    for (final c in effectiveCols) {
+      colX[c.sourceIndex] = c.sticky ? clipX : x + p.translateX;
+      x += c.width;
+      clipX += c.sticky ? c.width : 0;
     }
+
+    // Rows, mirroring `walkRowsInCol`: the visible slice, then any
+    // independently frozen trailing rows pinned to the bottom edge.
+    final trailingHeight = p.rowHeight.trailingHeight(
+      p.rows,
+      p.freezeTrailingRows,
+    );
+    final bodyBottom = p.height - trailingHeight;
+    final rowBoxes = <(int, double, double)>[];
+    var y = totalHeaderHeight + p.translateY;
+    final rowEnd = p.rows - p.freezeTrailingRows;
+    for (var row = p.cellYOffset; row < rowEnd && y < bodyBottom; row++) {
+      final h = p.rowHeight(row);
+      if (y + h > totalHeaderHeight) rowBoxes.add((row, y, h));
+      y += h;
+    }
+    var tail = p.height;
+    for (var i = 0; i < p.freezeTrailingRows; i++) {
+      final row = p.rows - 1 - i;
+      if (row < 0) break;
+      final h = p.rowHeight(row);
+      tail -= h;
+      rowBoxes.add((row, tail, h));
+    }
+    rowBoxes.sort((a, b) => a.$2.compareTo(b.$2));
 
     final range = p.selection.current?.range;
     final focused = p.selection.current?.cell;
@@ -1096,48 +1145,78 @@ class _SemiDataGridState extends State<SemiDataGrid>
           container: true,
           explicitChildNodes: true,
           label: 'Grid',
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Stack(
+            clipBehavior: Clip.hardEdge,
             children: [
-              Semantics(
-                container: true,
-                explicitChildNodes: true,
-                label: 'Column headers',
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (final c in cols)
-                      Semantics(
-                        container: true,
-                        button: true,
-                        label: c.title,
-                        selected: p.selection.columns.hasIndex(c.sourceIndex),
-                        focused:
-                            focused != null &&
-                            focused.col == c.sourceIndex &&
-                            focused.row < 0,
-                        onTap: () => _accessibilityActivate(
-                          c.sourceIndex,
-                          SemiItem.headerRow,
-                        ),
-                        child: const SizedBox(width: 1, height: 1),
-                      ),
-                  ],
-                ),
-              ),
-              for (var row = p.cellYOffset; row < endRow; row++)
-                Semantics(
+              Positioned(
+                left: 0,
+                top: 0,
+                width: p.width,
+                height: totalHeaderHeight,
+                child: Semantics(
                   container: true,
                   explicitChildNodes: true,
-                  label: 'Row ${row + 1}',
-                  selected: p.selection.rows.hasIndex(row),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                  label: 'Column headers',
+                  child: Stack(
+                    clipBehavior: Clip.hardEdge,
                     children: [
                       for (final c in cols)
-                        _cellSemantics(p, c.sourceIndex, row, range, focused),
+                        Positioned(
+                          left: colX[c.sourceIndex] ?? 0,
+                          top: 0,
+                          width: c.width,
+                          height: totalHeaderHeight,
+                          child: Semantics(
+                            container: true,
+                            button: true,
+                            label: c.title,
+                            selected: p.selection.columns.hasIndex(
+                              c.sourceIndex,
+                            ),
+                            focused:
+                                focused != null &&
+                                focused.col == c.sourceIndex &&
+                                focused.row < 0,
+                            onTap: () => _accessibilityActivate(
+                              c.sourceIndex,
+                              SemiItem.headerRow,
+                            ),
+                          ),
+                        ),
                     ],
+                  ),
+                ),
+              ),
+              for (final box in rowBoxes)
+                Positioned(
+                  left: 0,
+                  top: box.$2,
+                  width: p.width,
+                  height: box.$3,
+                  child: Semantics(
+                    container: true,
+                    explicitChildNodes: true,
+                    label: 'Row ${box.$1 + 1}',
+                    selected: p.selection.rows.hasIndex(box.$1),
+                    child: Stack(
+                      clipBehavior: Clip.hardEdge,
+                      children: [
+                        for (final c in cols)
+                          Positioned(
+                            left: colX[c.sourceIndex] ?? 0,
+                            top: 0,
+                            width: c.width,
+                            height: box.$3,
+                            child: _cellSemantics(
+                              p,
+                              c.sourceIndex,
+                              box.$1,
+                              range,
+                              focused,
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
             ],
@@ -1161,6 +1240,8 @@ class _SemiDataGridState extends State<SemiDataGrid>
         col < range.x + range.width &&
         row >= range.y &&
         row < range.y + range.height;
+    // No child: the surrounding [Positioned] gives this node the cell's rect,
+    // which is what a screen reader uses for touch exploration.
     return Semantics(
       container: true,
       button: true,
@@ -1169,7 +1250,6 @@ class _SemiDataGridState extends State<SemiDataGrid>
       readOnly: semiIsInnerOnlyCell(cell) || !semiIsReadWriteCell(cell),
       focused: focused != null && focused.col == col && focused.row == row,
       onTap: () => _accessibilityActivate(col, row),
-      child: const SizedBox(width: 1, height: 1),
     );
   }
 
@@ -1563,7 +1643,7 @@ class _SemiDataGridState extends State<SemiDataGrid>
                     isComplex: true,
                     willChange: true,
                   ),
-                  _accessibilityTree(p, mapped),
+                  _accessibilityTree(p),
                 ],
               ),
             ),
