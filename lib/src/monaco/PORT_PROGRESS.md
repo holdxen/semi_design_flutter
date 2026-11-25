@@ -324,12 +324,12 @@
 | 315 | editor | `editor/common/services/editorWorkerHost.ts` | `lib/src/monaco/editor/common/services/editorWorkerHost.dart` | tested |
 | 316 | editor | `editor/common/services/findSectionHeaders.ts` | `lib/src/monaco/editor/common/services/findSectionHeaders.dart` | pending |
 | 317 | editor | `editor/common/services/getIconClasses.ts` | `lib/src/monaco/editor/common/services/getIconClasses.dart` | pending |
-| 318 | editor | `editor/common/services/inMemoryTextModelService.ts` | `lib/src/monaco/editor/common/services/inMemoryTextModelService.dart` | pending |
+| 318 | editor | `editor/common/services/inMemoryTextModelService.ts` | `lib/src/monaco/editor/common/services/inMemoryTextModelService.dart` | tested |
 | 319 | editor | `editor/common/services/languageFeatureDebounce.ts` | `lib/src/monaco/editor/common/services/languageFeatureDebounce.dart` | tested |
 | 320 | editor | `editor/common/services/languageFeatures.ts` | `lib/src/monaco/editor/common/services/languageFeatures.dart` | tested |
 | 321 | editor | `editor/common/services/languageFeaturesService.ts` | `lib/src/monaco/editor/common/services/languageFeaturesService.dart` | tested |
 | 322 | editor | `editor/common/services/languageService.ts` | `lib/src/monaco/editor/common/services/languageService.dart` | pending |
-| 323 | editor | `editor/common/services/languagesAssociations.ts` | `lib/src/monaco/editor/common/services/languagesAssociations.dart` | pending |
+| 323 | editor | `editor/common/services/languagesAssociations.ts` | `lib/src/monaco/editor/common/services/languagesAssociations.dart` | tested |
 | 324 | editor | `editor/common/services/languagesRegistry.ts` | `lib/src/monaco/editor/common/services/languagesRegistry.dart` | pending |
 | 325 | editor | `editor/common/services/markerDecorations.ts` | `lib/src/monaco/editor/common/services/markerDecorations.dart` | tested |
 | 326 | editor | `editor/common/services/markerDecorationsService.ts` | `lib/src/monaco/editor/common/services/markerDecorationsService.dart` | pending |
@@ -367,7 +367,7 @@
 | 358 | editor | `editor/common/tokens/sparseMultilineTokens.ts` | `lib/src/monaco/editor/common/tokens/sparseMultilineTokens.dart` | pending |
 | 359 | editor | `editor/common/tokens/sparseTokensStore.ts` | `lib/src/monaco/editor/common/tokens/sparseTokensStore.dart` | pending |
 | 360 | editor | `editor/common/tokens/tokenWithTextArray.ts` | `lib/src/monaco/editor/common/tokens/tokenWithTextArray.dart` | pending |
-| 361 | editor | `editor/common/viewEventHandler.ts` | `lib/src/monaco/editor/common/viewEventHandler.dart` | pending |
+| 361 | editor | `editor/common/viewEventHandler.ts` | `lib/src/monaco/editor/common/viewEventHandler.dart` | tested |
 | 362 | editor | `editor/common/viewEvents.ts` | `lib/src/monaco/editor/common/viewEvents.dart` | tested |
 | 363 | editor | `editor/common/viewLayout/lineDecorations.ts` | `lib/src/monaco/editor/common/viewLayout/lineDecorations.dart` | pending |
 | 364 | editor | `editor/common/viewLayout/lineHeights.ts` | `lib/src/monaco/editor/common/viewLayout/lineHeights.dart` | tested |
@@ -411,7 +411,7 @@
 | 402 | editor | `editor/contrib/codeAction/test/browser/codeActionKeybindingResolver.test.ts` | `lib/src/monaco/editor/contrib/codeAction/test/browser/codeActionKeybindingResolver.test.dart` | pending |
 | 403 | editor | `editor/contrib/codeAction/test/browser/codeActionModel.test.ts` | `lib/src/monaco/editor/contrib/codeAction/test/browser/codeActionModel.test.dart` | pending |
 | 404 | editor | `editor/contrib/codelens/browser/codeLensCache.ts` | `lib/src/monaco/editor/contrib/codelens/browser/codeLensCache.dart` | pending |
-| 405 | editor | `editor/contrib/codelens/browser/codelens.ts` | `lib/src/monaco/editor/contrib/codelens/browser/codelens.dart` | pending |
+| 405 | editor | `editor/contrib/codelens/browser/codelens.ts` | `lib/src/monaco/editor/contrib/codelens/browser/codelens.dart` | tested |
 | 406 | editor | `editor/contrib/codelens/browser/codelensController.ts` | `lib/src/monaco/editor/contrib/codelens/browser/codelensController.dart` | pending |
 | 407 | editor | `editor/contrib/codelens/browser/codelensWidget.ts` | `lib/src/monaco/editor/contrib/codelens/browser/codelensWidget.dart` | pending |
 | 408 | editor | `editor/contrib/colorPicker/browser/color.ts` | `lib/src/monaco/editor/contrib/colorPicker/browser/color.dart` | pending |
@@ -634,7 +634,7 @@
 | 625 | editor | `editor/contrib/linesOperations/test/browser/sortLinesCommand.test.ts` | `lib/src/monaco/editor/contrib/linesOperations/test/browser/sortLinesCommand.test.dart` | pending |
 | 626 | editor | `editor/contrib/linkedEditing/browser/linkedEditing.ts` | `lib/src/monaco/editor/contrib/linkedEditing/browser/linkedEditing.dart` | pending |
 | 627 | editor | `editor/contrib/linkedEditing/test/browser/linkedEditing.test.ts` | `lib/src/monaco/editor/contrib/linkedEditing/test/browser/linkedEditing.test.dart` | pending |
-| 628 | editor | `editor/contrib/links/browser/getLinks.ts` | `lib/src/monaco/editor/contrib/links/browser/getLinks.dart` | pending |
+| 628 | editor | `editor/contrib/links/browser/getLinks.ts` | `lib/src/monaco/editor/contrib/links/browser/getLinks.dart` | tested |
 | 629 | editor | `editor/contrib/links/browser/links.ts` | `lib/src/monaco/editor/contrib/links/browser/links.dart` | pending |
 | 630 | editor | `editor/contrib/longLinesHelper/browser/longLinesHelper.ts` | `lib/src/monaco/editor/contrib/longLinesHelper/browser/longLinesHelper.dart` | pending |
 | 631 | editor | `editor/contrib/message/browser/messageController.ts` | `lib/src/monaco/editor/contrib/message/browser/messageController.dart` | pending |
@@ -662,7 +662,7 @@
 | 653 | editor | `editor/contrib/sectionHeaders/browser/sectionHeaders.ts` | `lib/src/monaco/editor/contrib/sectionHeaders/browser/sectionHeaders.dart` | pending |
 | 654 | editor | `editor/contrib/semanticTokens/browser/documentSemanticTokens.ts` | `lib/src/monaco/editor/contrib/semanticTokens/browser/documentSemanticTokens.dart` | pending |
 | 655 | editor | `editor/contrib/semanticTokens/browser/viewportSemanticTokens.ts` | `lib/src/monaco/editor/contrib/semanticTokens/browser/viewportSemanticTokens.dart` | pending |
-| 656 | editor | `editor/contrib/semanticTokens/common/getSemanticTokens.ts` | `lib/src/monaco/editor/contrib/semanticTokens/common/getSemanticTokens.dart` | pending |
+| 656 | editor | `editor/contrib/semanticTokens/common/getSemanticTokens.ts` | `lib/src/monaco/editor/contrib/semanticTokens/common/getSemanticTokens.dart` | tested |
 | 657 | editor | `editor/contrib/semanticTokens/common/semanticTokensConfig.ts` | `lib/src/monaco/editor/contrib/semanticTokens/common/semanticTokensConfig.dart` | pending |
 | 658 | editor | `editor/contrib/semanticTokens/test/browser/documentSemanticTokens.test.ts` | `lib/src/monaco/editor/contrib/semanticTokens/test/browser/documentSemanticTokens.test.dart` | pending |
 | 659 | editor | `editor/contrib/semanticTokens/test/browser/getSemanticTokens.test.ts` | `lib/src/monaco/editor/contrib/semanticTokens/test/browser/getSemanticTokens.test.dart` | pending |
