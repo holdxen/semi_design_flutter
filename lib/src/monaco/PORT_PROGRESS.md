@@ -259,7 +259,7 @@
 | 250 | editor | `editor/common/languages/modesRegistry.ts` | `lib/src/monaco/editor/common/languages/modesRegistry.dart` | tested |
 | 251 | editor | `editor/common/languages/nullTokenize.ts` | `lib/src/monaco/editor/common/languages/nullTokenize.dart` | tested |
 | 252 | editor | `editor/common/languages/supports/characterPair.ts` | `lib/src/monaco/editor/common/languages/supports/characterPair.dart` | tested |
-| 253 | editor | `editor/common/languages/supports/electricCharacter.ts` | `lib/src/monaco/editor/common/languages/supports/electricCharacter.dart` | pending |
+| 253 | editor | `editor/common/languages/supports/electricCharacter.ts` | `lib/src/monaco/editor/common/languages/supports/electricCharacter.dart` | tested |
 | 254 | editor | `editor/common/languages/supports/indentRules.ts` | `lib/src/monaco/editor/common/languages/supports/indentRules.dart` | pending |
 | 255 | editor | `editor/common/languages/supports/indentationLineProcessor.ts` | `lib/src/monaco/editor/common/languages/supports/indentationLineProcessor.dart` | pending |
 | 256 | editor | `editor/common/languages/supports/inplaceReplaceSupport.ts` | `lib/src/monaco/editor/common/languages/supports/inplaceReplaceSupport.dart` | pending |
