@@ -288,7 +288,7 @@
 | 279 | editor | `editor/common/model/editStack.ts` | `lib/src/monaco/editor/common/model/editStack.dart` | pending |
 | 280 | editor | `editor/common/model/fixedArray.ts` | `lib/src/monaco/editor/common/model/fixedArray.dart` | tested |
 | 281 | editor | `editor/common/model/guidesTextModelPart.ts` | `lib/src/monaco/editor/common/model/guidesTextModelPart.dart` | pending |
-| 282 | editor | `editor/common/model/indentationGuesser.ts` | `lib/src/monaco/editor/common/model/indentationGuesser.dart` | pending |
+| 282 | editor | `editor/common/model/indentationGuesser.ts` | `lib/src/monaco/editor/common/model/indentationGuesser.dart` | tested |
 | 283 | editor | `editor/common/model/intervalTree.ts` | `lib/src/monaco/editor/common/model/intervalTree.dart` | pending |
 | 284 | editor | `editor/common/model/mirrorTextModel.ts` | `lib/src/monaco/editor/common/model/mirrorTextModel.dart` | tested |
 | 285 | editor | `editor/common/model/pieceTreeTextBuffer/pieceTreeBase.ts` | `lib/src/monaco/editor/common/model/pieceTreeTextBuffer/pieceTreeBase.dart` | pending |
@@ -317,7 +317,7 @@
 | 308 | editor | `editor/common/modelLineProjectionData.ts` | `lib/src/monaco/editor/common/modelLineProjectionData.dart` | tested |
 | 309 | editor | `editor/common/multiDiffEditor.ts` | `lib/src/monaco/editor/common/multiDiffEditor.dart` | tested |
 | 310 | editor | `editor/common/services/completionsEnablement.ts` | `lib/src/monaco/editor/common/services/completionsEnablement.dart` | tested |
-| 311 | editor | `editor/common/services/editorBaseApi.ts` | `lib/src/monaco/editor/common/services/editorBaseApi.dart` | pending |
+| 311 | editor | `editor/common/services/editorBaseApi.ts` | `lib/src/monaco/editor/common/services/editorBaseApi.dart` | tested |
 | 312 | editor | `editor/common/services/editorWebWorker.ts` | `lib/src/monaco/editor/common/services/editorWebWorker.dart` | pending |
 | 313 | editor | `editor/common/services/editorWebWorkerMain.ts` | `lib/src/monaco/editor/common/services/editorWebWorkerMain.dart` | pending |
 | 314 | editor | `editor/common/services/editorWorker.ts` | `lib/src/monaco/editor/common/services/editorWorker.dart` | pending |

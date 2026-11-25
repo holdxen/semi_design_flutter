@@ -3213,7 +3213,10 @@ class _SemiDataEditorState extends State<SemiDataEditor>
       focused: _focused,
       cutEnabled: semiKeysWithDefaults(widget.props.keybindings).cut,
       selection: _selection,
-      rows: widget.props.rows,
+      // Whole-column copies span the *display* rows, group headers included
+      // (`data-editor.tsx:930-936,3837-3846`), so collapsing a group requests
+      // fewer rows than `props.rows` and expanding one requests more.
+      rows: _groupedRows,
       rowMarkerOffset: _markerOffset,
       columns: widget.props.columns,
       getCellsForSelection: _getCellsForSelection,
@@ -3233,7 +3236,8 @@ class _SemiDataEditorState extends State<SemiDataEditor>
       focused: _focused,
       copyEnabled: semiKeysWithDefaults(widget.props.keybindings).copy,
       selection: _selection,
-      rows: widget.props.rows,
+      // Same display-row span as `_cut` (`data-editor.tsx:3837-3846`).
+      rows: _groupedRows,
       rowMarkerOffset: _markerOffset,
       columns: widget.props.columns,
       getCellsForSelection: _getCellsForSelection,

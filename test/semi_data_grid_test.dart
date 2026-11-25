@@ -4241,6 +4241,98 @@ void main() {
       expect(selectionLog.last.current!.cell.row, 1);
     });
 
+    testWidgets('whole-column copy spans the grouped display rows', (
+      tester,
+    ) async {
+      final requested = <SemiRectangle>[];
+      mockGridClipboard(write: (_) async {});
+      await tester.pumpWidget(
+        buildEditor(
+          rows: 200,
+          columnCount: 2,
+          rowGrouping: const SemiRowGroupingOptions(
+            groups: [
+              SemiRowGroup(headerIndex: 0, isCollapsed: true),
+              SemiRowGroup(headerIndex: 3, isCollapsed: false),
+            ],
+            height: 60,
+          ),
+          cellsForSelection: (region) {
+            requested.add(region);
+            return [
+              for (
+                var y = region.y.toInt();
+                y < region.y + region.height;
+                y++
+              )
+                [
+                  for (
+                    var x = region.x.toInt();
+                    x < region.x + region.width;
+                    x++
+                  )
+                    SemiTextCell(data: '$x/$y', displayData: '$x/$y'),
+                ],
+            ];
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // The header owns y in [0, 32); clicking it selects column 0 and focuses
+      // the grid, which is what `semiCopy` needs to run.
+      final gesture = await tester.startGesture(
+        const Offset(50, 16),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      await sendClipboardShortcut(tester, LogicalKeyboardKey.keyC);
+      await tester.pumpAndSettle();
+
+      final displayRows =
+          tester.widget<SemiDataGrid>(find.byType(SemiDataGrid)).props.rows;
+      // The collapsed group hides its content rows, so the grid has fewer
+      // display rows than the 200 data rows the caller declared.
+      expect(displayRows, lessThan(200));
+      expect(requested, hasLength(1));
+      expect(requested.single.y, 0);
+      expect(
+        requested.single.height,
+        displayRows,
+        reason: 'a whole-column copy must span the grouped display rows',
+      );
+    });
+
+    testWidgets('shrinking the grid clears an out-of-bounds selection', (
+      tester,
+    ) async {
+      SemiGridSelection rendered() => tester
+          .widget<SemiDataGrid>(find.byType(SemiDataGrid))
+          .props
+          .selection;
+
+      await tester.pumpWidget(buildEditor(rows: 4, columnCount: 2));
+      await tester.pumpAndSettle();
+
+      // Header 32 + 3 rows of 32 + half a row lands on row 3.
+      final gesture = await tester.startGesture(
+        const Offset(50, 144),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(rendered().current!.cell, const SemiItem(0, 3));
+
+      await tester.pumpWidget(buildEditor(rows: 2, columnCount: 2));
+      await tester.pumpAndSettle();
+
+      expect(rendered().current, isNull);
+      expect(rendered().columns.isEmpty, isTrue);
+      expect(rendered().rows.isEmpty, isTrue);
+    });
+
     testWidgets('unsized columns are measured and become hit-testable', (
       tester,
     ) async {
