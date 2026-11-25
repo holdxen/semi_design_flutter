@@ -4333,6 +4333,92 @@ void main() {
       expect(rendered().rows.isEmpty, isTrue);
     });
 
+    testWidgets('touch dragging scrolls both axes without selecting', (
+      tester,
+    ) async {
+      final regions = <SemiVisibleRegion>[];
+      await tester.pumpWidget(
+        buildEditor(
+          rows: 200,
+          columnCount: 6,
+          onVisibleRegionChanged: (region, _) => regions.add(region),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final initial = regions.last;
+
+      final gesture = await tester.startGesture(
+        const Offset(200, 200),
+        kind: PointerDeviceKind.touch,
+      );
+      // Finger up scrolls the rows down; finger left scrolls the columns right.
+      await gesture.moveBy(const Offset(0, -120));
+      await tester.pump();
+      await gesture.moveBy(const Offset(-80, 0));
+      await tester.pump();
+
+      final afterDrag = regions.last;
+      expect(afterDrag.y, greaterThan(initial.y));
+      expect(afterDrag.x, greaterThan(initial.x));
+      expect(selectionLog, isEmpty);
+      expect(find.byType(SemiDataGridOverlayEditor), findsNothing);
+
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      // A drag is a scroll, never a tap: no selection and no editor.
+      expect(selectionLog, isEmpty);
+      expect(find.byType(SemiDataGridOverlayEditor), findsNothing);
+    });
+
+    testWidgets('a touch tap still selects on release', (tester) async {
+      await tester.pumpWidget(buildEditor());
+      await tester.pumpAndSettle();
+
+      final gesture = await tester.startGesture(
+        const Offset(150, 45),
+        kind: PointerDeviceKind.touch,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(selectionLog.last.current!.cell, const SemiItem(1, 0));
+    });
+
+    testWidgets('a flung touch keeps scrolling after release', (tester) async {
+      final regions = <SemiVisibleRegion>[];
+      await tester.pumpWidget(
+        buildEditor(
+          rows: 200,
+          onVisibleRegionChanged: (region, _) => regions.add(region),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final gesture = await tester.startGesture(
+        const Offset(200, 300),
+        kind: PointerDeviceKind.touch,
+      );
+      await gesture.moveBy(const Offset(0, -40));
+      await gesture.moveBy(const Offset(0, -60));
+      await tester.pump();
+      final afterDrag = regions.last;
+
+      await gesture.up();
+      await tester.pump(const Duration(milliseconds: 16));
+      await tester.pump(const Duration(milliseconds: 16));
+      await tester.pump(const Duration(milliseconds: 16));
+      expect(
+        regions.last.y,
+        greaterThan(afterDrag.y),
+        reason: 'inertia must keep scrolling after the finger lifts',
+      );
+
+      await tester.pumpAndSettle();
+      expect(regions.last.y, greaterThan(afterDrag.y));
+      expect(selectionLog, isEmpty);
+    });
+
     testWidgets('unsized columns are measured and become hit-testable', (
       tester,
     ) async {

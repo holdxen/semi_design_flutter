@@ -10,8 +10,8 @@ final ValueNotifier<Widget> _body = ValueNotifier<Widget>(
   const SizedBox.shrink(),
 );
 
-Widget _host() => SemiTheme(
-  data: const SemiThemeData.light(),
+Widget _host({SemiThemeData theme = const SemiThemeData.light()}) => SemiTheme(
+  data: theme,
   child: Directionality(
     textDirection: TextDirection.ltr,
     child: MediaQuery(
@@ -36,10 +36,14 @@ Widget _host() => SemiTheme(
   ),
 );
 
-Future<void> pumpHost(WidgetTester tester, Widget child) async {
+Future<void> pumpHost(
+  WidgetTester tester,
+  Widget child, {
+  SemiThemeData theme = const SemiThemeData.light(),
+}) async {
   await tester.binding.setSurfaceSize(const Size(800, 600));
   _body.value = child;
-  await tester.pumpWidget(_host());
+  await tester.pumpWidget(_host(theme: theme));
   await tester.pump();
 }
 
@@ -210,6 +214,45 @@ void main() {
     expect(resolved.chromeTabsMenuBackground, theme.colors.colorBg3);
     expect(resolved.chromeTabsAccentColor, theme.colors.colorPrimary);
     expect(resolved.chromeTabTextColor, isNot(const Color(0xff5f6368)));
+  });
+
+  testWidgets('dark theme paints menu and tooltip inset shadows', (
+    tester,
+  ) async {
+    final mouse = await startMouse(tester);
+    await pumpHost(
+      tester,
+      _tabs(
+        tabs: manyTabs(3),
+        activeTabId: 't0',
+        groups: const <SemiChromeTabGroup>[
+          SemiChromeTabGroup(id: 'work', name: 'Work'),
+        ],
+        activeGroupId: 'work',
+        tooltipMode: SemiChromeTabTooltipMode.always,
+        renderTabTooltip: (_) => const Text('DARK TIP'),
+      ),
+      theme: const SemiThemeData.dark(),
+    );
+
+    await mouse.moveTo(
+      tester.getCenter(find.byKey(const ValueKey('semi-chrome-tab-t0'))),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('DARK TIP'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(byLabel('Select group'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(
+      find.byKey(const ValueKey('semi-chrome-tab-t1')),
+      buttons: kSecondaryButton,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Close all to the left'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   test('chrome-tab-height is max(strip height, 28)', () {

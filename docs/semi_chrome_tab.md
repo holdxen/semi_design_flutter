@@ -124,6 +124,8 @@ CSS 变量一一对应 `SemiChromeTabThemeData`。未覆盖的字段由 `resolve
 
 `chromeTabHeight` 不单独暴露：按上游 `max(--chrome-tabs-height, 28px)` 由 `resolve` 派生。
 
+菜单与 tooltip 的 `shadow-elevated` 按仓库既有方案拆分：drop 层进入 `BoxDecoration.boxShadow`（`toDropBoxShadows()`），暗色主题的 `inset 0 0 0 1px` 层由 `SemiInsetShadow` 画师绘制，避免 `toBoxShadows()` 对 inset 层抛出 `UnsupportedError`。菜单内部分隔线统一使用 `chromeTabsMenuBorderColor`，随深浅主题切换。
+
 如需固定为某一套配色（不跟随全局主题），可用 `SemiChromeTabThemeData(...)` 显式覆盖上表字段；局部主题示例见下。
 
 局部主题：
@@ -157,7 +159,6 @@ SemiChromeTabTheme(
 | `2 × 18px` | 分隔线 | tab divider / new-tab divider |
 | `16px + 6px` | 图标 | 图标尺寸与间距 |
 | `28px` | Chromium `kTabCloseButtonSize` 16 + 12 padding | 关闭按钮命中区（可见 hover 为 16px 图标区域，X 8px） |
-| `#e8eaed` | 菜单第一条/新建分组分隔线 | 菜单内部分隔线 |
 | `120ms` | `schedulePopoverClose` | tooltip / 溢出列表关闭延迟 |
 | `300ms` | 浏览器双击间隔 | 本移植用于识别 `edit-address` |
 

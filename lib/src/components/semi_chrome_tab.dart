@@ -11,6 +11,7 @@ import 'icon/semi_icon.dart';
 import 'icon/semi_icon_data.dart';
 import 'icon/semi_icons.dart';
 import 'semi_chrome_tab_add_button_painter.dart';
+import 'semi_inset_shadow.dart';
 import 'semi_tooltip.dart';
 
 /// Language used by [SemiChromeTab]'s built-in labels.
@@ -1338,19 +1339,24 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
             decoration: BoxDecoration(
               color: theme.chromeTabActiveBackground,
               borderRadius: BorderRadius.circular(theme.chromeTabRadius),
-              boxShadow: theme.chromeTabsMenuShadow.toBoxShadows(),
+              // drop 层进 BoxDecoration；inset 层走 SemiInsetShadow 画师。
+              boxShadow: theme.chromeTabsMenuShadow.toDropBoxShadows(),
             ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: Text(
-                  tab.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: theme.chromeTabsFontSize,
-                    color: theme.chromeTabActiveTextColor,
+            child: SemiInsetShadow(
+              shadows: theme.chromeTabsMenuShadow,
+              borderRadius: BorderRadius.circular(theme.chromeTabRadius),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(
+                    tab.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: theme.chromeTabsFontSize,
+                      color: theme.chromeTabActiveTextColor,
+                    ),
                   ),
                 ),
               ),
@@ -2246,46 +2252,60 @@ class _GroupMenuState extends State<_GroupMenu> {
   @override
   Widget build(BuildContext context) {
     final theme = widget.theme;
-    return Container(
+    final radius = BorderRadius.circular(_SemiChromeTabState._menuRadius);
+    return SizedBox(
       width: _SemiChromeTabState._groupMenuWidth,
-      padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
-        color: theme.chromeTabsMenuBackground,
-        borderRadius: BorderRadius.circular(_SemiChromeTabState._menuRadius),
-        border: Border.all(color: theme.chromeTabsMenuBorderColor),
-        boxShadow: theme.chromeTabsMenuShadow.toBoxShadows(),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          for (final group in widget.groups)
-            MouseRegion(
-              onEnter: (_) => setState(() => _hoveredGroupId = group.id),
-              onExit: (_) => setState(() => _hoveredGroupId = null),
-              child: _groupRow(context, theme, group),
-            ),
-          Container(
-            margin: const EdgeInsets.only(top: 5),
-            padding: const EdgeInsets.only(top: 5),
-            decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(color: theme.chromeTabsMenuBorderColor),
-              ),
-            ),
-            child: _MenuButton(
-              onTap: widget.onAdd,
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
-              borderRadius: BorderRadius.circular(5),
-              hoverColor: theme.chromeTabsMenuHoverBackground,
-              alignment: AlignmentDirectional.centerStart,
-              child: Text(
-                widget.messages.addGroup,
-                style: TextStyle(color: theme.chromeTabsMenuTextColor),
-              ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: theme.chromeTabsMenuBackground,
+          borderRadius: radius,
+          border: Border.all(color: theme.chromeTabsMenuBorderColor),
+          // drop 层进 BoxDecoration；inset 层走 SemiInsetShadow 画师。
+          boxShadow: theme.chromeTabsMenuShadow.toDropBoxShadows(),
+        ),
+        child: SemiInsetShadow(
+          shadows: theme.chromeTabsMenuShadow,
+          borderRadius: radius,
+          borderWidth: 1,
+          child: Padding(
+            padding: const EdgeInsets.all(6),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                for (final group in widget.groups)
+                  MouseRegion(
+                    onEnter: (_) => setState(() => _hoveredGroupId = group.id),
+                    onExit: (_) => setState(() => _hoveredGroupId = null),
+                    child: _groupRow(context, theme, group),
+                  ),
+                Container(
+                  margin: const EdgeInsets.only(top: 5),
+                  padding: const EdgeInsets.only(top: 5),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      top: BorderSide(color: theme.chromeTabsMenuBorderColor),
+                    ),
+                  ),
+                  child: _MenuButton(
+                    onTap: widget.onAdd,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 7,
+                    ),
+                    borderRadius: BorderRadius.circular(5),
+                    hoverColor: theme.chromeTabsMenuHoverBackground,
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Text(
+                      widget.messages.addGroup,
+                      style: TextStyle(color: theme.chromeTabsMenuTextColor),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -2438,49 +2458,60 @@ class _ContextMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final radius = BorderRadius.circular(_SemiChromeTabState._menuRadius);
+    return SizedBox(
       width: width,
-      padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
-        color: theme.chromeTabsMenuBackground,
-        borderRadius: BorderRadius.circular(_SemiChromeTabState._menuRadius),
-        border: Border.all(color: theme.chromeTabsMenuBorderColor),
-        boxShadow: theme.chromeTabsMenuShadow.toBoxShadows(),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          for (var index = 0; index < entries.length; index++)
-            Container(
-              margin: index == 0
-                  ? const EdgeInsets.only(bottom: 4)
-                  : EdgeInsets.zero,
-              decoration: index == 0
-                  ? BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: theme.chromeTabsMenuBorderColor,
-                        ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: theme.chromeTabsMenuBackground,
+          borderRadius: radius,
+          border: Border.all(color: theme.chromeTabsMenuBorderColor),
+          // drop 层进 BoxDecoration；inset 层走 SemiInsetShadow 画师。
+          boxShadow: theme.chromeTabsMenuShadow.toDropBoxShadows(),
+        ),
+        child: SemiInsetShadow(
+          shadows: theme.chromeTabsMenuShadow,
+          borderRadius: radius,
+          borderWidth: 1,
+          child: Padding(
+            padding: const EdgeInsets.all(6),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                for (var index = 0; index < entries.length; index++)
+                  Container(
+                    margin: index == 0
+                        ? const EdgeInsets.only(bottom: 4)
+                        : EdgeInsets.zero,
+                    decoration: index == 0
+                        ? BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                color: theme.chromeTabsMenuBorderColor,
+                              ),
+                            ),
+                          )
+                        : null,
+                    child: _MenuButton(
+                      onTap: entries[index].onTap,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 8,
                       ),
-                    )
-                  : null,
-              child: _MenuButton(
-                onTap: entries[index].onTap,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 8,
-                ),
-                borderRadius: BorderRadius.circular(5),
-                hoverColor: theme.chromeTabsMenuHoverBackground,
-                alignment: AlignmentDirectional.centerStart,
-                child: Text(
-                  entries[index].label,
-                  style: TextStyle(color: theme.chromeTabsMenuTextColor),
-                ),
-              ),
+                      borderRadius: BorderRadius.circular(5),
+                      hoverColor: theme.chromeTabsMenuHoverBackground,
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Text(
+                        entries[index].label,
+                        style: TextStyle(color: theme.chromeTabsMenuTextColor),
+                      ),
+                    ),
+                  ),
+              ],
             ),
-        ],
+          ),
+        ),
       ),
     );
   }
@@ -2643,19 +2674,29 @@ class _TooltipBubble extends StatelessWidget {
         constraints: BoxConstraints(
           maxWidth: math.min(360.0, surface.width - 16),
         ),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: DecoratedBox(
           decoration: BoxDecoration(
             color: theme.chromeTabsTooltipBackground,
             borderRadius: BorderRadius.circular(
               _SemiChromeTabState._tooltipRadius,
             ),
             border: Border.all(color: theme.chromeTabsTooltipBorderColor),
-            boxShadow: theme.chromeTabsTooltipShadow.toBoxShadows(),
+            // drop 层进 BoxDecoration；inset 层走 SemiInsetShadow 画师。
+            boxShadow: theme.chromeTabsTooltipShadow.toDropBoxShadows(),
           ),
-          child: DefaultTextStyle.merge(
-            style: TextStyle(color: theme.chromeTabsTooltipTextColor),
-            child: child,
+          child: SemiInsetShadow(
+            shadows: theme.chromeTabsTooltipShadow,
+            borderRadius: BorderRadius.circular(
+              _SemiChromeTabState._tooltipRadius,
+            ),
+            borderWidth: 1,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: DefaultTextStyle.merge(
+                style: TextStyle(color: theme.chromeTabsTooltipTextColor),
+                child: child,
+              ),
+            ),
           ),
         ),
       ),
