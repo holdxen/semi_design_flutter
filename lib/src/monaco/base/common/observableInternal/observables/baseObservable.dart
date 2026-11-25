@@ -33,6 +33,58 @@ String Function(Object observable, Object opts)? _debugGetObservableGraph;
 void setDebugGetObservableGraph(String Function(Object observable, Object opts) fn) =>
     _debugGetObservableGraph = fn;
 
+/// Dart-only typed view over an untyped derived observable.
+///
+/// TS erases generic arguments at runtime, so `map` can directly return its
+/// derived observable as `IObservable<TNew>`. Dart reifies them: the derived
+/// bridge produces `IObservableWithChange<Object?, Object?>`, which needs a
+/// typed delegate to be used as `IObservable<TNew>`.
+class _CastObservable<T> implements IObservable<T> {
+  final IObservableWithChange<Object?, Object?> _source;
+  _CastObservable(this._source);
+
+  @override
+  T get() => _source.get() as T;
+
+  @override
+  void reportChanges() => _source.reportChanges();
+
+  @override
+  void addObserver(IObserver observer) => _source.addObserver(observer);
+
+  @override
+  void removeObserver(IObserver observer) => _source.removeObserver(observer);
+
+  @override
+  T read(IReader? reader) => _source.read(reader) as T;
+
+  @override
+  IObservable<T> recomputeInitiallyAndOnChange(Object store,
+          [void Function(T value)? handleValue]) =>
+      _CastObservable<T>(_source.recomputeInitiallyAndOnChange(store,
+          handleValue == null ? null : (Object? v) => handleValue(v as T)));
+
+  @override
+  IObservable<T> keepObserved(Object store) =>
+      _CastObservable<T>(_source.keepObserved(store));
+
+  @override
+  IObservable<TNew> map<TNew>(TNew Function(T value, IReader reader) fn) =>
+      _CastObservable<TNew>(
+          _source.map<Object?>((Object? v, IReader r) => fn(v as T, r)));
+
+  @override
+  IObservable<TNew> flatten<TNew>() =>
+      _CastObservable<TNew>(_source.flatten<Object?>());
+
+  @override
+  IObservableWithChange<T, Object?> log() =>
+      _CastObservable<T>(_source.log());
+
+  @override
+  String get debugName => _source.debugName;
+}
+
 /// 1:1: `export abstract class ConvenientObservable<T, TChange>`
 abstract class ConvenientObservable<T, TChange>
     implements IObservableWithChange<T, TChange> {
@@ -66,7 +118,7 @@ abstract class ConvenientObservable<T, TChange>
   IObservable<TNew> map<TNew>(TNew Function(T value, IReader reader) fn,
       [DebugOwner? owner, DebugLocation? debugLocation]) {
     final derived = _derived;
-    return derived!(
+    return _CastObservable<TNew>(derived!(
           <Object, Object?>{
             'owner': owner,
             'debugName': () {
@@ -90,7 +142,8 @@ abstract class ConvenientObservable<T, TChange>
           },
           (IReader reader) => fn(read(reader), reader) as Object?,
           debugLocation,
-        ) as IObservable<TNew>;
+        ) as IObservableWithChange<Object?, Object?>);
+    // Dart: TS's erased generic return is re-typed through [_CastObservable].
   }
 
   @override
@@ -100,13 +153,13 @@ abstract class ConvenientObservable<T, TChange>
   @override
   IObservable<TNew> flatten<TNew>() {
     final derived = _derived;
-    return derived!(
+    return _CastObservable<TNew>(derived!(
           <Object, Object?>{
             'owner': null,
             'debugName': () => '$debugName (flattened)',
           },
           (IReader reader) => (read(reader) as dynamic).read(reader) as Object?,
-        ) as IObservable<TNew>;
+        ) as IObservableWithChange<Object?, Object?>);
   }
 
   @override

@@ -262,9 +262,17 @@ Object? _derivedOptsBridge(
       debugReferenceFn: map['debugReferenceFn'] as Function?,
     );
   }
-  return derivedOpts<Object?>(
-    opts,
-    (IReader reader) => compute(reader),
+  // Dart: `derivedOpts` builds `Derived<T, Object?, void>`, which cannot be
+  // viewed as `IObservable<T>` (= `IObservableWithChange<T, Object?>`) because
+  // Dart's `void` is a top type, not a subtype of `Object?`. Build the same
+  // Derived with `TChange = Object?` so `ConvenientObservable.map`/`flatten`
+  // can return a well-typed observable (TS has no runtime reified generics).
+  return Derived<Object?, Object?, Object?>(
+    DebugNameData(opts.owner, opts.debugName, opts.debugReferenceFn),
+    (IDerivedReader<Object?> reader, Object? changeSummary) => compute(reader),
+    null,
+    opts.onLastObserverRemoved,
+    opts.equalsFn ?? strictEquals,
     debugLocation as DebugLocation?,
   );
 }
