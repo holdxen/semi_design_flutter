@@ -457,7 +457,7 @@
 | 448 | editor | `editor/contrib/dropOrPasteInto/browser/dropIntoEditorContribution.ts` | `lib/src/monaco/editor/contrib/dropOrPasteInto/browser/dropIntoEditorContribution.dart` | pending |
 | 449 | editor | `editor/contrib/dropOrPasteInto/browser/dropIntoEditorController.ts` | `lib/src/monaco/editor/contrib/dropOrPasteInto/browser/dropIntoEditorController.dart` | pending |
 | 450 | editor | `editor/contrib/dropOrPasteInto/browser/edit.ts` | `lib/src/monaco/editor/contrib/dropOrPasteInto/browser/edit.dart` | tested |
-| 451 | editor | `editor/contrib/dropOrPasteInto/browser/pasteEditSession.ts` | `lib/src/monaco/editor/contrib/dropOrPasteInto/browser/pasteEditSession.dart` | pending |
+| 451 | editor | `editor/contrib/dropOrPasteInto/browser/pasteEditSession.ts` | `lib/src/monaco/editor/contrib/dropOrPasteInto/browser/pasteEditSession.dart` | tested |
 | 452 | editor | `editor/contrib/dropOrPasteInto/browser/postEditWidget.ts` | `lib/src/monaco/editor/contrib/dropOrPasteInto/browser/postEditWidget.dart` | pending |
 | 453 | editor | `editor/contrib/dropOrPasteInto/test/browser/copyPasteController.test.ts` | `lib/src/monaco/editor/contrib/dropOrPasteInto/test/browser/copyPasteController.test.dart` | pending |
 | 454 | editor | `editor/contrib/dropOrPasteInto/test/browser/editSort.test.ts` | `lib/src/monaco/editor/contrib/dropOrPasteInto/test/browser/editSort.test.dart` | pending |
