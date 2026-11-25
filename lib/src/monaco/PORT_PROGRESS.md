@@ -49,7 +49,7 @@
 | 40 | editor | `editor/browser/gpu/contentSegmenter.ts` | `lib/src/monaco/editor/browser/gpu/contentSegmenter.dart` | pending |
 | 41 | editor | `editor/browser/gpu/css/decorationCssRuleExtractor.ts` | `lib/src/monaco/editor/browser/gpu/css/decorationCssRuleExtractor.dart` | tested |
 | 42 | editor | `editor/browser/gpu/css/decorationStyleCache.ts` | `lib/src/monaco/editor/browser/gpu/css/decorationStyleCache.dart` | tested |
-| 43 | editor | `editor/browser/gpu/gpu.ts` | `lib/src/monaco/editor/browser/gpu/gpu.dart` | pending |
+| 43 | editor | `editor/browser/gpu/gpu.ts` | `lib/src/monaco/editor/browser/gpu/gpu.dart` | tested |
 | 44 | editor | `editor/browser/gpu/gpuDisposable.ts` | `lib/src/monaco/editor/browser/gpu/gpuDisposable.dart` | tested |
 | 45 | editor | `editor/browser/gpu/gpuUtils.ts` | `lib/src/monaco/editor/browser/gpu/gpuUtils.dart` | tested |
 | 46 | editor | `editor/browser/gpu/objectCollectionBuffer.ts` | `lib/src/monaco/editor/browser/gpu/objectCollectionBuffer.dart` | tested |
@@ -93,7 +93,7 @@
 | 84 | editor | `editor/browser/viewParts/gpuMark/gpuMark.ts` | `lib/src/monaco/editor/browser/viewParts/gpuMark/gpuMark.dart` | pending |
 | 85 | editor | `editor/browser/viewParts/indentGuides/indentGuides.ts` | `lib/src/monaco/editor/browser/viewParts/indentGuides/indentGuides.dart` | pending |
 | 86 | editor | `editor/browser/viewParts/lineNumbers/lineNumbers.ts` | `lib/src/monaco/editor/browser/viewParts/lineNumbers/lineNumbers.dart` | pending |
-| 87 | editor | `editor/browser/viewParts/linesDecorations/linesDecorations.ts` | `lib/src/monaco/editor/browser/viewParts/linesDecorations/linesDecorations.dart` | pending |
+| 87 | editor | `editor/browser/viewParts/linesDecorations/linesDecorations.ts` | `lib/src/monaco/editor/browser/viewParts/linesDecorations/linesDecorations.dart` | tested |
 | 88 | editor | `editor/browser/viewParts/margin/margin.ts` | `lib/src/monaco/editor/browser/viewParts/margin/margin.dart` | pending |
 | 89 | editor | `editor/browser/viewParts/marginDecorations/marginDecorations.ts` | `lib/src/monaco/editor/browser/viewParts/marginDecorations/marginDecorations.dart` | pending |
 | 90 | editor | `editor/browser/viewParts/minimap/minimap.ts` | `lib/src/monaco/editor/browser/viewParts/minimap/minimap.dart` | pending |
@@ -118,8 +118,8 @@
 | 109 | editor | `editor/browser/viewParts/viewLines/viewLines.ts` | `lib/src/monaco/editor/browser/viewParts/viewLines/viewLines.dart` | pending |
 | 110 | editor | `editor/browser/viewParts/viewLinesGpu/viewLinesGpu.ts` | `lib/src/monaco/editor/browser/viewParts/viewLinesGpu/viewLinesGpu.dart` | pending |
 | 111 | editor | `editor/browser/viewParts/viewZones/viewZones.ts` | `lib/src/monaco/editor/browser/viewParts/viewZones/viewZones.dart` | pending |
-| 112 | editor | `editor/browser/viewParts/whitespace/whitespace.ts` | `lib/src/monaco/editor/browser/viewParts/whitespace/whitespace.dart` | pending |
-| 113 | editor | `editor/browser/viewParts/wordWrapIndicator/wordWrapIndicator.ts` | `lib/src/monaco/editor/browser/viewParts/wordWrapIndicator/wordWrapIndicator.dart` | pending |
+| 112 | editor | `editor/browser/viewParts/whitespace/whitespace.ts` | `lib/src/monaco/editor/browser/viewParts/whitespace/whitespace.dart` | tested |
+| 113 | editor | `editor/browser/viewParts/wordWrapIndicator/wordWrapIndicator.ts` | `lib/src/monaco/editor/browser/viewParts/wordWrapIndicator/wordWrapIndicator.dart` | tested |
 | 114 | editor | `editor/browser/widget/codeEditor/codeEditorContributions.ts` | `lib/src/monaco/editor/browser/widget/codeEditor/codeEditorContributions.dart` | pending |
 | 115 | editor | `editor/browser/widget/codeEditor/codeEditorWidget.ts` | `lib/src/monaco/editor/browser/widget/codeEditor/codeEditorWidget.dart` | pending |
 | 116 | editor | `editor/browser/widget/codeEditor/embeddedCodeEditorWidget.ts` | `lib/src/monaco/editor/browser/widget/codeEditor/embeddedCodeEditorWidget.dart` | pending |
@@ -448,7 +448,7 @@
 | 439 | editor | `editor/contrib/diffEditorBreadcrumbs/browser/contribution.ts` | `lib/src/monaco/editor/contrib/diffEditorBreadcrumbs/browser/contribution.dart` | pending |
 | 440 | editor | `editor/contrib/dnd/browser/dnd.ts` | `lib/src/monaco/editor/contrib/dnd/browser/dnd.dart` | pending |
 | 441 | editor | `editor/contrib/dnd/browser/dragAndDropCommand.ts` | `lib/src/monaco/editor/contrib/dnd/browser/dragAndDropCommand.dart` | pending |
-| 442 | editor | `editor/contrib/documentSymbols/browser/documentSymbols.ts` | `lib/src/monaco/editor/contrib/documentSymbols/browser/documentSymbols.dart` | pending |
+| 442 | editor | `editor/contrib/documentSymbols/browser/documentSymbols.ts` | `lib/src/monaco/editor/contrib/documentSymbols/browser/documentSymbols.dart` | tested |
 | 443 | editor | `editor/contrib/documentSymbols/browser/outlineModel.ts` | `lib/src/monaco/editor/contrib/documentSymbols/browser/outlineModel.dart` | tested |
 | 444 | editor | `editor/contrib/documentSymbols/test/browser/outlineModel.test.ts` | `lib/src/monaco/editor/contrib/documentSymbols/test/browser/outlineModel.test.dart` | pending |
 | 445 | editor | `editor/contrib/dropOrPasteInto/browser/copyPasteContribution.ts` | `lib/src/monaco/editor/contrib/dropOrPasteInto/browser/copyPasteContribution.dart` | pending |
@@ -867,7 +867,7 @@
 | 858 | editor | `editor/test/common/modes/supports/electricCharacter.test.ts` | `lib/src/monaco/editor/test/common/modes/supports/electricCharacter.test.dart` | pending |
 | 859 | editor | `editor/test/common/modes/supports/indentationRules.ts` | `lib/src/monaco/editor/test/common/modes/supports/indentationRules.dart` | tested |
 | 860 | editor | `editor/test/common/modes/supports/onEnter.test.ts` | `lib/src/monaco/editor/test/common/modes/supports/onEnter.test.dart` | pending |
-| 861 | editor | `editor/test/common/modes/supports/onEnterRules.ts` | `lib/src/monaco/editor/test/common/modes/supports/onEnterRules.dart` | pending |
+| 861 | editor | `editor/test/common/modes/supports/onEnterRules.ts` | `lib/src/monaco/editor/test/common/modes/supports/onEnterRules.dart` | tested |
 | 862 | editor | `editor/test/common/modes/supports/richEditBrackets.test.ts` | `lib/src/monaco/editor/test/common/modes/supports/richEditBrackets.test.dart` | pending |
 | 863 | editor | `editor/test/common/modes/supports/tokenization.test.ts` | `lib/src/monaco/editor/test/common/modes/supports/tokenization.test.dart` | tested |
 | 864 | editor | `editor/test/common/modes/testLanguageConfigurationService.ts` | `lib/src/monaco/editor/test/common/modes/testLanguageConfigurationService.dart` | pending |
