@@ -86,6 +86,7 @@ class SemiDrawCellArgs {
     frameTime: frameTime,
     metrics: metrics,
     requestAnimationFrame: requestAnimationFrame,
+    imageLoader: imageLoader,
   );
 }
 

@@ -148,6 +148,9 @@ class SaturationBox extends Disposable {
 
   ISaturationNode get domNode => _domNode;
 
+  /// Replay-only view of the selection node's inline style.
+  Map<String, String> get selectionStyle => selection.style;
+
   void onPointerDown(Object event) {
     final SaturationPointerEvent e = event as SaturationPointerEvent;
     final Object? target = e.target;

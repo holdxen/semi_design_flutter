@@ -25,6 +25,8 @@ import 'semi_animation_manager.dart';
 import 'semi_event_args.dart';
 import 'render/semi_data_grid_painter.dart';
 import 'render/semi_draw_grid_arg.dart';
+import 'render/semi_render_walk.dart';
+import 'semi_cell_set.dart';
 
 /// `DataGridProps` (`data-grid.tsx:63-312`), narrowed to what the Flutter
 /// port draws and routes. Fields that only exist for DOM concerns are
@@ -233,10 +235,12 @@ class SemiDataGridController extends ChangeNotifier {
   SemiRectangle? getBounds(int? col, int? row) =>
       _state?._getBoundsForItem(col ?? -1, row ?? -1);
 
-  /// `damage(cells)` (`data-grid.tsx:322`): request a repaint of specific
-  /// cells. Flutter repaints the whole painter, so this is a no-op kept for
-  /// API parity.
-  void damage(Iterable<SemiItem> cells) => notifyListeners();
+  /// Requests a viewport repaint and refreshes cell semantics. Cell positions
+  /// are in grid coordinates; Flutter redraws the viewport as a single layer.
+  void damage(Iterable<SemiItem> cells) {
+    _state?._scheduleRefresh(semantics: true);
+    notifyListeners();
+  }
 }
 
 class SemiDataGrid extends StatefulWidget {
@@ -297,9 +301,32 @@ class _SemiDataGridState extends State<SemiDataGrid>
     });
   }
 
+  int? _refreshFrame;
+  bool _refreshSemantics = false;
+
+  void _scheduleRefresh({bool semantics = false}) {
+    _refreshSemantics |= semantics;
+    _refreshFrame ??= SchedulerBinding.instance.scheduleFrameCallback((_) {
+      _refreshFrame = null;
+      if (!mounted) return;
+      if (_refreshSemantics) {
+        _refreshSemantics = false;
+        setState(() => _accessibilityTreeKey = null);
+      }
+      _markGridNeedsPaint();
+    });
+  }
+
+  void _markGridNeedsPaint() {
+    final render = _paintKey.currentContext?.findRenderObject();
+    if (render != null && render.attached) render.markNeedsPaint();
+  }
+
   /// `imageWindowLoader` (`data-grid.tsx:157`).
   late SemiImageWindowLoader _imageLoader;
   bool _ownsImageLoader = false;
+  void Function(SemiCellSet)? _previousImageCallback;
+  void Function(SemiCellSet)? _gridImageCallback;
 
   /// `spriteManager` (`data-grid.tsx:427-433`): rebuilt when `headerIcons`
   /// changes, exactly as upstream's `useMemo(..., [headerIcons])`. Its
@@ -389,20 +416,41 @@ class _SemiDataGridState extends State<SemiDataGrid>
       _imageLoader = SemiImageWindowLoader();
       _ownsImageLoader = true;
     }
-    _imageLoader.onLoaded = (_) {
-      if (mounted) setState(() {});
+    final loader = _imageLoader;
+    final previous = loader.onLoaded;
+    late final void Function(SemiCellSet) callback;
+    callback = (locations) {
+      if (!mounted || !identical(_gridImageCallback, callback)) return;
+      _scheduleRefresh();
+      previous?.call(locations);
     };
+    _previousImageCallback = previous;
+    _gridImageCallback = callback;
+    loader.onLoaded = callback;
+  }
+
+  void _releaseImageLoader() {
+    if (identical(_imageLoader.onLoaded, _gridImageCallback)) {
+      _imageLoader.onLoaded = _previousImageCallback;
+    }
+    _gridImageCallback = null;
+    _previousImageCallback = null;
+    if (_ownsImageLoader) _imageLoader.dispose();
+  }
+
+  void _detachController(SemiDataGridController? controller) {
+    if (controller?._state == this) controller!._state = null;
   }
 
   @override
   void didUpdateWidget(SemiDataGrid oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.controller != widget.controller) {
-      oldWidget.controller?._state = null;
+      _detachController(oldWidget.controller);
       widget.controller?._state = this;
     }
     if (!identical(oldWidget.props.imageLoader, widget.props.imageLoader)) {
-      if (_ownsImageLoader) _imageLoader.dispose();
+      _releaseImageLoader();
       _resolveImageLoader();
     }
     if (!identical(oldWidget.props.headerIcons, widget.props.headerIcons)) {
@@ -413,44 +461,86 @@ class _SemiDataGridState extends State<SemiDataGrid>
 
   @override
   void dispose() {
-    widget.controller?._state = null;
+    _detachController(widget.controller);
     _spriteManager.dispose();
-    if (_ownsImageLoader) _imageLoader.dispose();
-    _imageLoader.onLoaded = null;
+    _releaseImageLoader();
+    final refreshFrame = _refreshFrame;
+    if (refreshFrame != null) {
+      SchedulerBinding.instance.cancelFrameCallbackWithId(refreshFrame);
+    }
     _hoverTicker.dispose();
     _focusNode.dispose();
     super.dispose();
   }
 
-  /// `setWindow` (`image-window-loader.ts:52-66`): the visible cell rect,
-  /// derived from the offsets the grid already has instead of a scroll
-  /// position it does not own.
+  /// Tracks the rows and columns that can draw images in the viewport.
   void _updateImageWindow(List<SemiMappedColumn> mapped) {
     final p = widget.props;
+    final headerHeight =
+        p.headerHeight + (p.enableGroups ? p.groupHeaderHeight : 0);
+    final bodyTop = headerHeight + 1;
+    final effective = getEffectiveColumns(
+      mapped,
+      p.cellXOffset,
+      p.width,
+      p.dragAndDropState,
+      p.translateX,
+    );
+    var firstCol = mapped.length;
+    var lastCol = -1;
+    walkColumns(
+      effectiveCols: effective,
+      cellYOffset: p.cellYOffset,
+      translateX: p.translateX,
+      translateY: p.translateY,
+      totalHeaderHeight: headerHeight,
+      cb: (column, x, _, clipX, _) {
+        if (x + column.width > math.max(0.0, clipX) &&
+            x < p.width &&
+            (!column.sticky || p.dragAndDropState != null)) {
+          firstCol = math.min(firstCol, column.sourceIndex);
+          lastCol = math.max(lastCol, column.sourceIndex);
+        }
+        return null;
+      },
+    );
 
-    var endCol = p.cellXOffset;
-    var x = p.translateX;
-    while (endCol < mapped.length && x <= p.width) {
-      x += mapped[endCol].width;
-      endCol++;
-    }
-
-    var endRow = p.cellYOffset;
-    var y = p.translateY;
-    while (endRow < p.rows && y <= p.height) {
-      y += p.rowHeight(endRow);
-      endRow++;
-    }
+    final freezeRows = p.freezeTrailingRows.clamp(0, p.rows);
+    final bodyBottom =
+        p.height - p.rowHeight.trailingHeight(p.rows, freezeRows);
+    var firstRow = p.rows;
+    var lastRow = -1;
+    final trailingRows = <int>[];
+    walkRowsInCol(
+      startRow: p.cellYOffset,
+      drawY: headerHeight + p.translateY,
+      height: p.height,
+      rows: p.rows,
+      getRowHeight: p.rowHeight,
+      freezeTrailingRows: freezeRows,
+      hasAppendRow: p.hasAppendRow,
+      skipToY: bodyTop,
+      cb: (y, row, height, sticky, _) {
+        if (sticky) {
+          if (y + height > bodyTop && y < p.height) trailingRows.add(row);
+        } else if (y < bodyBottom && bodyBottom > bodyTop) {
+          firstRow = math.min(firstRow, row);
+          lastRow = row;
+        }
+        return null;
+      },
+    );
 
     _imageLoader.setWindow(
       SemiRectangle(
-        x: p.cellXOffset.toDouble(),
-        y: p.cellYOffset.toDouble(),
-        width: math.max(0, endCol - p.cellXOffset).toDouble(),
-        height: math.max(0, endRow - p.cellYOffset).toDouble(),
+        x: firstCol.toDouble(),
+        y: firstRow.toDouble(),
+        // The loader includes the right and bottom edges of its window.
+        width: math.max(0, lastCol - firstCol).toDouble(),
+        height: math.max(0, lastRow - firstRow).toDouble(),
       ),
-      p.freezeColumns,
-      const [],
+      p.dragAndDropState == null ? p.freezeColumns : 0,
+      trailingRows,
     );
   }
 
@@ -1409,6 +1499,7 @@ class _SemiDataGridState extends State<SemiDataGrid>
       hyperWrapping: p.hyperWrapping,
       enqueue: p.enqueue ?? _enqueue,
       minimumCellWidth: p.minimumCellWidth,
+      imageLoader: _imageLoader,
       spriteManager: _spriteManager,
     );
 

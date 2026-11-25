@@ -54,6 +54,59 @@ SemiGridCell _stableContent(SemiItem item, [bool? getSticky]) =>
 
 bool _stableBorder(int col) => true;
 
+Widget _standaloneGrid({
+  required SemiGridCell Function(SemiItem, [bool?]) content,
+  required SemiGetCellRenderer renderer,
+  SemiDataGridController? controller,
+  SemiDrawCellCallback? drawCell,
+  SemiImageWindowLoader? imageLoader,
+  int a11yRevision = 0,
+  int rows = 10,
+  int cellYOffset = 0,
+  int freezeTrailingRows = 0,
+}) => Directionality(
+  textDirection: TextDirection.ltr,
+  child: SizedBox(
+    width: 400,
+    height: 300,
+    child: SemiDataGrid(
+      controller: controller,
+      props: SemiDataGridProps(
+        width: 400,
+        height: 300,
+        columns: const [
+          SemiGridColumn(title: 'C0', width: 100),
+          SemiGridColumn(title: 'C1', width: 100),
+          SemiGridColumn(title: 'C2', width: 100),
+          SemiGridColumn(title: 'C3', width: 100),
+        ],
+        rows: rows,
+        rowHeight: const SemiRowHeight.fixed(30),
+        headerHeight: 30,
+        cellYOffset: cellYOffset,
+        freezeTrailingRows: freezeTrailingRows,
+        getCellContent: content,
+        getCellRenderer: renderer,
+        drawCell: drawCell,
+        imageLoader: imageLoader,
+        a11yRevision: a11yRevision,
+        theme: SemiDataGridTheme.light(),
+        verticalBorder: _stableBorder,
+        onItemHovered: (_) {},
+        onMouseMove: (_) {},
+        onMouseDown: (_) {},
+        onMouseUp: (_, _) {},
+        onContextMenu: (_, _) {},
+        onCanvasFocused: () {},
+        onCanvasBlur: () {},
+        onCellFocused: (_) {},
+        onKeyDown: (_) {},
+        isFocused: true,
+      ),
+    ),
+  ),
+);
+
 /// Top-level so `const SemiRowHeight.variable(...)` is a constant: local
 /// function tear-offs are not.
 double _shortRowHeight(int row) => 24;
@@ -4798,40 +4851,10 @@ void main() {
       SemiGridCell content(SemiItem item, [bool? forceStrict]) =>
           SemiTextCell(data: label, displayData: label);
 
-      Widget build() => Directionality(
-        textDirection: TextDirection.ltr,
-        child: SizedBox(
-          width: 400,
-          height: 300,
-          child: SemiDataGrid(
-            props: SemiDataGridProps(
-              width: 400,
-              height: 300,
-              columns: [
-                for (var i = 0; i < 4; i++)
-                  SemiGridColumn(title: 'C$i', width: 100),
-              ],
-              rows: 10,
-              rowHeight: const SemiRowHeight.fixed(30),
-              headerHeight: 30,
-              getCellContent: content,
-              getCellRenderer: lookup.forCell,
-              a11yRevision: revision,
-              theme: SemiDataGridTheme.light(),
-              verticalBorder: (_) => true,
-              onItemHovered: (_) {},
-              onMouseMove: (_) {},
-              onMouseDown: (_) {},
-              onMouseUp: (_, _) {},
-              onContextMenu: (_, _) {},
-              onCanvasFocused: () {},
-              onCanvasBlur: () {},
-              onCellFocused: (_) {},
-              onKeyDown: (_) {},
-              isFocused: true,
-            ),
-          ),
-        ),
+      Widget build() => _standaloneGrid(
+        content: content,
+        renderer: lookup.forCell,
+        a11yRevision: revision,
       );
 
       await tester.pumpWidget(build());
@@ -4854,6 +4877,50 @@ void main() {
       expect(find.bySemanticsLabel('second'), findsWidgets);
       expect(find.bySemanticsLabel('first'), findsNothing);
 
+      handle.dispose();
+    });
+
+    testWidgets('controller damage refreshes paint and semantics', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      final controller = SemiDataGridController();
+      addTearDown(controller.dispose);
+      final lookup = SemiDefaultRendererLookup();
+      const item = SemiItem(0, 0);
+      final paintedLabels = <String>[];
+      var label = 'before damage';
+
+      SemiGridCell content(SemiItem location, [bool? forceStrict]) =>
+          location == item
+          ? SemiTextCell(data: label, displayData: label)
+          : _stableContent(location);
+
+      await tester.pumpWidget(
+        _standaloneGrid(
+          controller: controller,
+          content: content,
+          renderer: lookup.forCell,
+          drawCell: (args, draw) {
+            if (args.col == item.col && args.row == item.row) {
+              paintedLabels.add((args.cell as SemiTextCell).displayData);
+            }
+            draw();
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(paintedLabels.last, 'before damage');
+      expect(find.bySemanticsLabel('before damage'), findsOneWidget);
+
+      label = 'after damage';
+      paintedLabels.clear();
+      controller.damage(const [item]);
+      await tester.pumpAndSettle();
+
+      expect(paintedLabels, contains('after damage'));
+      expect(find.bySemanticsLabel('after damage'), findsOneWidget);
+      expect(find.bySemanticsLabel('before damage'), findsNothing);
       handle.dispose();
     });
   });
@@ -5125,6 +5192,207 @@ void main() {
   // -------------------------------------------------------------------------
 
   group('image cell', () {
+    const thumbnail = SemiImageCell(
+      data: ['thumbnail.png'],
+      contentAlign: SemiContentAlign.center,
+    );
+    const boundaryKey = ValueKey('image grid');
+    const redPixel = 0xFF0000FF;
+
+    SemiGridCell thumbnailContent(SemiItem item, [bool? forceStrict]) =>
+        item == const SemiItem(0, 0) ? thumbnail : _stableContent(item);
+
+    Future<int?> gridPixel(WidgetTester tester, int x, int y) {
+      final boundary = tester.renderObject<RenderRepaintBoundary>(
+        find.byKey(boundaryKey),
+      );
+      // Rasterize the last painted layer without invoking the painter again.
+      return tester.runAsync(() async {
+        final snapshot = await boundary.toImage();
+        try {
+          final bytes = await snapshot.toByteData(
+            format: ui.ImageByteFormat.rawRgba,
+          );
+          return bytes!.getUint32((y * snapshot.width + x) * 4);
+        } finally {
+          snapshot.dispose();
+        }
+      });
+    }
+
+    testWidgets('an idle image grid paints after a deferred load', (
+      tester,
+    ) async {
+      final image = (await tester.runAsync(_fakeImage))!;
+      addTearDown(image.dispose);
+      final requests = <String>[];
+      final completions = <void Function(ui.Image?)>[];
+      final loader = SemiImageWindowLoader(
+        loadImage: (url, complete) {
+          requests.add(url);
+          completions.add(complete);
+        },
+      );
+      addTearDown(loader.dispose);
+      final lookup = SemiDefaultRendererLookup();
+
+      await tester.pumpWidget(
+        RepaintBoundary(
+          key: boundaryKey,
+          child: _standaloneGrid(
+            content: thumbnailContent,
+            renderer: lookup.forCell,
+            imageLoader: loader,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(requests, ['thumbnail.png']);
+      expect(await gridPixel(tester, 50, 45), isNot(redPixel));
+      expect(tester.binding.hasScheduledFrame, isFalse);
+
+      completions.single(image);
+      expect(tester.binding.hasScheduledFrame, isTrue);
+      await tester.pumpAndSettle();
+      expect(await gridPixel(tester, 50, 45), redPixel);
+      expect(requests, ['thumbnail.png']);
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is CustomPaint && widget.painter is SemiDataGridPainter,
+        ),
+        paints..drawImageRect(image: image),
+      );
+    });
+
+    testWidgets('an image can complete synchronously during grid paint', (
+      tester,
+    ) async {
+      final image = (await tester.runAsync(_fakeImage))!;
+      addTearDown(image.dispose);
+      final requests = <String>[];
+      final loader = SemiImageWindowLoader(
+        loadImage: (url, complete) {
+          requests.add(url);
+          complete(image);
+        },
+      );
+      addTearDown(loader.dispose);
+      final lookup = SemiDefaultRendererLookup();
+
+      await tester.pumpWidget(
+        RepaintBoundary(
+          key: boundaryKey,
+          child: _standaloneGrid(
+            content: thumbnailContent,
+            renderer: lookup.forCell,
+            imageLoader: loader,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(await gridPixel(tester, 50, 45), redPixel);
+      expect(requests, ['thumbnail.png']);
+    });
+
+    testWidgets('swapping external image loaders detaches their callbacks', (
+      tester,
+    ) async {
+      final image = (await tester.runAsync(_fakeImage))!;
+      addTearDown(image.dispose);
+      final oldCompletions = <void Function(ui.Image?)>[];
+      final newCompletions = <void Function(ui.Image?)>[];
+      final oldLoader = SemiImageWindowLoader(
+        loadImage: (_, complete) => oldCompletions.add(complete),
+      );
+      final newLoader = SemiImageWindowLoader(
+        loadImage: (_, complete) => newCompletions.add(complete),
+      );
+      addTearDown(oldLoader.dispose);
+      addTearDown(newLoader.dispose);
+      final lookup = SemiDefaultRendererLookup();
+
+      Widget build(SemiImageWindowLoader loader) => _standaloneGrid(
+        content: thumbnailContent,
+        renderer: lookup.forCell,
+        imageLoader: loader,
+      );
+
+      await tester.pumpWidget(build(oldLoader));
+      expect(oldLoader.onLoaded, isNotNull);
+      expect(oldCompletions, hasLength(1));
+
+      await tester.pumpWidget(build(newLoader));
+      await tester.pumpAndSettle();
+      expect(oldLoader.onLoaded, isNull);
+      expect(newLoader.onLoaded, isNotNull);
+      expect(newCompletions, hasLength(1));
+
+      oldCompletions.single(image);
+      expect(oldLoader.loadOrGetImage('thumbnail.png', 0, 0), same(image));
+      expect(newLoader.loadOrGetImage('thumbnail.png', 0, 0), isNull);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      expect(newLoader.onLoaded, isNull);
+      newCompletions.single(image);
+      expect(newLoader.loadOrGetImage('thumbnail.png', 0, 0), same(image));
+    });
+
+    testWidgets('a frozen trailing row keeps its thumbnail across windows', (
+      tester,
+    ) async {
+      final image = (await tester.runAsync(_fakeImage))!;
+      addTearDown(image.dispose);
+      final requests = <String>[];
+      final completions = <String, void Function(ui.Image?)>{};
+      final loader = SemiImageWindowLoader(
+        loadImage: (url, complete) {
+          requests.add(url);
+          completions[url] = complete;
+        },
+      );
+      addTearDown(loader.dispose);
+      final lookup = SemiDefaultRendererLookup();
+
+      SemiGridCell content(SemiItem item, [bool? forceStrict]) =>
+          switch (item) {
+            SemiItem(col: 0, row: 29) => thumbnail,
+            SemiItem(col: 0, row: 24) =>
+              const SemiImageCell(data: ['scroll.png']),
+            _ => _stableContent(item),
+          };
+
+      Widget build(int rowOffset) => RepaintBoundary(
+        key: boundaryKey,
+        child: _standaloneGrid(
+          content: content,
+          renderer: lookup.forCell,
+          imageLoader: loader,
+          rows: 30,
+          cellYOffset: rowOffset,
+          freezeTrailingRows: 1,
+        ),
+      );
+
+      await tester.pumpWidget(build(24));
+      await tester.pumpAndSettle();
+      expect(requests, unorderedEquals(['scroll.png', 'thumbnail.png']));
+      completions['scroll.png']!(image);
+      completions['thumbnail.png']!(image);
+      await tester.pumpAndSettle();
+      expect(loader.cachedCount, 2);
+      expect(await gridPixel(tester, 50, 285), redPixel);
+
+      for (final rowOffset in [0, 10]) {
+        await tester.pumpWidget(build(rowOffset));
+        await tester.pumpAndSettle();
+        expect(loader.cachedCount, 1);
+        expect(await gridPixel(tester, 50, 285), redPixel);
+        expect(requests, unorderedEquals(['scroll.png', 'thumbnail.png']));
+      }
+    });
+
     test('measure is the url count times 50', () {
       const renderer = SemiImageCellRenderer();
       final width = renderer.measure(

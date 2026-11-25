@@ -423,7 +423,7 @@
 | 414 | editor | `editor/contrib/colorPicker/browser/colorPickerParts/colorPickerCloseButton.ts` | `lib/src/monaco/editor/contrib/colorPicker/browser/colorPickerParts/colorPickerCloseButton.dart` | tested |
 | 415 | editor | `editor/contrib/colorPicker/browser/colorPickerParts/colorPickerHeader.ts` | `lib/src/monaco/editor/contrib/colorPicker/browser/colorPickerParts/colorPickerHeader.dart` | pending |
 | 416 | editor | `editor/contrib/colorPicker/browser/colorPickerParts/colorPickerInsertButton.ts` | `lib/src/monaco/editor/contrib/colorPicker/browser/colorPickerParts/colorPickerInsertButton.dart` | tested |
-| 417 | editor | `editor/contrib/colorPicker/browser/colorPickerParts/colorPickerSaturationBox.ts` | `lib/src/monaco/editor/contrib/colorPicker/browser/colorPickerParts/colorPickerSaturationBox.dart` | pending |
+| 417 | editor | `editor/contrib/colorPicker/browser/colorPickerParts/colorPickerSaturationBox.ts` | `lib/src/monaco/editor/contrib/colorPicker/browser/colorPickerParts/colorPickerSaturationBox.dart` | tested |
 | 418 | editor | `editor/contrib/colorPicker/browser/colorPickerParts/colorPickerStrip.ts` | `lib/src/monaco/editor/contrib/colorPicker/browser/colorPickerParts/colorPickerStrip.dart` | pending |
 | 419 | editor | `editor/contrib/colorPicker/browser/colorPickerWidget.ts` | `lib/src/monaco/editor/contrib/colorPicker/browser/colorPickerWidget.dart` | pending |
 | 420 | editor | `editor/contrib/colorPicker/browser/defaultDocumentColorProvider.ts` | `lib/src/monaco/editor/contrib/colorPicker/browser/defaultDocumentColorProvider.dart` | pending |
@@ -516,7 +516,7 @@
 | 507 | editor | `editor/contrib/hover/browser/contentHoverController.ts` | `lib/src/monaco/editor/contrib/hover/browser/contentHoverController.dart` | pending |
 | 508 | editor | `editor/contrib/hover/browser/contentHoverRendered.ts` | `lib/src/monaco/editor/contrib/hover/browser/contentHoverRendered.dart` | pending |
 | 509 | editor | `editor/contrib/hover/browser/contentHoverStatusBar.ts` | `lib/src/monaco/editor/contrib/hover/browser/contentHoverStatusBar.dart` | pending |
-| 510 | editor | `editor/contrib/hover/browser/contentHoverTypes.ts` | `lib/src/monaco/editor/contrib/hover/browser/contentHoverTypes.dart` | pending |
+| 510 | editor | `editor/contrib/hover/browser/contentHoverTypes.ts` | `lib/src/monaco/editor/contrib/hover/browser/contentHoverTypes.dart` | tested |
 | 511 | editor | `editor/contrib/hover/browser/contentHoverWidget.ts` | `lib/src/monaco/editor/contrib/hover/browser/contentHoverWidget.dart` | pending |
 | 512 | editor | `editor/contrib/hover/browser/contentHoverWidgetWrapper.ts` | `lib/src/monaco/editor/contrib/hover/browser/contentHoverWidgetWrapper.dart` | pending |
 | 513 | editor | `editor/contrib/hover/browser/getHover.ts` | `lib/src/monaco/editor/contrib/hover/browser/getHover.dart` | pending |

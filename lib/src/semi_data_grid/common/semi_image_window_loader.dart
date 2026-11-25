@@ -7,13 +7,8 @@
 // through [NetworkImage] and hands back a `ui.Image` the painter can
 // `drawImageRect`.
 //
-// Two deliberate differences:
-// - Decoding goes through [SemiImageLoader] so tests (and callers with their
-//   own image pipeline) can swap it out.
-// - Eviction drops the entry but never calls `ui.Image.dispose()`: images
-//   resolved through [NetworkImage] belong to `PaintingBinding.imageCache`,
-//   which owns their lifetime and bounds them with its own LRU. Dropping our
-//   reference is enough, because a later draw simply resolves again.
+// The default loader owns the image handles delivered to its stream listener.
+// Injected loaders retain ownership of the images they supply.
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -22,34 +17,46 @@ import 'package:flutter/painting.dart';
 import '../internal/data_grid/semi_cell_set.dart';
 import '../internal/data_grid/semi_types.dart';
 
-/// Starts loading [url] and calls [onComplete] exactly once with the decoded
-/// image, or null on failure. The returned function cancels the load.
+/// Starts loading [url] and calls [onComplete] with a decoded image or null
+/// on failure. The caller supplying this function retains image ownership.
 typedef SemiImageLoad = void Function(
   String url,
   void Function(ui.Image? image) onComplete,
 );
 
-/// Streams currently listening, keyed by URL, so eviction can detach them.
-final Map<String, (ImageStream, ImageStreamListener)> _activeNetworkLoads = {};
-
-/// The default [SemiImageLoad]: [NetworkImage] through Flutter's image cache.
+/// Resolves through Flutter's image cache. The receiver owns the image handle.
 void semiLoadNetworkImage(
   String url,
   void Function(ui.Image? image) onComplete,
 ) {
-  final stream = NetworkImage(url).resolve(ImageConfiguration.empty);
-  late final ImageStreamListener listener;
-  listener = ImageStreamListener(
-    (info, _) => onComplete(info.image),
-    onError: (_, _) => onComplete(null),
-  );
-  stream.addListener(listener);
-  _activeNetworkLoads[url] = (stream, listener);
+  _startNetworkLoad(url, onComplete);
 }
 
-void _cancelNetworkLoad(String url) {
-  final active = _activeNetworkLoads.remove(url);
-  if (active != null) active.$1.removeListener(active.$2);
+void Function() _startNetworkLoad(
+  String url,
+  void Function(ui.Image? image) onComplete,
+) {
+  final stream = NetworkImage(url).resolve(ImageConfiguration.empty);
+  var finished = false;
+  late final ImageStreamListener listener;
+  void cancel() {
+    if (finished) return;
+    finished = true;
+    stream.removeListener(listener);
+  }
+
+  listener = ImageStreamListener(
+    (info, _) {
+      cancel();
+      onComplete(info.image);
+    },
+    onError: (_, _) {
+      cancel();
+      onComplete(null);
+    },
+  );
+  stream.addListener(listener);
+  return cancel;
 }
 
 class _ImageEntry {
@@ -121,9 +128,7 @@ class SemiImageWindowLoader {
     for (final url in stale) {
       final entry = _cache.remove(url);
       if (entry == null) continue;
-      entry.cancel?.call();
-      _cancelNetworkLoad(url);
-      // The image itself is not disposed: see the file header.
+      _releaseEntry(entry);
     }
   }
 
@@ -141,16 +146,32 @@ class SemiImageWindowLoader {
 
     final entry = _ImageEntry(url, [SemiItem(col, row)]);
     _cache[url] = entry;
-    loadImage(url, (image) {
-      if (!identical(_cache[url], entry)) return; // evicted while loading
+    void complete(ui.Image? image) {
+      if (!identical(_cache[url], entry)) {
+        if (_ownsImages) image?.dispose();
+        return;
+      }
       if (image == null) {
         entry.failed = true;
         return;
       }
       entry.image = image;
       _flushLoaded(entry);
-    });
+    }
+
+    if (_ownsImages) {
+      entry.cancel = _startNetworkLoad(url, complete);
+    } else {
+      loadImage(url, complete);
+    }
     return null;
+  }
+
+  bool get _ownsImages => identical(loadImage, semiLoadNetworkImage);
+
+  void _releaseEntry(_ImageEntry entry) {
+    entry.cancel?.call();
+    if (_ownsImages) entry.image?.dispose();
   }
 
   /// `sendLoaded` (`image-window-loader.ts:63-67`): upstream throttles to
@@ -167,8 +188,7 @@ class SemiImageWindowLoader {
 
   void dispose() {
     for (final entry in _cache.values) {
-      entry.cancel?.call();
-      _cancelNetworkLoad(entry.url);
+      _releaseEntry(entry);
     }
     _cache.clear();
     onLoaded = null;

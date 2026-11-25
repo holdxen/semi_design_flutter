@@ -142,6 +142,8 @@ class _Monitor implements ISaturationPointerMonitor {
   ) {
     moveCallback = pointerMoveCallback;
     this.stopCallback = stopCallback;
+    initialElement.addListener('pointermove', pointerMoveCallback);
+    initialElement.addListener('pointerup', (_) => stopMonitoring(true));
   }
 
   @override
@@ -159,7 +161,7 @@ class _Model implements IColorPickerModelForSaturationBox {
   final List<void Function(Color)> listeners = <void Function(Color)>[];
 
   @override
-  Color color = Color(HSVA(0.5, 1, 1, 1));
+  Color color = Color(HSVA(0.5, 0.25, 0.75, 1));
 
   @override
   IDisposable onDidChangeColor(void Function(Color color) listener) {
@@ -185,11 +187,11 @@ Map<String, Object?> _domJson(SaturationBox box, _Canvas canvas) =>
         'left': box.selectionStyle['left'],
         'top': box.selectionStyle['top'],
       },
-      'calls': canvas.context.calls,
+      'calls': List<Object?>.from(canvas.context.calls),
       'gradients': canvas.context.gradients
           .map((g) => <String, Object?>{
                 'bounds': g.bounds,
-                'stops': g.stops,
+                'stops': List<Object?>.from(g.stops),
               })
           .toList(),
     };
@@ -198,6 +200,7 @@ void main() {
   final Map<String, dynamic> truth = _truth();
   final List<dynamic> expected = truth['results'] as List<dynamic>;
 
+  test('saturation box truth replay', () {
   final _Node documentNode = _Node('DOCUMENT');
   final _Node container = _Node('DIV');
   final _Canvas canvas = _Canvas();
@@ -217,6 +220,7 @@ void main() {
   );
 
   box = SaturationBox(container, model, 2, env, monitor);
+  final _Node boxNode = box.domNode as _Node;
   box.onDidChange((e) => changes.add(<Object?>[e['s'], e['v']]));
   box.onColorFlushed((_) => flushed.add('flush'));
 
@@ -230,8 +234,8 @@ void main() {
         .toList(),
   });
 
-  box.domNode.offsetWidth = 200;
-  box.domNode.offsetHeight = 100;
+  boxNode.offsetWidth = 200;
+  boxNode.offsetHeight = 100;
   box.layout();
   actual.add(<String, Object?>{
     'label': 'layout',
@@ -242,17 +246,17 @@ void main() {
     target: canvas,
     pointerId: 1,
     buttons: 1,
-    offsetX: 40,
-    offsetY: 75,
-    pageX: 70,
-    pageY: 95,
+    offsetX: 40.0,
+    offsetY: 75.0,
+    pageX: 70.0,
+    pageY: 95.0,
   );
-  box.domNode.fire('pointerdown', down);
+  boxNode.fire('pointerdown', down);
   actual.add(<String, Object?>{
     'label': 'pointer-down',
     'dom': _domJson(box, canvas),
-    'changes': changes,
-    'listeners': listenerLog,
+    'changes': List<Object?>.from(changes),
+    'listeners': listenerLog.map((e) => List<Object?>.from(e)).toList(),
   });
   changes.clear();
 
@@ -260,30 +264,31 @@ void main() {
     target: canvas,
     pointerId: 1,
     buttons: 1,
-    offsetX: 0,
-    offsetY: 0,
-    pageX: 210,
-    pageY: 20,
+    offsetX: 0.0,
+    offsetY: 0.0,
+    pageX: 210.0,
+    pageY: 20.0,
   ));
   actual.add(<String, Object?>{
     'label': 'pointer-move',
     'dom': _domJson(box, canvas),
-    'changes': changes,
+    'changes': List<Object?>.from(changes),
   });
   changes.clear();
 
   documentNode.fire('pointerup', down);
-  actual.add(<String, Object?{
+  actual.add(<String, Object?>{
     'label': 'pointer-up',
-    'flushed': flushed,
+    'flushed': List<Object?>.from(flushed),
   });
   flushed.clear();
 
-  model.setColor(Color(HSVA(0.2, 1, 1, 1)));
+  model.setColor(Color(HSVA(0.2, 0.8, 0.4, 1)));
   actual.add(<String, Object?>{
     'label': 'color-change-after-up',
     'dom': _domJson(box, canvas),
   });
 
   expect(actual, expected);
+  });
 }
