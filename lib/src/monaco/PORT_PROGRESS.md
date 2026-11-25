@@ -354,7 +354,7 @@
 | 345 | editor | `editor/common/standaloneStrings.ts` | `lib/src/monaco/editor/common/standaloneStrings.dart` | tested |
 | 346 | editor | `editor/common/textModelBracketPairs.ts` | `lib/src/monaco/editor/common/textModelBracketPairs.dart` | pending |
 | 347 | editor | `editor/common/textModelEditSource.ts` | `lib/src/monaco/editor/common/textModelEditSource.dart` | pending |
-| 348 | editor | `editor/common/textModelEvents.ts` | `lib/src/monaco/editor/common/textModelEvents.dart` | pending |
+| 348 | editor | `editor/common/textModelEvents.ts` | `lib/src/monaco/editor/common/textModelEvents.dart` | tested |
 | 349 | editor | `editor/common/textModelGuides.ts` | `lib/src/monaco/editor/common/textModelGuides.dart` | tested |
 | 350 | editor | `editor/common/tokenizationRegistry.ts` | `lib/src/monaco/editor/common/tokenizationRegistry.dart` | tested |
 | 351 | editor | `editor/common/tokenizationTextModelPart.ts` | `lib/src/monaco/editor/common/tokenizationTextModelPart.dart` | pending |
