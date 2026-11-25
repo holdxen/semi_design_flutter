@@ -17,13 +17,12 @@ void main() {
 
   testWidgets('six heading metrics without Material', (t) async {
     const sizes = [32, 28, 24, 20, 18, 16];
-    const heights = [44, 40, 32, 28, 24, 22];
     for (var h = 1; h <= 6; h++) {
       await t.pumpWidget(host(SemiTitle('标题', heading: h)));
       expect(textStyle(t).fontSize, sizes[h - 1]);
-      expect(textStyle(t).height, heights[h - 1] / sizes[h - 1]);
+      // No fixed line-height: inherit the host DefaultTextStyle height (1.7).
+      expect(textStyle(t).height, 1.7);
       expect(textStyle(t).fontWeight, FontWeight.w600);
-      expect(t.getSize(find.byType(Text)).height, closeTo(heights[h - 1], 1));
     }
   });
 

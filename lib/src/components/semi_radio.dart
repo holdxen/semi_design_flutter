@@ -395,11 +395,6 @@ class _SemiRadioState extends State<SemiRadio> {
       SemiRadioButtonSize.middle => t.fontRadioButtonRadioMiddleDefaultSize,
       SemiRadioButtonSize.large => t.fontRadioButtonRadioLargeDefaultSize,
     };
-    final buttonLineHeight = switch (buttonSize) {
-      SemiRadioButtonSize.small => t.fontRadioButtonRadioGroupSmallLineHeight,
-      SemiRadioButtonSize.middle => t.fontRadioButtonRadioGroupMiddleLineHeight,
-      SemiRadioButtonSize.large => t.fontRadioButtonRadioGroupLargeLineHeight,
-    };
     final TextStyle labelStyle;
     if (isButton) {
       labelStyle = TextStyle(
@@ -409,7 +404,7 @@ class _SemiRadioState extends State<SemiRadio> {
             : hovered
             ? t.fontRadioButtonRadioHoverFontWeight
             : t.fontRadioButtonRadioDefaultFontWeight,
-        height: buttonLineHeight / buttonFontSize,
+        // No fixed line-height: inherit from DefaultTextStyle.
         color: disabled
             ? t.colorRadioButtonRadioTextDisabled
             : checked
@@ -420,9 +415,7 @@ class _SemiRadioState extends State<SemiRadio> {
       labelStyle = TextStyle(
         fontSize: t.fontRadioCardRadioGroupAddonSize,
         fontWeight: t.fontRadioCardRadioGroupAddonFontWeight,
-        height:
-            t.fontRadioCardRadioGroupAddonLineHeight /
-            t.fontRadioCardRadioGroupAddonSize,
+        // No fixed line-height: inherit from DefaultTextStyle.
         color: disabled
             ? t.colorRadioDisabledTextDefault
             : t.colorRadioCardRadioGroupAddonTextDefault,
@@ -430,7 +423,7 @@ class _SemiRadioState extends State<SemiRadio> {
     } else {
       labelStyle = TextStyle(
         fontSize: global.typography.fontSizeRegular,
-        height: t.heightRadioInnerMin / global.typography.fontSizeRegular,
+        // No fixed line-height: inherit from DefaultTextStyle.
         color: disabled
             ? t.colorRadioDisabledTextDefault
             : t.colorRadioDefaultTextDefault,
@@ -440,9 +433,7 @@ class _SemiRadioState extends State<SemiRadio> {
         ? TextStyle(
             fontSize: t.fontRadioCardRadioGroupExtraSize,
             fontWeight: t.fontRadioCardRadioGroupExtraFontWeight,
-            height:
-                t.fontRadioCardRadioGroupExtraLineHeight /
-                t.fontRadioCardRadioGroupExtraSize,
+            // No fixed line-height: inherit from DefaultTextStyle.
             color: disabled
                 ? t.colorRadioDisabledTextDefault
                 : t.colorRadioCardRadioGroupExtraTextDefault,

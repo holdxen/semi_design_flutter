@@ -562,9 +562,7 @@ class _GroupItemViewState extends State<_GroupItemView> {
           style: TextStyle(
             color: t.colorFloatButtonGroupItemText,
             fontSize: t.fontFloatButtonGroupItemFontSize,
-            height:
-                t.fontFloatButtonGroupItemLineHeight /
-                t.fontFloatButtonGroupItemFontSize,
+            // No fixed line-height: inherit from DefaultTextStyle.
             fontWeight: t.fontFloatButtonGroupItemFontWeight,
           ),
           child: Row(

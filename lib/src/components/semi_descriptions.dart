@@ -292,7 +292,7 @@ class SemiDescriptions extends StatelessWidget {
     color: theme.colorDescriptionsKeyTextDefault,
     fontSize: fontSize,
     fontWeight: _DescriptionsMetrics.keyBaseFontWeight,
-    height: lineHeight / fontSize,
+    // No fixed line-height: inherit from DefaultTextStyle.
   );
 
   TextStyle _valueStyle(
@@ -306,7 +306,7 @@ class SemiDescriptions extends StatelessWidget {
     color: theme.colorDescriptionsValueTextDefault,
     fontSize: fontSize,
     fontWeight: fontWeight,
-    height: lineHeight / fontSize,
+    // No fixed line-height: inherit from DefaultTextStyle.
   );
 
   /// `font-size-small` mixin line height for the small double-row key; the

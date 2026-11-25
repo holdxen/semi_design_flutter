@@ -1111,11 +1111,7 @@ void main() {
       final style = richTextOf(tester, '帮助').text.style!;
       expect(style.color, t.colorFloatButtonGroupItemText);
       expect(style.fontSize, t.fontFloatButtonGroupItemFontSize);
-      expect(
-        style.height,
-        t.fontFloatButtonGroupItemLineHeight /
-            t.fontFloatButtonGroupItemFontSize,
-      );
+      expect(style.height, isNull);
       expect(style.fontWeight, t.fontFloatButtonGroupItemFontWeight);
       // 子项内容间距 8（column-gap）。
       final row = tester.widget<Row>(

@@ -1531,7 +1531,7 @@ void main() {
       expect(addon.start, addonH, reason: 'addon padding (horizontal)');
       final style = tester.widget<Text>(find.text('A')).style!;
       expect(style.fontSize, fontSize);
-      expect(style.height, lineHeight / fontSize);
+      expect(style.height, isNull);
       expect(style.fontWeight, FontWeight.w600);
     }
 

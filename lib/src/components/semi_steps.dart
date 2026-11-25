@@ -721,9 +721,7 @@ class _BasicStepState extends State<_BasicStep> {
           ? widget.global.typography.fontSizeRegular
           : _StepsMetrics.basicTitleFontSize,
       fontWeight: t.fontStepsBasicItemTitleFontWeight,
-      height:
-          t.fontStepsBasicItemTitleLineHeight /
-          _StepsMetrics.basicTitleFontSize,
+      // No fixed line-height: inherit from DefaultTextStyle.
       color: titleColor,
     );
     final descriptionStyle = TextStyle(

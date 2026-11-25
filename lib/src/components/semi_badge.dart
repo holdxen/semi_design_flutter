@@ -215,7 +215,7 @@ class SemiBadge extends StatelessWidget {
           style: TextStyle(
             color: text,
             fontSize: fontSize,
-            height: 16 / fontSize,
+            // No fixed line-height: inherit from DefaultTextStyle.
             fontWeight: global.typography.fontWeightRegular,
           ),
         ),

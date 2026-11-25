@@ -31,14 +31,8 @@ void main() {
             ? 12.0
             : 23.0;
         expect(s.fontSize, font);
-        expect(
-          s.height,
-          spacing == SemiParagraphSpacing.extended
-              ? 24 / font
-              : size == SemiTextSize.inherit
-              ? 1.7
-              : (size == SemiTextSize.small ? 16 : 20) / font,
-        );
+        // No fixed line-height: inherit the host DefaultTextStyle height.
+        expect(s.height, 1.7);
         expect(s.fontWeight, FontWeight.w400);
         expect(t.getSize(find.byType(SemiParagraph)).width, 800);
         expect(t.takeException(), isNull);
@@ -70,7 +64,8 @@ void main() {
         style: const TextStyle(),
       ),
     );
-    expect(textStyle(t).height, 24 / 14);
+    // host style is an empty TextStyle (no height) -> inherits null.
+    expect(textStyle(t).height, isNull);
     expect(t.takeException(), isNull);
   });
 
@@ -174,7 +169,8 @@ void main() {
     );
     final s = textStyle(t);
     expect(s.fontSize, 28);
-    expect(s.height, 24 / 14);
+    // No fixed line-height: inherit the host DefaultTextStyle height.
+    expect(s.height, 1.7);
     expect(s.fontWeight, FontWeight.w900);
     expect(s.color, const Color(0xff123456));
     expect(s.backgroundColor, const Color(0xffabcdef));
@@ -240,15 +236,8 @@ void main() {
             );
             final font = small ? patch.fontSizeSmall! : patch.fontSizeRegular!;
             expect(textStyle(t).fontSize, font);
-            expect(
-              textStyle(t).height,
-              (extended
-                      ? patch.paragraphExtendedLineHeight!
-                      : small
-                      ? patch.lineHeightSmall!
-                      : patch.lineHeightRegular!) /
-                  font,
-            );
+            // No fixed line-height: inherit the host DefaultTextStyle height.
+            expect(textStyle(t).height, 1.7);
             final padding = t.widget<Padding>(
               find
                   .descendant(
@@ -279,10 +268,8 @@ void main() {
         host(child, theme: SemiThemeData.light(typography: tokens)),
       );
       expect(textStyle(t).fontSize, tokens.fontSizeRegular);
-      expect(
-        textStyle(t).height,
-        tokens.lineHeightRegular / tokens.fontSizeRegular,
-      );
+      // No fixed line-height: inherit the host DefaultTextStyle height.
+      expect(textStyle(t).height, 1.7);
       expect(textStyle(t).fontWeight, tokens.fontWeightRegular);
       expect(textStyle(t).fontFamily, tokens.fontFamily);
     }

@@ -245,7 +245,8 @@ class SemiScrollList extends StatelessWidget {
             borderRadius: BorderRadius.circular(t.radiusScrollList),
             child: DefaultTextStyle(
               style: DefaultTextStyle.of(context).style
-                  .copyWith(fontSize: 14, height: 20 / 14),
+                  // No fixed line-height: inherit from DefaultTextStyle.
+                  .copyWith(fontSize: 14),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -823,7 +824,7 @@ class _SemiScrollItemState extends State<SemiScrollItem> {
           _label(dataIndex),
           style: TextStyle(
             fontSize: 14, // @include font-size-regular
-            height: 20 / 14,
+            // No fixed line-height: inherit from DefaultTextStyle.
             color: wheelSettled
                 // `color: var(--semi-color-primary) !important`（★变量外内联色）。
                 ? global.colors.colorPrimary

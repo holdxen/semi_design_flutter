@@ -54,14 +54,8 @@ void main() {
               ? 12
               : 23,
         );
-        expect(
-          s.height,
-          size == SemiTextSize.normal
-              ? 20 / 14
-              : size == SemiTextSize.small
-              ? 16 / 12
-              : 1.7,
-        );
+        // No fixed line-height: text inherits the host DefaultTextStyle height.
+        expect(s.height, 1.7);
       }
     }
     expect(find.byType(GestureDetector), findsNothing);

@@ -1751,9 +1751,7 @@ class _SemiImagePreviewInnerState extends State<SemiImagePreviewInner> {
         style: TextStyle(
           color: t.colorImagePreviewHeader,
           fontSize: global.typography.fontSizeRegular,
-          height:
-              global.typography.lineHeightRegular /
-              global.typography.fontSizeRegular,
+          // No fixed line-height: inherit from DefaultTextStyle.
           fontWeight: global.typography.fontWeightRegular,
         ),
         child: _currentTitle ?? const SizedBox.shrink(),
@@ -1891,9 +1889,7 @@ class _SemiImagePreviewInnerState extends State<SemiImagePreviewInner> {
           style: TextStyle(
             color: t.colorImagePreviewFooterIcon,
             fontSize: global.typography.fontSizeHeading6,
-            height:
-                global.typography.lineHeightHeading6 /
-                global.typography.fontSizeHeading6,
+            // No fixed line-height: inherit from DefaultTextStyle.
           ),
         ),
       ),

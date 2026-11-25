@@ -463,7 +463,8 @@ class _RatingItem extends StatelessWidget {
         data: IconThemeData(color: color, size: fontSize),
         child: DefaultTextStyle(
           style: DefaultTextStyle.of(context).style
-              .merge(TextStyle(fontSize: fontSize, height: 1.0, color: color)),
+              // No fixed line-height: inherit from DefaultTextStyle.
+              .merge(TextStyle(fontSize: fontSize, color: color)),
           child: character!,
         ),
       );

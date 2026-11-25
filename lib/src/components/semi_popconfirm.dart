@@ -449,9 +449,7 @@ class _PopconfirmCard extends StatelessWidget {
                 // h6 metrics and swaps the weight/color tokens.
                 style: TextStyle(
                   fontSize: global.typography.fontSizeHeading6,
-                  height:
-                      global.typography.lineHeightHeading6 /
-                      global.typography.fontSizeHeading6,
+                  // No fixed line-height: inherit from DefaultTextStyle.
                   fontWeight: t.fontPopconfirmHeaderTitleFontWeight,
                   color: t.colorPopconfirmHeaderText,
                 ),

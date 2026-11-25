@@ -367,10 +367,7 @@ class _SemiCheckboxState extends State<SemiCheckbox> {
           ? t.fontCheckboxCardTypeAddonSize
           : global.typography.fontSizeRegular,
       fontWeight: isCard ? t.fontCheckboxCardTypeAddonFontWeight : null,
-      height: isCard
-          ? t.fontCheckboxCardTypeAddonLineHeight /
-                t.fontCheckboxCardTypeAddonSize
-          : t.fontCheckboxLabelLineHeight / global.typography.fontSizeRegular,
+      // No fixed line-height: inherit from DefaultTextStyle.
       color: disabled
           ? t.colorCheckboxLabelTextDisabled
           : isCard

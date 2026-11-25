@@ -306,7 +306,7 @@ class _SemiAvatarState extends State<SemiAvatar> with TickerProviderStateMixin {
       // 尺寸档 mixin：`font-size-small`/`font-size-header-5`/`font-size-header-4`/
       // `font-size-header-1`；xxs/xl 用显式 Sass 字号。customSize 无尺寸类 →
       // 回落 `font-size-regular`。
-      final (fontSize, lineHeight) = widget.customSize != null
+      final (fontSize, _) = widget.customSize != null
           ? (
               global.typography.fontSizeRegular,
               global.typography.lineHeightRegular,
@@ -325,7 +325,7 @@ class _SemiAvatarState extends State<SemiAvatar> with TickerProviderStateMixin {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: fontSize,
-              height: lineHeight / fontSize,
+              // No fixed line-height: inherit from DefaultTextStyle.
               fontWeight: global.typography.fontWeightBold,
               color: fg,
             ),
@@ -651,7 +651,7 @@ class _SemiAvatarState extends State<SemiAvatar> with TickerProviderStateMixin {
                 color: slot.textColor ?? t.colorAvatarTopSlotText,
                 fontSize: fontSize,
                 fontWeight: global.typography.fontWeightBold,
-                height: 1,
+                // No fixed line-height: inherit from DefaultTextStyle.
               ),
               child: slot.text ?? const SizedBox.shrink(),
             ),
@@ -709,8 +709,11 @@ class _SemiAvatarState extends State<SemiAvatar> with TickerProviderStateMixin {
           ),
           child: Center(
             child: DefaultTextStyle(
-              style: DefaultTextStyle.of(context).style
-                  .copyWith(color: fg, fontSize: fontSize, height: 1),
+              style: DefaultTextStyle.of(context).style.copyWith(
+                color: fg,
+                fontSize: fontSize,
+                // No fixed line-height: inherit from DefaultTextStyle.
+              ),
               child: slot.text ?? const SizedBox.shrink(),
             ),
           ),
@@ -765,7 +768,7 @@ class _SemiAvatarState extends State<SemiAvatar> with TickerProviderStateMixin {
             color: fg,
             fontSize: fontSize,
             fontWeight: global.typography.fontWeightBold,
-            height: 1,
+            // No fixed line-height: inherit from DefaultTextStyle.
           ),
           child: slot.text ?? const SizedBox.shrink(),
         ),

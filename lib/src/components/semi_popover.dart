@@ -342,9 +342,7 @@ class _PopoverCard extends StatelessWidget {
             // the shell motion.
             style: TextStyle(
               fontSize: global.typography.fontSizeRegular,
-              height:
-                  global.typography.lineHeightRegular /
-                  global.typography.fontSizeRegular,
+              // No fixed line-height: inherit from DefaultTextStyle.
             ),
             child: content,
           ),

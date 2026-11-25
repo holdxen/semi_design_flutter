@@ -175,6 +175,16 @@ Rect headerBoxRect(WidgetTester t, String key) => t.getRect(
   ),
 );
 
+/// The header's Row rect. The Row can be taller than the text glyph because
+/// the 16px arrow exceeds the ~14px text; subtracting the Row (not the text)
+/// isolates the vertical padding.
+Rect headerRowRect(WidgetTester t, String key) => t.getRect(
+      find.descendant(
+        of: panelScope(key),
+        matching: find.byType(Row),
+      ).first,
+    );
+
 TextStyle? renderedStyle(WidgetTester t, Finder textFinder) => t
     .widget<RichText>(
       find.descendant(of: textFinder, matching: find.byType(RichText)).first,
@@ -706,8 +716,10 @@ void main() {
       expect(resolved.spacingCollapseContentPaddingTop, 30);
       expect(resolved.spacingCollapseContentPaddingBottom, 40);
       final headerBox = headerBoxRect(tester, '1');
-      final textRect = tester.getRect(find.text('Header 1'));
-      expect(headerBox.height - textRect.height, 100);
+      expect(
+        headerBox.height - headerRowRect(tester, '1').height,
+        100,
+      );
       // 4 margin bottom + 30 content padding top.
       final contentRect = tester.getRect(find.text('Content 1'));
       expect(contentRect.top - headerBox.bottom, closeTo(34, 0.5));
@@ -778,14 +790,12 @@ void main() {
         ),
       );
       await tester.pumpWidget(wrap(30));
-      var textRect = tester.getRect(find.text('Header 1'));
       var headerBox = headerBoxRect(tester, '1');
-      expect(headerBox.height - textRect.height, 60);
+      expect(headerBox.height - headerRowRect(tester, '1').height, 60);
       await tester.pumpWidget(wrap(30));
       await tester.pumpWidget(wrap(36));
-      textRect = tester.getRect(find.text('Header 1'));
       headerBox = headerBoxRect(tester, '1');
-      expect(headerBox.height - textRect.height, 72);
+      expect(headerBox.height - headerRowRect(tester, '1').height, 72);
       final context = tester.element(find.byType(SemiCollapse));
       final captured = InheritedTheme.captureAll(
         context,
@@ -823,9 +833,8 @@ void main() {
           ),
         ),
       );
-      final textRect = tester.getRect(find.text('Header 1'));
       final headerBox = headerBoxRect(tester, '1');
-      expect(headerBox.height - textRect.height, 40);
+      expect(headerBox.height - headerRowRect(tester, '1').height, 40);
       final contentRect = tester.getRect(find.text('Content 1'));
       expect(contentRect.top - headerBox.bottom, closeTo(34, 0.5));
       final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);

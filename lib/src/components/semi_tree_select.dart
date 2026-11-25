@@ -2007,8 +2007,7 @@ class _SemiTreeSelectState extends State<SemiTreeSelect> {
                 color: renderText == null ? placeholderColor : textColor,
                 fontSize: fontSize,
                 fontWeight: theme.fontTreeSelectDefaultFontWeight,
-                // line-height → 行盒高度（CSS line-height 的 Flutter 映射）。
-                height: lineHeight / fontSize,
+                // No fixed line-height: inherit from DefaultTextStyle.
               ),
             );
       // treeSelect.scss:264-267 `&-multiple .selection-placeholder` 左缩进 8。
@@ -2182,7 +2181,7 @@ class _SemiTreeSelectState extends State<SemiTreeSelect> {
                   : textColor,
               fontSize: fontSize,
               fontWeight: theme.fontTreeSelectDefaultFontWeight,
-              height: lineHeight / fontSize,
+              // No fixed line-height: inherit from DefaultTextStyle.
             ),
           );
     return Stack(

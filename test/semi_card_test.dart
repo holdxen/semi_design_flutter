@@ -505,38 +505,26 @@ void main() {
     final metaStyle = semiTextStyleOf(tester, 'M');
     expect(metaStyle.fontSize, theme.fontCardTitleFontSize);
     expect(metaStyle.fontWeight, theme.fontCardTitleFontWeight);
-    expect(
-      metaStyle.height,
-      theme.fontCardTitleLineHeight / theme.fontCardTitleFontSize,
-    );
+    expect(metaStyle.height, isNull);
     expect(metaStyle.color, theme.colorCardTitleText);
     // Meta description metrics: fontCardDefault* + colorCardDescriptionText.
     final descriptionStyle = semiTextStyleOf(tester, 'D');
     expect(descriptionStyle.fontSize, theme.fontCardDefaultFontSize);
     expect(descriptionStyle.fontWeight, theme.fontCardDefaultFontWeight);
-    expect(
-      descriptionStyle.height,
-      theme.fontCardDefaultLineHeight / theme.fontCardDefaultFontSize,
-    );
+    expect(descriptionStyle.height, isNull);
     expect(descriptionStyle.color, theme.colorCardDescriptionText);
     // Body default text style merges the root metrics and body color.
     final bodyStyle = DefaultTextStyle.of(tester.element(find.text('D'))).style;
     expect(bodyStyle.fontSize, theme.fontCardDefaultFontSize);
     expect(bodyStyle.fontWeight, theme.fontCardDefaultFontWeight);
-    expect(
-      bodyStyle.height,
-      theme.fontCardDefaultLineHeight / theme.fontCardDefaultFontSize,
-    );
+    expect(bodyStyle.height, isNull);
     expect(bodyStyle.color, theme.colorCardBodyText);
     // Extra text metrics through the header DefaultTextStyle.
     final extraStyle = DefaultTextStyle.of(tester.element(find.text('E')))
         .style;
     expect(extraStyle.fontSize, theme.fontCardExtraFontSize);
     expect(extraStyle.fontWeight, theme.fontCardExtraFontWeight);
-    expect(
-      extraStyle.height,
-      theme.fontCardDefaultLineHeight / theme.fontCardExtraFontSize,
-    );
+    expect(extraStyle.height, isNull);
     expect(extraStyle.color, theme.colorCardExtraText);
     // Actions: Wrap gap 12 (硬编码 INTERNAL) and the block offsets.
     final wrap = tester.widget<Wrap>(find.byType(Wrap));
@@ -893,18 +881,12 @@ void main() {
     final titleStyle = semiTextStyleOf(tester, 'M');
     expect(titleStyle.fontSize, theme.fontCardTitleFontSize);
     expect(titleStyle.fontWeight, theme.fontCardTitleFontWeight);
-    expect(
-      titleStyle.height,
-      theme.fontCardTitleLineHeight / theme.fontCardTitleFontSize,
-    );
+    expect(titleStyle.height, isNull);
     expect(titleStyle.color, theme.colorCardTitleText);
     final descriptionStyle = semiTextStyleOf(tester, 'D');
     expect(descriptionStyle.fontSize, theme.fontCardDefaultFontSize);
     expect(descriptionStyle.fontWeight, theme.fontCardDefaultFontWeight);
-    expect(
-      descriptionStyle.height,
-      theme.fontCardDefaultLineHeight / theme.fontCardDefaultFontSize,
-    );
+    expect(descriptionStyle.height, isNull);
     expect(descriptionStyle.color, theme.colorCardDescriptionText);
     // Widget slots are placed as-is.
     await tester.pumpWidget(
@@ -1113,16 +1095,17 @@ void main() {
       ),
     );
     expect(tester.takeException(), isNull);
-    // `height: lineHeight/fontSize` scales the line box instead of clipping.
+    // No fixed line-height: the line box is fontSize * textScale (2x here),
+    // so scaling still grows the box instead of clipping.
     final description = tester.getRect(find.text('D'));
     expect(
       description.height,
-      moreOrLessEquals(2 * theme.fontCardDefaultLineHeight, epsilon: 0.5),
+      moreOrLessEquals(2 * theme.fontCardDefaultFontSize, epsilon: 0.5),
     );
     final metaTitle = tester.getRect(find.text('M'));
     expect(
       metaTitle.height,
-      moreOrLessEquals(2 * theme.fontCardTitleLineHeight, epsilon: 0.5),
+      moreOrLessEquals(2 * theme.fontCardTitleFontSize, epsilon: 0.5),
     );
     await tester.pumpWidget(host(const SizedBox()));
   });

@@ -1337,7 +1337,7 @@ class _SemiTextAreaState extends State<SemiTextArea> {
 
     final placeholderStyle = TextStyle(
       fontSize: editStyle.fontSize,
-      height: editStyle.height,
+      // No fixed line-height: inherit from DefaultTextStyle.
       color: widget.disabled
           ? t.colorInputDisabledTextDefault
           : t.colorInputPlaceholderTextDefault,

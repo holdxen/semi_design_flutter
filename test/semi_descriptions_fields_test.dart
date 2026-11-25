@@ -413,11 +413,11 @@ void main() {
     var key = tester.getRect(find.text('电子邮箱'));
     var value = tester.getRect(find.text('zhangsan@example.com'));
     expect(value.left - key.right, 30);
-    // fontDescriptionsLineHeight 30 drives the base line height.
+    // No fixed line-height: the line box equals the font size (14).
     final text = tester.widget<Text>(find.text('张三'));
     expect(text.style!.fontSize, 14);
-    expect(text.style!.height, 30 / 14);
-    expect(key.height, 30);
+    expect(text.style!.height, isNull);
+    expect(key.height, 14);
     // spacingDescriptionsItemPaddingBottom 30 between rows.
     final key2 = tester.getRect(find.text('用户名'));
     expect(key.top - key2.bottom, 30);

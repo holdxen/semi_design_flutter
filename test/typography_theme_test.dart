@@ -2346,9 +2346,9 @@ void typographyAcceptanceTests() {
       await t.pumpWidget(tree(25));
       expect(textStyle(t).fontSize, 17);
       expect(textStyle(t).fontWeight, FontWeight.w800);
-      expect(textStyle(t).height, 25 / 17);
+      expect(textStyle(t).height, 1.7);
       await t.pumpWidget(tree(29));
-      expect(textStyle(t).height, 29 / 17);
+      expect(textStyle(t).height, 1.7);
       expect(textStyle(t).fontSize, 17);
       await t.pumpWidget(
         host(
@@ -2686,11 +2686,11 @@ void typographyAcceptanceTests() {
     await t.pumpWidget(tree(14, 20, FontWeight.w400, null));
     await t.pumpWidget(tree(18, 27, FontWeight.w300, null));
     expect(textStyle(t).fontSize, 18);
-    expect(textStyle(t).height, 1.5);
+    expect(textStyle(t).height, 1.7);
     expect(textStyle(t).fontWeight, FontWeight.w300);
     await t.pumpWidget(tree(22, 33, FontWeight.w500, 16));
     expect(textStyle(t).fontSize, 16);
-    expect(textStyle(t).height, 33 / 16);
+    expect(textStyle(t).height, 1.7);
     expect(textStyle(t).fontWeight, FontWeight.w500);
     await t.pumpWidget(tree(22, 33, FontWeight.w500, 19));
     expect(textStyle(t).fontSize, 19);

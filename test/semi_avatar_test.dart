@@ -166,11 +166,7 @@ void main() {
         await pumpHost(tester, SemiAvatar(size: entry.key, text: 'x'));
         final style = tester.widget<Text>(find.text('x')).style!;
         expect(style.fontSize, entry.value.$1, reason: '${entry.key} size');
-        expect(
-          style.height,
-          entry.value.$2 / entry.value.$1,
-          reason: '${entry.key} line height',
-        );
+        expect(style.height, isNull, reason: '${entry.key} line height');
         expect(style.fontWeight, FontWeight.w600, reason: '${entry.key} bold');
       }
     });

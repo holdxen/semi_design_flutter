@@ -452,7 +452,7 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
         style: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
-          height: 1.45,
+          // No fixed line-height: inherit from DefaultTextStyle.
         ),
       );
     }

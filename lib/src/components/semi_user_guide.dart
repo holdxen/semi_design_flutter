@@ -672,9 +672,7 @@ class _SemiUserGuideState extends State<SemiUserGuide>
                                 key: SemiUserGuide.indicatorKey,
                                 style: TextStyle(
                                   fontSize: _UserGuideMetrics.fontSizeRegular,
-                                  height:
-                                      t.fontUserGuidePopupContentIndicatorLineHeight /
-                                      _UserGuideMetrics.fontSizeRegular,
+                                  // No fixed line-height: inherit from DefaultTextStyle.
                                 ),
                               ),
                             Padding(
@@ -915,7 +913,7 @@ class _SemiUserGuideState extends State<SemiUserGuide>
       style: TextStyle(
         fontSize: fontSize,
         fontWeight: fontWeight,
-        height: lineHeight / fontSize,
+        // No fixed line-height: inherit from DefaultTextStyle.
       ),
     );
   }

@@ -527,11 +527,6 @@ class _SemiButtonState extends State<SemiButton> {
         SemiButtonSize.normal => t.fontButtonFontSize,
         SemiButtonSize.large => t.fontButtonLargeFontSize,
       };
-      final lineHeight = switch (size) {
-        SemiButtonSize.small => t.fontButtonSmallLineHeight,
-        SemiButtonSize.normal => t.fontButtonLineHeight,
-        SemiButtonSize.large => t.fontButtonLargeLineHeight,
-      };
       final fontWeight = switch (size) {
         SemiButtonSize.small => t.fontButtonSmallFontWeight,
         SemiButtonSize.normal => t.fontButtonFontWeight,
@@ -543,7 +538,7 @@ class _SemiButtonState extends State<SemiButton> {
               style: TextStyle(
                 color: visual.color,
                 fontSize: fontSize,
-                height: lineHeight / fontSize,
+                // No fixed line-height: inherit from DefaultTextStyle.
                 fontWeight: fontWeight,
               ),
             )

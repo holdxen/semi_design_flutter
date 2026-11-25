@@ -426,7 +426,7 @@ void main() {
           ),
         );
         expect(resolved(tester).fontSize, 45 - 4 * h);
-        expect(resolved(tester).height, (64 - 4 * h) / (45 - 4 * h));
+        expect(resolved(tester).height, isNull);
         expect(resolved(tester).fontWeight, FontWeight.w800);
         await tester.pumpWidget(
           host(
@@ -435,7 +435,7 @@ void main() {
           ),
         );
         expect(resolved(tester).fontSize, 45 - 4 * h);
-        expect(resolved(tester).height, (64 - 4 * h) / (45 - 4 * h));
+        expect(resolved(tester).height, isNull);
         expect(resolved(tester).fontWeight, FontWeight.normal);
       }
     },
@@ -469,7 +469,7 @@ void main() {
     final theme = SemiThemeData.light(typography: t);
     await tester.pumpWidget(host(const SemiText('text'), theme));
     expect(resolved(tester).fontSize, 25);
-    expect(resolved(tester).height, 30 / 25);
+    expect(resolved(tester).height, isNull);
     expect(resolved(tester).fontWeight, FontWeight.w300);
     expect(resolved(tester).fontFamily, 'Custom');
     expect(resolved(tester).fontFamilyFallback, ['Fallback']);
@@ -498,7 +498,7 @@ void main() {
         theme.copyWith(typography: t.copyWith(fontSizeRegular: 10)),
       ),
     );
-    expect(resolved(tester).height, 30 / 10);
+    expect(resolved(tester).height, isNull);
   });
 
   testWidgets('inherit retains DefaultTextStyle family size and height', (
@@ -574,7 +574,7 @@ void main() {
       ),
     );
     expect(resolved(tester).fontSize, 19);
-    expect(resolved(tester).height, 2);
+    expect(resolved(tester).height, isNull);
     expect(resolved(tester).fontFamily, 'Parent');
   });
 }

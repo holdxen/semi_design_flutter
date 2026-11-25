@@ -511,7 +511,7 @@ class _SemiFeedbackState extends State<SemiFeedback> {
         fontSize: t.fontFeedbackEmojiFontSize,
         // `font-family: Inter`（emoji 字形走系统 emoji 字体回退）。
         fontFamily: 'Inter',
-        height: 1,
+        // No fixed line-height: inherit from DefaultTextStyle.
       ),
     );
     return Semantics(

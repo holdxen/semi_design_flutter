@@ -126,8 +126,7 @@ class SemiCard extends StatelessWidget {
       child: DefaultTextStyle(
         style: TextStyle(
           fontSize: theme.fontCardDefaultFontSize,
-          height:
-              theme.fontCardDefaultLineHeight / theme.fontCardDefaultFontSize,
+          // No fixed line-height: inherit from DefaultTextStyle.
           fontWeight: theme.fontCardDefaultFontWeight,
           letterSpacing: _CardMetrics.letterSpacing,
         ),
@@ -190,8 +189,7 @@ class SemiCard extends StatelessWidget {
         : DefaultTextStyle.merge(
             style: TextStyle(
               fontSize: theme.fontCardExtraFontSize,
-              height:
-                  theme.fontCardDefaultLineHeight / theme.fontCardExtraFontSize,
+              // No fixed line-height: inherit from DefaultTextStyle.
               fontWeight: theme.fontCardExtraFontWeight,
               color: theme.colorCardExtraText,
               letterSpacing: _CardMetrics.letterSpacing,
@@ -376,14 +374,14 @@ class SemiCardMeta extends StatelessWidget {
     final theme = SemiCardTheme.resolve(context);
     final titleStyle = TextStyle(
       fontSize: theme.fontCardTitleFontSize,
-      height: theme.fontCardTitleLineHeight / theme.fontCardTitleFontSize,
+      // No fixed line-height: inherit from DefaultTextStyle.
       fontWeight: theme.fontCardTitleFontWeight,
       color: theme.colorCardTitleText,
       letterSpacing: _CardMetrics.letterSpacing,
     );
     final descriptionStyle = TextStyle(
       fontSize: theme.fontCardDefaultFontSize,
-      height: theme.fontCardDefaultLineHeight / theme.fontCardDefaultFontSize,
+      // No fixed line-height: inherit from DefaultTextStyle.
       fontWeight: theme.fontCardDefaultFontWeight,
       color: theme.colorCardDescriptionText,
       letterSpacing: _CardMetrics.letterSpacing,

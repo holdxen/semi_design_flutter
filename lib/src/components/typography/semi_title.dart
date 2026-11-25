@@ -56,14 +56,6 @@ class SemiTitle extends StatelessWidget {
       t.fontSizeHeading5,
       t.fontSizeHeading6,
     ][heading - 1];
-    final lineHeight = [
-      t.lineHeightHeading1,
-      t.lineHeightHeading2,
-      t.lineHeightHeading3,
-      t.lineHeightHeading4,
-      t.lineHeightHeading5,
-      t.lineHeightHeading6,
-    ][heading - 1];
     return Semantics(
       header: true,
       child: Padding(
@@ -95,10 +87,8 @@ class SemiTitle extends StatelessWidget {
           mark: mark,
           underline: underline,
           delete: delete,
-          style: TextStyle(
-            fontSize: size,
-            height: lineHeight / size,
-          ).merge(style),
+          // No fixed line-height: inherit from DefaultTextStyle.
+          style: TextStyle(fontSize: size).merge(style),
           link: link,
           textAlign: textAlign,
           textDirection: textDirection,

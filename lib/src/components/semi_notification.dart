@@ -384,9 +384,7 @@ class _SemiNotificationNoticeState extends State<SemiNotificationNotice> {
                         o.toString(),
                         style: TextStyle(
                           fontSize: typography.fontSizeHeading6,
-                          height:
-                              typography.lineHeightHeading6 /
-                              typography.fontSizeHeading6,
+                          // No fixed line-height: inherit from DefaultTextStyle.
                           fontWeight: t.fontNotificationNoticeTitleFontWeight,
                           color: t.colorNotificationTitleText,
                         ),
@@ -402,9 +400,7 @@ class _SemiNotificationNoticeState extends State<SemiNotificationNotice> {
                       o.toString(),
                       style: TextStyle(
                         fontSize: typography.fontSizeRegular,
-                        height:
-                            typography.lineHeightRegular /
-                            typography.fontSizeRegular,
+                        // No fixed line-height: inherit from DefaultTextStyle.
                         fontWeight: t.fontNotificationNoticeContentFontWeight,
                         color: t.colorNotificationContentText,
                       ),

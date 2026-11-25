@@ -753,7 +753,7 @@ class _SemiSliderState extends State<SemiSlider> {
                 style: TextStyle(
                   color: t.colorSliderRail,
                   fontSize: t.fontSliderRailFontSize,
-                  height: t.fontSliderRailLineHeight,
+                  // No fixed line-height: inherit from DefaultTextStyle.
                 ),
                 child: const SizedBox.expand(),
               ),

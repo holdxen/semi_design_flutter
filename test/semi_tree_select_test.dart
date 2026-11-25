@@ -1202,9 +1202,28 @@ void main() {
             placeholder: 'x',
           ),
         );
-        final box = tester.renderObject<RenderBox>(find.text('x'));
-        expect(box.size.height, greaterThanOrEqualTo(height - 0.01));
-        expect(box.size.height, lessThanOrEqualTo(height + 0.01));
+        // Trigger height is set by the SizedBox(height: _triggerHeight)
+        // container, not the placeholder text (which no longer has a fixed
+        // line-height). Walk up from the placeholder to that sized ancestor.
+        // Trigger height is set by SizedBox(height: _triggerHeight) (24/32/40),
+        // not the placeholder text (no fixed line-height anymore). Assert on
+        // that container's declared height instead of the text's line box.
+        final sized = find.ancestor(
+          of: find.text('x'),
+          matching: find.byWidgetPredicate(
+            (w) => w is SizedBox && w.height != null,
+          ),
+        );
+        double? triggerHeight;
+        for (final element in sized.evaluate()) {
+          final h = (element.widget as SizedBox).height;
+          if (h != null && h >= height - 0.01 && h <= height + 0.01) {
+            triggerHeight = h;
+            break;
+          }
+        }
+        expect(triggerHeight, isNotNull,
+            reason: 'no trigger SizedBox(height: $height) found');
       }
     });
 
