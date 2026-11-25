@@ -314,7 +314,7 @@
 | 305 | editor | `editor/common/model/tokens/treeSitter/treeSitterTree.ts` | `lib/src/monaco/editor/common/model/tokens/treeSitter/treeSitterTree.dart` | pending |
 | 306 | editor | `editor/common/model/utils.ts` | `lib/src/monaco/editor/common/model/utils.dart` | tested |
 | 307 | editor | `editor/common/model.ts` | `lib/src/monaco/editor/common/model.dart` | tested |
-| 308 | editor | `editor/common/modelLineProjectionData.ts` | `lib/src/monaco/editor/common/modelLineProjectionData.dart` | pending |
+| 308 | editor | `editor/common/modelLineProjectionData.ts` | `lib/src/monaco/editor/common/modelLineProjectionData.dart` | tested |
 | 309 | editor | `editor/common/multiDiffEditor.ts` | `lib/src/monaco/editor/common/multiDiffEditor.dart` | tested |
 | 310 | editor | `editor/common/services/completionsEnablement.ts` | `lib/src/monaco/editor/common/services/completionsEnablement.dart` | tested |
 | 311 | editor | `editor/common/services/editorBaseApi.ts` | `lib/src/monaco/editor/common/services/editorBaseApi.dart` | pending |
@@ -370,7 +370,7 @@
 | 361 | editor | `editor/common/viewEventHandler.ts` | `lib/src/monaco/editor/common/viewEventHandler.dart` | pending |
 | 362 | editor | `editor/common/viewEvents.ts` | `lib/src/monaco/editor/common/viewEvents.dart` | pending |
 | 363 | editor | `editor/common/viewLayout/lineDecorations.ts` | `lib/src/monaco/editor/common/viewLayout/lineDecorations.dart` | pending |
-| 364 | editor | `editor/common/viewLayout/lineHeights.ts` | `lib/src/monaco/editor/common/viewLayout/lineHeights.dart` | pending |
+| 364 | editor | `editor/common/viewLayout/lineHeights.ts` | `lib/src/monaco/editor/common/viewLayout/lineHeights.dart` | tested |
 | 365 | editor | `editor/common/viewLayout/linePart.ts` | `lib/src/monaco/editor/common/viewLayout/linePart.dart` | tested |
 | 366 | editor | `editor/common/viewLayout/linesLayout.ts` | `lib/src/monaco/editor/common/viewLayout/linesLayout.dart` | pending |
 | 367 | editor | `editor/common/viewLayout/viewLayout.ts` | `lib/src/monaco/editor/common/viewLayout/viewLayout.dart` | pending |
