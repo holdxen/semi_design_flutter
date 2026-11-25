@@ -49,7 +49,8 @@ class SemiChromeTabThemeData {
   /// `--chrome-tabs-height: 38px` (upstream layout constant, not themed).
   final double? chromeTabsHeight;
 
-  /// `--chrome-tabs-background`; defaults to `colors.colorFill1`.
+  /// `--chrome-tabs-background`; light defaults to `colors.colorFill1`, dark
+  /// to `colors.colorBg1` so the strip sits clearly below the active tab.
   final Color? chromeTabsBackground;
 
   /// `--chrome-tabs-font` (size part only; Arial is not bundled and is
@@ -71,11 +72,12 @@ class SemiChromeTabThemeData {
   /// `--chrome-tab-active-text-color`; defaults to `colors.colorText0`.
   final Color? chromeTabActiveTextColor;
 
-  /// `--chrome-tab-hover-background`; defaults to `colors.colorFill2`.
+  /// `--chrome-tab-hover-background`; light defaults to `colors.colorFill2`,
+  /// dark to `colors.colorFill0` to stay below the active tab surface.
   final Color? chromeTabHoverBackground;
 
-  /// `--chrome-tab-active-background`; defaults to the elevated surface
-  /// `colors.colorBg3`.
+  /// `--chrome-tab-active-background`; light defaults to `colors.colorBg3`,
+  /// dark to the higher elevation `colors.colorBg4` for visible contrast.
   final Color? chromeTabActiveBackground;
 
   /// `--chrome-tab-divider-color`; defaults to `colors.colorBorder`.
@@ -257,11 +259,13 @@ class SemiChromeTabThemeData {
 
   SemiResolvedChromeTabThemeData resolve(SemiThemeData theme) {
     final colors = theme.colors;
+    final dark = theme.dark;
     final height = chromeTabsHeight ?? 38;
     final tabTextColor = chromeTabTextColor ?? colors.colorText2;
     return SemiResolvedChromeTabThemeData(
       chromeTabsHeight: height,
-      chromeTabsBackground: chromeTabsBackground ?? colors.colorFill1,
+      chromeTabsBackground:
+          chromeTabsBackground ?? (dark ? colors.colorBg1 : colors.colorFill1),
       chromeTabsFontSize: chromeTabsFontSize ?? theme.typography.fontSizeSmall,
       chromeTabHeight: math.max(height, 28),
       chromeTabMinWidth: chromeTabMinWidth ?? 52,
@@ -269,8 +273,12 @@ class SemiChromeTabThemeData {
       chromeTabRadius: chromeTabRadius ?? theme.radius.borderRadiusMedium.value,
       chromeTabTextColor: tabTextColor,
       chromeTabActiveTextColor: chromeTabActiveTextColor ?? colors.colorText0,
-      chromeTabHoverBackground: chromeTabHoverBackground ?? colors.colorFill2,
-      chromeTabActiveBackground: chromeTabActiveBackground ?? colors.colorBg3,
+      chromeTabHoverBackground:
+          chromeTabHoverBackground ??
+          (dark ? colors.colorFill0 : colors.colorFill2),
+      chromeTabActiveBackground:
+          chromeTabActiveBackground ??
+          (dark ? colors.colorBg4 : colors.colorBg3),
       chromeTabDividerColor: chromeTabDividerColor ?? colors.colorBorder,
       chromeTabCloseHoverBackground:
           chromeTabCloseHoverBackground ?? colors.colorFill2,

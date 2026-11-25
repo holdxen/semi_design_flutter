@@ -22,5 +22,41 @@
     "createTime": "2026-11-24T09:57:34.272Z",
     "updateTime": "2026-11-24T09:57:34.272Z",
     "isDeleted": false
+  },
+  {
+    "id": "f0a4af82d8924faba5ce18f6d00d40e2",
+    "userID": "hw_008613025669512_01",
+    "domainID": "hw_008613025669512_01",
+    "type": "Styling scheme",
+    "content": "Prefers a Semi-style theme for the semiChromeTab component and wants it used as the default theme.",
+    "remark": "new",
+    "namespace": "DevMate",
+    "createTime": "2026-11-25T12:37:39.255Z",
+    "updateTime": "2026-11-25T12:37:39.255Z",
+    "isDeleted": false
+  },
+  {
+    "id": "000d4203179f4edc9b1ff08a9d011a5d",
+    "userID": "hw_008613025669512_01",
+    "domainID": "hw_008613025669512_01",
+    "type": "Styling scheme",
+    "content": "Expects dark mode support and adaptation for the component's theme, not only light mode.",
+    "remark": "new",
+    "namespace": "DevMate",
+    "createTime": "2026-11-25T12:37:39.256Z",
+    "updateTime": "2026-11-25T12:37:39.256Z",
+    "isDeleted": false
+  },
+  {
+    "id": "86560bd07dee4fac9effd727f8c0d30a",
+    "userID": "hw_008613025669512_01",
+    "domainID": "hw_008613025669512_01",
+    "type": "Styling scheme",
+    "content": "Prefers selected and unselected states in Chrometab dark mode to have clearly distinguishable colors with sufficient visual contrast.",
+    "remark": "new",
+    "namespace": "DevMate",
+    "createTime": "2026-11-25T12:37:39.256Z",
+    "updateTime": "2026-11-25T12:37:39.256Z",
+    "isDeleted": false
   }
 ]

@@ -94,15 +94,15 @@ CSS 变量一一对应 `SemiChromeTabThemeData`。未覆盖的字段由 `resolve
 | CSS 变量 | 字段 | 默认 |
 | --- | --- | --- |
 | `--chrome-tabs-height` | `chromeTabsHeight` | `38`（上游布局常量） |
-| `--chrome-tabs-background` | `chromeTabsBackground` | `colors.colorFill1` |
+| `--chrome-tabs-background` | `chromeTabsBackground` | 浅色 `colors.colorFill1`；暗色 `colors.colorBg1` |
 | `--chrome-tabs-font` | `chromeTabsFontSize` | `typography.fontSizeSmall`（仅字号；Arial 未随包提供） |
 | `--chrome-tab-min-width` | `chromeTabMinWidth` | `52`（上游布局常量） |
 | `--chrome-tab-max-width` | `chromeTabMaxWidth` | `120`（上游布局常量） |
 | `--chrome-tab-radius` | `chromeTabRadius` | `radius.borderRadiusMedium` |
 | `--chrome-tab-text-color` | `chromeTabTextColor` | `colors.colorText2` |
 | `--chrome-tab-active-text-color` | `chromeTabActiveTextColor` | `colors.colorText0` |
-| `--chrome-tab-hover-background` | `chromeTabHoverBackground` | `colors.colorFill2` |
-| `--chrome-tab-active-background` | `chromeTabActiveBackground` | `colors.colorBg3` |
+| `--chrome-tab-hover-background` | `chromeTabHoverBackground` | 浅色 `colors.colorFill2`；暗色 `colors.colorFill0` |
+| `--chrome-tab-active-background` | `chromeTabActiveBackground` | 浅色 `colors.colorBg3`；暗色 `colors.colorBg4` |
 | `--chrome-tab-divider-color` | `chromeTabDividerColor` | `colors.colorBorder` |
 | `--chrome-tab-close-hover-background` | `chromeTabCloseHoverBackground` | `colors.colorFill2` |
 | `--chrome-tabs-accent-color` | `chromeTabsAccentColor` | `colors.colorPrimary` |
@@ -125,6 +125,8 @@ CSS 变量一一对应 `SemiChromeTabThemeData`。未覆盖的字段由 `resolve
 `chromeTabHeight` 不单独暴露：按上游 `max(--chrome-tabs-height, 28px)` 由 `resolve` 派生。
 
 菜单与 tooltip 的 `shadow-elevated` 按仓库既有方案拆分：drop 层进入 `BoxDecoration.boxShadow`（`toDropBoxShadows()`），暗色主题的 `inset 0 0 0 1px` 层由 `SemiInsetShadow` 画师绘制，避免 `toBoxShadows()` 对 inset 层抛出 `UnsupportedError`。菜单内部分隔线统一使用 `chromeTabsMenuBorderColor`，随深浅主题切换。
+
+暗色下标签条带使用 `colorBg1`、hover 使用 `colorFill0`、选中标签使用 `colorBg4`，形成“页面 < 条带 < hover < 选中”的层级，避免选中与未选中背景过于接近；浅色仍保持原来的 `colorFill1` / `colorFill2` / `colorBg3`。
 
 如需固定为某一套配色（不跟随全局主题），可用 `SemiChromeTabThemeData(...)` 显式覆盖上表字段；局部主题示例见下。
 

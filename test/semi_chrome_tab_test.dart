@@ -207,13 +207,19 @@ void main() {
   test('dark theme resolves dark Semi surface tokens', () {
     const theme = SemiThemeData.dark();
     final resolved = const SemiChromeTabThemeData().resolve(theme);
-    expect(resolved.chromeTabsBackground, theme.colors.colorFill1);
+    expect(resolved.chromeTabsBackground, theme.colors.colorBg1);
     expect(resolved.chromeTabTextColor, theme.colors.colorText2);
     expect(resolved.chromeTabActiveTextColor, theme.colors.colorText0);
-    expect(resolved.chromeTabActiveBackground, theme.colors.colorBg3);
+    expect(resolved.chromeTabHoverBackground, theme.colors.colorFill0);
+    expect(resolved.chromeTabActiveBackground, theme.colors.colorBg4);
     expect(resolved.chromeTabsMenuBackground, theme.colors.colorBg3);
     expect(resolved.chromeTabsAccentColor, theme.colors.colorPrimary);
     expect(resolved.chromeTabTextColor, isNot(const Color(0xff5f6368)));
+    // Dark mode needs a visible gap between the strip and the active tab.
+    expect(
+      resolved.chromeTabActiveBackground,
+      isNot(resolved.chromeTabsBackground),
+    );
   });
 
   testWidgets('dark theme paints menu and tooltip inset shadows', (
