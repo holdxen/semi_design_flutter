@@ -311,18 +311,17 @@ class _SemiDataGridState extends State<SemiDataGrid>
   SemiGridMouseArgs? _hoveredArgs;
   bool _hoveredOnEdge = false;
   bool _lastWasTouch = false;
-  int _downTime = 0;
-
-  /// `downPosition` (`data-grid.tsx:1074`): where the press landed, so a
-  /// release only counts as a header-menu click when it started on the same
-  /// header row.
-  SemiItem? _downPosition;
-
-  /// The button [_downPosition] was recorded with. Upstream's `click` event
-  /// only fires for the left button (`data-grid.tsx:1236` checks
-  /// `args.button === 0`), but Flutter's `onPointerUp` fires for every button,
-  /// so the press button has to be carried over from the down.
-  int _downButton = 0;
+  // Flutter's pointer-up event no longer carries the released button.
+  final _pointerPresses =
+      <
+        int,
+        ({
+          int button,
+          int time,
+          SemiItem location,
+          ({bool? menu, int? groupAction})? control,
+        })
+      >{};
   int _lastUpTime = 0;
   bool _cursorIsPointer = false;
 
@@ -1065,7 +1064,9 @@ class _SemiDataGridState extends State<SemiDataGrid>
   ///
   /// Upstream compares `localEventY + box.y`, which only ever lands inside the
   /// top 26px of the header; the bounds-relative form is used here instead.
-  SemiGroupAction? _groupHeaderAction(SemiGridGroupHeaderMouseArgs args) {
+  ({int index, SemiGroupAction action})? _groupHeaderAction(
+    SemiGridGroupHeaderMouseArgs args,
+  ) {
     final details = widget.props.getGroupDetails?.call(args.group);
     final actions = details?.actions;
     if (actions == null || actions.isEmpty) return null;
@@ -1076,37 +1077,88 @@ class _SemiDataGridState extends State<SemiDataGrid>
         args.bounds.x + args.localEventX,
         args.bounds.y + args.localEventY,
       );
-      if (hit) return actions[i];
+      if (hit) return (index: i, action: actions[i]);
     }
     return null;
   }
 
-  void _handlePointerDown(PointerDownEvent event) {
-    final p = widget.props;
-    _focusNode.requestFocus();
-    _lastWasTouch = event.kind == PointerDeviceKind.touch;
-    _downTime = DateTime.now().millisecondsSinceEpoch;
-    final args = _getMouseArgsForPosition(
+  ({({bool? menu, int? groupAction}) key, VoidCallback activate})?
+  _headerControlAt(SemiGridMouseArgs args, Offset at) {
+    if (args is SemiGridGroupHeaderMouseArgs) {
+      if (widget.props.isDragging || widget.props.isResizing) return null;
+      final hit = _groupHeaderAction(args);
+      if (hit == null) return null;
+      return (
+        key: (menu: null, groupAction: hit.index),
+        activate: () => hit.action.onClick(args.bounds),
+      );
+    }
+    if (args is! SemiGridHeaderMouseArgs) return null;
+    final col = args.location.col;
+    final hit = _isOverHeaderElement(
+      col,
+      at.dx,
+      at.dy,
+      _onHeaderResizeEdge(args),
+    );
+    if (hit == null) return null;
+    return (
+      key: (menu: hit.menu, groupAction: null),
+      activate: () {
+        final p = widget.props;
+        final callback = hit.menu
+            ? p.onHeaderMenuClick
+            : p.onHeaderIndicatorClick;
+        callback?.call(col, hit.bounds);
+      },
+    );
+  }
+
+  int _pointerButton(int buttons) => switch (buttons) {
+    kPrimaryButton => 0,
+    kMiddleMouseButton => 1,
+    kSecondaryButton => 2,
+    _ => -1,
+  };
+
+  SemiGridMouseArgs _pointerArgs(
+    PointerEvent event, {
+    required int button,
+    bool isLongTouch = false,
+    bool isDoubleClick = false,
+  }) {
+    final isTouch = event.kind == PointerDeviceKind.touch;
+    final keyboard = HardwareKeyboard.instance;
+    return _getMouseArgsForPosition(
       event.localPosition.dx,
       event.localPosition.dy,
-      button: event.buttons == kPrimaryButton ? 0 : 1,
+      button: button,
       buttons: event.buttons,
-      shiftKey: false,
-      ctrlKey: false,
-      metaKey: false,
-      isTouch: _lastWasTouch,
+      shiftKey: !isTouch && keyboard.isShiftPressed,
+      ctrlKey: !isTouch && keyboard.isControlPressed,
+      metaKey: !isTouch && keyboard.isMetaPressed,
+      isTouch: isTouch,
+      isLongTouch: isLongTouch,
+      isDoubleClick: isDoubleClick,
     );
-    // `downPosition.current = args.location` (`data-grid.tsx:1092`), recorded
-    // before the group-header check exactly as upstream does.
-    _downPosition = _locationOf(args);
-    _downButton = event.buttons == kPrimaryButton ? 0 : 1;
-    // `groupHeaderActionForEvent` on press (`data-grid.tsx:1105-1111`): the
-    // action owns the click, so the editor never sees it.
-    if (args is SemiGridGroupHeaderMouseArgs &&
-        _groupHeaderAction(args) != null) {
-      return;
-    }
-    p.onMouseDown(args);
+  }
+
+  void _handlePointerDown(PointerDownEvent event) {
+    _focusNode.requestFocus();
+    _lastWasTouch = event.kind == PointerDeviceKind.touch;
+    final button = _pointerButton(event.buttons);
+    final args = _pointerArgs(event, button: button);
+    final control = button == 0
+        ? _headerControlAt(args, event.localPosition)
+        : null;
+    _pointerPresses[event.pointer] = (
+      button: button,
+      time: DateTime.now().millisecondsSinceEpoch,
+      location: _locationOf(args),
+      control: control?.key,
+    );
+    // Header controls own their press and never start selection or dragging.
+    if (control == null) widget.props.onMouseDown(args);
   }
 
   /// Shared by [Listener.onPointerMove] and [Listener.onPointerHover].
@@ -1119,15 +1171,11 @@ class _SemiDataGridState extends State<SemiDataGrid>
   void _handlePointerMove(PointerEvent event) {
     final p = widget.props;
     p.onPointerMoveRaw?.call(event.localPosition);
-    final args = _getMouseArgsForPosition(
-      event.localPosition.dx,
-      event.localPosition.dy,
-      button: 0,
-      buttons: event.buttons,
-      shiftKey: event.kind == PointerDeviceKind.touch ? false : false,
-      ctrlKey: false,
-      metaKey: false,
-      isTouch: event.kind == PointerDeviceKind.touch,
+    final args = _pointerArgs(
+      event,
+      button:
+          _pointerPresses[event.pointer]?.button ??
+          (event.buttons == 0 ? 0 : _pointerButton(event.buttons)),
     );
     final isEdge = args is SemiGridOutOfBoundsMouseArgs && args.isEdge;
 
@@ -1152,85 +1200,43 @@ class _SemiDataGridState extends State<SemiDataGrid>
   }
 
   void _handlePointerUp(PointerUpEvent event) {
-    final p = widget.props;
+    final press = _pointerPresses.remove(event.pointer);
+    if (press == null) return;
     final now = DateTime.now().millisecondsSinceEpoch;
-    final lastUpTime = _lastUpTime;
-    _lastUpTime = now;
-
-    final isTouch = _lastWasTouch;
-    var isLongTouch = false;
-    var isDoubleClick = false;
-
-    // `data-grid.tsx:1154-1166`: a held touch longer than 500ms is a long
-    // touch, and a second release inside the window is a double click. The
-    // flags are computed before the args so every `kind` gets them.
-    if (isTouch && _downTime != 0 && now - _downTime > 500) {
-      isLongTouch = true;
-    }
-    if (lastUpTime != 0 && now - lastUpTime < (isTouch ? 1000 : 500)) {
-      isDoubleClick = true;
-    }
-
-    final args = _getMouseArgsForPosition(
-      event.localPosition.dx,
-      event.localPosition.dy,
-      button: 0,
-      buttons: 0,
-      shiftKey: false,
-      ctrlKey: false,
-      metaKey: false,
-      isTouch: isTouch,
-      isLongTouch: isLongTouch,
-      isDoubleClick: isDoubleClick,
+    final isTouch = event.kind == PointerDeviceKind.touch;
+    final longTouch = isTouch && now - press.time > 500;
+    final doubleClick =
+        press.button == 0 &&
+        press.control == null &&
+        _lastUpTime != 0 &&
+        now - _lastUpTime < (isTouch ? 1000 : 500);
+    if (press.button == 0 && press.control == null) _lastUpTime = now;
+    final args = _pointerArgs(
+      event,
+      button: press.button,
+      isLongTouch: longTouch,
+      isDoubleClick: doubleClick,
     );
-
-    // `groupHeaderActionForEvent` on release (`data-grid.tsx:1184-1192`).
-    if (args is SemiGridGroupHeaderMouseArgs) {
-      final action = _groupHeaderAction(args);
-      if (action != null) {
-        if (args.button == 0) action.onClick(args.bounds);
-        return;
+    final control = press.button == 0
+        ? _headerControlAt(args, event.localPosition)
+        : null;
+    if (press.control != null) {
+      if (press.location == _locationOf(args) &&
+          control?.key == press.control) {
+        control?.activate();
       }
-    }
-
-    // Fired before `onMouseUp` on purpose. Upstream clears its drag state in
-    // `onMouseUpImpl` *before* forwarding to the editor's handler
-    // (`data-grid-dnd.tsx:256`), so firing afterwards would find both drag
-    // guards already reset and open a menu on top of a just-dropped column.
-    // Upstream's two `click` listeners also register child-first, which puts
-    // this menu ahead of `onHeaderClicked` — the same order.
-    _maybeFireHeaderElementClick(args, event.localPosition);
-
-    p.onMouseUp(args, false);
-  }
-
-  /// `onClickImpl` (`data-grid.tsx:1227-1246`): a release over the header's
-  /// menu button or indicator icon fires the matching callback.
-  ///
-  /// Upstream runs this from a `click` listener, which fires after `pointerup`
-  /// and only for the left button; the press must also have started on the
-  /// same header row (`downPosition.current?.[1] === -1`). Both gates are
-  /// reproduced here with [_downButton] and [_downPosition].
-  void _maybeFireHeaderElementClick(SemiGridMouseArgs args, Offset at) {
-    if (args is! SemiGridHeaderMouseArgs) return;
-    if (_downButton != 0) return;
-    final down = _downPosition;
-    if (down == null) return;
-    if (down.col != args.location.col || down.row != SemiItem.headerRow) {
       return;
     }
 
-    final hit = _isOverHeaderElement(
-      args.location.col,
-      at.dx,
-      at.dy,
-      _onHeaderResizeEdge(args),
-    );
-    if (hit == null) return;
-    if (hit.menu) {
-      widget.props.onHeaderMenuClick?.call(args.location.col, hit.bounds);
-    } else {
-      widget.props.onHeaderIndicatorClick?.call(args.location.col, hit.bounds);
+    // Don’t turn a normal press that ended over a control into a click.
+    // The editor still gets the release so it can finish an active drag.
+    widget.props.onMouseUp(args, control != null);
+  }
+
+  void _handlePointerCancel(PointerCancelEvent event) {
+    final press = _pointerPresses.remove(event.pointer);
+    if (press != null && press.control == null) {
+      widget.props.onMouseUp(_pointerArgs(event, button: press.button), true);
     }
   }
 
@@ -1260,15 +1266,16 @@ class _SemiDataGridState extends State<SemiDataGrid>
 
   void _handleSecondaryTap(TapUpDetails details) {
     var prevented = false;
+    final keyboard = HardwareKeyboard.instance;
     widget.props.onContextMenu(
       _getMouseArgsForPosition(
         details.localPosition.dx,
         details.localPosition.dy,
         button: 2,
         buttons: kSecondaryButton,
-        shiftKey: false,
-        ctrlKey: false,
-        metaKey: false,
+        shiftKey: keyboard.isShiftPressed,
+        ctrlKey: keyboard.isControlPressed,
+        metaKey: keyboard.isMetaPressed,
         isTouch: false,
       ),
       () => prevented = true,
@@ -1417,6 +1424,7 @@ class _SemiDataGridState extends State<SemiDataGrid>
         onPointerMove: _handlePointerMove,
         onPointerHover: _handlePointerMove,
         onPointerUp: _handlePointerUp,
+        onPointerCancel: _handlePointerCancel,
         behavior: HitTestBehavior.opaque,
         child: GestureDetector(
           onSecondaryTapUp: _handleSecondaryTap,

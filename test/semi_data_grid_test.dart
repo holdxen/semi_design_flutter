@@ -5,6 +5,8 @@ import 'package:flutter/gestures.dart';
 
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -1776,8 +1778,16 @@ void main() {
       onVisibleRegionChanged,
       void Function(SemiGridCell? newValue, SemiEditorMovement movement)?
       onFinishedEditing,
+      SemiRangeSelect rangeSelect = SemiRangeSelect.rect,
+      void Function(SemiItem location, SemiCellClickedEventArgs args)?
+      onCellClicked,
+      void Function(SemiItem location, SemiCellClickedEventArgs args)?
+      onCellContextMenu,
+      void Function(int col, SemiGridHeaderMouseArgs args)? onHeaderClicked,
       void Function(int col, SemiHeaderClickedEventArgs args)?
       onHeaderContextMenu,
+      void Function(int col, SemiGroupHeaderClickedEventArgs args)?
+      onGroupHeaderClicked,
       bool hasMenu = false,
       void Function(int col, SemiRectangle bounds)? onHeaderMenuClick,
       void Function(SemiGridMouseArgs args)? onMouseMove,
@@ -1842,7 +1852,12 @@ void main() {
             onCellFocused: onCellFocused,
             onVisibleRegionChanged: onVisibleRegionChanged,
             onFinishedEditing: onFinishedEditing,
+            rangeSelect: rangeSelect,
+            onCellClicked: onCellClicked,
+            onCellContextMenu: onCellContextMenu,
+            onHeaderClicked: onHeaderClicked,
             onHeaderContextMenu: onHeaderContextMenu,
+            onGroupHeaderClicked: onGroupHeaderClicked,
             onHeaderMenuClick: onHeaderMenuClick,
             onMouseMove: onMouseMove,
             onColumnAppended: onColumnAppended == null
@@ -1930,11 +1945,13 @@ void main() {
       tester,
     ) async {
       final fired = <int>[];
+      final headerClicks = <int>[];
       await tester.pumpWidget(
         buildEditor(
           hasMenu: true,
           rowMarkers: const SemiRowMarkerOptions(width: 40),
           onHeaderMenuClick: (col, bounds) => fired.add(col),
+          onHeaderClicked: (col, _) => headerClicks.add(col),
         ),
       );
       await tester.pumpAndSettle();
@@ -1954,6 +1971,98 @@ void main() {
         [0],
         reason: 'the callback must report the user column, not the mangled one',
       );
+      expect(headerClicks, isEmpty);
+      expect(selectionLog, isEmpty);
+    });
+
+    testWidgets('a normal header click reports the business column', (
+      tester,
+    ) async {
+      final clicks = <int>[];
+      await tester.pumpWidget(
+        buildEditor(
+          rowMarkers: const SemiRowMarkerOptions(width: 40),
+          onHeaderClicked: (col, _) => clicks.add(col),
+        ),
+      );
+      await tester.tapAt(const Offset(190, 16), kind: PointerDeviceKind.mouse);
+      await tester.pumpAndSettle();
+
+      expect(clicks, [1]);
+      expect(selectionLog.last.columns.toArray(), [1]);
+    });
+
+    testWidgets('group header selection skips row markers and is cancelable', (
+      tester,
+    ) async {
+      final clicks = <(int, int)>[];
+      var preventSelection = true;
+      await tester.pumpWidget(
+        buildEditor(
+          columnCount: 3,
+          group: 'Team A',
+          rowMarkers: const SemiRowMarkerOptions(width: 40),
+          onGroupHeaderClicked: (col, args) {
+            clicks.add((col, args.col));
+            if (preventSelection) args.preventDefault();
+          },
+        ),
+      );
+      const groupHeader = Offset(290, 15);
+      await tester.tapAt(groupHeader, kind: PointerDeviceKind.mouse);
+      await tester.pumpAndSettle();
+
+      expect(clicks, [(2, 2)]);
+      expect(selectionLog, isEmpty);
+
+      preventSelection = false;
+      await tester.tapAt(groupHeader, kind: PointerDeviceKind.mouse);
+      await tester.pumpAndSettle();
+
+      expect(clicks, [(2, 2), (2, 2)]);
+      expect(selectionLog.last.columns.toArray(), [0, 1, 2]);
+    });
+
+    testWidgets('unmatched mouse releases do not fire header clicks', (
+      tester,
+    ) async {
+      final clicks = <int>[];
+      await tester.pumpWidget(
+        buildEditor(onHeaderClicked: (col, _) => clicks.add(col)),
+      );
+
+      // One press starts on a different column, the other on a different row.
+      for (final down in [const Offset(150, 16), const Offset(50, 45)]) {
+        final gesture = await tester.startGesture(
+          down,
+          kind: PointerDeviceKind.mouse,
+        );
+        await gesture.moveTo(const Offset(50, 16));
+        await gesture.up();
+        await tester.pumpAndSettle();
+      }
+
+      expect(clicks, isEmpty);
+    });
+
+    testWidgets('cancelled header press does not leak to the next click', (
+      tester,
+    ) async {
+      final clicks = <int>[];
+      await tester.pumpWidget(
+        buildEditor(onHeaderClicked: (col, _) => clicks.add(col)),
+      );
+      final gesture = await tester.startGesture(
+        const Offset(50, 16),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.cancel();
+      await tester.pumpAndSettle();
+      expect(clicks, isEmpty);
+
+      await tester.tapAt(const Offset(150, 16), kind: PointerDeviceKind.mouse);
+      await tester.pumpAndSettle();
+      expect(clicks, [1]);
     });
 
     testWidgets('releasing over the menu mid-drag does not fire it', (
@@ -2001,6 +2110,100 @@ void main() {
       final current = selectionLog.last.current;
       expect(current, isNotNull);
       expect(current!.cell, const SemiItem(1, 0));
+    });
+
+    testWidgets('Shift-click expands the range from the original cell', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildEditor());
+      await tester.tapAt(const Offset(50, 45), kind: PointerDeviceKind.mouse);
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.tapAt(const Offset(250, 109), kind: PointerDeviceKind.mouse);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.pumpAndSettle();
+
+      final current = selectionLog.last.current!;
+      expect(current.cell, const SemiItem(0, 0));
+      expect(current.range, const SemiRectangle(x: 0, y: 0, width: 3, height: 3));
+      expect(current.rangeStack, isEmpty);
+    });
+
+    testWidgets('Ctrl/Meta-click appends a multiRect range', (tester) async {
+      await tester.pumpWidget(
+        buildEditor(rangeSelect: SemiRangeSelect.multiRect),
+      );
+      await tester.tapAt(const Offset(50, 45), kind: PointerDeviceKind.mouse);
+      await tester.pumpAndSettle();
+
+      final modifier = defaultTargetPlatform == TargetPlatform.macOS
+          ? LogicalKeyboardKey.metaLeft
+          : LogicalKeyboardKey.controlLeft;
+      await tester.sendKeyDownEvent(modifier);
+      await tester.tapAt(const Offset(250, 109), kind: PointerDeviceKind.mouse);
+      await tester.sendKeyUpEvent(modifier);
+      await tester.pumpAndSettle();
+
+      final current = selectionLog.last.current!;
+      expect(current.cell, const SemiItem(2, 2));
+      expect(current.range, const SemiRectangle(x: 2, y: 2, width: 1, height: 1));
+      expect(current.rangeStack, [
+        const SemiRectangle(x: 0, y: 0, width: 1, height: 1),
+      ]);
+    }, variant: const TargetPlatformVariant({
+      TargetPlatform.windows,
+      TargetPlatform.macOS,
+    }));
+
+    testWidgets('middle clicks do not edit; right clicks go to context menu', (
+      tester,
+    ) async {
+      final clicks = <(SemiItem, int, int)>[];
+      final contextMenus = <SemiItem>[];
+      await tester.pumpWidget(
+        buildEditor(
+          content: (_) => const SemiTextCell(
+            data: 'editable',
+            displayData: 'editable',
+            activationBehaviorOverride: SemiCellActivationBehavior.singleClick,
+          ),
+          onCellClicked: (item, args) =>
+              clicks.add((item, args.button, args.buttons)),
+          onCellContextMenu: (item, _) => contextMenus.add(item),
+        ),
+      );
+      await tester.tapAt(
+        const Offset(50, 45),
+        kind: PointerDeviceKind.mouse,
+        buttons: kMiddleMouseButton,
+      );
+      await tester.pumpAndSettle();
+
+      expect(clicks, [(const SemiItem(0, 0), 1, 0)]);
+      expect(contextMenus, isEmpty);
+      expect(selectionLog, isEmpty);
+      expect(activationLog, isEmpty);
+      expect(edits, isEmpty);
+      expect(find.byType(SemiDataGridOverlayEditor), findsNothing);
+
+      final secondary = await tester.startGesture(
+        const Offset(150, 45),
+        kind: PointerDeviceKind.mouse,
+        buttons: kSecondaryButton,
+      );
+      await tester.pumpAndSettle();
+      expect(selectionLog, isEmpty);
+      await secondary.up();
+      await tester.pumpAndSettle();
+
+      expect(contextMenus, [const SemiItem(1, 0)]);
+      expect(clicks, hasLength(1));
+      // A context menu outside the selection makes that cell current, as
+      // Glide does, without going through the primary click or editor.
+      expect(selectionLog.single.current!.cell, const SemiItem(1, 0));
+      expect(activationLog, isEmpty);
+      expect(edits, isEmpty);
     });
 
     testWidgets('a second click on the selected cell opens the editor', (

@@ -389,7 +389,7 @@
 | 380 | editor | `editor/common/viewModel/viewModelImpl.ts` | `lib/src/monaco/editor/common/viewModel/viewModelImpl.dart` | pending |
 | 381 | editor | `editor/common/viewModel/viewModelLines.ts` | `lib/src/monaco/editor/common/viewModel/viewModelLines.dart` | pending |
 | 382 | editor | `editor/common/viewModel.ts` | `lib/src/monaco/editor/common/viewModel.dart` | tested |
-| 383 | editor | `editor/common/viewModelEventDispatcher.ts` | `lib/src/monaco/editor/common/viewModelEventDispatcher.dart` | pending |
+| 383 | editor | `editor/common/viewModelEventDispatcher.ts` | `lib/src/monaco/editor/common/viewModelEventDispatcher.dart` | tested |
 | 384 | editor | `editor/contrib/anchorSelect/browser/anchorSelect.ts` | `lib/src/monaco/editor/contrib/anchorSelect/browser/anchorSelect.dart` | pending |
 | 385 | editor | `editor/contrib/bracketMatching/browser/bracketMatching.ts` | `lib/src/monaco/editor/contrib/bracketMatching/browser/bracketMatching.dart` | pending |
 | 386 | editor | `editor/contrib/bracketMatching/test/browser/bracketMatching.test.ts` | `lib/src/monaco/editor/contrib/bracketMatching/test/browser/bracketMatching.test.dart` | pending |
@@ -758,7 +758,7 @@
 | 749 | editor | `editor/standalone/browser/toggleHighContrast/toggleHighContrast.ts` | `lib/src/monaco/editor/standalone/browser/toggleHighContrast/toggleHighContrast.dart` | pending |
 | 750 | editor | `editor/standalone/common/monarch/monarchCommon.ts` | `lib/src/monaco/editor/standalone/common/monarch/monarchCommon.dart` | tested |
 | 751 | editor | `editor/standalone/common/monarch/monarchCompile.ts` | `lib/src/monaco/editor/standalone/common/monarch/monarchCompile.dart` | tested |
-| 752 | editor | `editor/standalone/common/monarch/monarchLexer.ts` | `lib/src/monaco/editor/standalone/common/monarch/monarchLexer.dart` | pending |
+| 752 | editor | `editor/standalone/common/monarch/monarchLexer.ts` | `lib/src/monaco/editor/standalone/common/monarch/monarchLexer.dart` | tested |
 | 753 | editor | `editor/standalone/common/monarch/monarchTypes.ts` | `lib/src/monaco/editor/standalone/common/monarch/monarchTypes.dart` | tested |
 | 754 | editor | `editor/standalone/common/standaloneTheme.ts` | `lib/src/monaco/editor/standalone/common/standaloneTheme.dart` | tested |
 | 755 | editor | `editor/standalone/common/themes.ts` | `lib/src/monaco/editor/standalone/common/themes.dart` | tested |

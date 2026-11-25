@@ -457,10 +457,9 @@ class _SemiDataEditorState extends State<SemiDataEditor>
       widget.props.searchResults ?? _searchResultsInner;
 
   /// `lastMouseDownData` (`data-editor.tsx:2091`).
-  ({int button, int time, SemiItem location})? _mouseDownData;
+  ({int button, SemiItem location})? _mouseDownData;
 
   /// `lastMouseSelectLocation` (`data-editor.tsx:2089`).
-  SemiItem? _lastMouseSelectLocation;
 
   /// `mouseState.previousSelection` (`data-editor.tsx:2120`): the selection
   /// as it was *before* the press, which is what second-click activation
@@ -2146,10 +2145,10 @@ class _SemiDataEditorState extends State<SemiDataEditor>
 
     // `mouseState !== undefined` upstream; `_previousSelection` is only set
     // for presses that reached `setMouseState`.
-    final dragging = _previousSelection != null;
+    final dragging =
+        _previousSelection != null && args.button == 0 && args.buttons != 0;
 
     if (dragging &&
-        args.buttons != 0 &&
         _fillHandlePressed &&
         _previousSelection?.current != null) {
       // `mouseState.fillHandle === true` (`data-editor.tsx:2765-2769`).
@@ -2166,7 +2165,6 @@ class _SemiDataEditorState extends State<SemiDataEditor>
         setState(() => _fillHighlightRegion = rect);
       }
     } else if (dragging &&
-        args.buttons != 0 &&
         _selection.current != null &&
         (widget.props.rangeSelect == SemiRangeSelect.rect ||
             widget.props.rangeSelect == SemiRangeSelect.multiRect)) {
@@ -2215,7 +2213,9 @@ class _SemiDataEditorState extends State<SemiDataEditor>
   void _updateScrollDir(SemiGridMouseArgs args) {
     final (x, y) = args.scrollEdge;
     final mouseDown = _mouseDownData;
-    final next = mouseDown == null ? null : (x, y);
+    final next = mouseDown?.button == 0 && args.button == 0 && args.buttons != 0
+        ? (x, y)
+        : null;
     if (next == _scrollDir) return;
     setState(() => _scrollDir = next);
     _autoscroll.setDirection(next?.$1 ?? 0, next?.$2 ?? 0);
@@ -2366,16 +2366,15 @@ class _SemiDataEditorState extends State<SemiDataEditor>
   // -------------------------------------------------------------------------
 
   void _onMouseDown(SemiGridMouseArgs args) {
-    if (args.button != 0 && args.button != 1) {
-      _mouseDownData = null;
-      return;
-    }
+    if (args.button != 0 && args.button != 1) return;
+
+    _mouseDownData = (button: args.button, location: _locationOf(args));
+    // Middle-click can notify the caller but never starts a grid gesture.
+    if (args.button != 0) return;
 
     // `DataGridDnd.onMouseDownImpl` (`data-grid-dnd.tsx:149-186`) runs before
     // the editor's own handler.
-    if (args.button == 0) {
-      _detectResizeStart(args);
-    }
+    _detectResizeStart(args);
 
     final isFillHandle = args is SemiGridCellMouseArgs && args.isFillHandle;
 
@@ -2392,12 +2391,6 @@ class _SemiDataEditorState extends State<SemiDataEditor>
       _dragRowActive = false;
     }
 
-    _mouseDownData = (
-      button: args.button,
-      time: DateTime.now().millisecondsSinceEpoch,
-      location: _locationOf(args),
-    );
-
     // `!fh && kind !== "cell" && isEdge` returns before `setMouseState`, so a
     // resize press never arms selection dragging.
     if (!isFillHandle && args.kind != SemiGridCellKind.cell && args.isEdge) {
@@ -2406,13 +2399,7 @@ class _SemiDataEditorState extends State<SemiDataEditor>
 
     _previousSelection = _selection;
     _fillHandlePressed = isFillHandle;
-    _lastMouseSelectLocation = null;
-
-    if (!args.isTouch && args.button == 0 && !isFillHandle) {
-      _handleSelect(args);
-    } else if (!args.isTouch && args.button == 1) {
-      _lastMouseSelectLocation = _locationOf(args);
-    }
+    if (!args.isTouch && !isFillHandle) _handleSelect(args);
   }
 
   void _handleSelect(SemiGridMouseArgs args) {
@@ -2537,9 +2524,17 @@ class _SemiDataEditorState extends State<SemiDataEditor>
   }
 
   void _onMouseUp(SemiGridMouseArgs args, bool isOutside) {
+    final down = _mouseDownData;
+    if (down == null || args.button != down.button) return;
+    final matchesPress = down.location == _locationOf(args);
+    final wasDragging = _dragColActive || _dragRowActive;
+    final wasResizing = _resizeCol != null;
     if (isOutside) {
-      _mouseDownData = null;
-      _fillHandlePressed = false;
+      _resizeCol = null;
+      _resizeColStartX = null;
+      _lastResizeWidth = -1;
+      _clearDragState();
+      _finishPointerGesture(refresh: wasDragging || wasResizing);
       return;
     }
 
@@ -2570,8 +2565,7 @@ class _SemiDataEditorState extends State<SemiDataEditor>
     if (_fillHandlePressed) {
       final previous = _previousSelection;
       final highlight = _fillHighlightRegion;
-      _fillHandlePressed = false;
-      _fillHighlightRegion = null;
+      _finishPointerGesture();
       if (_selection.current != null &&
           previous?.current != null &&
           highlight != null) {
@@ -2595,82 +2589,78 @@ class _SemiDataEditorState extends State<SemiDataEditor>
         if (!_handleMaybeClick(args as SemiGridCellMouseArgs)) {
           _handleSelect(args);
         }
-      } else if (args.kind == SemiGridCellKind.header) {
-        final header = args as SemiGridHeaderMouseArgs;
-        widget.props.onHeaderClicked?.call(header.location.col, header);
+      } else if (args case final SemiGridHeaderMouseArgs header) {
+        final col = header.location.col - _markerOffset;
+        if (col >= 0) widget.props.onHeaderClicked?.call(col, header);
         _handleSelect(args);
       } else if (args.kind == SemiGridCellKind.groupHeader) {
         _handleSelect(args);
       }
-      _lastMouseSelectLocation = null;
-      _mouseDownData = null;
-      _previousSelection = null;
+      _finishPointerGesture();
       return;
     }
 
-    switch (args.kind) {
-      case SemiGridCellKind.header:
-        final header = args as SemiGridHeaderMouseArgs;
-        final lastDown = _lastMouseSelectLocation;
+    switch (args) {
+      case SemiGridHeaderMouseArgs header:
+        if (args.button != 0 || !matchesPress || wasDragging) break;
         if (header.isEdge) {
           // Double-clicking a header edge re-measures the column
           // (`data-editor.tsx:2489-2492`).
           if (header.isDoubleClick == true) {
             _normalSizeColumn(header.location.col);
           }
-        } else if (args.button == 0 &&
-            lastDown != null &&
-            lastDown.col == header.location.col &&
-            lastDown.row == header.location.row) {
-          widget.props.onHeaderClicked?.call(header.location.col, header);
+        } else if (!wasResizing) {
+          final col = header.location.col - _markerOffset;
+          if (col >= 0) widget.props.onHeaderClicked?.call(col, header);
         }
-      case SemiGridCellKind.groupHeader:
-        final groupHeader = args as SemiGridGroupHeaderMouseArgs;
-        final lastDown = _lastMouseSelectLocation;
-        if (args.button == 0 &&
-            lastDown != null &&
-            lastDown.col == groupHeader.location.col &&
-            lastDown.row == groupHeader.location.row) {
-          final adjustedCol = groupHeader.location.col - _markerOffset;
-          if (adjustedCol < 0) return;
+      case SemiGridGroupHeaderMouseArgs groupHeader:
+        if (args.button != 0 || !matchesPress || wasDragging || wasResizing) {
+          break;
+        }
+        final adjustedCol = groupHeader.location.col - _markerOffset;
+        if (adjustedCol < 0) break;
 
-          // `onGroupHeaderClicked` runs first; a `preventDefault` skips the
-          // selection (`data-editor.ts:2504-2507`).
-          var prevented = false;
-          widget.props.onGroupHeaderClicked?.call(
-            adjustedCol,
-            SemiGroupHeaderClickedEventArgs(
-              col: adjustedCol,
-              args: groupHeader,
-              preventDefault: () => prevented = true,
-            ),
-          );
-          if (prevented) return;
+        // Let the callback cancel default group selection (`data-editor.tsx:2504-2507`).
+        var prevented = false;
+        widget.props.onGroupHeaderClicked?.call(
+          adjustedCol,
+          SemiGroupHeaderClickedEventArgs(
+            col: adjustedCol,
+            args: groupHeader,
+            preventDefault: () => prevented = true,
+          ),
+        );
+        if (prevented) break;
 
-          _selectionState.handleGroupHeaderSelection(
-            groupHeader,
-            columns: widget.props.columns,
-            rowMarkerOffset: 0,
-          );
-          if (_selectionState.selection != _selection) {
-            _setGridSelection(_selectionState.selection, false);
-          }
+        _selectionState.handleGroupHeaderSelection(
+          groupHeader,
+          columns: _mangledColumns,
+          rowMarkerOffset: _markerOffset,
+        );
+        if (_selectionState.selection != _selection) {
+          _setGridSelection(_selectionState.selection, false);
         }
-      case SemiGridCellKind.cell:
-        if (args.button == 0 || args.button == 1) {
-          _handleMaybeClick(args as SemiGridCellMouseArgs);
+      case SemiGridCellMouseArgs cell:
+        if (matchesPress && !wasDragging && !wasResizing) {
+          _handleMaybeClick(cell);
         }
-      case SemiGridCellKind.outOfBounds:
+      case SemiGridOutOfBoundsMouseArgs():
         break;
     }
-    _lastMouseSelectLocation = null;
+    _finishPointerGesture(refresh: wasDragging || wasResizing);
+  }
+
+  void _finishPointerGesture({bool refresh = false}) {
     _mouseDownData = null;
     _previousSelection = null;
-    _fillHighlightRegion = null;
-    if (_scrollDir != null) {
-      setState(() => _scrollDir = null);
-      _setAutoscrollActive(false);
+    _fillHandlePressed = false;
+    if (refresh || _fillHighlightRegion != null || _scrollDir != null) {
+      setState(() {
+        _fillHighlightRegion = null;
+        _scrollDir = null;
+      });
     }
+    _setAutoscrollActive(false);
   }
 
   // -------------------------------------------------------------------------
