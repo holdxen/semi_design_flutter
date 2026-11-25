@@ -1119,39 +1119,36 @@ class SemiDataGridPainter extends CustomPainter {
   ) {
     final a = arg;
     double? lineX;
-    for (final c in effectiveCols) {
-      if (c.sourceIndex == a.resizeColumn) {
-        lineX = null;
-        var x = 0.0;
-        for (final e in effectiveCols) {
-          if (e.sticky) {
-            x += e.width;
-            continue;
-          }
-          if (e.sourceIndex == a.resizeColumn) break;
-          x += e.width;
-        }
-        lineX = x + c.width + (c.sticky ? 0 : a.translateX);
-        break;
-      }
-    }
-    if (lineX == null) return;
+    walkColumns(
+      effectiveCols: effectiveCols,
+      cellYOffset: 0,
+      translateX: a.translateX,
+      translateY: 0,
+      totalHeaderHeight: totalHeaderHeight,
+      cb: (column, drawX, _, _, _) {
+        if (column.sourceIndex != a.resizeColumn) return false;
+        lineX = drawX + column.width;
+        return true;
+      },
+    );
+    final x = lineX;
+    if (x == null) return;
 
     final headerColor = Color.alphaBlend(
       a.theme.resizeIndicatorColor ?? a.theme.accentLight,
       a.theme.bgHeader,
     );
     canvas.drawLine(
-      Offset(lineX, 0),
-      Offset(lineX, totalHeaderHeight + 1),
+      Offset(x, 0),
+      Offset(x, totalHeaderHeight + 1),
       Paint()
         ..color = headerColor
         ..strokeWidth = 2,
     );
     if (a.resizeIndicator == SemiResizeIndicator.full) {
       canvas.drawLine(
-        Offset(lineX, totalHeaderHeight),
-        Offset(lineX, a.height),
+        Offset(x, totalHeaderHeight),
+        Offset(x, a.height),
         Paint()
           ..color = Color.alphaBlend(
             a.theme.resizeIndicatorColor ?? a.theme.accentLight,

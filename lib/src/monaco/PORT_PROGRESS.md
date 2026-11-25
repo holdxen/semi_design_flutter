@@ -39,7 +39,7 @@
 | 30 | editor | `editor/browser/editorBrowser.ts` | `lib/src/monaco/editor/browser/editorBrowser.dart` | pending |
 | 31 | editor | `editor/browser/editorDom.ts` | `lib/src/monaco/editor/browser/editorDom.dart` | pending |
 | 32 | editor | `editor/browser/editorExtensions.ts` | `lib/src/monaco/editor/browser/editorExtensions.dart` | pending |
-| 33 | editor | `editor/browser/editorMarkdownSanitizer.ts` | `lib/src/monaco/editor/browser/editorMarkdownSanitizer.dart` | pending |
+| 33 | editor | `editor/browser/editorMarkdownSanitizer.ts` | `lib/src/monaco/editor/browser/editorMarkdownSanitizer.dart` | tested |
 | 34 | editor | `editor/browser/gpu/atlas/atlas.ts` | `lib/src/monaco/editor/browser/gpu/atlas/atlas.dart` | tested |
 | 35 | editor | `editor/browser/gpu/atlas/textureAtlas.ts` | `lib/src/monaco/editor/browser/gpu/atlas/textureAtlas.dart` | tested |
 | 36 | editor | `editor/browser/gpu/atlas/textureAtlasPage.ts` | `lib/src/monaco/editor/browser/gpu/atlas/textureAtlasPage.dart` | tested |
@@ -70,7 +70,7 @@
 | 61 | editor | `editor/browser/services/contribution.ts` | `lib/src/monaco/editor/browser/services/contribution.dart` | pending |
 | 62 | editor | `editor/browser/services/editorWorkerService.ts` | `lib/src/monaco/editor/browser/services/editorWorkerService.dart` | pending |
 | 63 | editor | `editor/browser/services/inlineCompletionsService.ts` | `lib/src/monaco/editor/browser/services/inlineCompletionsService.dart` | tested |
-| 64 | editor | `editor/browser/services/markerDecorations.ts` | `lib/src/monaco/editor/browser/services/markerDecorations.dart` | pending |
+| 64 | editor | `editor/browser/services/markerDecorations.ts` | `lib/src/monaco/editor/browser/services/markerDecorations.dart` | tested |
 | 65 | editor | `editor/browser/services/openerService.ts` | `lib/src/monaco/editor/browser/services/openerService.dart` | pending |
 | 66 | editor | `editor/browser/services/renameSymbolTrackerService.ts` | `lib/src/monaco/editor/browser/services/renameSymbolTrackerService.dart` | pending |
 | 67 | editor | `editor/browser/stableEditorScroll.ts` | `lib/src/monaco/editor/browser/stableEditorScroll.dart` | pending |
@@ -258,7 +258,7 @@
 | 249 | editor | `editor/common/languages/linkComputer.ts` | `lib/src/monaco/editor/common/languages/linkComputer.dart` | tested |
 | 250 | editor | `editor/common/languages/modesRegistry.ts` | `lib/src/monaco/editor/common/languages/modesRegistry.dart` | tested |
 | 251 | editor | `editor/common/languages/nullTokenize.ts` | `lib/src/monaco/editor/common/languages/nullTokenize.dart` | tested |
-| 252 | editor | `editor/common/languages/supports/characterPair.ts` | `lib/src/monaco/editor/common/languages/supports/characterPair.dart` | pending |
+| 252 | editor | `editor/common/languages/supports/characterPair.ts` | `lib/src/monaco/editor/common/languages/supports/characterPair.dart` | tested |
 | 253 | editor | `editor/common/languages/supports/electricCharacter.ts` | `lib/src/monaco/editor/common/languages/supports/electricCharacter.dart` | pending |
 | 254 | editor | `editor/common/languages/supports/indentRules.ts` | `lib/src/monaco/editor/common/languages/supports/indentRules.dart` | pending |
 | 255 | editor | `editor/common/languages/supports/indentationLineProcessor.ts` | `lib/src/monaco/editor/common/languages/supports/indentationLineProcessor.dart` | pending |
@@ -301,7 +301,7 @@
 | 292 | editor | `editor/common/model/textModelSearch.ts` | `lib/src/monaco/editor/common/model/textModelSearch.dart` | pending |
 | 293 | editor | `editor/common/model/textModelStringEdit.ts` | `lib/src/monaco/editor/common/model/textModelStringEdit.dart` | pending |
 | 294 | editor | `editor/common/model/textModelText.ts` | `lib/src/monaco/editor/common/model/textModelText.dart` | pending |
-| 295 | editor | `editor/common/model/textModelTokens.ts` | `lib/src/monaco/editor/common/model/textModelTokens.dart` | pending |
+| 295 | editor | `editor/common/model/textModelTokens.ts` | `lib/src/monaco/editor/common/model/textModelTokens.dart` | tested |
 | 296 | editor | `editor/common/model/tokens/abstractSyntaxTokenBackend.ts` | `lib/src/monaco/editor/common/model/tokens/abstractSyntaxTokenBackend.dart` | pending |
 | 297 | editor | `editor/common/model/tokens/annotations.ts` | `lib/src/monaco/editor/common/model/tokens/annotations.dart` | tested |
 | 298 | editor | `editor/common/model/tokens/tokenizationFontDecorationsProvider.ts` | `lib/src/monaco/editor/common/model/tokens/tokenizationFontDecorationsProvider.dart` | pending |
@@ -861,8 +861,8 @@
 | 852 | editor | `editor/test/common/modes/languageConfiguration.test.ts` | `lib/src/monaco/editor/test/common/modes/languageConfiguration.test.dart` | pending |
 | 853 | editor | `editor/test/common/modes/languageSelector.test.ts` | `lib/src/monaco/editor/test/common/modes/languageSelector.test.dart` | tested |
 | 854 | editor | `editor/test/common/modes/linkComputer.test.ts` | `lib/src/monaco/editor/test/common/modes/linkComputer.test.dart` | pending |
-| 855 | editor | `editor/test/common/modes/supports/autoClosingPairsRules.ts` | `lib/src/monaco/editor/test/common/modes/supports/autoClosingPairsRules.dart` | pending |
-| 856 | editor | `editor/test/common/modes/supports/bracketRules.ts` | `lib/src/monaco/editor/test/common/modes/supports/bracketRules.dart` | pending |
+| 855 | editor | `editor/test/common/modes/supports/autoClosingPairsRules.ts` | `lib/src/monaco/editor/test/common/modes/supports/autoClosingPairsRules.dart` | tested |
+| 856 | editor | `editor/test/common/modes/supports/bracketRules.ts` | `lib/src/monaco/editor/test/common/modes/supports/bracketRules.dart` | tested |
 | 857 | editor | `editor/test/common/modes/supports/characterPair.test.ts` | `lib/src/monaco/editor/test/common/modes/supports/characterPair.test.dart` | pending |
 | 858 | editor | `editor/test/common/modes/supports/electricCharacter.test.ts` | `lib/src/monaco/editor/test/common/modes/supports/electricCharacter.test.dart` | pending |
 | 859 | editor | `editor/test/common/modes/supports/indentationRules.ts` | `lib/src/monaco/editor/test/common/modes/supports/indentationRules.dart` | tested |

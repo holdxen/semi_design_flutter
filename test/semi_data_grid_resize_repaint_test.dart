@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:semi_design_flutter/semi_design_flutter.dart';
+import 'package:semi_design_flutter/src/semi_data_grid/internal/data_grid/render/semi_data_grid_painter.dart';
 
 // Regression: writing resized widths back must rebuild the grid's columns.
 // The grid compares `props.columns` by identity, so an in-place list mutation
@@ -12,6 +13,10 @@ void main() {
     required bool replaceList,
     required List<(int, double)> startLog,
     required List<double> resizeLog,
+    SemiResizeIndicator resizeIndicator = SemiResizeIndicator.full,
+    int freezeColumns = 0,
+    SemiRowMarkerOptions? rowMarkers,
+    SemiDataGridTheme? theme,
   }) {
     var columns = [
       SemiGridColumn(title: 'C0', width: 100),
@@ -28,7 +33,10 @@ void main() {
                 props: SemiDataEditorProps(
                   columns: columns,
                   rows: 200,
-                  theme: SemiDataGridTheme.light(),
+                  theme: theme ?? SemiDataGridTheme.light(),
+                  freezeColumns: freezeColumns,
+                  rowMarkers: rowMarkers,
+                  resizeIndicator: resizeIndicator,
                   rowHeight: const SemiRowHeight.fixed(32),
                   headerHeight: 32,
                   onColumnResizeStart: (column, width, col, _) {
@@ -111,6 +119,153 @@ void main() {
       reason: 'new width should expose a resize edge at x~170',
     );
     expect(start.first.$1, 0);
+  });
+
+  for (final mode in SemiResizeIndicator.values) {
+    testWidgets('paints the frozen-column resize indicator in $mode mode', (
+      tester,
+    ) async {
+      const indicatorColor = Color(0xFFFF00AA);
+      final gridPaint = find.byWidgetPredicate(
+        (widget) =>
+            widget is CustomPaint && widget.painter is SemiDataGridPainter,
+      );
+      PaintPattern indicator({Offset? from, Offset? to}) => paints
+        ..something(
+          (method, args) =>
+              method == #drawLine &&
+              (args[2] as Paint).color.toARGB32() == indicatorColor.toARGB32() &&
+              (from == null || args[0] == from) &&
+              (to == null || args[1] == to),
+        );
+      await tester.pumpWidget(
+        buildHarness(
+          replaceList: true,
+          startLog: [],
+          resizeLog: [],
+          freezeColumns: 1,
+          rowMarkers: const SemiRowMarkerOptions(width: 40),
+          resizeIndicator: mode,
+          theme: const SemiThemeOverride(resizeIndicatorColor: indicatorColor)
+              .applyTo(SemiDataGridTheme.light()),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(gridPaint, isNot(indicator()));
+
+      // The marker and the first data column are both frozen. The marker
+      // shifts that column's edge from x=100 to x=140.
+      final drag = await tester.startGesture(
+        const Offset(137, 15),
+        kind: PointerDeviceKind.mouse,
+      );
+      await tester.pump();
+      if (mode != SemiResizeIndicator.none) {
+        expect(gridPaint, indicator(from: const Offset(140, 0)));
+      }
+      await drag.moveTo(const Offset(210, 15));
+      await tester.pump();
+
+      if (mode == SemiResizeIndicator.none) {
+        expect(gridPaint, isNot(indicator()));
+      } else {
+        expect(
+          gridPaint,
+          indicator(from: const Offset(210, 0), to: const Offset(210, 33)),
+        );
+        expect(gridPaint, isNot(indicator(from: const Offset(140, 0))));
+        final body = indicator(
+          from: const Offset(210, 32),
+          to: const Offset(210, 400),
+        );
+        expect(
+          gridPaint,
+          mode == SemiResizeIndicator.full ? body : isNot(body),
+        );
+      }
+
+      // Both normal release and cancellation must remove the indicator.
+      if (mode == SemiResizeIndicator.header) {
+        await drag.cancel();
+      } else {
+        await drag.up();
+      }
+      await tester.pumpAndSettle();
+      expect(gridPaint, isNot(indicator()));
+    });
+  }
+
+  testWidgets('column drag paints a preview without committing the order', (
+    tester,
+  ) async {
+    final headerX = <int, double>{};
+    final cellX = <int, double>{};
+    final moves = <(int, int)>[];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 400,
+            height: 200,
+            child: SemiDataEditor(
+              props: SemiDataEditorProps(
+                columns: [
+                  for (var i = 0; i < 3; i++)
+                    SemiGridColumn(title: 'C$i', width: 100),
+                ],
+                rows: 2,
+                rowHeight: const SemiRowHeight.fixed(32),
+                headerHeight: 32,
+                rowMarkers: const SemiRowMarkerOptions(width: 40),
+                freezeColumns: 1,
+                getCellContent: (item, [_]) => SemiTextCell(
+                  data: 'C${item.col}',
+                  displayData: 'C${item.col}',
+                ),
+                onColumnMoved: (from, to) => moves.add((from, to)),
+                drawHeader: (args, draw) {
+                  if (args.columnIndex >= 0) {
+                    headerX[args.columnIndex] = args.rect.x;
+                  }
+                  draw();
+                },
+                drawCell: (args, draw) {
+                  if (args.row == 0 && args.col >= 0) {
+                    cellX[args.col] = args.rect.x;
+                  }
+                  draw();
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    const original = {0: 40.0, 1: 140.0, 2: 240.0};
+    expect(headerX, original);
+    expect(cellX, original);
+
+    final drag = await tester.startGesture(
+      const Offset(190, 15),
+      kind: PointerDeviceKind.mouse,
+    );
+    await tester.pump();
+    expect(headerX, original);
+    await drag.moveTo(const Offset(290, 15));
+    await tester.pump();
+    const preview = {0: 40.0, 1: 240.0, 2: 140.0};
+    expect(headerX, preview);
+    expect(cellX, preview);
+    expect(moves, isEmpty);
+
+    await drag.up();
+    await tester.pumpAndSettle();
+    expect(moves, hasLength(1));
+    // The caller did not write back a new columns list, so only the preview
+    // was reordered. The next paint uses the original order again.
+    expect(headerX, original);
+    expect(cellX, original);
   });
 
   testWidgets('mutating the list in place leaves width stale', (tester) async {

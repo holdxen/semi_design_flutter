@@ -1948,8 +1948,10 @@ class _SemiDataEditorState extends State<SemiDataEditor>
       final last = _mangledColumns.length - 1;
       final bounds = _gridController.getBounds(last, SemiItem.headerRow);
       if (bounds != null) {
-        _resizeColStartX = bounds.x;
-        _resizeCol = last;
+        setState(() {
+          _resizeColStartX = bounds.x;
+          _resizeCol = last;
+        });
       }
       return;
     }
@@ -1972,8 +1974,10 @@ class _SemiDataEditorState extends State<SemiDataEditor>
     }
     if (!_canResize) return;
 
-    _resizeColStartX = header.bounds.x;
-    _resizeCol = col;
+    setState(() {
+      _resizeColStartX = header.bounds.x;
+      _resizeCol = col;
+    });
     _emitResize(widget.props.onColumnResizeStart, col, header.bounds.width);
   }
 
