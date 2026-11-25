@@ -299,7 +299,7 @@
 | 290 | editor | `editor/common/model/textModel.ts` | `lib/src/monaco/editor/common/model/textModel.dart` | pending |
 | 291 | editor | `editor/common/model/textModelPart.ts` | `lib/src/monaco/editor/common/model/textModelPart.dart` | tested |
 | 292 | editor | `editor/common/model/textModelSearch.ts` | `lib/src/monaco/editor/common/model/textModelSearch.dart` | pending |
-| 293 | editor | `editor/common/model/textModelStringEdit.ts` | `lib/src/monaco/editor/common/model/textModelStringEdit.dart` | pending |
+| 293 | editor | `editor/common/model/textModelStringEdit.ts` | `lib/src/monaco/editor/common/model/textModelStringEdit.dart` | tested |
 | 294 | editor | `editor/common/model/textModelText.ts` | `lib/src/monaco/editor/common/model/textModelText.dart` | pending |
 | 295 | editor | `editor/common/model/textModelTokens.ts` | `lib/src/monaco/editor/common/model/textModelTokens.dart` | tested |
 | 296 | editor | `editor/common/model/tokens/abstractSyntaxTokenBackend.ts` | `lib/src/monaco/editor/common/model/tokens/abstractSyntaxTokenBackend.dart` | pending |

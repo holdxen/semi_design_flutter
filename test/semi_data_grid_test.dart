@@ -1873,6 +1873,8 @@ void main() {
       validateCell,
       SemiEditorProvider? Function(SemiGridCell cell, SemiItem location)?
       provideEditor,
+      SemiDataEditorController? controller,
+      void Function(SemiGridKeyArgs event)? onKeyDown,
     }) {
       edits = [];
       selectionLog = [];
@@ -1954,7 +1956,7 @@ void main() {
             theme: theme ?? SemiDataGridTheme.light(),
             rowHeight: const SemiRowHeight.fixed(32),
             headerHeight: 32,
-            onKeyDown: (_) {},
+            onKeyDown: onKeyDown ?? (_) {},
             onDelete: onDelete,
             onPaste: onPaste,
             onCellsEdited: (items) {
@@ -2009,7 +2011,7 @@ void main() {
               body: SizedBox(
                 width: 400,
                 height: 400,
-                child: SemiDataEditor(props: p),
+                child: SemiDataEditor(props: p, controller: controller),
               ),
             ),
           );
@@ -2593,6 +2595,223 @@ void main() {
         expect(rendered.columns.toArray(), [0, 2]);
         expect(rendered.rows.toArray(), [0, 1]);
         expect(selectionLog, isEmpty);
+      });
+    });
+
+    group('DataEditorRef controller', () {
+      SemiGridSelection renderedSelection(WidgetTester tester) => tester
+          .widget<SemiDataGrid>(find.byType(SemiDataGrid))
+          .props
+          .selection;
+
+      testWidgets('appendRow and appendColumn select the new data', (
+        tester,
+      ) async {
+        final controller = SemiDataEditorController();
+        var appended = 0;
+        await tester.pumpWidget(
+          buildEditor(
+            controller: controller,
+            rows: 3,
+            columnCount: 3,
+            trailingRowOptions: const SemiTrailingRowOptions(),
+            onRowAppended: () => appended++,
+            onColumnAppended: () {
+              appended++;
+              return null;
+            },
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final rowFuture = controller.appendRow(1, openOverlay: false);
+        await tester.pumpAndSettle();
+        await rowFuture;
+        expect(appended, 1);
+        expect(renderedSelection(tester).current!.cell, const SemiItem(1, 3));
+
+        final colFuture = controller.appendColumn(0, openOverlay: false);
+        await tester.pumpAndSettle();
+        await colFuture;
+        expect(appended, 2);
+        expect(renderedSelection(tester).current!.cell, const SemiItem(3, 0));
+      });
+
+      testWidgets('emit copy and delete operate on the selection', (
+        tester,
+      ) async {
+        final controller = SemiDataEditorController();
+        final writes = <String>[];
+        mockGridClipboard(write: (text) async => writes.add(text));
+        await tester.pumpWidget(
+          buildEditor(controller: controller, rows: 2, columnCount: 2),
+        );
+        await tester.pumpAndSettle();
+        await focusClipboardCell(tester, 50);
+
+        await controller.emit(SemiEmitEvent.copy);
+        await tester.pumpAndSettle();
+        expect(writes, ['r0 c0']);
+
+        await controller.emit(SemiEmitEvent.delete);
+        await tester.pumpAndSettle();
+        expect(edits.single.location, const SemiItem(0, 0));
+        expect((edits.single.value as SemiTextCell).data, isEmpty);
+      });
+
+      testWidgets('emit paste writes the clipboard data', (tester) async {
+        final controller = SemiDataEditorController();
+        mockGridClipboard(text: 'pasted');
+        await tester.pumpWidget(
+          buildEditor(controller: controller, rows: 2, columnCount: 2),
+        );
+        await tester.pumpAndSettle();
+        await focusClipboardCell(tester, 50);
+
+        await controller.emit(SemiEmitEvent.paste);
+        await tester.pumpAndSettle();
+        expect(edits.single.location, const SemiItem(0, 0));
+        expect((edits.single.value as SemiTextCell).data, 'pasted');
+      });
+
+      testWidgets('emit fill-right fills the selected range', (tester) async {
+        final controller = SemiDataEditorController();
+        await tester.pumpWidget(
+          buildEditor(
+            controller: controller,
+            rows: 2,
+            columnCount: 3,
+            // Fill is unbound by default upstream too
+            // (`data-editor-keybindings.ts:77-78`).
+            keybindings: const SemiKeybinds(downFill: true, rightFill: true),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await focusClipboardCell(tester, 50);
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.tapAt(
+          const Offset(150, 45),
+          kind: PointerDeviceKind.mouse,
+        );
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.pumpAndSettle();
+        expect(renderedSelection(tester).current!.range.width, 2);
+        edits.clear();
+
+        await controller.emit(SemiEmitEvent.fillRight);
+        await tester.pumpAndSettle();
+        expect(edits, hasLength(1));
+        expect(edits.single.location, const SemiItem(1, 0));
+        expect((edits.single.value as SemiTextCell).data, 'r0 c0');
+      });
+
+      testWidgets('emit delete is cancelled by onKeyDown', (tester) async {
+        final controller = SemiDataEditorController();
+        var keyDowns = 0;
+        await tester.pumpWidget(
+          buildEditor(
+            controller: controller,
+            rows: 2,
+            columnCount: 2,
+            onKeyDown: (event) {
+              keyDowns++;
+              event.cancel();
+            },
+          ),
+        );
+        await tester.pumpAndSettle();
+        await focusClipboardCell(tester, 50);
+
+        await controller.emit(SemiEmitEvent.delete);
+        await tester.pumpAndSettle();
+        expect(keyDowns, 1);
+        expect(edits, isEmpty);
+      });
+
+      testWidgets('getBounds, scrollTo and mouse args use business coords', (
+        tester,
+      ) async {
+        final controller = SemiDataEditorController();
+        final regions = <SemiVisibleRegion>[];
+        await tester.pumpWidget(
+          buildEditor(
+            controller: controller,
+            rows: 80,
+            columnCount: 3,
+            rowMarkers: const SemiRowMarkerOptions(width: 40),
+            onVisibleRegionChanged: (region, _) => regions.add(region),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Marker (40) + 3 x 100 wide, 80 x 32 tall.
+        expect(
+          controller.getBounds(null, null),
+          const SemiRectangle(x: 0, y: 0, width: 340, height: 2560),
+        );
+        // Business col 1 is grid col 2: marker 40 + first data column 100.
+        final cell = controller.getBounds(1, 0)!;
+        expect(cell.x, 140);
+        // `computeBounds` inflates by a pixel so the hit box covers the grid
+        // line, matching the painter's own cell rects.
+        expect(cell.width, 101);
+
+        // Grid column 1 (the marker owns 0..40) is business column 0.
+        final args = controller.getMouseArgsForPosition(90, 45);
+        expect(args, isA<SemiGridCellMouseArgs>());
+        expect(
+          (args! as SemiGridCellMouseArgs).location,
+          const SemiItem(0, 0),
+        );
+
+        final initial = regions.last;
+        controller.scrollTo(2, 60);
+        await tester.pumpAndSettle();
+        expect(regions.last, isNot(initial));
+        expect(regions.last.rect.containsItem(const SemiItem(2, 60)), isTrue);
+      });
+
+      testWidgets('remeasureColumns reports business column indices', (
+        tester,
+      ) async {
+        final controller = SemiDataEditorController();
+        final measured = <(String, int)>[];
+        await tester.pumpWidget(
+          buildEditor(
+            controller: controller,
+            rows: 3,
+            columnCount: 3,
+            rowMarkers: const SemiRowMarkerOptions(width: 40),
+            onColumnResize: (column, width, col, grow) =>
+                measured.add((column.title, col)),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        controller.remeasureColumns(SemiCompactSelection.fromArray([1]));
+        await tester.pumpAndSettle();
+
+        expect(measured, [('C1', 1)]);
+      });
+
+      testWidgets('a replaced or disposed editor detaches the controller', (
+        tester,
+      ) async {
+        final first = SemiDataEditorController();
+        final second = SemiDataEditorController();
+        await tester.pumpWidget(buildEditor(controller: first));
+        await tester.pumpAndSettle();
+        expect(first.getBounds(0, 0), isNotNull);
+
+        await tester.pumpWidget(buildEditor(controller: second));
+        await tester.pumpAndSettle();
+        expect(first.getBounds(0, 0), isNull);
+        expect(second.getBounds(0, 0), isNotNull);
+
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pumpAndSettle();
+        expect(second.getBounds(0, 0), isNull);
       });
     });
 

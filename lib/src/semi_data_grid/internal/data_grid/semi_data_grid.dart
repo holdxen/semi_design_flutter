@@ -241,6 +241,12 @@ class SemiDataGridController extends ChangeNotifier {
     _state?._scheduleRefresh(semantics: true);
     notifyListeners();
   }
+
+  /// `getMouseArgsForPosition` (`data-grid.tsx:324`): hit-tests [x]/[y]
+  /// without a live pointer, using hover-style button state and the keyboard
+  /// modifiers currently held down. Locations are in grid coordinates.
+  SemiGridMouseArgs? mouseArgsForPosition(double x, double y) =>
+      _state?._mouseArgsForPosition(x, y);
 }
 
 class SemiDataGrid extends StatefulWidget {
@@ -726,6 +732,23 @@ class _SemiDataGridState extends State<SemiDataGrid>
   // -------------------------------------------------------------------------
   // getMouseArgsForPosition (`data-grid.tsx:516-...`)
   // -------------------------------------------------------------------------
+
+  /// Public hit-test used by [SemiDataGridController.mouseArgsForPosition]:
+  /// no live pointer is required, so the button state is the hover default and
+  /// the modifiers are read from the keyboard at call time.
+  SemiGridMouseArgs _mouseArgsForPosition(double x, double y) {
+    final keyboard = HardwareKeyboard.instance;
+    return _getMouseArgsForPosition(
+      x,
+      y,
+      button: 0,
+      buttons: 0,
+      shiftKey: keyboard.isShiftPressed,
+      ctrlKey: keyboard.isControlPressed,
+      metaKey: keyboard.isMetaPressed,
+      isTouch: false,
+    );
+  }
 
   SemiGridMouseArgs _getMouseArgsForPosition(
     double posX,

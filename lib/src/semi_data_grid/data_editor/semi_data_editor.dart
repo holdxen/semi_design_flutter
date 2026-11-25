@@ -20,6 +20,7 @@ import 'package:flutter/services.dart';
 
 import '../cells/semi_cell_registry.dart';
 import '../cells/semi_cell_types.dart';
+import '../common/semi_is_hotkey.dart';
 import '../common/semi_math.dart';
 import '../common/semi_utils.dart';
 import '../../theme/semi_theme.dart';
@@ -434,10 +435,91 @@ class SemiDataEditorProps {
 }
 
 /// `SemiDataEditor`: `DataGrid` + selection + overlay editor + clipboard.
+/// The events [SemiDataEditorController.emit] can fire, matching upstream's
+/// `EmitEvents` (`data-editor.tsx:166`). `cut` is deliberately absent.
+enum SemiEmitEvent { copy, paste, delete, fillRight, fillDown }
+
+/// `DataEditorRef` (`data-editor.tsx:701-760`): programmatic control of the
+/// editor. Every column/row index is a *business* coordinate — the row-marker
+/// column is stripped before a value reaches the grid, and added back before
+/// one is reported.
+///
+/// The controller is inert until it is handed to a mounted [SemiDataEditor];
+/// calls made before that (or after the editor is disposed) are no-ops.
+class SemiDataEditorController {
+  _SemiDataEditorState? _state;
+
+  void _attach(_SemiDataEditorState state) => _state = state;
+
+  void _detach(_SemiDataEditorState state) {
+    if (identical(_state, state)) _state = null;
+  }
+
+  /// `appendRow` (`data-editor.tsx:710`): appends a row focused at [col] and
+  /// resolves once the caller has written the new row back and it has been
+  /// selected (or the post-frame polling gives up).
+  Future<void> appendRow(int col, {bool openOverlay = true}) {
+    final state = _state;
+    if (state == null) return Future<void>.value();
+    return state._appendRow(
+      col + state._markerOffset,
+      openOverlay: openOverlay,
+    );
+  }
+
+  /// `appendColumn` (`data-editor.tsx:716`): same contract as [appendRow].
+  Future<void> appendColumn(int row, {bool openOverlay = true}) =>
+      _state?._appendColumn(row, openOverlay: openOverlay) ??
+      Future<void>.value();
+
+  /// `updateCells` (`data-editor.tsx:721`): asks for a repaint of [cells].
+  void updateCells(Iterable<SemiItem> cells) => _state?._updateCells(cells);
+
+  /// `getBounds` (`data-editor.tsx:726`): canvas-local bounds of [col]/[row],
+  /// or null when the cell is off-screen. With both omitted, returns the full
+  /// scrollable content rectangle instead of a single cell.
+  SemiRectangle? getBounds(int? col, int? row) =>
+      _state?._controllerGetBounds(col, row);
+
+  /// `focus` (`data-editor.tsx:731`): moves keyboard focus to the grid.
+  void focus() => _state?._gridController.focus();
+
+  /// `emit` (`data-editor.tsx:736`): fires an event as if the user had
+  /// triggered it, so `props.onKeyDown` still gets the chance to cancel.
+  Future<void> emit(SemiEmitEvent event) =>
+      _state?._emit(event) ?? Future<void>.value();
+
+  /// `scrollTo` (`data-editor.tsx:741`): scrolls the cell into view. Only the
+  /// cell-addressed form of the upstream signature is ported; pixel amounts,
+  /// alignment and `padding` have no equivalent here.
+  void scrollTo(int col, int row, {SemiScrollAxis? axis}) => _state
+      ?._scrollTo(
+        SemiScrollTarget(
+          col,
+          row,
+          axis: axis ?? SemiScrollAxis.both,
+        ),
+      );
+
+  /// `remeasureColumns` (`data-editor.tsx:746`): re-measures each column in
+  /// [cols] and re-emits `onColumnResize`.
+  void remeasureColumns(SemiCompactSelection cols) =>
+      _state?._remeasureColumns(cols);
+
+  /// `getMouseArgsForPosition` (`data-editor.tsx:751`): hit-tests a pointer
+  /// position with hover-style button state and the current keyboard
+  /// modifiers. The returned event's location is marker-free.
+  SemiGridMouseArgs? getMouseArgsForPosition(double x, double y) =>
+      _state?._mouseArgsForPosition(x, y);
+}
+
 class SemiDataEditor extends StatefulWidget {
-  const SemiDataEditor({super.key, required this.props});
+  const SemiDataEditor({super.key, required this.props, this.controller});
 
   final SemiDataEditorProps props;
+
+  /// Optional programmatic handle; see [SemiDataEditorController].
+  final SemiDataEditorController? controller;
 
   @override
   State<SemiDataEditor> createState() => _SemiDataEditorState();
@@ -544,6 +626,7 @@ class _SemiDataEditorState extends State<SemiDataEditor>
   @override
   void initState() {
     super.initState();
+    widget.controller?._attach(this);
     _selection = SemiGridSelection.empty;
     _rebuildRowGrouping();
     _rebuildRemAdjustment(16);
@@ -573,6 +656,7 @@ class _SemiDataEditorState extends State<SemiDataEditor>
 
   @override
   void dispose() {
+    widget.controller?._detach(this);
     _searchFadeTimer?.cancel();
     _searchRunner.cancel();
     _searchTextController.dispose();
@@ -800,6 +884,10 @@ class _SemiDataEditorState extends State<SemiDataEditor>
   @override
   void didUpdateWidget(SemiDataEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller?._detach(this);
+      widget.controller?._attach(this);
+    }
     final old = oldWidget.props;
     final props = widget.props;
     final searchVisibilityChanged =
@@ -1273,33 +1361,42 @@ class _SemiDataEditorState extends State<SemiDataEditor>
   /// `appendRow` (`data-editor.tsx:1687-1742`). The Web version awaits the
   /// consumer's promise and retries with a backoff; here the same job is a
   /// post-frame check that `rows` grew.
-  void _appendRow(int col, {bool openOverlay = true}) {
+  Future<void> _appendRow(int col, {bool openOverlay = true}) async {
     final p = widget.props;
     if (col < 0 || col >= _mangledColumns.length) return;
     if (_mangledColumns[col].trailingRowOptions?.disabled == true) return;
 
     final rowsBefore = _groupedRows;
     p.onRowAppended?.call();
-    _focusAfterAppend(col, rowsBefore, openOverlay, 0);
+    await _focusAfterAppend(col, rowsBefore, openOverlay, 0);
   }
 
-  void _focusAfterAppend(
+  Future<void> _focusAfterAppend(
     int col,
     int rowsBefore,
     bool openOverlay,
     int attempt,
   ) {
-    if (!mounted) return;
+    if (!mounted) return Future<void>.value();
     if (_groupedRows > rowsBefore) {
       _selectAppendedRow(col, rowsBefore, openOverlay);
-      return;
+      return Future<void>.value();
     }
-    if (attempt >= 10) return;
+    if (attempt >= 10) return Future<void>.value();
+    final completer = Completer<void>();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _focusAfterAppend(col, rowsBefore, openOverlay, attempt + 1);
+      if (!mounted) {
+        completer.complete();
+        return;
       }
+      _focusAfterAppend(
+        col,
+        rowsBefore,
+        openOverlay,
+        attempt + 1,
+      ).whenComplete(completer.complete);
     });
+    return completer.future;
   }
 
   /// `doFocus`'s `setCurrent` + `scrollTo` (`data-editor.tsx:1716-1740`).
@@ -1351,40 +1448,44 @@ class _SemiDataEditorState extends State<SemiDataEditor>
   }
 
   /// `appendColumn` (`data-editor.tsx:1744-1793`).
-  void _appendColumn(int row, {bool openOverlay = true}) {
+  Future<void> _appendColumn(int row, {bool openOverlay = true}) async {
     final p = widget.props;
     final append = p.onColumnAppended;
     if (append == null) return;
 
     final colsBefore = _mangledColumns.length;
     final result = append();
-    _focusAfterColumnAppend(colsBefore, row, result, openOverlay, 0);
+    await _focusAfterColumnAppend(colsBefore, row, result, openOverlay, 0);
   }
 
-  void _focusAfterColumnAppend(
+  Future<void> _focusAfterColumnAppend(
     int colsBefore,
     int row,
     Object? result,
     bool openOverlay,
     int attempt,
   ) {
-    if (!mounted) return;
+    if (!mounted) return Future<void>.value();
     if (_mangledColumns.length > colsBefore) {
       _selectAppendedColumn(colsBefore, row, result, openOverlay);
-      return;
+      return Future<void>.value();
     }
-    if (attempt >= 10) return;
+    if (attempt >= 10) return Future<void>.value();
+    final completer = Completer<void>();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _focusAfterColumnAppend(
-          colsBefore,
-          row,
-          result,
-          openOverlay,
-          attempt + 1,
-        );
+      if (!mounted) {
+        completer.complete();
+        return;
       }
+      _focusAfterColumnAppend(
+        colsBefore,
+        row,
+        result,
+        openOverlay,
+        attempt + 1,
+      ).whenComplete(completer.complete);
     });
+    return completer.future;
   }
 
   /// `doFocus` of `appendColumn` (`data-editor.tsx:1763-1786`).
@@ -2316,12 +2417,18 @@ class _SemiDataEditorState extends State<SemiDataEditor>
   }
 
   /// `normalSizeColumn` (`data-editor.tsx:2193-2241`).
+  /// `normalSizeColumn` (`data-editor.tsx:2193-2236`): [col] is the
+  /// marker-inclusive grid index, which is what `getCellsForSelection` and
+  /// the header hit-test report. The column itself and the emitted
+  /// `onColumnResize` index are business columns
+  /// (`columns[col - rowMarkerOffset]` upstream).
   void _normalSizeColumn(int col) {
     final p = widget.props;
     final getCells = _getCellsForSelection;
     final onResize = p.onColumnResize;
     if (p.getCellsForSelection == null || onResize == null) return;
-    if (col < 0 || col >= p.columns.length) return;
+    final userCol = col - _markerOffset;
+    if (userCol < 0 || userCol >= p.columns.length) return;
 
     final start = _visible?.y ?? 0;
     final height = math.min(
@@ -2340,8 +2447,8 @@ class _SemiDataEditorState extends State<SemiDataEditor>
 
     final newWidth = semiMeasureColumn(
       theme: _theme,
-      column: p.columns[col],
-      colIndex: col,
+      column: p.columns[userCol],
+      colIndex: userCol,
       selectedData: cells,
       minColumnWidth: _minColumnWidth,
       maxColumnWidth: _maxColumnWidth,
@@ -2349,7 +2456,84 @@ class _SemiDataEditorState extends State<SemiDataEditor>
       getCellRenderer: _renderers.forCell,
       metrics: _metrics,
     );
-    onResize(p.columns[col], newWidth, col, newWidth);
+    onResize(p.columns[userCol], newWidth, userCol, newWidth);
+  }
+
+  // -------------------------------------------------------------------------
+  // DataEditorRef (`data-editor.tsx:701-760`)
+  // -------------------------------------------------------------------------
+
+  void _updateCells(Iterable<SemiItem> cells) {
+    _gridController.damage([
+      for (final cell in cells) SemiItem(cell.col + _markerOffset, cell.row),
+    ]);
+  }
+
+  SemiRectangle? _controllerGetBounds(int? col, int? row) {
+    if (col == null && row == null) {
+      return SemiRectangle(
+        x: 0,
+        y: 0,
+        width: _columnsWidth,
+        height: _rowsHeight,
+      );
+    }
+    return _gridController.getBounds((col ?? 0) + _markerOffset, row);
+  }
+
+  Future<void> _emit(SemiEmitEvent event) async {
+    switch (event) {
+      case SemiEmitEvent.copy:
+        await _copy();
+      case SemiEmitEvent.paste:
+        await _paste();
+      case SemiEmitEvent.delete:
+        _emitHotkey('Delete', 46);
+      case SemiEmitEvent.fillRight:
+        _emitHotkey('r', 82, primary: true);
+      case SemiEmitEvent.fillDown:
+        _emitHotkey('d', 68, primary: true);
+    }
+  }
+
+  /// Upstream `emit` synthesizes a DOM key event and hands it to the editor's
+  /// own key handler (`data-editor.tsx:4032-4070`), which is what keeps
+  /// `props.onKeyDown` able to cancel the action. The `primary` modifier is
+  /// mapped per platform so `primary+_68` / `primary+_82` match on macOS too.
+  void _emitHotkey(String key, int keyCode, {bool primary = false}) {
+    final isMac = semiIsOSX();
+    _handleKeyDown(
+      SemiGridKeyArgs(
+        bounds: null,
+        key: key,
+        keyCode: keyCode,
+        altKey: false,
+        shiftKey: false,
+        ctrlKey: primary && !isMac,
+        metaKey: primary && isMac,
+        cancel: () {},
+        stopPropagation: () {},
+        preventDefault: () {},
+        location: null,
+      ),
+    );
+  }
+
+  void _remeasureColumns(SemiCompactSelection cols) {
+    for (final col in cols.indices) {
+      _normalSizeColumn(col + _markerOffset);
+    }
+  }
+
+  SemiGridMouseArgs? _mouseArgsForPosition(double x, double y) {
+    final args = _gridController.mouseArgsForPosition(x, y);
+    if (args == null) return null;
+    final location = _locationOf(args);
+    return _withLocation(
+      args,
+      location.col - _markerOffset,
+      location.row,
+    );
   }
 
   // -------------------------------------------------------------------------
