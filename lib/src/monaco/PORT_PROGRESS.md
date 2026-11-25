@@ -202,7 +202,7 @@
 | 193 | editor | `editor/common/core/selection.ts` | `lib/src/monaco/editor/common/core/selection.dart` | tested |
 | 194 | editor | `editor/common/core/stringBuilder.ts` | `lib/src/monaco/editor/common/core/stringBuilder.dart` | tested |
 | 195 | editor | `editor/common/core/text/abstractText.ts` | `lib/src/monaco/editor/common/core/text/abstractText.dart` | tested |
-| 196 | editor | `editor/common/core/text/getPositionOffsetTransformerFromTextModel.ts` | `lib/src/monaco/editor/common/core/text/getPositionOffsetTransformerFromTextModel.dart` | pending |
+| 196 | editor | `editor/common/core/text/getPositionOffsetTransformerFromTextModel.ts` | `lib/src/monaco/editor/common/core/text/getPositionOffsetTransformerFromTextModel.dart` | tested |
 | 197 | editor | `editor/common/core/text/positionToOffset.ts` | `lib/src/monaco/editor/common/core/text/positionToOffset.dart` | tested |
 | 198 | editor | `editor/common/core/text/positionToOffsetImpl.ts` | `lib/src/monaco/editor/common/core/text/positionToOffsetImpl.dart` | tested |
 | 199 | editor | `editor/common/core/text/textLength.ts` | `lib/src/monaco/editor/common/core/text/textLength.dart` | tested |
@@ -565,13 +565,13 @@
 | 556 | editor | `editor/contrib/inlineCompletions/browser/model/editKind.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/editKind.dart` | tested |
 | 557 | editor | `editor/contrib/inlineCompletions/browser/model/ghostText.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/ghostText.dart` | pending |
 | 558 | editor | `editor/contrib/inlineCompletions/browser/model/graph.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/graph.dart` | tested |
-| 559 | editor | `editor/contrib/inlineCompletions/browser/model/inlineCompletionIsVisible.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/inlineCompletionIsVisible.dart` | pending |
+| 559 | editor | `editor/contrib/inlineCompletions/browser/model/inlineCompletionIsVisible.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/inlineCompletionIsVisible.dart` | tested |
 | 560 | editor | `editor/contrib/inlineCompletions/browser/model/inlineCompletionsModel.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/inlineCompletionsModel.dart` | pending |
 | 561 | editor | `editor/contrib/inlineCompletions/browser/model/inlineCompletionsSource.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/inlineCompletionsSource.dart` | pending |
 | 562 | editor | `editor/contrib/inlineCompletions/browser/model/inlineSuggestionItem.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/inlineSuggestionItem.dart` | pending |
 | 563 | editor | `editor/contrib/inlineCompletions/browser/model/provideInlineCompletions.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/provideInlineCompletions.dart` | pending |
 | 564 | editor | `editor/contrib/inlineCompletions/browser/model/renameSymbolProcessor.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/renameSymbolProcessor.dart` | pending |
-| 565 | editor | `editor/contrib/inlineCompletions/browser/model/singleTextEditHelpers.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/singleTextEditHelpers.dart` | pending |
+| 565 | editor | `editor/contrib/inlineCompletions/browser/model/singleTextEditHelpers.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/singleTextEditHelpers.dart` | tested |
 | 566 | editor | `editor/contrib/inlineCompletions/browser/model/suggestWidgetAdapter.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/suggestWidgetAdapter.dart` | pending |
 | 567 | editor | `editor/contrib/inlineCompletions/browser/model/textModelValueReference.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/textModelValueReference.dart` | tested |
 | 568 | editor | `editor/contrib/inlineCompletions/browser/model/typingSpeed.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/typingSpeed.dart` | pending |
