@@ -247,7 +247,7 @@
 | 238 | editor | `editor/common/editorTheme.ts` | `lib/src/monaco/editor/common/editorTheme.dart` | tested |
 | 239 | editor | `editor/common/encodedTokenAttributes.ts` | `lib/src/monaco/editor/common/encodedTokenAttributes.dart` | tested |
 | 240 | editor | `editor/common/inputMode.ts` | `lib/src/monaco/editor/common/inputMode.dart` | tested |
-| 241 | editor | `editor/common/languageFeatureRegistry.ts` | `lib/src/monaco/editor/common/languageFeatureRegistry.dart` | pending |
+| 241 | editor | `editor/common/languageFeatureRegistry.ts` | `lib/src/monaco/editor/common/languageFeatureRegistry.dart` | tested |
 | 242 | editor | `editor/common/languageSelector.ts` | `lib/src/monaco/editor/common/languageSelector.dart` | tested |
 | 243 | editor | `editor/common/languages/autoIndent.ts` | `lib/src/monaco/editor/common/languages/autoIndent.dart` | pending |
 | 244 | editor | `editor/common/languages/defaultDocumentColorsComputer.ts` | `lib/src/monaco/editor/common/languages/defaultDocumentColorsComputer.dart` | tested |
@@ -325,9 +325,9 @@
 | 316 | editor | `editor/common/services/findSectionHeaders.ts` | `lib/src/monaco/editor/common/services/findSectionHeaders.dart` | pending |
 | 317 | editor | `editor/common/services/getIconClasses.ts` | `lib/src/monaco/editor/common/services/getIconClasses.dart` | pending |
 | 318 | editor | `editor/common/services/inMemoryTextModelService.ts` | `lib/src/monaco/editor/common/services/inMemoryTextModelService.dart` | pending |
-| 319 | editor | `editor/common/services/languageFeatureDebounce.ts` | `lib/src/monaco/editor/common/services/languageFeatureDebounce.dart` | pending |
-| 320 | editor | `editor/common/services/languageFeatures.ts` | `lib/src/monaco/editor/common/services/languageFeatures.dart` | pending |
-| 321 | editor | `editor/common/services/languageFeaturesService.ts` | `lib/src/monaco/editor/common/services/languageFeaturesService.dart` | pending |
+| 319 | editor | `editor/common/services/languageFeatureDebounce.ts` | `lib/src/monaco/editor/common/services/languageFeatureDebounce.dart` | tested |
+| 320 | editor | `editor/common/services/languageFeatures.ts` | `lib/src/monaco/editor/common/services/languageFeatures.dart` | tested |
+| 321 | editor | `editor/common/services/languageFeaturesService.ts` | `lib/src/monaco/editor/common/services/languageFeaturesService.dart` | tested |
 | 322 | editor | `editor/common/services/languageService.ts` | `lib/src/monaco/editor/common/services/languageService.dart` | pending |
 | 323 | editor | `editor/common/services/languagesAssociations.ts` | `lib/src/monaco/editor/common/services/languagesAssociations.dart` | pending |
 | 324 | editor | `editor/common/services/languagesRegistry.ts` | `lib/src/monaco/editor/common/services/languagesRegistry.dart` | pending |
@@ -406,7 +406,7 @@
 | 397 | editor | `editor/contrib/codeAction/browser/codeActionMenu.ts` | `lib/src/monaco/editor/contrib/codeAction/browser/codeActionMenu.dart` | pending |
 | 398 | editor | `editor/contrib/codeAction/browser/codeActionModel.ts` | `lib/src/monaco/editor/contrib/codeAction/browser/codeActionModel.dart` | pending |
 | 399 | editor | `editor/contrib/codeAction/browser/lightBulbWidget.ts` | `lib/src/monaco/editor/contrib/codeAction/browser/lightBulbWidget.dart` | pending |
-| 400 | editor | `editor/contrib/codeAction/common/types.ts` | `lib/src/monaco/editor/contrib/codeAction/common/types.dart` | pending |
+| 400 | editor | `editor/contrib/codeAction/common/types.ts` | `lib/src/monaco/editor/contrib/codeAction/common/types.dart` | tested |
 | 401 | editor | `editor/contrib/codeAction/test/browser/codeAction.test.ts` | `lib/src/monaco/editor/contrib/codeAction/test/browser/codeAction.test.dart` | pending |
 | 402 | editor | `editor/contrib/codeAction/test/browser/codeActionKeybindingResolver.test.ts` | `lib/src/monaco/editor/contrib/codeAction/test/browser/codeActionKeybindingResolver.test.dart` | pending |
 | 403 | editor | `editor/contrib/codeAction/test/browser/codeActionModel.test.ts` | `lib/src/monaco/editor/contrib/codeAction/test/browser/codeActionModel.test.dart` | pending |
@@ -562,7 +562,7 @@
 | 553 | editor | `editor/contrib/inlineCompletions/browser/model/InlineSuggestAlternativeAction.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/InlineSuggestAlternativeAction.dart` | pending |
 | 554 | editor | `editor/contrib/inlineCompletions/browser/model/changeRecorder.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/changeRecorder.dart` | pending |
 | 555 | editor | `editor/contrib/inlineCompletions/browser/model/computeGhostText.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/computeGhostText.dart` | pending |
-| 556 | editor | `editor/contrib/inlineCompletions/browser/model/editKind.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/editKind.dart` | pending |
+| 556 | editor | `editor/contrib/inlineCompletions/browser/model/editKind.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/editKind.dart` | tested |
 | 557 | editor | `editor/contrib/inlineCompletions/browser/model/ghostText.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/ghostText.dart` | pending |
 | 558 | editor | `editor/contrib/inlineCompletions/browser/model/graph.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/graph.dart` | tested |
 | 559 | editor | `editor/contrib/inlineCompletions/browser/model/inlineCompletionIsVisible.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/inlineCompletionIsVisible.dart` | pending |
@@ -722,7 +722,7 @@
 | 713 | editor | `editor/contrib/unicodeHighlighter/browser/unicodeHighlighter.ts` | `lib/src/monaco/editor/contrib/unicodeHighlighter/browser/unicodeHighlighter.dart` | pending |
 | 714 | editor | `editor/contrib/unusualLineTerminators/browser/unusualLineTerminators.ts` | `lib/src/monaco/editor/contrib/unusualLineTerminators/browser/unusualLineTerminators.dart` | pending |
 | 715 | editor | `editor/contrib/wordHighlighter/browser/highlightDecorations.ts` | `lib/src/monaco/editor/contrib/wordHighlighter/browser/highlightDecorations.dart` | pending |
-| 716 | editor | `editor/contrib/wordHighlighter/browser/textualHighlightProvider.ts` | `lib/src/monaco/editor/contrib/wordHighlighter/browser/textualHighlightProvider.dart` | pending |
+| 716 | editor | `editor/contrib/wordHighlighter/browser/textualHighlightProvider.ts` | `lib/src/monaco/editor/contrib/wordHighlighter/browser/textualHighlightProvider.dart` | tested |
 | 717 | editor | `editor/contrib/wordHighlighter/browser/wordHighlighter.ts` | `lib/src/monaco/editor/contrib/wordHighlighter/browser/wordHighlighter.dart` | pending |
 | 718 | editor | `editor/contrib/wordHighlighter/test/browser/wordHighlighter.test.ts` | `lib/src/monaco/editor/contrib/wordHighlighter/test/browser/wordHighlighter.test.dart` | pending |
 | 719 | editor | `editor/contrib/wordOperations/browser/wordOperations.ts` | `lib/src/monaco/editor/contrib/wordOperations/browser/wordOperations.dart` | pending |
