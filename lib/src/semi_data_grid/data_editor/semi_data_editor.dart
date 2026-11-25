@@ -215,13 +215,15 @@ class SemiDataEditorProps {
   final SemiTrailingRowOptions? trailingRowOptions;
 
   /// `onRowAppended` (`data-editor.tsx:221`): the owner inserts a row and
-  /// rebuilds; the editor waits for `rows` to grow before focusing it.
-  final void Function()? onRowAppended;
+  /// returns where it landed — `"top"`, `"bottom"` (the default) or the row
+  /// index to focus. A [Future] is awaited, matching the upstream `Promise`
+  /// return; the editor waits for `rows` to grow before focusing the new row.
+  final FutureOr<Object?> Function()? onRowAppended;
 
   /// `onColumnAppended` (`data-editor.tsx:225`): return `"left"`, `"right"`
-  /// or a column index to control where the new column lands; null appends on
-  /// the right. The editor waits for the column count to grow.
-  final Object? Function()? onColumnAppended;
+  /// (the default) or a column index to control where the new column lands.
+  /// A [Future] is awaited; the editor waits for the column count to grow.
+  final FutureOr<Object?> Function()? onColumnAppended;
 
   /// `rowGrouping` (`data-editor.tsx:936`): group headers, collapse state
   /// and the per-group theme/height overrides.
@@ -1316,6 +1318,15 @@ class _SemiDataEditorState extends State<SemiDataEditor>
   int get _mangledRows =>
       _showTrailingBlankRow ? _groupedRows + 1 : _groupedRows;
 
+  /// `freezeTrailingRows + (showTrailingBlankRow && lastRowSticky ? 1 : 0)`
+  /// (`data-editor.tsx:1581,4278`): a `trailingRowOptions.sticky` row is
+  /// always visible, so it joins the frozen trailing rows.
+  int get _effectiveFreezeTrailingRows =>
+      widget.props.freezeTrailingRows +
+      (_showTrailingBlankRow && widget.props.trailingRowOptions?.sticky == true
+          ? 1
+          : 0);
+
   /// `trailingRowOptions.tint` (`data-editor.ts:3961-3965`): the trailing
   /// row joins `disabledRows`, which the painter tints with `bgHeader`.
   SemiCompactSelection get _disabledRows =>
@@ -1433,19 +1444,29 @@ class _SemiDataEditorState extends State<SemiDataEditor>
     if (_mangledColumns[col].trailingRowOptions?.disabled == true) return;
 
     final rowsBefore = _groupedRows;
-    p.onRowAppended?.call();
-    await _focusAfterAppend(col, rowsBefore, openOverlay, 0);
+    final result = await p.onRowAppended?.call();
+    final target = _appendRowTarget(result, rowsBefore);
+    await _focusAfterAppend(col, rowsBefore, target, openOverlay, 0);
+  }
+
+  /// `const row = typeof r === "number" ? r : bottom ? rows : 0`
+  /// (`data-editor.tsx:1710-1714`), where `rows` is the count from before the
+  /// append.
+  static int _appendRowTarget(Object? result, int rowsBefore) {
+    if (result is int) return result;
+    return result == 'top' ? 0 : rowsBefore;
   }
 
   Future<void> _focusAfterAppend(
     int col,
     int rowsBefore,
+    int targetRow,
     bool openOverlay,
     int attempt,
   ) {
     if (!mounted) return Future<void>.value();
     if (_groupedRows > rowsBefore) {
-      _selectAppendedRow(col, rowsBefore, openOverlay);
+      _selectAppendedRow(col, targetRow, openOverlay);
       return Future<void>.value();
     }
     if (attempt >= 10) return Future<void>.value();
@@ -1458,6 +1479,7 @@ class _SemiDataEditorState extends State<SemiDataEditor>
       _focusAfterAppend(
         col,
         rowsBefore,
+        targetRow,
         openOverlay,
         attempt + 1,
       ).whenComplete(completer.complete);
@@ -1520,7 +1542,7 @@ class _SemiDataEditorState extends State<SemiDataEditor>
     if (append == null) return;
 
     final colsBefore = _mangledColumns.length;
-    final result = append();
+    final result = await append();
     await _focusAfterColumnAppend(colsBefore, row, result, openOverlay, 0);
   }
 
@@ -2268,9 +2290,11 @@ class _SemiDataEditorState extends State<SemiDataEditor>
     for (var i = 0; i < _mangledFreezeColumns; i++) {
       frozenWidth += _mangledColumns[i].width ?? 0;
     }
-    final frozenRows = widget.props.freezeTrailingRows.clamp(0, _groupedRows);
+    final frozenRows = _effectiveFreezeTrailingRows.clamp(0, _mangledRows);
+    // `getFreezeTrailingHeight(mangledRows, freezeTrailingRowsEffective, ...)`
+    // (`data-editor.tsx:1581-1586`).
     final trailingHeight = _effectiveRowHeight.trailingHeight(
-      _groupedRows,
+      _mangledRows,
       frozenRows,
     );
 
@@ -2297,7 +2321,7 @@ class _SemiDataEditorState extends State<SemiDataEditor>
       scrollX = 0;
     }
     if (axis == SemiScrollAxis.horizontal ||
-        target.row >= _groupedRows - frozenRows) {
+        target.row >= _mangledRows - frozenRows) {
       scrollY = 0;
     }
 
@@ -3634,7 +3658,7 @@ class _SemiDataEditorState extends State<SemiDataEditor>
               : 0,
           enableGroups: p.enableGroups,
           freezeColumns: _mangledFreezeColumns,
-          freezeTrailingRows: p.freezeTrailingRows,
+          freezeTrailingRows: _effectiveFreezeTrailingRows,
           cellXOffset: _cellXOffset,
           cellYOffset: _cellYOffset,
           translateX: _translateX,

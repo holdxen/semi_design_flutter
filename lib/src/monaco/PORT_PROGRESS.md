@@ -300,7 +300,7 @@
 | 291 | editor | `editor/common/model/textModelPart.ts` | `lib/src/monaco/editor/common/model/textModelPart.dart` | tested |
 | 292 | editor | `editor/common/model/textModelSearch.ts` | `lib/src/monaco/editor/common/model/textModelSearch.dart` | pending |
 | 293 | editor | `editor/common/model/textModelStringEdit.ts` | `lib/src/monaco/editor/common/model/textModelStringEdit.dart` | tested |
-| 294 | editor | `editor/common/model/textModelText.ts` | `lib/src/monaco/editor/common/model/textModelText.dart` | pending |
+| 294 | editor | `editor/common/model/textModelText.ts` | `lib/src/monaco/editor/common/model/textModelText.dart` | tested |
 | 295 | editor | `editor/common/model/textModelTokens.ts` | `lib/src/monaco/editor/common/model/textModelTokens.dart` | tested |
 | 296 | editor | `editor/common/model/tokens/abstractSyntaxTokenBackend.ts` | `lib/src/monaco/editor/common/model/tokens/abstractSyntaxTokenBackend.dart` | pending |
 | 297 | editor | `editor/common/model/tokens/annotations.ts` | `lib/src/monaco/editor/common/model/tokens/annotations.dart` | tested |
@@ -559,7 +559,7 @@
 | 550 | editor | `editor/contrib/inlineCompletions/browser/hintsWidget/inlineCompletionsHintsWidget.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/hintsWidget/inlineCompletionsHintsWidget.dart` | pending |
 | 551 | editor | `editor/contrib/inlineCompletions/browser/inlineCompletions.contribution.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/inlineCompletions.contribution.dart` | pending |
 | 552 | editor | `editor/contrib/inlineCompletions/browser/inlineCompletionsAccessibleView.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/inlineCompletionsAccessibleView.dart` | pending |
-| 553 | editor | `editor/contrib/inlineCompletions/browser/model/InlineSuggestAlternativeAction.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/InlineSuggestAlternativeAction.dart` | pending |
+| 553 | editor | `editor/contrib/inlineCompletions/browser/model/InlineSuggestAlternativeAction.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/InlineSuggestAlternativeAction.dart` | tested |
 | 554 | editor | `editor/contrib/inlineCompletions/browser/model/changeRecorder.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/changeRecorder.dart` | pending |
 | 555 | editor | `editor/contrib/inlineCompletions/browser/model/computeGhostText.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/computeGhostText.dart` | pending |
 | 556 | editor | `editor/contrib/inlineCompletions/browser/model/editKind.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/editKind.dart` | tested |

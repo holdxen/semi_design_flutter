@@ -56,6 +56,7 @@ import 'semi_avatar_theme_data.dart';
 import 'semi_cropper_theme_data.dart';
 import 'semi_side_sheet_theme_data.dart';
 import 'semi_scroll_list_theme_data.dart';
+import 'semi_scroll_bar_theme_data.dart';
 import 'semi_float_button_theme_data.dart';
 import 'semi_image_theme_data.dart';
 import 'semi_toast_theme_data.dart';
@@ -121,6 +122,7 @@ class SemiComponentThemes {
     this.cropper = const SemiCropperThemeData(),
     this.sideSheet = const SemiSideSheetThemeData(),
     this.scrollList = const SemiScrollListThemeData(),
+    this.scrollBar = const SemiScrollBarThemeData(),
     this.floatButton = const SemiFloatButtonThemeData(),
     this.image = const SemiImageThemeData(),
     this.toast = const SemiToastThemeData(),
@@ -186,6 +188,7 @@ class SemiComponentThemes {
   final SemiCropperThemeData cropper;
   final SemiSideSheetThemeData sideSheet;
   final SemiScrollListThemeData scrollList;
+  final SemiScrollBarThemeData scrollBar;
   final SemiFloatButtonThemeData floatButton;
   final SemiImageThemeData image;
   final SemiToastThemeData toast;
@@ -248,6 +251,7 @@ class SemiComponentThemes {
     SemiCropperThemeData? cropper,
     SemiSideSheetThemeData? sideSheet,
     SemiScrollListThemeData? scrollList,
+    SemiScrollBarThemeData? scrollBar,
     SemiFloatButtonThemeData? floatButton,
     SemiImageThemeData? image,
     SemiToastThemeData? toast,
@@ -310,6 +314,7 @@ class SemiComponentThemes {
     cropper: cropper ?? this.cropper,
     sideSheet: sideSheet ?? this.sideSheet,
     scrollList: scrollList ?? this.scrollList,
+    scrollBar: scrollBar ?? this.scrollBar,
     floatButton: floatButton ?? this.floatButton,
     image: image ?? this.image,
     toast: toast ?? this.toast,
@@ -376,6 +381,7 @@ class SemiComponentThemes {
           cropper == other.cropper &&
           sideSheet == other.sideSheet &&
           scrollList == other.scrollList &&
+          scrollBar == other.scrollBar &&
           floatButton == other.floatButton &&
           image == other.image &&
           toast == other.toast &&
@@ -439,6 +445,7 @@ class SemiComponentThemes {
     cropper,
     sideSheet,
     scrollList,
+    scrollBar,
     floatButton,
     image,
     toast,

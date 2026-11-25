@@ -1878,7 +1878,7 @@ void main() {
       void Function(SemiGridMouseArgs args)? onMouseMove,
       SemiRowGroupingOptions? rowGrouping,
       SemiTrailingRowOptions? trailingRowOptions,
-      void Function()? onRowAppended,
+      FutureOr<Object?> Function()? onRowAppended,
       Object? Function()? onColumnAppended,
       SemiGetCellsForSelection? cellsForSelection,
       SemiDeleteCallback? onDelete,
@@ -1967,9 +1967,9 @@ void main() {
             trailingRowOptions: trailingRowOptions,
             onRowAppended: trailingRowOptions == null
                 ? null
-                : () {
+                : () async {
                     setRows(() => currentRows++);
-                    onRowAppended?.call();
+                    return await onRowAppended?.call();
                   },
             getCellContent: (item, [_]) {
               if (content != null) return content(item);
@@ -2641,7 +2641,10 @@ void main() {
             rows: 3,
             columnCount: 3,
             trailingRowOptions: const SemiTrailingRowOptions(),
-            onRowAppended: () => appended++,
+            onRowAppended: () {
+              appended++;
+              return null;
+            },
             onColumnAppended: () {
               appended++;
               return null;
@@ -2838,6 +2841,100 @@ void main() {
         await tester.pumpWidget(const SizedBox.shrink());
         await tester.pumpAndSettle();
         expect(second.getBounds(0, 0), isNull);
+      });
+    });
+
+    group('append positions', () {
+      SemiItem selectedCell(WidgetTester tester) => tester
+          .widget<SemiDataGrid>(find.byType(SemiDataGrid))
+          .props
+          .selection
+          .current!
+          .cell;
+
+      testWidgets('onRowAppended chooses where the new row is focused', (
+        tester,
+      ) async {
+        Future<SemiItem> appendedAt(Object? answer) async {
+          final controller = SemiDataEditorController();
+          await tester.pumpWidget(
+            buildEditor(
+              controller: controller,
+              rows: 3,
+              columnCount: 2,
+              trailingRowOptions: const SemiTrailingRowOptions(),
+              onRowAppended: () => answer,
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          final appended = controller.appendRow(1, openOverlay: false);
+          await tester.pumpAndSettle();
+          await appended;
+          return selectedCell(tester);
+        }
+
+        // `row = typeof r === "number" ? r : bottom ? rows : 0`
+        // (`data-editor.tsx:1710-1714`).
+        expect(await appendedAt(null), const SemiItem(1, 3));
+        expect(await appendedAt('bottom'), const SemiItem(1, 3));
+        expect(await appendedAt('top'), const SemiItem(1, 0));
+        expect(await appendedAt(1), const SemiItem(1, 1));
+      });
+
+      testWidgets('onColumnAppended may resolve asynchronously', (
+        tester,
+      ) async {
+        final controller = SemiDataEditorController();
+        var appended = 0;
+        await tester.pumpWidget(
+          buildEditor(
+            controller: controller,
+            rows: 3,
+            columnCount: 3,
+            onColumnAppended: () async {
+              appended++;
+              return null;
+            },
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final future = controller.appendColumn(0, openOverlay: false);
+        await tester.pumpAndSettle();
+        await future;
+
+        expect(appended, 1);
+        expect(selectedCell(tester), const SemiItem(3, 0));
+      });
+
+      testWidgets('a sticky trailing row counts as a frozen trailing row', (
+        tester,
+      ) async {
+        Widget grid(int freeze, {required bool sticky}) => buildEditor(
+          rows: 20,
+          columnCount: 2,
+          freezeTrailingRows: freeze,
+          trailingRowOptions: SemiTrailingRowOptions(sticky: sticky),
+        );
+
+        await tester.pumpWidget(grid(1, sticky: false));
+        await tester.pumpAndSettle();
+        expect(
+          tester.widget<SemiDataGrid>(find.byType(SemiDataGrid)).props
+              .freezeTrailingRows,
+          1,
+        );
+
+        await tester.pumpWidget(grid(1, sticky: true));
+        await tester.pumpAndSettle();
+        // The sticky "new row" row joins the frozen trailing rows
+        // (`data-editor.tsx:4278`).
+        expect(
+          tester.widget<SemiDataGrid>(find.byType(SemiDataGrid)).props
+              .freezeTrailingRows,
+          2,
+        );
       });
     });
 
@@ -3997,7 +4094,10 @@ void main() {
         buildEditor(
           rows: 3,
           trailingRowOptions: const SemiTrailingRowOptions(hint: 'New row'),
-          onRowAppended: () => appended++,
+          onRowAppended: () {
+              appended++;
+              return null;
+            },
         ),
       );
       await tester.pumpAndSettle();
@@ -4026,7 +4126,10 @@ void main() {
         buildEditor(
           rows: 3,
           trailingRowOptions: const SemiTrailingRowOptions(),
-          onRowAppended: () => appended++,
+          onRowAppended: () {
+              appended++;
+              return null;
+            },
         ),
       );
       await tester.pumpAndSettle();
@@ -4059,7 +4162,10 @@ void main() {
         buildEditor(
           rows: 3,
           trailingRowOptions: const SemiTrailingRowOptions(),
-          onRowAppended: () => appended++,
+          onRowAppended: () {
+              appended++;
+              return null;
+            },
         ),
       );
       await tester.pumpAndSettle();
@@ -4717,7 +4823,10 @@ void main() {
             hint: 'New row',
             tint: true,
           ),
-          onRowAppended: () => appended++,
+          onRowAppended: () {
+              appended++;
+              return null;
+            },
         ),
       );
       await tester.pumpAndSettle();
