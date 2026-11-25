@@ -339,7 +339,7 @@
 | 330 | editor | `editor/common/services/resolverService.ts` | `lib/src/monaco/editor/common/services/resolverService.dart` | tested |
 | 331 | editor | `editor/common/services/semanticTokensDto.ts` | `lib/src/monaco/editor/common/services/semanticTokensDto.dart` | tested |
 | 332 | editor | `editor/common/services/semanticTokensProviderStyling.ts` | `lib/src/monaco/editor/common/services/semanticTokensProviderStyling.dart` | tested |
-| 333 | editor | `editor/common/services/semanticTokensStyling.ts` | `lib/src/monaco/editor/common/services/semanticTokensStyling.dart` | pending |
+| 333 | editor | `editor/common/services/semanticTokensStyling.ts` | `lib/src/monaco/editor/common/services/semanticTokensStyling.dart` | tested |
 | 334 | editor | `editor/common/services/semanticTokensStylingService.ts` | `lib/src/monaco/editor/common/services/semanticTokensStylingService.dart` | pending |
 | 335 | editor | `editor/common/services/textModelSync/textModelSync.impl.ts` | `lib/src/monaco/editor/common/services/textModelSync/textModelSync.impl.dart` | pending |
 | 336 | editor | `editor/common/services/textModelSync/textModelSync.protocol.ts` | `lib/src/monaco/editor/common/services/textModelSync/textModelSync.protocol.dart` | tested |
@@ -357,7 +357,7 @@
 | 348 | editor | `editor/common/textModelEvents.ts` | `lib/src/monaco/editor/common/textModelEvents.dart` | tested |
 | 349 | editor | `editor/common/textModelGuides.ts` | `lib/src/monaco/editor/common/textModelGuides.dart` | tested |
 | 350 | editor | `editor/common/tokenizationRegistry.ts` | `lib/src/monaco/editor/common/tokenizationRegistry.dart` | tested |
-| 351 | editor | `editor/common/tokenizationTextModelPart.ts` | `lib/src/monaco/editor/common/tokenizationTextModelPart.dart` | pending |
+| 351 | editor | `editor/common/tokenizationTextModelPart.ts` | `lib/src/monaco/editor/common/tokenizationTextModelPart.dart` | tested |
 | 352 | editor | `editor/common/tokens/common.ts` | `lib/src/monaco/editor/common/tokens/common.dart` | tested |
 | 353 | editor | `editor/common/tokens/contiguousMultilineTokens.ts` | `lib/src/monaco/editor/common/tokens/contiguousMultilineTokens.dart` | tested |
 | 354 | editor | `editor/common/tokens/contiguousMultilineTokensBuilder.ts` | `lib/src/monaco/editor/common/tokens/contiguousMultilineTokensBuilder.dart` | tested |
