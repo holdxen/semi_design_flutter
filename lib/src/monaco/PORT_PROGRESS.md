@@ -16,7 +16,7 @@
 | 7 | editor | `editor/browser/config/tabFocus.ts` | `lib/src/monaco/editor/browser/config/tabFocus.dart` | tested |
 | 8 | editor | `editor/browser/controller/dragScrolling.ts` | `lib/src/monaco/editor/browser/controller/dragScrolling.dart` | pending |
 | 9 | editor | `editor/browser/controller/editContext/clipboardUtils.ts` | `lib/src/monaco/editor/browser/controller/editContext/clipboardUtils.dart` | tested |
-| 10 | editor | `editor/browser/controller/editContext/editContext.ts` | `lib/src/monaco/editor/browser/controller/editContext/editContext.dart` | pending |
+| 10 | editor | `editor/browser/controller/editContext/editContext.ts` | `lib/src/monaco/editor/browser/controller/editContext/editContext.dart` | tested |
 | 11 | editor | `editor/browser/controller/editContext/native/debugEditContext.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/debugEditContext.dart` | tested |
 | 12 | editor | `editor/browser/controller/editContext/native/editContextFactory.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/editContextFactory.dart` | tested |
 | 13 | editor | `editor/browser/controller/editContext/native/nativeEditContext.ts` | `lib/src/monaco/editor/browser/controller/editContext/native/nativeEditContext.dart` | pending |
@@ -77,11 +77,11 @@
 | 68 | editor | `editor/browser/triggerInlineEditCommandsRegistry.ts` | `lib/src/monaco/editor/browser/triggerInlineEditCommandsRegistry.dart` | tested |
 | 69 | editor | `editor/browser/view/domLineBreaksComputer.ts` | `lib/src/monaco/editor/browser/view/domLineBreaksComputer.dart` | pending |
 | 70 | editor | `editor/browser/view/dynamicViewOverlay.ts` | `lib/src/monaco/editor/browser/view/dynamicViewOverlay.dart` | pending |
-| 71 | editor | `editor/browser/view/renderingContext.ts` | `lib/src/monaco/editor/browser/view/renderingContext.dart` | pending |
+| 71 | editor | `editor/browser/view/renderingContext.ts` | `lib/src/monaco/editor/browser/view/renderingContext.dart` | tested |
 | 72 | editor | `editor/browser/view/viewController.ts` | `lib/src/monaco/editor/browser/view/viewController.dart` | pending |
 | 73 | editor | `editor/browser/view/viewLayer.ts` | `lib/src/monaco/editor/browser/view/viewLayer.dart` | pending |
 | 74 | editor | `editor/browser/view/viewOverlays.ts` | `lib/src/monaco/editor/browser/view/viewOverlays.dart` | pending |
-| 75 | editor | `editor/browser/view/viewPart.ts` | `lib/src/monaco/editor/browser/view/viewPart.dart` | pending |
+| 75 | editor | `editor/browser/view/viewPart.ts` | `lib/src/monaco/editor/browser/view/viewPart.dart` | tested |
 | 76 | editor | `editor/browser/view/viewUserInputEvents.ts` | `lib/src/monaco/editor/browser/view/viewUserInputEvents.dart` | tested |
 | 77 | editor | `editor/browser/view.ts` | `lib/src/monaco/editor/browser/view.dart` | pending |
 | 78 | editor | `editor/browser/viewParts/blockDecorations/blockDecorations.ts` | `lib/src/monaco/editor/browser/viewParts/blockDecorations/blockDecorations.dart` | pending |

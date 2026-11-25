@@ -688,6 +688,13 @@ class _SemiScrollItemState extends State<SemiScrollItem> {
           child: ListView.builder(
             controller: _controller,
             padding: EdgeInsets.all(t.spacingScrollListItemUlPadding),
+            // cycled 虚拟列表可达 `_dataCount * _loopBlocks`（最大 60060）列，
+            // 且 mount 时要 `jumpTo` 到中段副本（偏移可达百万像素）。若不给
+            // `itemExtent`，`SliverList` 无法按固定行高直接定位起始下标，只能
+            // 从 0 逐列布局到目标偏移（O(n)，数万行），首帧即卡死。cycled 列
+            // 去掉首尾留白后每行等高 `_itemExtent`，故用 `SliverFixedExtentList`
+            // 让深跳转 O(1)；非 cycled 列含 132 高首尾留白块（高度不齐）且总量
+            // 很小（仅数据下标范围），保持 `SliverList`。
             itemCount: _virtualCount + (_spacers ? 2 : 0),
             itemBuilder: (context, index) {
               if (_spacers && index == 0) {
