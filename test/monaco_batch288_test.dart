@@ -37,7 +37,9 @@ ILanguageExtensionPoint _makeDef(Map<String, dynamic> d) =>
       mimetypes: (d['mimetypes'] as List<dynamic>?)?.cast<String>(),
       configuration: d['configuration'] == null
           ? null
-          : URI.parse(d['configuration'] as String),
+          : URI.parse(
+              (d['configuration'] as Map)['external'] as String? ??
+                  (d['configuration'] as Map)['path'] as String),
     );
 
 void main() {
@@ -128,8 +130,9 @@ void main() {
             value = registry.getLanguageIdByMimeType(arg as String?);
             break;
           case 'guessLanguageIdByFilepathOrFirstLine':
+            final uri = q['uri'];
             value = registry.guessLanguageIdByFilepathOrFirstLine(
-              arg == null ? null : URI.parse(arg as String),
+              uri == null ? null : URI.parse(uri as String),
               q['firstLine'] as String?,
             );
             break;
@@ -139,6 +142,8 @@ void main() {
         outputs.add(<String, Object?>{
           'op': q['op'],
           'arg': arg,
+          'uri': q['uri'],
+          'firstLine': q['firstLine'],
           'value': value,
         });
       }

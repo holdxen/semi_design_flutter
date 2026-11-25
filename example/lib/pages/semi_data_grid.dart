@@ -89,7 +89,13 @@ class _SemiDataGridPageState extends State<SemiDataGridPage> {
     double newSizeWithGrow,
   ) {
     setState(() {
-      _columns[col] = column.copyWith(width: newSize);
+      // Replace the list instead of mutating it in place: the grid rebuilds
+      // its column metrics only when `props.columns` identity changes, so an
+      // in-place `_columns[col] = ...` would leave the rendered widths stale.
+      _columns = [
+        for (var i = 0; i < _columns.length; i++)
+          i == col ? column.copyWith(width: newSize) : _columns[i],
+      ];
       _status = '拖拽调整 ${column.title} 列宽：$newSize px';
     });
   }

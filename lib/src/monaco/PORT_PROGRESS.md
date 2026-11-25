@@ -330,7 +330,7 @@
 | 321 | editor | `editor/common/services/languageFeaturesService.ts` | `lib/src/monaco/editor/common/services/languageFeaturesService.dart` | tested |
 | 322 | editor | `editor/common/services/languageService.ts` | `lib/src/monaco/editor/common/services/languageService.dart` | pending |
 | 323 | editor | `editor/common/services/languagesAssociations.ts` | `lib/src/monaco/editor/common/services/languagesAssociations.dart` | tested |
-| 324 | editor | `editor/common/services/languagesRegistry.ts` | `lib/src/monaco/editor/common/services/languagesRegistry.dart` | pending |
+| 324 | editor | `editor/common/services/languagesRegistry.ts` | `lib/src/monaco/editor/common/services/languagesRegistry.dart` | tested |
 | 325 | editor | `editor/common/services/markerDecorations.ts` | `lib/src/monaco/editor/common/services/markerDecorations.dart` | tested |
 | 326 | editor | `editor/common/services/markerDecorationsService.ts` | `lib/src/monaco/editor/common/services/markerDecorationsService.dart` | pending |
 | 327 | editor | `editor/common/services/model.ts` | `lib/src/monaco/editor/common/services/model.dart` | tested |
