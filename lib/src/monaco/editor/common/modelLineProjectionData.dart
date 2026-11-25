@@ -6,7 +6,6 @@
 library;
 
 import '../../base/common/assert.dart' show assertNever;
-import 'config/editorOptions.dart' show WrappingIndent;
 import 'config/fontInfo.dart' show FontInfo;
 import 'core/position.dart' show Position;
 import 'model.dart' show InjectedTextCursorStops, PositionAffinity;
@@ -20,7 +19,9 @@ class ModelLineProjectionData {
   /// Refers to offsets after applying injections to the source.
   final List<int> breakOffsets;
   /// Refers to offsets after applying injections.
-  final List<int> breakOffsetsVisibleColumn;
+  /// TS `number[]` — may hold fractional values when full-width characters
+  /// use a non-integer column ratio (e.g. `columnsForFullWidthChar=1.66`).
+  final List<num> breakOffsetsVisibleColumn;
   final num wrappedTextIndentLength;
 
   ModelLineProjectionData(
@@ -364,7 +365,7 @@ abstract class ILineBreaksComputerFactory {
     FontInfo fontInfo,
     int tabSize,
     int wrappingColumn,
-    WrappingIndent wrappingIndent,
+    int wrappingIndent,
     String wordBreak,
     bool wrapOnEscapedLineFeeds,
     bool useTwoCellFullwidthCharacters,

@@ -232,7 +232,7 @@
 | 223 | editor | `editor/common/diff/defaultLinesDiffComputer/lineSequence.ts` | `lib/src/monaco/editor/common/diff/defaultLinesDiffComputer/lineSequence.dart` | tested |
 | 224 | editor | `editor/common/diff/defaultLinesDiffComputer/linesSliceCharSequence.ts` | `lib/src/monaco/editor/common/diff/defaultLinesDiffComputer/linesSliceCharSequence.dart` | tested |
 | 225 | editor | `editor/common/diff/defaultLinesDiffComputer/utils.ts` | `lib/src/monaco/editor/common/diff/defaultLinesDiffComputer/utils.dart` | tested |
-| 226 | editor | `editor/common/diff/documentDiffProvider.ts` | `lib/src/monaco/editor/common/diff/documentDiffProvider.dart` | pending |
+| 226 | editor | `editor/common/diff/documentDiffProvider.ts` | `lib/src/monaco/editor/common/diff/documentDiffProvider.dart` | tested |
 | 227 | editor | `editor/common/diff/externalLinesDiffComputer.ts` | `lib/src/monaco/editor/common/diff/externalLinesDiffComputer.dart` | tested |
 | 228 | editor | `editor/common/diff/legacyLinesDiffComputer.ts` | `lib/src/monaco/editor/common/diff/legacyLinesDiffComputer.dart` | tested |
 | 229 | editor | `editor/common/diff/linesDiffComputer.ts` | `lib/src/monaco/editor/common/diff/linesDiffComputer.dart` | tested |
@@ -331,7 +331,7 @@
 | 322 | editor | `editor/common/services/languageService.ts` | `lib/src/monaco/editor/common/services/languageService.dart` | pending |
 | 323 | editor | `editor/common/services/languagesAssociations.ts` | `lib/src/monaco/editor/common/services/languagesAssociations.dart` | pending |
 | 324 | editor | `editor/common/services/languagesRegistry.ts` | `lib/src/monaco/editor/common/services/languagesRegistry.dart` | pending |
-| 325 | editor | `editor/common/services/markerDecorations.ts` | `lib/src/monaco/editor/common/services/markerDecorations.dart` | pending |
+| 325 | editor | `editor/common/services/markerDecorations.ts` | `lib/src/monaco/editor/common/services/markerDecorations.dart` | tested |
 | 326 | editor | `editor/common/services/markerDecorationsService.ts` | `lib/src/monaco/editor/common/services/markerDecorationsService.dart` | pending |
 | 327 | editor | `editor/common/services/model.ts` | `lib/src/monaco/editor/common/services/model.dart` | pending |
 | 328 | editor | `editor/common/services/modelService.ts` | `lib/src/monaco/editor/common/services/modelService.dart` | pending |
@@ -380,7 +380,7 @@
 | 371 | editor | `editor/common/viewModel/inlineDecorations.ts` | `lib/src/monaco/editor/common/viewModel/inlineDecorations.dart` | pending |
 | 372 | editor | `editor/common/viewModel/minimapTokensColorTracker.ts` | `lib/src/monaco/editor/common/viewModel/minimapTokensColorTracker.dart` | pending |
 | 373 | editor | `editor/common/viewModel/modelLineProjection.ts` | `lib/src/monaco/editor/common/viewModel/modelLineProjection.dart` | pending |
-| 374 | editor | `editor/common/viewModel/monospaceLineBreaksComputer.ts` | `lib/src/monaco/editor/common/viewModel/monospaceLineBreaksComputer.dart` | pending |
+| 374 | editor | `editor/common/viewModel/monospaceLineBreaksComputer.ts` | `lib/src/monaco/editor/common/viewModel/monospaceLineBreaksComputer.dart` | tested |
 | 375 | editor | `editor/common/viewModel/overviewZoneManager.ts` | `lib/src/monaco/editor/common/viewModel/overviewZoneManager.dart` | tested |
 | 376 | editor | `editor/common/viewModel/screenReaderSimpleModel.ts` | `lib/src/monaco/editor/common/viewModel/screenReaderSimpleModel.dart` | tested |
 | 377 | editor | `editor/common/viewModel/viewContext.ts` | `lib/src/monaco/editor/common/viewModel/viewContext.dart` | pending |
@@ -573,7 +573,7 @@
 | 564 | editor | `editor/contrib/inlineCompletions/browser/model/renameSymbolProcessor.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/renameSymbolProcessor.dart` | pending |
 | 565 | editor | `editor/contrib/inlineCompletions/browser/model/singleTextEditHelpers.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/singleTextEditHelpers.dart` | pending |
 | 566 | editor | `editor/contrib/inlineCompletions/browser/model/suggestWidgetAdapter.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/suggestWidgetAdapter.dart` | pending |
-| 567 | editor | `editor/contrib/inlineCompletions/browser/model/textModelValueReference.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/textModelValueReference.dart` | pending |
+| 567 | editor | `editor/contrib/inlineCompletions/browser/model/textModelValueReference.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/textModelValueReference.dart` | tested |
 | 568 | editor | `editor/contrib/inlineCompletions/browser/model/typingSpeed.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/typingSpeed.dart` | pending |
 | 569 | editor | `editor/contrib/inlineCompletions/browser/structuredLogger.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/structuredLogger.dart` | tested |
 | 570 | editor | `editor/contrib/inlineCompletions/browser/telemetry.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/telemetry.dart` | tested |
@@ -667,7 +667,7 @@
 | 658 | editor | `editor/contrib/semanticTokens/test/browser/documentSemanticTokens.test.ts` | `lib/src/monaco/editor/contrib/semanticTokens/test/browser/documentSemanticTokens.test.dart` | pending |
 | 659 | editor | `editor/contrib/semanticTokens/test/browser/getSemanticTokens.test.ts` | `lib/src/monaco/editor/contrib/semanticTokens/test/browser/getSemanticTokens.test.dart` | pending |
 | 660 | editor | `editor/contrib/semanticTokens/test/browser/viewportSemanticTokens.test.ts` | `lib/src/monaco/editor/contrib/semanticTokens/test/browser/viewportSemanticTokens.test.dart` | pending |
-| 661 | editor | `editor/contrib/smartSelect/browser/bracketSelections.ts` | `lib/src/monaco/editor/contrib/smartSelect/browser/bracketSelections.dart` | pending |
+| 661 | editor | `editor/contrib/smartSelect/browser/bracketSelections.ts` | `lib/src/monaco/editor/contrib/smartSelect/browser/bracketSelections.dart` | tested |
 | 662 | editor | `editor/contrib/smartSelect/browser/smartSelect.ts` | `lib/src/monaco/editor/contrib/smartSelect/browser/smartSelect.dart` | pending |
 | 663 | editor | `editor/contrib/smartSelect/browser/wordSelections.ts` | `lib/src/monaco/editor/contrib/smartSelect/browser/wordSelections.dart` | tested |
 | 664 | editor | `editor/contrib/smartSelect/test/browser/smartSelect.test.ts` | `lib/src/monaco/editor/contrib/smartSelect/test/browser/smartSelect.test.dart` | pending |

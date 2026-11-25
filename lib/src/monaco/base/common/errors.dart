@@ -14,7 +14,7 @@ typedef ErrorListenerUnbind = void Function();
 
 // Avoid circular dependency on EventEmitter by implementing a subset of the interface.
 class ErrorHandler {
-  late final void Function(Object? error) unexpectedErrorHandler;
+  late void Function(Object? error) unexpectedErrorHandler;
   late final List<ErrorListenerCallback> listeners;
 
   ErrorHandler() {
