@@ -76,7 +76,7 @@
 | 67 | editor | `editor/browser/stableEditorScroll.ts` | `lib/src/monaco/editor/browser/stableEditorScroll.dart` | pending |
 | 68 | editor | `editor/browser/triggerInlineEditCommandsRegistry.ts` | `lib/src/monaco/editor/browser/triggerInlineEditCommandsRegistry.dart` | tested |
 | 69 | editor | `editor/browser/view/domLineBreaksComputer.ts` | `lib/src/monaco/editor/browser/view/domLineBreaksComputer.dart` | pending |
-| 70 | editor | `editor/browser/view/dynamicViewOverlay.ts` | `lib/src/monaco/editor/browser/view/dynamicViewOverlay.dart` | pending |
+| 70 | editor | `editor/browser/view/dynamicViewOverlay.ts` | `lib/src/monaco/editor/browser/view/dynamicViewOverlay.dart` | tested |
 | 71 | editor | `editor/browser/view/renderingContext.ts` | `lib/src/monaco/editor/browser/view/renderingContext.dart` | tested |
 | 72 | editor | `editor/browser/view/viewController.ts` | `lib/src/monaco/editor/browser/view/viewController.dart` | pending |
 | 73 | editor | `editor/browser/view/viewLayer.ts` | `lib/src/monaco/editor/browser/view/viewLayer.dart` | pending |
@@ -213,7 +213,7 @@
 | 204 | editor | `editor/common/cursor/cursorAtomicMoveOperations.ts` | `lib/src/monaco/editor/common/cursor/cursorAtomicMoveOperations.dart` | tested |
 | 205 | editor | `editor/common/cursor/cursorCollection.ts` | `lib/src/monaco/editor/common/cursor/cursorCollection.dart` | pending |
 | 206 | editor | `editor/common/cursor/cursorColumnSelection.ts` | `lib/src/monaco/editor/common/cursor/cursorColumnSelection.dart` | pending |
-| 207 | editor | `editor/common/cursor/cursorContext.ts` | `lib/src/monaco/editor/common/cursor/cursorContext.dart` | pending |
+| 207 | editor | `editor/common/cursor/cursorContext.ts` | `lib/src/monaco/editor/common/cursor/cursorContext.dart` | tested |
 | 208 | editor | `editor/common/cursor/cursorDeleteOperations.ts` | `lib/src/monaco/editor/common/cursor/cursorDeleteOperations.dart` | pending |
 | 209 | editor | `editor/common/cursor/cursorMoveCommands.ts` | `lib/src/monaco/editor/common/cursor/cursorMoveCommands.dart` | pending |
 | 210 | editor | `editor/common/cursor/cursorMoveOperations.ts` | `lib/src/monaco/editor/common/cursor/cursorMoveOperations.dart` | pending |
@@ -552,7 +552,7 @@
 | 543 | editor | `editor/contrib/inlayHints/browser/inlayHintsLocations.ts` | `lib/src/monaco/editor/contrib/inlayHints/browser/inlayHintsLocations.dart` | pending |
 | 544 | editor | `editor/contrib/inlineCompletions/browser/controller/commandIds.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/controller/commandIds.dart` | tested |
 | 545 | editor | `editor/contrib/inlineCompletions/browser/controller/commands.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/controller/commands.dart` | pending |
-| 546 | editor | `editor/contrib/inlineCompletions/browser/controller/common.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/controller/common.dart` | pending |
+| 546 | editor | `editor/contrib/inlineCompletions/browser/controller/common.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/controller/common.dart` | tested |
 | 547 | editor | `editor/contrib/inlineCompletions/browser/controller/inlineCompletionContextKeys.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/controller/inlineCompletionContextKeys.dart` | tested |
 | 548 | editor | `editor/contrib/inlineCompletions/browser/controller/inlineCompletionsController.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/controller/inlineCompletionsController.dart` | pending |
 | 549 | editor | `editor/contrib/inlineCompletions/browser/hintsWidget/hoverParticipant.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/hintsWidget/hoverParticipant.dart` | pending |

@@ -695,6 +695,7 @@ class _SemiScrollItemState extends State<SemiScrollItem> {
             // 去掉首尾留白后每行等高 `_itemExtent`，故用 `SliverFixedExtentList`
             // 让深跳转 O(1)；非 cycled 列含 132 高首尾留白块（高度不齐）且总量
             // 很小（仅数据下标范围），保持 `SliverList`。
+            itemExtent: _spacers ? null : _itemExtent,
             itemCount: _virtualCount + (_spacers ? 2 : 0),
             itemBuilder: (context, index) {
               if (_spacers && index == 0) {
