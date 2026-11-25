@@ -66,7 +66,7 @@
 | 57 | editor | `editor/browser/observableCodeEditor.ts` | `lib/src/monaco/editor/browser/observableCodeEditor.dart` | pending |
 | 58 | editor | `editor/browser/services/abstractCodeEditorService.ts` | `lib/src/monaco/editor/browser/services/abstractCodeEditorService.dart` | pending |
 | 59 | editor | `editor/browser/services/bulkEditService.ts` | `lib/src/monaco/editor/browser/services/bulkEditService.dart` | pending |
-| 60 | editor | `editor/browser/services/codeEditorService.ts` | `lib/src/monaco/editor/browser/services/codeEditorService.dart` | pending |
+| 60 | editor | `editor/browser/services/codeEditorService.ts` | `lib/src/monaco/editor/browser/services/codeEditorService.dart` | tested |
 | 61 | editor | `editor/browser/services/contribution.ts` | `lib/src/monaco/editor/browser/services/contribution.dart` | pending |
 | 62 | editor | `editor/browser/services/editorWorkerService.ts` | `lib/src/monaco/editor/browser/services/editorWorkerService.dart` | pending |
 | 63 | editor | `editor/browser/services/inlineCompletionsService.ts` | `lib/src/monaco/editor/browser/services/inlineCompletionsService.dart` | tested |
@@ -152,7 +152,7 @@
 | 143 | editor | `editor/browser/widget/multiDiffEditor/compressedVirtualizedScrollLayout.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/compressedVirtualizedScrollLayout.dart` | tested |
 | 144 | editor | `editor/browser/widget/multiDiffEditor/compressedVirtualizedScrollView.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/compressedVirtualizedScrollView.dart` | pending |
 | 145 | editor | `editor/browser/widget/multiDiffEditor/diffEditorItemTemplate.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/diffEditorItemTemplate.dart` | pending |
-| 146 | editor | `editor/browser/widget/multiDiffEditor/model.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/model.dart` | pending |
+| 146 | editor | `editor/browser/widget/multiDiffEditor/model.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/model.dart` | tested |
 | 147 | editor | `editor/browser/widget/multiDiffEditor/multiDiffEditorLogging.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/multiDiffEditorLogging.dart` | pending |
 | 148 | editor | `editor/browser/widget/multiDiffEditor/multiDiffEditorOptions.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/multiDiffEditorOptions.dart` | pending |
 | 149 | editor | `editor/browser/widget/multiDiffEditor/multiDiffEditorViewModel.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/multiDiffEditorViewModel.dart` | pending |
@@ -264,7 +264,7 @@
 | 255 | editor | `editor/common/languages/supports/indentationLineProcessor.ts` | `lib/src/monaco/editor/common/languages/supports/indentationLineProcessor.dart` | pending |
 | 256 | editor | `editor/common/languages/supports/inplaceReplaceSupport.ts` | `lib/src/monaco/editor/common/languages/supports/inplaceReplaceSupport.dart` | pending |
 | 257 | editor | `editor/common/languages/supports/languageBracketsConfiguration.ts` | `lib/src/monaco/editor/common/languages/supports/languageBracketsConfiguration.dart` | pending |
-| 258 | editor | `editor/common/languages/supports/onEnter.ts` | `lib/src/monaco/editor/common/languages/supports/onEnter.dart` | pending |
+| 258 | editor | `editor/common/languages/supports/onEnter.ts` | `lib/src/monaco/editor/common/languages/supports/onEnter.dart` | tested |
 | 259 | editor | `editor/common/languages/supports/richEditBrackets.ts` | `lib/src/monaco/editor/common/languages/supports/richEditBrackets.dart` | pending |
 | 260 | editor | `editor/common/languages/supports/tokenization.ts` | `lib/src/monaco/editor/common/languages/supports/tokenization.dart` | tested |
 | 261 | editor | `editor/common/languages/supports.ts` | `lib/src/monaco/editor/common/languages/supports.dart` | pending |
@@ -375,7 +375,7 @@
 | 366 | editor | `editor/common/viewLayout/linesLayout.ts` | `lib/src/monaco/editor/common/viewLayout/linesLayout.dart` | tested |
 | 367 | editor | `editor/common/viewLayout/viewLayout.ts` | `lib/src/monaco/editor/common/viewLayout/viewLayout.dart` | pending |
 | 368 | editor | `editor/common/viewLayout/viewLineRenderer.ts` | `lib/src/monaco/editor/common/viewLayout/viewLineRenderer.dart` | pending |
-| 369 | editor | `editor/common/viewLayout/viewLinesViewportData.ts` | `lib/src/monaco/editor/common/viewLayout/viewLinesViewportData.dart` | pending |
+| 369 | editor | `editor/common/viewLayout/viewLinesViewportData.ts` | `lib/src/monaco/editor/common/viewLayout/viewLinesViewportData.dart` | tested |
 | 370 | editor | `editor/common/viewModel/glyphLanesModel.ts` | `lib/src/monaco/editor/common/viewModel/glyphLanesModel.dart` | tested |
 | 371 | editor | `editor/common/viewModel/inlineDecorations.ts` | `lib/src/monaco/editor/common/viewModel/inlineDecorations.dart` | pending |
 | 372 | editor | `editor/common/viewModel/minimapTokensColorTracker.ts` | `lib/src/monaco/editor/common/viewModel/minimapTokensColorTracker.dart` | pending |
@@ -515,11 +515,11 @@
 | 506 | editor | `editor/contrib/hover/browser/contentHoverComputer.ts` | `lib/src/monaco/editor/contrib/hover/browser/contentHoverComputer.dart` | pending |
 | 507 | editor | `editor/contrib/hover/browser/contentHoverController.ts` | `lib/src/monaco/editor/contrib/hover/browser/contentHoverController.dart` | pending |
 | 508 | editor | `editor/contrib/hover/browser/contentHoverRendered.ts` | `lib/src/monaco/editor/contrib/hover/browser/contentHoverRendered.dart` | pending |
-| 509 | editor | `editor/contrib/hover/browser/contentHoverStatusBar.ts` | `lib/src/monaco/editor/contrib/hover/browser/contentHoverStatusBar.dart` | pending |
+| 509 | editor | `editor/contrib/hover/browser/contentHoverStatusBar.ts` | `lib/src/monaco/editor/contrib/hover/browser/contentHoverStatusBar.dart` | tested |
 | 510 | editor | `editor/contrib/hover/browser/contentHoverTypes.ts` | `lib/src/monaco/editor/contrib/hover/browser/contentHoverTypes.dart` | tested |
 | 511 | editor | `editor/contrib/hover/browser/contentHoverWidget.ts` | `lib/src/monaco/editor/contrib/hover/browser/contentHoverWidget.dart` | pending |
 | 512 | editor | `editor/contrib/hover/browser/contentHoverWidgetWrapper.ts` | `lib/src/monaco/editor/contrib/hover/browser/contentHoverWidgetWrapper.dart` | pending |
-| 513 | editor | `editor/contrib/hover/browser/getHover.ts` | `lib/src/monaco/editor/contrib/hover/browser/getHover.dart` | pending |
+| 513 | editor | `editor/contrib/hover/browser/getHover.ts` | `lib/src/monaco/editor/contrib/hover/browser/getHover.dart` | tested |
 | 514 | editor | `editor/contrib/hover/browser/glyphHoverComputer.ts` | `lib/src/monaco/editor/contrib/hover/browser/glyphHoverComputer.dart` | pending |
 | 515 | editor | `editor/contrib/hover/browser/glyphHoverController.ts` | `lib/src/monaco/editor/contrib/hover/browser/glyphHoverController.dart` | pending |
 | 516 | editor | `editor/contrib/hover/browser/glyphHoverWidget.ts` | `lib/src/monaco/editor/contrib/hover/browser/glyphHoverWidget.dart` | pending |
@@ -530,7 +530,7 @@
 | 521 | editor | `editor/contrib/hover/browser/hoverCopyButton.ts` | `lib/src/monaco/editor/contrib/hover/browser/hoverCopyButton.dart` | pending |
 | 522 | editor | `editor/contrib/hover/browser/hoverOperation.ts` | `lib/src/monaco/editor/contrib/hover/browser/hoverOperation.dart` | pending |
 | 523 | editor | `editor/contrib/hover/browser/hoverTypes.ts` | `lib/src/monaco/editor/contrib/hover/browser/hoverTypes.dart` | pending |
-| 524 | editor | `editor/contrib/hover/browser/hoverUtils.ts` | `lib/src/monaco/editor/contrib/hover/browser/hoverUtils.dart` | pending |
+| 524 | editor | `editor/contrib/hover/browser/hoverUtils.ts` | `lib/src/monaco/editor/contrib/hover/browser/hoverUtils.dart` | tested |
 | 525 | editor | `editor/contrib/hover/browser/markdownHoverParticipant.ts` | `lib/src/monaco/editor/contrib/hover/browser/markdownHoverParticipant.dart` | pending |
 | 526 | editor | `editor/contrib/hover/browser/markerHoverParticipant.ts` | `lib/src/monaco/editor/contrib/hover/browser/markerHoverParticipant.dart` | pending |
 | 527 | editor | `editor/contrib/hover/browser/resizableContentWidget.ts` | `lib/src/monaco/editor/contrib/hover/browser/resizableContentWidget.dart` | pending |
@@ -778,7 +778,7 @@
 | 769 | editor | `editor/test/browser/controller/cursor.integrationTest.ts` | `lib/src/monaco/editor/test/browser/controller/cursor.integrationTest.dart` | pending |
 | 770 | editor | `editor/test/browser/controller/cursor.test.ts` | `lib/src/monaco/editor/test/browser/controller/cursor.test.dart` | pending |
 | 771 | editor | `editor/test/browser/controller/cursorMoveCommand.test.ts` | `lib/src/monaco/editor/test/browser/controller/cursorMoveCommand.test.dart` | pending |
-| 772 | editor | `editor/test/browser/controller/imeRecordedTypes.ts` | `lib/src/monaco/editor/test/browser/controller/imeRecordedTypes.dart` | pending |
+| 772 | editor | `editor/test/browser/controller/imeRecordedTypes.ts` | `lib/src/monaco/editor/test/browser/controller/imeRecordedTypes.dart` | tested |
 | 773 | editor | `editor/test/browser/controller/nativeEditContextUtils.test.ts` | `lib/src/monaco/editor/test/browser/controller/nativeEditContextUtils.test.dart` | tested |
 | 774 | editor | `editor/test/browser/controller/textAreaInput.test.ts` | `lib/src/monaco/editor/test/browser/controller/textAreaInput.test.dart` | pending |
 | 775 | editor | `editor/test/browser/controller/textAreaState.test.ts` | `lib/src/monaco/editor/test/browser/controller/textAreaState.test.dart` | pending |

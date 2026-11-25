@@ -98,6 +98,7 @@ class SemiDataEditorProps {
     this.onRowMoved,
     this.lockColumns = 0,
     this.resizeIndicator = SemiResizeIndicator.full,
+    this.gridSelection,
     this.onGridSelectionChange,
     this.onSelectionCleared,
     this.onDelete,
@@ -236,6 +237,14 @@ class SemiDataEditorProps {
   final SemiPasteCallback? onPaste;
 
   final void Function(SemiGridMouseArgs args)? onItemHovered;
+
+  /// The selection in data coordinates, excluding the row-marker column.
+  /// When supplied, changes are proposed through [onGridSelectionChange]
+  /// and take effect when the caller supplies the updated selection.
+  final SemiGridSelection? gridSelection;
+
+  /// Reports selection changes in data coordinates. With [gridSelection],
+  /// reports a proposed selection for the caller to accept or replace.
   final void Function(SemiGridSelection selection)? onGridSelectionChange;
   final void Function()? onSelectionCleared;
   final SemiDeleteCallback? onDelete;
@@ -520,7 +529,10 @@ class _SemiDataEditorState extends State<SemiDataEditor>
     _rebuildRemAdjustment(16);
     _rebuildSizedColumns();
     _rebuildMangledColumns();
+    final controlled = widget.props.gridSelection;
+    if (controlled != null) _selection = _controlledSelection(controlled);
     _selectionState = _makeSelectionState();
+    _syncSelectionAnchors();
     _searchTextController = TextEditingController(text: _searchValue);
     _searchAnimatingOut = _showSearch;
     _autoscrollTicker = createTicker(_onAutoscrollTick);
@@ -535,6 +547,7 @@ class _SemiDataEditorState extends State<SemiDataEditor>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _applyScroll();
     });
+    if (controlled != null) _scheduleControlledSelectionChange(_selection.current?.cell);
     _refreshSearch();
   }
 
@@ -774,16 +787,48 @@ class _SemiDataEditorState extends State<SemiDataEditor>
     // A controlled `showSearch` flips without going through
     // `_openSearch`/`_closeSearch`, so the fade is synced here too.
     if (searchVisibilityChanged) _syncSearchFade();
-    if (old.columns != props.columns ||
+    final oldMarkerOffset = _mangledColumns.length - old.columns.length;
+    final previousSelection = _selection;
+    final geometryChanged = old.columns != props.columns ||
         old.rows != props.rows ||
         old.rowMarkers != props.rowMarkers ||
         old.rowGrouping != props.rowGrouping ||
-        old.rowHeight != props.rowHeight) {
+        old.rowHeight != props.rowHeight ||
+        (old.onRowAppended == null) != (props.onRowAppended == null);
+    if (geometryChanged) {
       _rebuildRowGrouping();
       _rebuildRemAdjustment(16);
       _rebuildSizedColumns();
       _rebuildMangledColumns();
-      setState(() => _selectionState = _makeSelectionState());
+    }
+    final controlled = props.gridSelection;
+    if (controlled != null) {
+      _selection = _controlledSelection(controlled);
+    } else if (geometryChanged) {
+      _selection = _clipSelection(
+        semiShiftSelection(_selection, _markerOffset - oldMarkerOffset),
+        allowTrailingRow: true,
+      );
+    }
+    if (geometryChanged || old.rangeSelect != props.rangeSelect ||
+        old.columnSelect != props.columnSelect || old.rowSelect != props.rowSelect ||
+        old.rangeSelectionBlending != props.rangeSelectionBlending ||
+        old.columnSelectionBlending != props.columnSelectionBlending ||
+        old.rowSelectionBlending != props.rowSelectionBlending ||
+        old.rangeSelectionColumnSpanning != props.rangeSelectionColumnSpanning ||
+        old.columnSelectionModeMulti != props.columnSelectionModeMulti ||
+        old.rowSelectionMode != props.rowSelectionMode ||
+        old.onRowMoved != props.onRowMoved) {
+      _selectionState = _makeSelectionState();
+    } else {
+      _selectionState.selection = _selection;
+    }
+    if (_selection != previousSelection || geometryChanged) {
+      _syncSelectionAnchors();
+    }
+    final focused = _selection.current?.cell;
+    if (controlled != null && focused != previousSelection.current?.cell) {
+      _scheduleControlledSelectionChange(focused);
     }
     final queryChanged = (old.searchValue ?? _searchValueInner) != _searchValue;
     if (queryChanged) _syncSearchText();
@@ -1600,6 +1645,86 @@ class _SemiDataEditorState extends State<SemiDataEditor>
   // Selection
   // -------------------------------------------------------------------------
 
+  SemiGridSelection _controlledSelection(SemiGridSelection selection) =>
+      _clipSelection(semiShiftSelection(selection, _markerOffset));
+
+  SemiGridSelection _clipSelection(
+    SemiGridSelection selection, {
+    bool allowTrailingRow = false,
+  }) {
+    final firstCol = _markerOffset;
+    final endCol = _mangledColumns.length;
+    final endRow = allowTrailingRow ? _mangledRows : _groupedRows;
+
+    SemiRectangle? clipRange(SemiRectangle range) {
+      if (!range.x.isFinite || !range.y.isFinite ||
+          !range.right.isFinite || !range.bottom.isFinite) {
+        return null;
+      }
+      final left = math.max(firstCol.toDouble(), range.x);
+      final top = math.max(0.0, range.y);
+      final right = math.min(endCol.toDouble(), range.right);
+      final bottom = math.min(endRow.toDouble(), range.bottom);
+      if (right <= left || bottom <= top) return null;
+      return SemiRectangle(
+        x: left, y: top, width: right - left, height: bottom - top,
+      );
+    }
+
+    SemiCompactSelection clipItems(SemiCompactSelection items, int start, int end) {
+      return SemiCompactSelection.create([
+        for (final slice in items.items)
+          if (math.max(slice.start, start) < math.min(slice.end, end))
+            SemiSlice(math.max(slice.start, start), math.min(slice.end, end)),
+      ]);
+    }
+
+    final current = selection.current;
+    SemiGridSelectionCurrent? clippedCurrent;
+    if (current != null) {
+      final cell = current.cell;
+      if (cell.col >= firstCol && cell.col < endCol &&
+          cell.row >= 0 && cell.row < endRow) {
+        final range = clipRange(current.range);
+        clippedCurrent = current.copyWith(
+          range: range != null && range.containsItem(cell)
+              ? range
+              : SemiRectangle(x: cell.col.toDouble(), y: cell.row.toDouble(), width: 1, height: 1),
+          rangeStack: List.unmodifiable(current.rangeStack.map(clipRange).nonNulls),
+        );
+      }
+    }
+    return SemiGridSelection(
+      current: clippedCurrent,
+      rows: clipItems(selection.rows, 0, _groupedRows),
+      columns: clipItems(selection.columns, firstCol, endCol),
+    );
+  }
+
+  void _syncSelectionAnchors() {
+    final col = _selectionState.lastSelectedCol;
+    final row = _selectionState.lastSelectedRow;
+    if (col == null || !_selection.columns.hasIndex(col)) {
+      _selectionState.lastSelectedCol = _selection.columns.firstIndex;
+    }
+    if (row == null || !_selection.rows.hasIndex(row)) {
+      _selectionState.lastSelectedRow = _selection.rows.firstIndex;
+    }
+  }
+
+  void _scheduleControlledSelectionChange(SemiItem? cell) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || widget.props.gridSelection == null ||
+          _selection.current?.cell != cell) {
+        return;
+      }
+      if (cell != null && widget.props.scrollToActiveCell) {
+        _scrollTo(SemiScrollTarget(cell.col - _markerOffset, cell.row));
+      }
+      _notifySelectionFocus(cell);
+    });
+  }
+
   void _setGridSelection(SemiGridSelection newVal, bool expand) {
     var v = newVal;
     if (expand) {
@@ -1621,24 +1746,31 @@ class _SemiDataEditorState extends State<SemiDataEditor>
       v = SemiGridSelection.empty;
     }
 
-    setState(() {
-      _selection = v;
-      _selectionState.selection = v;
-    });
-    // `setGridSelection` hands the public API marker-free coordinates
-    // (`data-editor.tsx:1009`).
+    final controlled = widget.props.gridSelection != null;
+    if (controlled) {
+      // Mouse selection mutates the helper before submitting its proposal.
+      _selectionState.selection = _selection;
+    } else {
+      setState(() {
+        _selection = v;
+        _selectionState.selection = v;
+      });
+    }
     widget.props.onGridSelectionChange?.call(
       semiShiftSelection(v, -_markerOffset),
     );
+    if (controlled) return;
 
-    final focused = v.current?.cell;
-    if (focused != null && focused != _lastFocusedCell) {
-      _lastFocusedCell = focused;
-      widget.props.onCellFocused?.call(focused);
-    }
+    _notifySelectionFocus(v.current?.cell);
   }
 
   SemiItem? _lastFocusedCell;
+
+  void _notifySelectionFocus(SemiItem? cell) {
+    if (cell == _lastFocusedCell) return;
+    _lastFocusedCell = cell;
+    if (cell != null) widget.props.onCellFocused?.call(cell);
+  }
 
   SemiKeyHandler _makeKeyHandler() =>
       SemiKeyHandler(
@@ -1678,7 +1810,8 @@ class _SemiDataEditorState extends State<SemiDataEditor>
           rowBehavior: widget.props.rowSelectionBlending,
           rangeSelectionColumnSpanning:
               widget.props.rangeSelectionColumnSpanning,
-          scrollToActiveCell: widget.props.scrollToActiveCell,
+          scrollToActiveCell: widget.props.gridSelection == null &&
+              widget.props.scrollToActiveCell,
           getCellsForSelection: _getCellsForSelection,
           onSelectionCleared: widget.props.onSelectionCleared,
           onDelete: widget.props.onDelete,
@@ -1936,16 +2069,18 @@ class _SemiDataEditorState extends State<SemiDataEditor>
   // -------------------------------------------------------------------------
 
   void _scrollTo(SemiScrollTarget target) {
-    final bounds = _gridController.getBounds(target.col, target.row);
+    final col = target.col + _markerOffset;
+    final bounds = _gridController.getBounds(col, target.row);
     if (bounds == null || bounds.width == 0 || bounds.height == 0) return;
 
     var frozenWidth = 0.0;
-    for (var i = 0; i < widget.props.freezeColumns; i++) {
-      frozenWidth += widget.props.columns[i].width ?? 0;
+    for (var i = 0; i < _mangledFreezeColumns; i++) {
+      frozenWidth += _mangledColumns[i].width ?? 0;
     }
+    final frozenRows = widget.props.freezeTrailingRows.clamp(0, _groupedRows);
     final trailingHeight = _effectiveRowHeight.trailingHeight(
       _groupedRows,
-      widget.props.freezeTrailingRows,
+      frozenRows,
     );
 
     var sLeft = frozenWidth;
@@ -1967,11 +2102,11 @@ class _SemiDataEditorState extends State<SemiDataEditor>
     }
 
     final axis = target.axis;
-    if (axis == SemiScrollAxis.vertical ||
-        target.col < widget.props.freezeColumns) {
+    if (axis == SemiScrollAxis.vertical || col < _mangledFreezeColumns) {
       scrollX = 0;
-    } else if (axis == SemiScrollAxis.horizontal ||
-        target.row >= _groupedRows - widget.props.freezeTrailingRows) {
+    }
+    if (axis == SemiScrollAxis.horizontal ||
+        target.row >= _groupedRows - frozenRows) {
       scrollY = 0;
     }
 
@@ -2495,6 +2630,8 @@ class _SemiDataEditorState extends State<SemiDataEditor>
   }
 
   void _handleSelect(SemiGridMouseArgs args) {
+    final lastRow = _selectionState.lastSelectedRow;
+    final lastCol = _selectionState.lastSelectedCol;
     final outcome = _selectionState.handleSelect(
       args,
       getCellRenderer: _renderers.forCell,
@@ -2503,6 +2640,10 @@ class _SemiDataEditorState extends State<SemiDataEditor>
     );
     if (outcome.onSelectionCleared) {
       widget.props.onSelectionCleared?.call();
+    }
+    if (widget.props.gridSelection != null) {
+      _selectionState.lastSelectedRow = lastRow;
+      _selectionState.lastSelectedCol = lastCol;
     }
     if (_selectionState.selection != _selection) {
       _setGridSelection(_selectionState.selection, false);

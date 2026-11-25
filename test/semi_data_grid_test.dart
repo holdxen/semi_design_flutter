@@ -1816,6 +1816,8 @@ void main() {
       bool? Function(int from, int to)? onColumnProposeMove,
       void Function(int from, int to)? onRowMoved,
       SemiRowMarkerOptions? rowMarkers,
+      SemiGridSelection? gridSelection,
+      bool scrollToActiveCell = true,
       int rows = 200,
       int columnCount = 6,
       bool unsizedColumns = false,
@@ -1953,7 +1955,9 @@ void main() {
               edits.addAll(items);
               return true;
             },
+            gridSelection: gridSelection,
             onGridSelectionChange: selectionLog.add,
+            scrollToActiveCell: scrollToActiveCell,
             onCellActivated: (location, activation) {
               final key = activation is SemiKeyboardCellActivation
                   ? activation.key
@@ -2350,6 +2354,241 @@ void main() {
       await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
       await tester.pumpAndSettle();
     }
+
+    group('controlled grid selection', () {
+      SemiGridSelection renderedSelection(WidgetTester tester) => tester
+          .widget<SemiDataGrid>(find.byType(SemiDataGrid))
+          .props
+          .selection;
+
+      SemiGridSelection singleCell(int col, int row) => SemiGridSelection(
+        current: SemiGridSelectionCurrent(
+          cell: SemiItem(col, row),
+          range: SemiRectangle(
+            x: col.toDouble(),
+            y: row.toDouble(),
+            width: 1,
+            height: 1,
+          ),
+        ),
+      );
+
+      testWidgets('renders initial, updated, and explicitly empty values', (
+        tester,
+      ) async {
+        final initial = singleCell(1, 2);
+        await tester.pumpWidget(buildEditor(gridSelection: initial));
+        await tester.pumpAndSettle();
+        final editor = tester.state(find.byType(SemiDataEditor));
+        expect(renderedSelection(tester), initial);
+        expect(selectionLog, isEmpty);
+
+        final updated = singleCell(2, 3);
+        await tester.pumpWidget(buildEditor(gridSelection: updated));
+        await tester.pumpAndSettle();
+        expect(tester.state(find.byType(SemiDataEditor)), same(editor));
+        expect(renderedSelection(tester), updated);
+        expect(selectionLog, isEmpty);
+
+        await tester.pumpWidget(
+          buildEditor(gridSelection: SemiGridSelection.empty),
+        );
+        await tester.pumpAndSettle();
+        expect(renderedSelection(tester), SemiGridSelection.empty);
+        expect(selectionLog, isEmpty);
+
+        await focusClipboardCell(tester, 50);
+        expect(selectionLog, [singleCell(0, 0)]);
+        expect(renderedSelection(tester), SemiGridSelection.empty);
+      });
+
+      testWidgets('reports focus after the parent accepts a proposal', (
+        tester,
+      ) async {
+        final focused = <SemiItem>[];
+        await tester.pumpWidget(
+          buildEditor(
+            gridSelection: singleCell(1, 0),
+            onCellFocused: focused.add,
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(focused, [const SemiItem(1, 0)]);
+
+        await focusClipboardCell(tester, 50);
+        final proposed = selectionLog.single;
+        expect(focused, [const SemiItem(1, 0)]);
+
+        await tester.pumpWidget(
+          buildEditor(gridSelection: proposed, onCellFocused: focused.add),
+        );
+        await tester.pumpAndSettle();
+        expect(renderedSelection(tester), proposed);
+        expect(focused, [const SemiItem(1, 0), const SemiItem(0, 0)]);
+        expect(selectionLog, isEmpty);
+      });
+
+      testWidgets('uses the committed selection for proposals and copy', (
+        tester,
+      ) async {
+        const committed = SemiGridSelection(
+          current: SemiGridSelectionCurrent(
+            cell: SemiItem(1, 2),
+            range: SemiRectangle(x: 1, y: 2, width: 2, height: 2),
+          ),
+        );
+        final writes = <String>[];
+        mockGridClipboard(write: (text) async => writes.add(text));
+        await tester.pumpWidget(buildEditor(gridSelection: committed));
+        await tester.pumpAndSettle();
+
+        await focusClipboardCell(tester, 50);
+        expect(selectionLog, [singleCell(0, 0)]);
+        expect(renderedSelection(tester), committed);
+
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.tapAt(const Offset(50, 80), kind: PointerDeviceKind.mouse);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.pumpAndSettle();
+        const extend = SemiGridSelection(
+          current: SemiGridSelectionCurrent(
+            cell: SemiItem(1, 2),
+            range: SemiRectangle(x: 0, y: 1, width: 2, height: 2),
+          ),
+        );
+        expect(selectionLog, [singleCell(0, 0), extend]);
+        expect(renderedSelection(tester), committed);
+
+        final moveRight = singleCell(2, 2);
+        for (var i = 0; i < 2; i++) {
+          await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+          await tester.pumpAndSettle();
+          expect(renderedSelection(tester), committed);
+        }
+        expect(selectionLog, [singleCell(0, 0), extend, moveRight, moveRight]);
+
+        await sendClipboardShortcut(tester, LogicalKeyboardKey.keyC);
+        expect(writes, ['r2 c1\tr2 c2\nr3 c1\tr3 c2']);
+      });
+
+      testWidgets('shifts current, range stack, and columns for row markers', (
+        tester,
+      ) async {
+        final committed = SemiGridSelection(
+          current: const SemiGridSelectionCurrent(
+            cell: SemiItem(1, 2),
+            range: SemiRectangle(x: 1, y: 2, width: 2, height: 1),
+            rangeStack: [
+              SemiRectangle(x: 0, y: 0, width: 1, height: 2),
+              SemiRectangle(x: 2, y: 4, width: 2, height: 1),
+            ],
+          ),
+          columns: SemiCompactSelection.fromArray([0, 2]),
+          rows: SemiCompactSelection.fromArray([1, 4]),
+        );
+        await tester.pumpWidget(
+          buildEditor(
+            gridSelection: committed,
+            rowMarkers: const SemiRowMarkerOptions(width: 40),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final rendered = renderedSelection(tester);
+        expect(
+          rendered.current,
+          const SemiGridSelectionCurrent(
+            cell: SemiItem(2, 2),
+            range: SemiRectangle(x: 2, y: 2, width: 2, height: 1),
+            rangeStack: [
+              SemiRectangle(x: 1, y: 0, width: 1, height: 2),
+              SemiRectangle(x: 3, y: 4, width: 2, height: 1),
+            ],
+          ),
+        );
+        expect(rendered.columns.toArray(), [1, 3]);
+        expect(rendered.rows.toArray(), [1, 4]);
+
+        // The marker takes the first 40px, so this click is in data column 0.
+        await focusClipboardCell(tester, 90);
+        expect(selectionLog, [singleCell(0, 0)]);
+        expect(renderedSelection(tester), rendered);
+
+        await tester.pumpWidget(buildEditor(gridSelection: committed));
+        await tester.pumpAndSettle();
+        expect(renderedSelection(tester), committed);
+        expect(selectionLog, isEmpty);
+      });
+
+      for (final scrollToActiveCell in [true, false]) {
+        testWidgets(
+          'external selection follows scrollToActiveCell=$scrollToActiveCell',
+          (tester) async {
+            final regions = <SemiVisibleRegion>[];
+            Widget editor(SemiGridSelection selection) => buildEditor(
+              gridSelection: selection,
+              scrollToActiveCell: scrollToActiveCell,
+              onVisibleRegionChanged: (region, _) => regions.add(region),
+            );
+
+            await tester.pumpWidget(editor(singleCell(0, 0)));
+            await tester.pumpAndSettle();
+            final initialRegion = regions.last;
+            const target = SemiItem(5, 60);
+            expect(initialRegion.rect.containsItem(target), isFalse);
+
+            final updated = singleCell(target.col, target.row);
+            await tester.pumpWidget(editor(updated));
+            await tester.pumpAndSettle();
+            expect(renderedSelection(tester), updated);
+            if (scrollToActiveCell) {
+              expect(regions.last.rect.containsItem(target), isTrue);
+            } else {
+              expect(regions.last, initialRegion);
+            }
+            expect(selectionLog, isEmpty);
+          },
+        );
+      }
+
+      testWidgets('clips the committed selection when the grid shrinks', (
+        tester,
+      ) async {
+        final committed = SemiGridSelection(
+          current: const SemiGridSelectionCurrent(
+            cell: SemiItem(1, 1),
+            range: SemiRectangle(x: 1, y: 1, width: 3, height: 3),
+            rangeStack: [
+              SemiRectangle(x: 2, y: 0, width: 2, height: 2),
+              SemiRectangle(x: 0, y: 3, width: 1, height: 1),
+            ],
+          ),
+          columns: SemiCompactSelection.fromArray([0, 2, 3]),
+          rows: SemiCompactSelection.fromArray([0, 1, 3]),
+        );
+        await tester.pumpWidget(
+          buildEditor(gridSelection: committed, rows: 4, columnCount: 4),
+        );
+        await tester.pumpAndSettle();
+        expect(renderedSelection(tester), committed);
+
+        await tester.pumpWidget(
+          buildEditor(gridSelection: committed, rows: 2, columnCount: 3),
+        );
+        await tester.pumpAndSettle();
+        final rendered = renderedSelection(tester);
+        expect(
+          rendered.current,
+          const SemiGridSelectionCurrent(
+            cell: SemiItem(1, 1),
+            range: SemiRectangle(x: 1, y: 1, width: 2, height: 1),
+            rangeStack: [SemiRectangle(x: 2, y: 0, width: 1, height: 2)],
+          ),
+        );
+        expect(rendered.columns.toArray(), [0, 2]);
+        expect(rendered.rows.toArray(), [0, 1]);
+        expect(selectionLog, isEmpty);
+      });
+    });
 
     testWidgets(
       'cut writes before clearing text and numbers, but skips readonly cells',
