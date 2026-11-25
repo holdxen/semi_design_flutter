@@ -1,142 +1,209 @@
 // 1:1 replay of
-// `editor/contrib/semanticTokens/common/semanticTokensConfig.ts` (22 lines).
+//   `editor/contrib/insertFinalNewLine/browser/insertFinalNewLineCommand.ts` (46 lines),
+//   `editor/contrib/inPlaceReplace/browser/inPlaceReplaceCommand.ts` (48 lines).
 // Truth: `tool/ts2dart/_batch332_truth.cjs` -> `batch332_truth.json`.
-//
-// NOTE: originally numbered 331, which a concurrent session already used for a
-// three-file replay; renamed to 332 after restoring their test.
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import '../lib/src/monaco/base/common/uri.dart' show URI;
-import '../lib/src/monaco/editor/contrib/semanticTokens/common/semanticTokensConfig.dart'
-    as config;
-import '../lib/src/monaco/platform/configuration/common/configuration.dart'
-    show IConfigurationOverrides, IConfigurationServiceType;
-import '../lib/src/monaco/platform/theme/common/themeService.dart'
-    show IColorTheme, IThemeServiceType;
+import '../lib/src/monaco/editor/common/commands/commandInterfaces.dart';
+import '../lib/src/monaco/editor/common/core/editOperation.dart'
+    show ISingleEditOperation;
+import '../lib/src/monaco/editor/common/core/range.dart' show IRange, Range;
+import '../lib/src/monaco/editor/common/core/selection.dart' show Selection;
+import '../lib/src/monaco/editor/contrib/inPlaceReplace/browser/inPlaceReplaceCommand.dart'
+    show InPlaceReplaceCommand;
+import '../lib/src/monaco/editor/contrib/insertFinalNewLine/browser/insertFinalNewLineCommand.dart'
+    show InsertFinalNewLineCommand, insertFinalNewLine;
 
 Map<String, dynamic> _map(dynamic value) =>
     (value as Map).cast<String, dynamic>();
 
-Map<String, dynamic> _truth() => _map(jsonDecode(
-    File('tool/ts2dart/batch332_truth.json').readAsStringSync()));
+Map<String, dynamic> _truth() => _map(
+  jsonDecode(File('tool/ts2dart/batch332_truth.json').readAsStringSync()),
+);
 
-class _FakeModel {
-  String getLanguageId() => 'typescript';
-
-  URI get uri => URI.parse('file:///a.ts');
-}
-
-class _FakeConfig implements IConfigurationServiceType {
-  _FakeConfig(this.value);
-
-  final Object? value;
-  final List<List<Object?>> calls = <List<Object?>>[];
+class _Tokenization implements ITokenizationForCommand {
+  @override
+  bool hasAccurateTokensForLine(int lineNumber) => true;
 
   @override
-  Object? getValue$3(String section, IConfigurationOverrides overrides) {
-    calls.add(<Object?>[
-      section,
-      overrides.overrideIdentifier,
-      overrides.resource?.toString(),
-    ]);
-    return value;
+  ILineTokensForCommand getLineTokens(int lineNumber) => _LineTokens();
+}
+
+class _LineTokens implements ILineTokensForCommand {
+  @override
+  int getStandardTokenType(int tokenIndex) => 0;
+
+  @override
+  int findTokenIndexAtOffset(int offset) => 0;
+}
+
+class _Model implements ITextModelForCommand {
+  _Model(this.lines, this.eol);
+
+  final List<String> lines;
+  final String eol;
+
+  @override
+  ITokenizationForCommand get tokenization => _Tokenization();
+
+  @override
+  int getLineCount() => lines.length;
+
+  @override
+  String getLineContent(int lineNumber) => lines[lineNumber - 1];
+
+  @override
+  int getLineMaxColumn(int lineNumber) => lines[lineNumber - 1].length + 1;
+
+  @override
+  String getEOL() => eol;
+
+  @override
+  String getValueInRange(IRange range) {
+    final String line = lines[range.startLineNumber - 1];
+    return line.substring(range.startColumn - 1, range.endColumn - 1);
+  }
+}
+
+class _Builder implements IEditOperationBuilder {
+  final List<ISingleEditOperation> ops = <ISingleEditOperation>[];
+  Selection? tracked;
+  int _id = 0;
+
+  void _push(IRange range, String? text, bool? forceMoveMarkers) {
+    ops.add(
+      ISingleEditOperation(range, text, forceMoveMarkers: forceMoveMarkers),
+    );
   }
 
   @override
-  Object? get _serviceBrand => null;
+  void addEditOperation(IRange range, String? text, [bool? forceMoveMarkers]) =>
+      _push(range, text, forceMoveMarkers);
 
   @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  void addTrackedEditOperation(
+    IRange range,
+    String? text, [
+    bool? forceMoveMarkers,
+  ]) => _push(range, text, forceMoveMarkers);
+
+  @override
+  String trackSelection(Selection selection, [bool? trackPreviousOnEmpty]) {
+    tracked = selection;
+    return 'sel-${++_id}';
+  }
 }
 
-class _FakeThemeService implements IThemeServiceType {
-  _FakeThemeService(this.semanticHighlighting);
+class _Helper implements ICursorStateComputerData {
+  _Helper(this.builder, this.inverse);
 
-  final bool semanticHighlighting;
-
-  @override
-  IColorTheme getColorTheme() => _FakeTheme(semanticHighlighting);
+  final _Builder builder;
+  final List<Object?> inverse;
 
   @override
-  Object? get _serviceBrand => null;
+  List<Object?> getInverseEditOperations() => inverse;
 
   @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  Selection getTrackedSelection(String id) => builder.tracked!;
 }
 
-class _FakeTheme implements IColorTheme {
-  _FakeTheme(this.semanticHighlighting);
+List<int> _rangeOf(IRange r) => <int>[
+  r.startLineNumber,
+  r.startColumn,
+  r.endLineNumber,
+  r.endColumn,
+];
 
-  @override
-  final bool semanticHighlighting;
+List<int> _selectionOf(Selection s) => <int>[
+  s.selectionStartLineNumber,
+  s.selectionStartColumn,
+  s.positionLineNumber,
+  s.positionColumn,
+];
 
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+Map<String, Object?> _opJson(ISingleEditOperation op) => <String, Object?>{
+  'range': _rangeOf(op.range),
+  'text': op.text,
+  'forceMoveMarkers': op.forceMoveMarkers,
+};
+
+Map<String, Object?> _runCommand(
+  ICommand cmd,
+  _Model model, [
+  List<Object?>? inverse,
+]) {
+  final builder = _Builder();
+  cmd.getEditOperations(model, builder);
+  final helper = _Helper(builder, inverse ?? <Object?>[]);
+  final Selection cursor = cmd.computeCursorState(model, helper);
+  return <String, Object?>{
+    'ops': builder.ops.map(_opJson).toList(),
+    'tracked': builder.tracked == null ? null : _selectionOf(builder.tracked!),
+    'cursor': _selectionOf(cursor),
+  };
 }
+
+Selection _selection(List<dynamic> raw) =>
+    Selection(raw[0] as int, raw[1] as int, raw[2] as int, raw[3] as int);
+
+Range _range(List<dynamic> raw) =>
+    Range(raw[0] as int, raw[1] as int, raw[2] as int, raw[3] as int);
 
 void main() {
   final truth = _truth();
-  final model = _FakeModel();
 
-  test('setting constant', () {
-    expect(config.SEMANTIC_HIGHLIGHTING_SETTING_ID, truth['constant']);
-  });
+  group('batch332: InsertFinalNewLineCommand', () {
+    for (final dynamic raw in truth['insertFinalNewLine'] as List) {
+      final Map<String, dynamic> c = _map(raw);
+      test(c['label'] as String, () {
+        final model = _Model(
+          (c['lines'] as List).cast<String>(),
+          c['eol'] as String,
+        );
+        final selection = _selection((c['selection'] as List).cast<dynamic>());
 
-  test('enabled flag resolution and theme fallback', () {
-    for (final raw in (truth['cases'] as List)) {
-      final entry = raw as List;
-      final String name = entry[0] as String;
-      final bool withThemeOff = entry[1] as bool;
-      final bool withThemeOn = entry[2] as bool;
-      final Object? Function() value = _valueFor(name);
+        expect(_opJson(insertFinalNewLine(model)!), _map(c['direct']));
 
-      final off = _FakeConfig(value());
-      expect(
-          config.isSemanticColoringEnabled(
-              model, _FakeThemeService(false), off),
-          withThemeOff,
-          reason: '$name (theme off)');
-      expect(off.calls.last, <Object?>[
-        'editor.semanticHighlighting',
-        'typescript',
-        'file:///a.ts',
-      ]);
-      expect(
-          config.isSemanticColoringEnabled(
-              model, _FakeThemeService(true), _FakeConfig(value())),
-          withThemeOn,
-          reason: '$name (theme on)');
+        final Map<String, dynamic> expected = _map(c['run']);
+        final Map<String, Object?> actual = _runCommand(
+          InsertFinalNewLineCommand(selection),
+          model,
+        );
+        expect(actual['ops'], expected['ops']);
+        expect(actual['tracked'], expected['tracked']);
+        expect(actual['cursor'], expected['cursor']);
+      });
     }
   });
-}
 
-Object? Function() _valueFor(String name) {
-  switch (name) {
-    case 'true':
-      return () => true;
-    case 'false':
-      return () => false;
-    case 'enabledTrue':
-      return () => <String, Object?>{'enabled': true};
-    case 'enabledFalse':
-      return () => <String, Object?>{'enabled': false};
-    case 'configuredByTheme':
-      return () => <String, Object?>{'enabled': 'configuredByTheme'};
-    case 'enabledMissing':
-      return () => <String, Object?>{};
-    case 'undefined':
-      return () => null;
-    case 'null':
-      return () => null;
-    case 'enabledNull':
-      return () => <String, Object?>{'enabled': null};
-    case 'number':
-      return () => 1;
-    case 'stringTrue':
-      return () => 'true';
-  }
-  throw StateError('unknown case $name');
+  group('batch332: InPlaceReplaceCommand', () {
+    for (final dynamic raw in truth['inPlaceReplace'] as List) {
+      final Map<String, dynamic> c = _map(raw);
+      test(c['label'] as String, () {
+        final model = _Model(<String>['x'], '\n');
+        final command = InPlaceReplaceCommand(
+          _range((c['editRange'] as List).cast<dynamic>()),
+          _selection((c['selection'] as List).cast<dynamic>()),
+          c['text'] as String,
+        );
+        final List<int> inv = (c['inverseRange'] as List).cast<int>().toList();
+        final inverse = <Object?>[
+          ISingleEditOperation(Range(inv[0], inv[1], inv[0], inv[2]), null),
+        ];
+
+        final Map<String, dynamic> expected = _map(c['run']);
+        final Map<String, Object?> actual = _runCommand(
+          command,
+          model,
+          inverse,
+        );
+        expect(actual['ops'], expected['ops']);
+        expect(actual['tracked'], expected['tracked']);
+        expect(actual['cursor'], expected['cursor']);
+      });
+    }
+  });
 }
