@@ -12,6 +12,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -374,6 +375,8 @@ class SemiDataEditorProps {
 
   /// Controlled search state (`data-grid-search.ts:59-87`).
   final String? searchValue;
+
+  /// External matches in data coordinates, without the row-marker column.
   final List<SemiItem>? searchResults;
   final void Function(String newVal)? onSearchValueChange;
   final void Function(List<SemiItem> results, int navIndex)?
@@ -439,8 +442,10 @@ class _SemiDataEditorState extends State<SemiDataEditor>
   bool _showSearchInner = false;
   String _searchValueInner = '';
   List<SemiItem> _searchResultsInner = const [];
+  List<SemiItem>? _searchResultsControlled;
   SemiSearchStatus? _searchStatus;
   int _searchSelectedIndex = -1;
+  int _searchRequest = 0;
   final SemiSearchRunner _searchRunner = SemiSearchRunner();
   late final TextEditingController _searchTextController;
   final FocusNode _searchFocusNode = FocusNode(debugLabel: 'SemiSearch');
@@ -454,7 +459,7 @@ class _SemiDataEditorState extends State<SemiDataEditor>
   bool get _showSearch => widget.props.showSearch ?? _showSearchInner;
   String get _searchValue => widget.props.searchValue ?? _searchValueInner;
   List<SemiItem> get _searchResults =>
-      widget.props.searchResults ?? _searchResultsInner;
+      _searchResultsControlled ?? _searchResultsInner;
 
   /// `lastMouseDownData` (`data-editor.tsx:2091`).
   ({int button, SemiItem location})? _mouseDownData;
@@ -516,7 +521,8 @@ class _SemiDataEditorState extends State<SemiDataEditor>
     _rebuildSizedColumns();
     _rebuildMangledColumns();
     _selectionState = _makeSelectionState();
-    _searchTextController = TextEditingController();
+    _searchTextController = TextEditingController(text: _searchValue);
+    _searchAnimatingOut = _showSearch;
     _autoscrollTicker = createTicker(_onAutoscrollTick);
 
     // `useInitialScrollOffset` (`use-initial-scroll-offset.ts:38-71`): the
@@ -529,6 +535,7 @@ class _SemiDataEditorState extends State<SemiDataEditor>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _applyScroll();
     });
+    _refreshSearch();
   }
 
   @override
@@ -549,12 +556,9 @@ class _SemiDataEditorState extends State<SemiDataEditor>
     setState(() {
       _showSearchInner = true;
       _searchValueInner = '';
-      _searchStatus = null;
-      _searchSelectedIndex = -1;
-      _searchResultsInner = const [];
+      _refreshSearch();
     });
-    _searchTextController.clear();
-    _searchRunner.cancel();
+    _syncSearchText();
     widget.props.onSearchResultsChanged?.call(const [], -1);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _searchFocusNode.requestFocus();
@@ -563,15 +567,12 @@ class _SemiDataEditorState extends State<SemiDataEditor>
   }
 
   void _closeSearch() {
-    _searchRunner.cancel();
     setState(() {
       _showSearchInner = false;
       _searchValueInner = '';
-      _searchStatus = null;
-      _searchSelectedIndex = -1;
-      _searchResultsInner = const [];
+      _refreshSearch(runInternal: false);
     });
-    _searchTextController.clear();
+    _syncSearchText();
     widget.props.onSearchClose?.call();
     widget.props.onSearchResultsChanged?.call(const [], -1);
     _gridController.focus();
@@ -594,35 +595,93 @@ class _SemiDataEditorState extends State<SemiDataEditor>
     });
   }
 
-  /// `onSearchChange` (`data-grid-search.ts:285-298`).
-  void _onSearchChanged(String value) {
-    widget.props.onSearchValueChange?.call(value);
-    if (widget.props.searchResults != null) return;
+  void _syncSearchText() {
+    final value = _searchValue;
+    if (_searchTextController.text == value) return;
+    _searchTextController.value = TextEditingValue(
+      text: value,
+      selection: TextSelection.collapsed(offset: value.length),
+    );
+  }
 
-    setState(() => _searchValueInner = value);
-    if (value.isEmpty) {
-      _searchRunner.cancel();
-      setState(() {
-        _searchStatus = null;
-        _searchResultsInner = const [];
-      });
+  /// Resets navigation and switches between caller-provided and scanned hits.
+  void _refreshSearch({bool runInternal = true}) {
+    _searchRunner.cancel();
+    final request = ++_searchRequest;
+    _searchSelectedIndex = -1;
+    _searchResultsInner = const [];
+    _searchStatus = null;
+
+    final external = widget.props.searchResults;
+    _searchResultsControlled = external == null
+        ? null
+        : [
+            for (final item in external)
+              SemiItem(item.col + _markerOffset, item.row),
+          ];
+    if (external != null) {
+      if (external.isNotEmpty) {
+        _searchStatus = SemiSearchStatus(
+          rowsSearched: _mangledRows,
+          results: external.length,
+          selectedIndex: -1,
+        );
+      }
       return;
     }
-    _runSearch(value);
+
+    final query = _searchValue;
+    if (!runInternal ||
+        !_showSearch ||
+        query.isEmpty ||
+        widget.props.getCellsForSelection == null) {
+      return;
+    }
+    // Props can change during build. Start after layout so result callbacks
+    // may update the parent and the scan can use the current viewport.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && request == _searchRequest) _runSearch(query);
+    });
+  }
+
+  /// `onSearchChange` (`data-grid-search.ts:285-298`).
+  void _onSearchChanged(String value) {
+    final previouslyEffective = _searchValue;
+    setState(() {
+      _searchValueInner = value;
+      if (_searchValue != previouslyEffective &&
+          widget.props.searchResults == null) {
+        _refreshSearch();
+      }
+    });
+    widget.props.onSearchValueChange?.call(value);
+    if (widget.props.searchValue != null) {
+      // Let the owner accept the edit this frame; otherwise restore its value.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _syncSearchText();
+      });
+    }
   }
 
   Future<void> _runSearch(String value) async {
-    if (widget.props.getCellsForSelection == null) return;
     await _searchRunner.search(
       pattern: value,
       rows: _mangledRows,
       columnCount: _mangledColumns.length,
-      startY: _cellYOffset,
+      startY: clampInt(_cellYOffset, 0, math.max(0, _mangledRows - 1)),
       getCells: _getCellsForSelection,
       onResults: (results) => setState(() => _searchResultsInner = results),
-      onStatus: (status) => setState(() => _searchStatus = status),
-      onResultsChanged: _onSearchResultsChanged,
-      selectedIndex: _searchSelectedIndex,
+      onStatus: (status) => setState(() {
+        _searchStatus = SemiSearchStatus(
+          rowsSearched: status.rowsSearched,
+          results: status.results,
+          selectedIndex: _searchSelectedIndex,
+        );
+      }),
+      // Later batches grow the results but never undo an explicit step.
+      onResultsChanged: (results, _) =>
+          _onSearchResultsChanged(results, _searchSelectedIndex),
+      selectedIndex: -1,
     );
   }
 
@@ -650,6 +709,12 @@ class _SemiDataEditorState extends State<SemiDataEditor>
     }
     if (results.isEmpty || navIndex < 0 || navIndex >= results.length) return;
     final item = results[navIndex];
+    if (item.col < _markerOffset ||
+        item.col >= _mangledColumns.length ||
+        item.row < 0 ||
+        item.row >= _mangledRows) {
+      return;
+    }
     _updateSelectedCell(item.col, item.row);
   }
 
@@ -657,8 +722,10 @@ class _SemiDataEditorState extends State<SemiDataEditor>
   void _searchStep(int delta) {
     final status = _searchStatus;
     if (status == null || status.results == 0) return;
-    var newIndex = (status.selectedIndex + delta) % status.results;
-    if (newIndex < 0) newIndex += status.results;
+    final selected = status.selectedIndex;
+    final newIndex = selected < 0
+        ? (delta < 0 ? status.results - 1 : 0)
+        : (selected + delta) % status.results;
 
     setState(() {
       _searchSelectedIndex = newIndex;
@@ -700,22 +767,43 @@ class _SemiDataEditorState extends State<SemiDataEditor>
   @override
   void didUpdateWidget(SemiDataEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
+    final old = oldWidget.props;
+    final props = widget.props;
+    final searchVisibilityChanged =
+        (old.showSearch ?? _showSearchInner) != _showSearch;
     // A controlled `showSearch` flips without going through
     // `_openSearch`/`_closeSearch`, so the fade is synced here too.
-    if ((oldWidget.props.showSearch ?? _showSearchInner) !=
-        (widget.props.showSearch ?? _showSearchInner)) {
-      _syncSearchFade();
-    }
-    if (oldWidget.props.columns != widget.props.columns ||
-        oldWidget.props.rows != widget.props.rows ||
-        oldWidget.props.rowMarkers != widget.props.rowMarkers ||
-        oldWidget.props.rowGrouping != widget.props.rowGrouping ||
-        oldWidget.props.rowHeight != widget.props.rowHeight) {
+    if (searchVisibilityChanged) _syncSearchFade();
+    if (old.columns != props.columns ||
+        old.rows != props.rows ||
+        old.rowMarkers != props.rowMarkers ||
+        old.rowGrouping != props.rowGrouping ||
+        old.rowHeight != props.rowHeight) {
       _rebuildRowGrouping();
       _rebuildRemAdjustment(16);
       _rebuildSizedColumns();
       _rebuildMangledColumns();
       setState(() => _selectionState = _makeSelectionState());
+    }
+    final queryChanged = (old.searchValue ?? _searchValueInner) != _searchValue;
+    if (queryChanged) _syncSearchText();
+    final resultSourceChanged = !listEquals(
+      old.searchResults,
+      props.searchResults,
+    );
+    final searchGeometryChanged =
+        old.columns.length != props.columns.length ||
+        old.rows != props.rows ||
+        old.rowMarkers != props.rowMarkers ||
+        old.rowGrouping != props.rowGrouping;
+    if (resultSourceChanged ||
+        searchGeometryChanged ||
+        (props.searchResults == null &&
+            (queryChanged ||
+                searchVisibilityChanged ||
+                (old.getCellsForSelection == null) !=
+                    (props.getCellsForSelection == null)))) {
+      _refreshSearch();
     }
   }
 
@@ -3002,6 +3090,7 @@ class _SemiDataEditorState extends State<SemiDataEditor>
           isFocused: _focused,
           drawFocusRing: p.drawFocusRing,
           fillHandle: p.fillHandle,
+          prelightCells: _searchResults.isEmpty ? null : _searchResults,
           disabledRows: _disabledRows,
           isResizing: _resizeCol != null,
           // `isDragging={dragColActive}` (`data-grid-dnd.tsx:436`).

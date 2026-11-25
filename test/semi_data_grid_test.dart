@@ -1719,6 +1719,10 @@ void main() {
     late List<SemiEditListItem> edits;
     late List<SemiGridSelection> selectionLog;
     late List<String> activationLog;
+    const desktopSearch = TargetPlatformVariant({TargetPlatform.windows});
+    final searchTheme = const SemiThemeOverride(
+      bgSearchResult: Color(0xFFFF00E5),
+    ).applyTo(SemiDataGridTheme.light());
 
     List<List<SemiGridCell>> table() => [
       for (var row = 0; row < 200; row++)
@@ -1800,6 +1804,11 @@ void main() {
       SemiPasteCallback? onPaste,
       SemiSpanRangeBehavior spanRangeBehavior =
           SemiSpanRangeBehavior.standard,
+      SemiDataGridTheme? theme,
+      bool? showSearch,
+      String? searchValue,
+      List<SemiItem>? searchResults,
+      ValueChanged<String>? onSearchValueChange,
       void Function(List<SemiItem> results, int navIndex)?
       onSearchResultsChanged,
       SemiDrawCellCallback? drawCell,
@@ -1881,7 +1890,7 @@ void main() {
               }
               return cells[item.row][item.col];
             },
-            theme: SemiDataGridTheme.light(),
+            theme: theme ?? SemiDataGridTheme.light(),
             rowHeight: const SemiRowHeight.fixed(32),
             headerHeight: 32,
             onKeyDown: (_) {},
@@ -1909,6 +1918,10 @@ void main() {
             onRowMoved: onRowMoved,
             rowMarkers: rowMarkers,
             spanRangeBehavior: spanRangeBehavior,
+            showSearch: showSearch,
+            searchValue: searchValue,
+            searchResults: searchResults,
+            onSearchValueChange: onSearchValueChange,
             onSearchResultsChanged: onSearchResultsChanged,
             getCellsForSelection:
                 cellsForSelection ??
@@ -4046,51 +4059,271 @@ void main() {
       expect(partial.width, 2);
     });
 
-    testWidgets('search results reach the consumer in user coordinates', (
+    testWidgets(
+      'scanned matches are painted and reported in user coordinates',
+      (tester) async {
+        const match = SemiItem(1, 2);
+        const neighbor = SemiItem(2, 2);
+        final reported = <(List<SemiItem>, int)>[];
+        final fills = <SemiItem, Color?>{};
+        await tester.pumpWidget(
+          buildEditor(
+            rows: 4,
+            columnCount: 3,
+            rowMarkers: const SemiRowMarkerOptions(),
+            theme: searchTheme,
+            keybindingsOverride: const SemiKeybinds(search: true),
+            onSearchResultsChanged: (results, navIndex) =>
+                reported.add((results, navIndex)),
+            drawCell: (args, draw) {
+              fills[SemiItem(args.col, args.row)] = args.cellFillColor;
+              draw();
+            },
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(fills[match], searchTheme.bgCell);
+
+        await tester.tapAt(
+          const Offset(150, 45),
+          kind: PointerDeviceKind.mouse,
+        );
+        await tester.pumpAndSettle();
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+        await tester.pumpAndSettle();
+
+        await tester.enterText(find.byType(EditableText), 'r2 c1');
+        await tester.pumpAndSettle();
+        expect(fills[match], searchTheme.bgSearchResult);
+        expect(fills[neighbor], searchTheme.bgCell);
+
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.pumpAndSettle();
+        // Both the draw hook and the navigation callback expose marker-free
+        // coordinates even though the scanner and painter include the marker.
+        final (results, navIndex) = reported.last;
+        expect(results, [match]);
+        expect(navIndex, 0);
+      },
+      variant: desktopSearch,
+    );
+
+    testWidgets('external search values update the input and scanned matches', (
       tester,
     ) async {
-      final reported = <(List<SemiItem>, int)>[];
+      const first = SemiItem(1, 1);
+      const second = SemiItem(0, 2);
+      final values = <String>[];
+      final fills = <SemiItem, Color?>{};
+      final query = ValueNotifier('r1 c1');
+      addTearDown(query.dispose);
+
       await tester.pumpWidget(
-        buildEditor(
-          columnCount: 6,
-          rowMarkers: const SemiRowMarkerOptions(),
-          keybindingsOverride: const SemiKeybinds(search: true),
-          onSearchResultsChanged: (results, navIndex) =>
-              reported.add((results, navIndex)),
+        ValueListenableBuilder<String>(
+          valueListenable: query,
+          builder: (_, value, _) => buildEditor(
+            rows: 4,
+            columnCount: 3,
+            theme: searchTheme,
+            showSearch: true,
+            searchValue: value,
+            onSearchValueChange: values.add,
+            drawCell: (args, draw) {
+              fills[SemiItem(args.col, args.row)] = args.cellFillColor;
+              draw();
+            },
+          ),
         ),
       );
       await tester.pumpAndSettle();
 
-      final cell = await tester.startGesture(
-        const Offset(150, 45),
-        kind: PointerDeviceKind.mouse,
+      final input = find.byType(EditableText);
+      expect(tester.widget<EditableText>(input).controller.text, 'r1 c1');
+      expect(find.text('1 result'), findsOneWidget);
+      expect(fills[first], searchTheme.bgSearchResult);
+      expect(fills[second], searchTheme.bgCell);
+      expect(values, isEmpty);
+
+      query.value = 'r2 c0';
+      await tester.pumpAndSettle();
+      expect(tester.widget<EditableText>(input).controller.text, 'r2 c0');
+      expect(find.text('1 result'), findsOneWidget);
+      expect(fills[first], searchTheme.bgCell);
+      expect(fills[second], searchTheme.bgSearchResult);
+      expect(values, isEmpty);
+    }, variant: desktopSearch);
+
+    testWidgets('controlled results drive painting, count, and navigation', (
+      tester,
+    ) async {
+      const scanMatch = SemiItem(1, 0);
+      const first = SemiItem(2, 2);
+      const second = SemiItem(0, 1);
+      const third = SemiItem(1, 3);
+      const replacement = SemiItem(2, 3);
+      const initialResults = [first, second, third];
+      final results = ValueNotifier<List<SemiItem>>(initialResults);
+      addTearDown(results.dispose);
+      final reported = <(List<SemiItem>, int)>[];
+      final fills = <SemiItem, Color?>{};
+
+      await tester.pumpWidget(
+        ValueListenableBuilder<List<SemiItem>>(
+          valueListenable: results,
+          builder: (_, matches, _) => buildEditor(
+            rows: 4,
+            columnCount: 3,
+            rowMarkers: const SemiRowMarkerOptions(),
+            theme: searchTheme,
+            showSearch: true,
+            searchValue: 'r0 c1',
+            searchResults: matches,
+            onSearchResultsChanged: (items, index) =>
+                reported.add((items, index)),
+            drawCell: (args, draw) {
+              fills[SemiItem(args.col, args.row)] = args.cellFillColor;
+              draw();
+            },
+          ),
+        ),
       );
-      await cell.up();
       await tester.pumpAndSettle();
 
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
-      await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
-      await tester.pumpAndSettle();
+      // This query would find only scanMatch; the supplied cells and count
+      // must win instead, with the row-marker offset applied only to painting.
+      expect(find.text('3 results'), findsOneWidget);
+      expect(fills[scanMatch], searchTheme.bgCell);
+      for (final match in initialResults) {
+        expect(fills[match], searchTheme.bgSearchResult);
+      }
+      expect(selectionLog, isEmpty);
 
-      await tester.enterText(find.byType(EditableText), 'r0 c1');
-      await tester.pumpAndSettle();
+      Finder resultButton(String label) => find.byWidgetPredicate(
+        (widget) => widget is IconButton && widget.tooltip == label,
+      );
+      final next = resultButton('Next Result');
+      final previous = resultButton('Previous Result');
+      Future<void> step(Finder button, int index) async {
+        await tester.tap(button);
+        await tester.pumpAndSettle();
+        expect(find.text('${index + 1} of 3 results'), findsOneWidget);
+        expect(reported.last.$1, initialResults);
+        expect(reported.last.$2, index);
+      }
 
-      // The first run reports `navIndex: -1` and upstream bails out on it
-      // (`data-editor.tsx:3921`); Enter steps to index 0.
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.pumpAndSettle();
+      expect(find.text('3 of 3 results'), findsOneWidget);
+      expect(reported.last.$1, initialResults);
+      expect(reported.last.$2, 2);
+
+      await step(next, 0);
+      await step(previous, 2);
+      await step(next, 0);
+
+      results.value = const [replacement];
+      await tester.pumpAndSettle();
+      expect(find.textContaining('1 result'), findsOneWidget);
+      expect(fills[replacement], searchTheme.bgSearchResult);
+      for (final match in initialResults) {
+        expect(fills[match], searchTheme.bgCell);
+      }
+      await tester.tap(next);
+      await tester.pumpAndSettle();
+      expect(reported.last.$1, [replacement]);
+      expect(reported.last.$2, 0);
+
+      results.value = const [];
+      await tester.pumpAndSettle();
+      expect(fills[replacement], searchTheme.bgCell);
+      expect(fills[scanMatch], searchTheme.bgCell);
+      expect(tester.widget<IconButton>(previous).onPressed, isNull);
+      expect(tester.widget<IconButton>(next).onPressed, isNull);
+      expect(selectionLog, isEmpty);
+    }, variant: desktopSearch);
+
+    testWidgets('controlled results cancel the pending internal batches', (
+      tester,
+    ) async {
+      final results = ValueNotifier<List<SemiItem>?>(null);
+      addTearDown(results.dispose);
+      final batches = <int>[];
+      const externalMatch = SemiItem(2, 1);
+
+      await tester.pumpWidget(
+        ValueListenableBuilder<List<SemiItem>?>(
+          valueListenable: results,
+          builder: (_, matches, _) => buildEditor(
+            showSearch: true,
+            searchValue: 'c0',
+            searchResults: matches,
+            onSearchResultsChanged: (hits, _) => batches.add(hits.length),
+          ),
+        ),
+      );
+      expect(batches, [10], reason: 'only the initial scan batch has run');
+
+      results.value = const [externalMatch];
+      await tester.pump();
       await tester.pumpAndSettle();
 
-      expect(reported, isNotEmpty);
-      final (results, navIndex) = reported.last;
-      expect(navIndex, 0);
-      // The runner indexes `_getCellsForSelection`'s rows, which still carry
-      // the marker column, so the consumer must see the marker stripped
-      // (`data-editor.tsx:3913-3915`).
-      expect(results, [const SemiItem(1, 0)]);
-      // ...and never a negative column.
-      expect(results.every((r) => r.col >= 0), isTrue);
+      expect(batches, [
+        10,
+      ], reason: 'the remaining scan batches were cancelled');
+      expect(find.text('1 result'), findsOneWidget);
+      expect(
+        tester
+            .widget<SemiDataGrid>(find.byType(SemiDataGrid))
+            .props
+            .prelightCells,
+        [externalMatch],
+      );
     });
+
+    testWidgets('hidden controlled matches paint without selecting a cell', (
+      tester,
+    ) async {
+      const matches = [SemiItem(2, 2), SemiItem(0, 1), SemiItem(1, 3)];
+      final showSearch = ValueNotifier(false);
+      addTearDown(showSearch.dispose);
+      final fills = <SemiItem, Color?>{};
+
+      await tester.pumpWidget(
+        ValueListenableBuilder<bool>(
+          valueListenable: showSearch,
+          builder: (_, show, _) => buildEditor(
+            rows: 4,
+            columnCount: 3,
+            rowMarkers: const SemiRowMarkerOptions(),
+            theme: searchTheme,
+            showSearch: show,
+            searchResults: matches,
+            drawCell: (args, draw) {
+              fills[SemiItem(args.col, args.row)] = args.cellFillColor;
+              draw();
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(SemiSearchBar), findsNothing);
+      for (final match in matches) {
+        expect(fills[match], searchTheme.bgSearchResult);
+      }
+      expect(selectionLog, isEmpty);
+
+      showSearch.value = true;
+      await tester.pumpAndSettle();
+      expect(find.text('3 results'), findsOneWidget);
+      expect(selectionLog, isEmpty);
+      await tester.tap(find.byTooltip('Previous Result'));
+      await tester.pumpAndSettle();
+      expect(find.text('3 of 3 results'), findsOneWidget);
+    }, variant: desktopSearch);
 
     testWidgets('search without a consumer moves the selection to the match', (
       tester,
