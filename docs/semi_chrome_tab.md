@@ -89,40 +89,42 @@ class SemiChromeTabReorderInfo {
 
 ## 主题
 
-CSS 变量一一对应 `SemiChromeTabThemeData`。默认值是 qn-chrome-tabs 的 Chrome 亮色，不派生自 `SemiThemeData` 色板。
+CSS 变量一一对应 `SemiChromeTabThemeData`。未覆盖的字段由 `resolve` 回落到 `SemiThemeData` 的颜色、圆角、阴影 token，因此默认就是 Semi 风格，并随浅色/深色主题自动切换。高度、宽度和 Chromium 动效仍保留上游布局常量。
 
 | CSS 变量 | 字段 | 默认 |
 | --- | --- | --- |
-| `--chrome-tabs-height` | `chromeTabsHeight` | `38` |
-| `--chrome-tabs-background` | `chromeTabsBackground` | `#dee1e6` |
-| `--chrome-tabs-font` | `chromeTabsFontSize` | `12`（仅字号；和 Chromium 的 `kLabelFontSizeDelta` 一致；Arial 未随包提供） |
-| `--chrome-tab-min-width` | `chromeTabMinWidth` | `52` |
-| `--chrome-tab-max-width` | `chromeTabMaxWidth` | `120` |
-| `--chrome-tab-radius` | `chromeTabRadius` | `8` |
-| `--chrome-tab-text-color` | `chromeTabTextColor` | `#5f6368` |
-| `--chrome-tab-active-text-color` | `chromeTabActiveTextColor` | `#202124` |
-| `--chrome-tab-hover-background` | `chromeTabHoverBackground` | `#f4f5f6` |
-| `--chrome-tab-active-background` | `chromeTabActiveBackground` | `#ffffff` |
-| `--chrome-tab-divider-color` | `chromeTabDividerColor` | `#aeb5c64f` |
-| `--chrome-tab-close-hover-background` | `chromeTabCloseHoverBackground` | `#dadce0` |
-| `--chrome-tabs-accent-color` | `chromeTabsAccentColor` | `#1a73e8` |
-| `--chrome-tabs-menu-background` | `chromeTabsMenuBackground` | `#ffffff` |
-| `--chrome-tabs-menu-border-color` | `chromeTabsMenuBorderColor` | `#dadce0` |
-| `--chrome-tabs-menu-hover-background` | `chromeTabsMenuHoverBackground` | `#f1f3f4` |
-| `--chrome-tabs-menu-text-color` | `chromeTabsMenuTextColor` | 回退 `chromeTabTextColor` |
-| `--chrome-tabs-menu-icon-color` | `chromeTabsMenuIconColor` | 回退 `chromeTabTextColor` |
-| `--chrome-tabs-menu-icon-background` | `chromeTabsMenuIconBackground` | `rgb(255 255 255 / 62%)` |
-| `--chrome-tabs-menu-shadow` | `chromeTabsMenuShadow` | `0 6px 18px rgb(60 64 67 / 24%)` |
-| `--chrome-tabs-tooltip-background` | `chromeTabsTooltipBackground` | `#ffffff` |
-| `--chrome-tabs-tooltip-border-color` | `chromeTabsTooltipBorderColor` | `#dadce0` |
-| `--chrome-tabs-tooltip-text-color` | `chromeTabsTooltipTextColor` | 回退 `chromeTabTextColor` |
-| `--chrome-tabs-tooltip-shadow` | `chromeTabsTooltipShadow` | `0 2px 4px rgba(60,64,67,.067)` |
+| `--chrome-tabs-height` | `chromeTabsHeight` | `38`（上游布局常量） |
+| `--chrome-tabs-background` | `chromeTabsBackground` | `colors.colorFill1` |
+| `--chrome-tabs-font` | `chromeTabsFontSize` | `typography.fontSizeSmall`（仅字号；Arial 未随包提供） |
+| `--chrome-tab-min-width` | `chromeTabMinWidth` | `52`（上游布局常量） |
+| `--chrome-tab-max-width` | `chromeTabMaxWidth` | `120`（上游布局常量） |
+| `--chrome-tab-radius` | `chromeTabRadius` | `radius.borderRadiusMedium` |
+| `--chrome-tab-text-color` | `chromeTabTextColor` | `colors.colorText2` |
+| `--chrome-tab-active-text-color` | `chromeTabActiveTextColor` | `colors.colorText0` |
+| `--chrome-tab-hover-background` | `chromeTabHoverBackground` | `colors.colorFill2` |
+| `--chrome-tab-active-background` | `chromeTabActiveBackground` | `colors.colorBg3` |
+| `--chrome-tab-divider-color` | `chromeTabDividerColor` | `colors.colorBorder` |
+| `--chrome-tab-close-hover-background` | `chromeTabCloseHoverBackground` | `colors.colorFill2` |
+| `--chrome-tabs-accent-color` | `chromeTabsAccentColor` | `colors.colorPrimary` |
+| `--chrome-tabs-menu-background` | `chromeTabsMenuBackground` | `colors.colorBg3` |
+| `--chrome-tabs-menu-border-color` | `chromeTabsMenuBorderColor` | `colors.colorBorder` |
+| `--chrome-tabs-menu-hover-background` | `chromeTabsMenuHoverBackground` | `colors.colorFill0` |
+| `--chrome-tabs-menu-text-color` | `chromeTabsMenuTextColor` | 回退 `chromeTabTextColor`，再回退 `colors.colorText1` |
+| `--chrome-tabs-menu-icon-color` | `chromeTabsMenuIconColor` | 回退 `chromeTabTextColor`，再回退 `colors.colorText2` |
+| `--chrome-tabs-menu-icon-background` | `chromeTabsMenuIconBackground` | `colors.colorFill0` |
+| `--chrome-tabs-menu-shadow` | `chromeTabsMenuShadow` | `shadows.shadowElevated` |
+| `--chrome-tabs-tooltip-background` | `chromeTabsTooltipBackground` | `colors.colorBg3` |
+| `--chrome-tabs-tooltip-border-color` | `chromeTabsTooltipBorderColor` | `colors.colorBorder` |
+| `--chrome-tabs-tooltip-text-color` | `chromeTabsTooltipTextColor` | 回退 `chromeTabTextColor`，再回退 `colors.colorText0` |
+| `--chrome-tabs-tooltip-shadow` | `chromeTabsTooltipShadow` | `shadows.shadowElevated` |
 | Chromium tab insert | `chromeTabEnterDuration` | `200ms`（Chromium `StartInsertTabAnimation` + `EASE_OUT`；上游 `@keyframes chrome-tab-enter` 的 160ms 淡入已不采用） |
 | Chromium tab close | `chromeTabCloseDuration` | `200ms`（Chromium `StartRemoveTabAnimation` + `EASE_OUT`；上游 `@keyframes chrome-tab-close` 的 140ms 淡出已不采用） |
 | Chromium tab bounds transition | `chromeTabLayoutDuration` | `200ms easeOut`；新增标签时改用 `chromeTabEnterDuration`（`200ms`），并非上游 Web CSS 变量 |
 | tooltip `transition: left` | `chromeTabTooltipMoveDuration` | `140ms`（字段保留，移动过渡未移植） |
 
 `chromeTabHeight` 不单独暴露：按上游 `max(--chrome-tabs-height, 28px)` 由 `resolve` 派生。
+
+如需固定为某一套配色（不跟随全局主题），可用 `SemiChromeTabThemeData(...)` 显式覆盖上表字段；局部主题示例见下。
 
 局部主题：
 

@@ -250,7 +250,7 @@ class _SemiChromeTabPageState extends State<SemiChromeTabPage> {
   }
 
   static const List<_ChromePreset> _presets = <_ChromePreset>[
-    _ChromePreset('Chrome 默认', SemiChromeTabThemeData()),
+    _ChromePreset('Semi 默认', SemiChromeTabThemeData()),
     _ChromePreset(
       'Sea Salt Blue',
       SemiChromeTabThemeData(

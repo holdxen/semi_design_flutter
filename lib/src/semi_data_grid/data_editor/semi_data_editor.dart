@@ -623,6 +623,21 @@ class _SemiDataEditorState extends State<SemiDataEditor>
   Duration _lastTick = Duration.zero;
   final SemiAutoscroll _autoscroll = SemiAutoscroll();
 
+  /// Touch scrolling. The browser's native scroll that Glide relies on has no
+  /// Flutter equivalent, so the editor drives `_scrollX`/`_scrollY` itself. A
+  /// touch that moved past [kTouchSlop] is a drag: it scrolls instead of
+  /// selecting, and on release the selection path is skipped — upstream does
+  /// the same by comparing the visible region captured on press
+  /// (`data-editor.tsx:2438-2443`).
+  bool _touchDragged = false;
+  Offset? _touchDownPosition;
+  Offset? _touchLastPosition;
+  Duration? _touchLastMoveTime;
+  Offset _touchVelocity = Offset.zero;
+  late final Ticker _inertiaTicker;
+  Duration _lastInertiaTick = Duration.zero;
+  Offset _inertiaVelocity = Offset.zero;
+
   @override
   void initState() {
     super.initState();
@@ -639,6 +654,7 @@ class _SemiDataEditorState extends State<SemiDataEditor>
     _searchTextController = TextEditingController(text: _searchValue);
     _searchAnimatingOut = _showSearch;
     _autoscrollTicker = createTicker(_onAutoscrollTick);
+    _inertiaTicker = createTicker(_onInertiaTick);
 
     // `useInitialScrollOffset` (`use-initial-scroll-offset.ts:38-71`): the
     // offsets only take effect once the viewport exists, so they are applied
@@ -662,6 +678,7 @@ class _SemiDataEditorState extends State<SemiDataEditor>
     _searchTextController.dispose();
     _searchFocusNode.dispose();
     _autoscrollTicker.dispose();
+    _inertiaTicker.dispose();
     super.dispose();
   }
 
@@ -2596,13 +2613,17 @@ class _SemiDataEditorState extends State<SemiDataEditor>
         setState(() => _fillHighlightRegion = rect);
       }
     } else if (dragging &&
+        !args.isTouch &&
         _selection.current != null &&
         (widget.props.rangeSelect == SemiRangeSelect.rect ||
             widget.props.rangeSelect == SemiRangeSelect.multiRect)) {
+      // Touch selects on release, not while the finger is down, so it never
+      // rubber-bands a range here.
       _dragSelect(args);
     }
 
-    _updateScrollDir(args);
+    // Edge autoscroll is a mouse-drag affordance; a touch scrolls itself.
+    if (!args.isTouch) _updateScrollDir(args);
     widget.props.onItemHovered?.call(args);
   }
 
@@ -3022,6 +3043,16 @@ class _SemiDataEditorState extends State<SemiDataEditor>
     // Touch pointers do their selection on release instead of on press
     // (`data-editor.tsx:2438-2482`).
     if (args.isTouch == true) {
+      final dragged = _touchDragged;
+      final velocity = _touchVelocity;
+      _resetTouchGesture();
+      // A finger that scrolled is a scroll, not a tap: no selection, no cell
+      // activation (`data-editor.tsx:2438-2443` aborts on a changed region).
+      if (dragged) {
+        _startInertia(velocity);
+        _finishPointerGesture();
+        return;
+      }
       if (args.kind == SemiGridCellKind.cell) {
         if (!_handleMaybeClick(args as SemiGridCellMouseArgs)) {
           _handleSelect(args);
@@ -3361,6 +3392,137 @@ class _SemiDataEditorState extends State<SemiDataEditor>
     widget.props.onVisibleRegionChanged?.call(newRegion, _visibleExtras!);
   }
 
+  // -------------------------------------------------------------------------
+  // Touch scrolling and inertia
+  // -------------------------------------------------------------------------
+
+  void _handleEditorPointerDown(PointerDownEvent event) {
+    _stopInertia();
+    _resetTouchGesture();
+    if (event.kind != PointerDeviceKind.touch) return;
+    _touchDownPosition = event.localPosition;
+    _touchLastPosition = event.localPosition;
+  }
+
+  void _handleEditorPointerMove(PointerMoveEvent event) {
+    if (event.kind != PointerDeviceKind.touch || _touchDownPosition == null) {
+      return;
+    }
+    _handleTouchDrag(event.localPosition, event.timeStamp);
+  }
+
+  /// A press that started on a drag/resize/fill affordance keeps its existing
+  /// behaviour; only an otherwise free touch becomes a scroll.
+  bool get _touchMayScroll =>
+      _dragCol == null &&
+      _dragRow == null &&
+      _resizeCol == null &&
+      !_fillHandlePressed;
+
+  void _handleTouchDrag(Offset position, Duration timeStamp) {
+    if (!_touchMayScroll) return;
+    final down = _touchDownPosition;
+    if (down == null) return;
+
+    if (!_touchDragged) {
+      final delta = position - down;
+      if (delta.distance < kTouchSlop) return;
+      _touchDragged = true;
+      // The press was going to resize/drag a column, move a row or fill;
+      // a scroll wins now, so none of those gestures may commit on release.
+      _resizeCol = null;
+      _resizeColStartX = null;
+      _lastResizeWidth = -1;
+      _fillHandlePressed = false;
+      _fillHighlightRegion = null;
+      _clearDragState();
+      _scrollBy(-delta);
+      _touchLastPosition = position;
+      _touchLastMoveTime = timeStamp;
+      return;
+    }
+
+    final last = _touchLastPosition ?? position;
+    _touchLastPosition = position;
+    final delta = position - last;
+    if (delta == Offset.zero) return;
+    _scrollBy(-delta);
+
+    final lastTime = _touchLastMoveTime;
+    var dt = 0.016;
+    if (lastTime != null && timeStamp > lastTime) {
+      final micros = (timeStamp - lastTime).inMicroseconds;
+      if (micros > 0) dt = micros / 1e6;
+    }
+    _touchVelocity = delta / dt;
+    _touchLastMoveTime = timeStamp;
+  }
+
+  void _resetTouchGesture() {
+    _touchDragged = false;
+    _touchDownPosition = null;
+    _touchLastPosition = null;
+    _touchLastMoveTime = null;
+    _touchVelocity = Offset.zero;
+  }
+
+  void _scrollBy(Offset delta) {
+    final nextX = clampDouble(_scrollX + delta.dx, 0, _maxScrollX);
+    final nextY = clampDouble(_scrollY + delta.dy, 0, _maxScrollY);
+    if (nextX == _scrollX && nextY == _scrollY) return;
+    setState(() {
+      _scrollX = nextX;
+      _scrollY = nextY;
+    });
+    _applyScroll();
+  }
+
+  void _startInertia(Offset velocity) {
+    if (velocity.distance < 80) return;
+    _inertiaVelocity = velocity;
+    _lastInertiaTick = Duration.zero;
+    if (!_inertiaTicker.isActive) _inertiaTicker.start();
+  }
+
+  void _stopInertia() {
+    _inertiaVelocity = Offset.zero;
+    if (_inertiaTicker.isActive) _inertiaTicker.stop();
+  }
+
+  /// `advanceScroll` by frame; the browser gets this from the platform's own
+  /// fling, so the decay here is a plain exponential friction curve.
+  void _onInertiaTick(Duration elapsed) {
+    if (!mounted) return;
+    if (_lastInertiaTick == Duration.zero) {
+      _lastInertiaTick = elapsed;
+      return;
+    }
+    final dtMs = (elapsed - _lastInertiaTick).inMicroseconds / 1000.0;
+    _lastInertiaTick = elapsed;
+
+    final beforeX = _scrollX;
+    final beforeY = _scrollY;
+    _scrollBy(-_inertiaVelocity * (dtMs / 1000.0));
+    _inertiaVelocity *= math.pow(0.95, dtMs / 16.0).toDouble();
+
+    final moved = _scrollX != beforeX || _scrollY != beforeY;
+    if (!moved || _inertiaVelocity.distance < 30) _stopInertia();
+  }
+
+  void _handleEditorPointerUp(PointerUpEvent event) {
+    // The grid normally reports the release first and clears this; if it did
+    // not (for example a header control swallowed it), finish here.
+    if (!_touchDragged) return;
+    final velocity = _touchVelocity;
+    _resetTouchGesture();
+    _startInertia(velocity);
+  }
+
+  void _handleEditorPointerCancel(PointerCancelEvent event) {
+    _resetTouchGesture();
+    _stopInertia();
+  }
+
   void _handleScroll(PointerSignalEvent event) {
     if (event is! PointerScrollEvent) return;
     // Shift + wheel scrolls horizontally, matching the browser.
@@ -3505,6 +3667,10 @@ class _SemiDataEditorState extends State<SemiDataEditor>
             },
             child: Listener(
               onPointerSignal: _handleScroll,
+              onPointerDown: _handleEditorPointerDown,
+              onPointerMove: _handleEditorPointerMove,
+              onPointerUp: _handleEditorPointerUp,
+              onPointerCancel: _handleEditorPointerCancel,
               behavior: HitTestBehavior.opaque,
               child: Stack(
                 fit: StackFit.expand,

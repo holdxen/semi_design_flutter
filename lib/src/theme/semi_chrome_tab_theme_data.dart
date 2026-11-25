@@ -8,10 +8,11 @@ import 'semi_theme_data.dart';
 /// Nullable overrides for [SemiChromeTab].
 ///
 /// Every field mirrors a CSS custom property of the upstream qn-chrome-tabs
-/// `styles.css`. A null value falls back to the Chrome default recorded in
-/// [SemiResolvedChromeTabThemeData]. Unlike other Semi ports these defaults are
-/// literal Chrome colors, not `SemiThemeData` tokens: qn-chrome-tabs is a
-/// browser-chrome clone whose palette does not derive from Semi.
+/// `styles.css`. A null value falls back to the Semi-styled defaults resolved
+/// in [resolve]: colors, radius, and shadows come from the ambient
+/// [SemiThemeData] tokens, so the component follows the light/dark theme by
+/// default. Geometry and Chromium motion remain upstream constants because they
+/// describe the tab-strip layout rather than the palette.
 @immutable
 class SemiChromeTabThemeData {
   const SemiChromeTabThemeData({
@@ -45,77 +46,81 @@ class SemiChromeTabThemeData {
     this.chromeTabTooltipMoveDuration,
   });
 
-  /// `--chrome-tabs-height: 38px`.
+  /// `--chrome-tabs-height: 38px` (upstream layout constant, not themed).
   final double? chromeTabsHeight;
 
-  /// `--chrome-tabs-background: #dee1e6`.
+  /// `--chrome-tabs-background`; defaults to `colors.colorFill1`.
   final Color? chromeTabsBackground;
 
-  /// `--chrome-tabs-font: 12px Arial, sans-serif` (size part only; Arial is
-  /// not bundled and is documented as a platform difference).
+  /// `--chrome-tabs-font` (size part only; Arial is not bundled and is
+  /// documented as a platform difference). Defaults to `typography.fontSizeSmall`.
   final double? chromeTabsFontSize;
 
-  /// `--chrome-tab-min-width: 52px`.
+  /// `--chrome-tab-min-width: 52px` (upstream layout constant, not themed).
   final double? chromeTabMinWidth;
 
-  /// `--chrome-tab-max-width: 120px`.
+  /// `--chrome-tab-max-width: 120px` (upstream layout constant, not themed).
   final double? chromeTabMaxWidth;
 
-  /// `--chrome-tab-radius: 8px`.
+  /// `--chrome-tab-radius`; defaults to `radius.borderRadiusMedium`.
   final double? chromeTabRadius;
 
-  /// `--chrome-tab-text-color: #5f6368`.
+  /// `--chrome-tab-text-color`; defaults to `colors.colorText2`.
   final Color? chromeTabTextColor;
 
-  /// `--chrome-tab-active-text-color: #202124`.
+  /// `--chrome-tab-active-text-color`; defaults to `colors.colorText0`.
   final Color? chromeTabActiveTextColor;
 
-  /// `--chrome-tab-hover-background: #f4f5f6`.
+  /// `--chrome-tab-hover-background`; defaults to `colors.colorFill2`.
   final Color? chromeTabHoverBackground;
 
-  /// `--chrome-tab-active-background: #fff`.
+  /// `--chrome-tab-active-background`; defaults to the elevated surface
+  /// `colors.colorBg3`.
   final Color? chromeTabActiveBackground;
 
-  /// `--chrome-tab-divider-color: #aeb5c64f`.
+  /// `--chrome-tab-divider-color`; defaults to `colors.colorBorder`.
   final Color? chromeTabDividerColor;
 
-  /// `--chrome-tab-close-hover-background: #dadce0`.
+  /// `--chrome-tab-close-hover-background`; defaults to `colors.colorFill2`.
   final Color? chromeTabCloseHoverBackground;
 
-  /// `--chrome-tabs-accent-color: #1a73e8`.
+  /// `--chrome-tabs-accent-color`; defaults to `colors.colorPrimary`.
   final Color? chromeTabsAccentColor;
 
-  /// `--chrome-tabs-menu-background: #fff`.
+  /// `--chrome-tabs-menu-background`; defaults to `colors.colorBg3`.
   final Color? chromeTabsMenuBackground;
 
-  /// `--chrome-tabs-menu-border-color: #dadce0`.
+  /// `--chrome-tabs-menu-border-color`; defaults to `colors.colorBorder`.
   final Color? chromeTabsMenuBorderColor;
 
-  /// `--chrome-tabs-menu-hover-background: #f1f3f4`.
+  /// `--chrome-tabs-menu-hover-background`; defaults to `colors.colorFill0`.
   final Color? chromeTabsMenuHoverBackground;
 
-  /// `--chrome-tabs-menu-text-color` (defaults to [chromeTabTextColor]).
+  /// `--chrome-tabs-menu-text-color`; defaults to [chromeTabTextColor], then
+  /// `colors.colorText1`.
   final Color? chromeTabsMenuTextColor;
 
-  /// `--chrome-tabs-menu-icon-color` (defaults to [chromeTabTextColor]).
+  /// `--chrome-tabs-menu-icon-color`; defaults to [chromeTabTextColor], then
+  /// `colors.colorText2`.
   final Color? chromeTabsMenuIconColor;
 
-  /// `--chrome-tabs-menu-icon-background: rgb(255 255 255 / 62%)`.
+  /// `--chrome-tabs-menu-icon-background`; defaults to `colors.colorFill0`.
   final Color? chromeTabsMenuIconBackground;
 
-  /// `--chrome-tabs-menu-shadow: 0 6px 18px rgb(60 64 67 / 24%)`.
+  /// `--chrome-tabs-menu-shadow`; defaults to `shadows.shadowElevated`.
   final SemiShadows? chromeTabsMenuShadow;
 
-  /// `--chrome-tabs-tooltip-background: #fff`.
+  /// `--chrome-tabs-tooltip-background`; defaults to `colors.colorBg3`.
   final Color? chromeTabsTooltipBackground;
 
-  /// `--chrome-tabs-tooltip-border-color: #dadce0`.
+  /// `--chrome-tabs-tooltip-border-color`; defaults to `colors.colorBorder`.
   final Color? chromeTabsTooltipBorderColor;
 
-  /// `--chrome-tabs-tooltip-text-color` (defaults to [chromeTabTextColor]).
+  /// `--chrome-tabs-tooltip-text-color`; defaults to [chromeTabTextColor], then
+  /// `colors.colorText0`.
   final Color? chromeTabsTooltipTextColor;
 
-  /// `--chrome-tabs-tooltip-shadow: 0 2px 4px rgba(60, 64, 67, 0.067)`.
+  /// `--chrome-tabs-tooltip-shadow`; defaults to `shadows.shadowElevated`.
   final SemiShadows? chromeTabsTooltipShadow;
 
   /// Duration of the Chromium-style insertion animation (the new tab's bounds
@@ -251,52 +256,46 @@ class SemiChromeTabThemeData {
         );
 
   SemiResolvedChromeTabThemeData resolve(SemiThemeData theme) {
+    final colors = theme.colors;
     final height = chromeTabsHeight ?? 38;
-    final tabTextColor = chromeTabTextColor ?? const Color(0xff5f6368);
+    final tabTextColor = chromeTabTextColor ?? colors.colorText2;
     return SemiResolvedChromeTabThemeData(
       chromeTabsHeight: height,
-      chromeTabsBackground: chromeTabsBackground ?? const Color(0xffdee1e6),
-      chromeTabsFontSize: chromeTabsFontSize ?? 12,
+      chromeTabsBackground: chromeTabsBackground ?? colors.colorFill1,
+      chromeTabsFontSize: chromeTabsFontSize ?? theme.typography.fontSizeSmall,
       chromeTabHeight: math.max(height, 28),
       chromeTabMinWidth: chromeTabMinWidth ?? 52,
       chromeTabMaxWidth: chromeTabMaxWidth ?? 120,
-      chromeTabRadius: chromeTabRadius ?? 8,
+      chromeTabRadius: chromeTabRadius ?? theme.radius.borderRadiusMedium.value,
       chromeTabTextColor: tabTextColor,
-      chromeTabActiveTextColor:
-          chromeTabActiveTextColor ?? const Color(0xff202124),
-      chromeTabHoverBackground:
-          chromeTabHoverBackground ?? const Color(0xfff4f5f6),
-      chromeTabActiveBackground:
-          chromeTabActiveBackground ?? const Color(0xffffffff),
-      chromeTabDividerColor: chromeTabDividerColor ?? const Color(0x4faeb5c6),
+      chromeTabActiveTextColor: chromeTabActiveTextColor ?? colors.colorText0,
+      chromeTabHoverBackground: chromeTabHoverBackground ?? colors.colorFill2,
+      chromeTabActiveBackground: chromeTabActiveBackground ?? colors.colorBg3,
+      chromeTabDividerColor: chromeTabDividerColor ?? colors.colorBorder,
       chromeTabCloseHoverBackground:
-          chromeTabCloseHoverBackground ?? const Color(0xffdadce0),
-      chromeTabsAccentColor: chromeTabsAccentColor ?? const Color(0xff1a73e8),
-      chromeTabsMenuBackground:
-          chromeTabsMenuBackground ?? const Color(0xffffffff),
+          chromeTabCloseHoverBackground ?? colors.colorFill2,
+      chromeTabsAccentColor: chromeTabsAccentColor ?? colors.colorPrimary,
+      chromeTabsMenuBackground: chromeTabsMenuBackground ?? colors.colorBg3,
       chromeTabsMenuBorderColor:
-          chromeTabsMenuBorderColor ?? const Color(0xffdadce0),
+          chromeTabsMenuBorderColor ?? colors.colorBorder,
       chromeTabsMenuHoverBackground:
-          chromeTabsMenuHoverBackground ?? const Color(0xfff1f3f4),
-      chromeTabsMenuTextColor: chromeTabsMenuTextColor ?? tabTextColor,
-      chromeTabsMenuIconColor: chromeTabsMenuIconColor ?? tabTextColor,
+          chromeTabsMenuHoverBackground ?? colors.colorFill0,
+      chromeTabsMenuTextColor:
+          chromeTabsMenuTextColor ?? chromeTabTextColor ?? colors.colorText1,
+      chromeTabsMenuIconColor:
+          chromeTabsMenuIconColor ?? chromeTabTextColor ?? colors.colorText2,
       chromeTabsMenuIconBackground:
-          chromeTabsMenuIconBackground ?? const Color(0x9effffff),
+          chromeTabsMenuIconBackground ?? colors.colorFill0,
       chromeTabsMenuShadow:
-          chromeTabsMenuShadow ??
-          SemiShadows(const <SemiShadowLayer>[
-            SemiShadowLayer(false, 0, 6, 18, 0, Color(0x3d3c4043)),
-          ]),
+          chromeTabsMenuShadow ?? theme.shadows.shadowElevated,
       chromeTabsTooltipBackground:
-          chromeTabsTooltipBackground ?? const Color(0xffffffff),
+          chromeTabsTooltipBackground ?? colors.colorBg3,
       chromeTabsTooltipBorderColor:
-          chromeTabsTooltipBorderColor ?? const Color(0xffdadce0),
-      chromeTabsTooltipTextColor: chromeTabsTooltipTextColor ?? tabTextColor,
+          chromeTabsTooltipBorderColor ?? colors.colorBorder,
+      chromeTabsTooltipTextColor:
+          chromeTabsTooltipTextColor ?? chromeTabTextColor ?? colors.colorText0,
       chromeTabsTooltipShadow:
-          chromeTabsTooltipShadow ??
-          SemiShadows(const <SemiShadowLayer>[
-            SemiShadowLayer(false, 0, 2, 4, 0, Color(0x113c4043)),
-          ]),
+          chromeTabsTooltipShadow ?? theme.shadows.shadowElevated,
       chromeTabEnterDuration:
           chromeTabEnterDuration ?? const Duration(milliseconds: 200),
       chromeTabCloseDuration:

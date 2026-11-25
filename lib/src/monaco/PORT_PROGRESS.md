@@ -284,7 +284,7 @@
 | 275 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/tokenizer.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/tokenizer.dart` | pending |
 | 276 | editor | `editor/common/model/bracketPairsTextModelPart/colorizedBracketPairsDecorationProvider.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/colorizedBracketPairsDecorationProvider.dart` | pending |
 | 277 | editor | `editor/common/model/bracketPairsTextModelPart/fixBrackets.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/fixBrackets.dart` | pending |
-| 278 | editor | `editor/common/model/decorationProvider.ts` | `lib/src/monaco/editor/common/model/decorationProvider.dart` | pending |
+| 278 | editor | `editor/common/model/decorationProvider.ts` | `lib/src/monaco/editor/common/model/decorationProvider.dart` | tested |
 | 279 | editor | `editor/common/model/editStack.ts` | `lib/src/monaco/editor/common/model/editStack.dart` | pending |
 | 280 | editor | `editor/common/model/fixedArray.ts` | `lib/src/monaco/editor/common/model/fixedArray.dart` | tested |
 | 281 | editor | `editor/common/model/guidesTextModelPart.ts` | `lib/src/monaco/editor/common/model/guidesTextModelPart.dart` | pending |

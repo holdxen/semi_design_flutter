@@ -195,7 +195,6 @@ class _SemiChromeTabState extends State<SemiChromeTab> {
   static const double _contextMenuWidth = 172;
   static const double _menuRadius = 8;
   static const double _tooltipRadius = 12;
-  static const int _menuSeparator = 0xffe8eaed;
 
   final ScrollController _scroll = ScrollController();
   final GlobalKey _viewportKey = GlobalKey(debugLabel: 'semi-chrome-tabs');
@@ -2202,6 +2201,7 @@ class _AddButtonState extends State<_AddButton> {
             size: const Size.square(_SemiChromeTabState._addButtonSize),
             painter: SemiChromeTabAddButtonPainter(
               color: widget.theme.chromeTabTextColor,
+              hoverColor: widget.theme.chromeTabHoverBackground,
               hovered: _hovered,
             ),
           ),
@@ -2268,11 +2268,9 @@ class _GroupMenuState extends State<_GroupMenu> {
           Container(
             margin: const EdgeInsets.only(top: 5),
             padding: const EdgeInsets.only(top: 5),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               border: Border(
-                top: BorderSide(
-                  color: Color(_SemiChromeTabState._menuSeparator),
-                ),
+                top: BorderSide(color: theme.chromeTabsMenuBorderColor),
               ),
             ),
             child: _MenuButton(
@@ -2459,10 +2457,10 @@ class _ContextMenu extends StatelessWidget {
                   ? const EdgeInsets.only(bottom: 4)
                   : EdgeInsets.zero,
               decoration: index == 0
-                  ? const BoxDecoration(
+                  ? BoxDecoration(
                       border: Border(
                         bottom: BorderSide(
-                          color: Color(_SemiChromeTabState._menuSeparator),
+                          color: theme.chromeTabsMenuBorderColor,
                         ),
                       ),
                     )

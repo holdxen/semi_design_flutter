@@ -165,31 +165,51 @@ List<String> _flexOverflows(WidgetTester tester) {
 }
 
 void main() {
-  test('resolved chrome defaults match the upstream stylesheet', () {
-    final resolved = const SemiChromeTabThemeData().resolve(
-      const SemiThemeData.light(),
-    );
+  test('resolved defaults follow the Semi theme tokens', () {
+    const theme = SemiThemeData.light();
+    final resolved = const SemiChromeTabThemeData().resolve(theme);
     expect(resolved.chromeTabsHeight, 38);
     expect(resolved.chromeTabHeight, 38);
-    expect(resolved.chromeTabsFontSize, 12);
+    expect(resolved.chromeTabsFontSize, theme.typography.fontSizeSmall);
     expect(resolved.chromeTabMinWidth, 52);
     expect(resolved.chromeTabMaxWidth, 120);
-    expect(resolved.chromeTabRadius, 8);
-    expect(resolved.chromeTabsBackground, const Color(0xffdee1e6));
-    expect(resolved.chromeTabTextColor, const Color(0xff5f6368));
-    expect(resolved.chromeTabActiveTextColor, const Color(0xff202124));
-    expect(resolved.chromeTabHoverBackground, const Color(0xfff4f5f6));
-    expect(resolved.chromeTabActiveBackground, const Color(0xffffffff));
-    expect(resolved.chromeTabDividerColor, const Color(0x4faeb5c6));
-    expect(resolved.chromeTabsAccentColor, const Color(0xff1a73e8));
-    expect(resolved.chromeTabsMenuIconBackground, const Color(0x9effffff));
-    expect(resolved.chromeTabsMenuTextColor, resolved.chromeTabTextColor);
+    expect(resolved.chromeTabRadius, theme.radius.borderRadiusMedium.value);
+    expect(resolved.chromeTabsBackground, theme.colors.colorFill1);
+    expect(resolved.chromeTabTextColor, theme.colors.colorText2);
+    expect(resolved.chromeTabActiveTextColor, theme.colors.colorText0);
+    expect(resolved.chromeTabHoverBackground, theme.colors.colorFill2);
+    expect(resolved.chromeTabActiveBackground, theme.colors.colorBg3);
+    expect(resolved.chromeTabDividerColor, theme.colors.colorBorder);
+    expect(resolved.chromeTabsAccentColor, theme.colors.colorPrimary);
+    expect(resolved.chromeTabsMenuIconBackground, theme.colors.colorFill0);
+    expect(resolved.chromeTabsMenuTextColor, theme.colors.colorText1);
+    expect(resolved.chromeTabsMenuIconColor, theme.colors.colorText2);
+    expect(resolved.chromeTabsMenuBackground, theme.colors.colorBg3);
+    expect(resolved.chromeTabsMenuBorderColor, theme.colors.colorBorder);
+    expect(resolved.chromeTabsMenuHoverBackground, theme.colors.colorFill0);
+    expect(resolved.chromeTabsMenuShadow, theme.shadows.shadowElevated);
+    expect(resolved.chromeTabsTooltipBackground, theme.colors.colorBg3);
+    expect(resolved.chromeTabsTooltipBorderColor, theme.colors.colorBorder);
+    expect(resolved.chromeTabsTooltipTextColor, theme.colors.colorText0);
+    expect(resolved.chromeTabsTooltipShadow, theme.shadows.shadowElevated);
     expect(resolved.chromeTabEnterDuration, const Duration(milliseconds: 200));
     expect(resolved.chromeTabCloseDuration, const Duration(milliseconds: 200));
     expect(
       resolved.chromeTabTooltipMoveDuration,
       const Duration(milliseconds: 140),
     );
+  });
+
+  test('dark theme resolves dark Semi surface tokens', () {
+    const theme = SemiThemeData.dark();
+    final resolved = const SemiChromeTabThemeData().resolve(theme);
+    expect(resolved.chromeTabsBackground, theme.colors.colorFill1);
+    expect(resolved.chromeTabTextColor, theme.colors.colorText2);
+    expect(resolved.chromeTabActiveTextColor, theme.colors.colorText0);
+    expect(resolved.chromeTabActiveBackground, theme.colors.colorBg3);
+    expect(resolved.chromeTabsMenuBackground, theme.colors.colorBg3);
+    expect(resolved.chromeTabsAccentColor, theme.colors.colorPrimary);
+    expect(resolved.chromeTabTextColor, isNot(const Color(0xff5f6368)));
   });
 
   test('chrome-tab-height is max(strip height, 28)', () {
@@ -693,7 +713,7 @@ void main() {
     await tester.tap(byLabel('Select group'));
     await tester.pumpAndSettle();
     final work = tester.widget<Text>(find.text('Work'));
-    expect(work.style?.color, const Color(0xff1a73e8));
+    expect(work.style?.color, const SemiThemeData.light().colors.colorPrimary);
     expect(work.style?.fontWeight, FontWeight.w600);
     expect(find.text('＋ New group'), findsOneWidget);
     expect(byLabel('Rename Work'), findsNothing);
