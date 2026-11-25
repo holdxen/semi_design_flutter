@@ -82,7 +82,7 @@
 | 73 | editor | `editor/browser/view/viewLayer.ts` | `lib/src/monaco/editor/browser/view/viewLayer.dart` | pending |
 | 74 | editor | `editor/browser/view/viewOverlays.ts` | `lib/src/monaco/editor/browser/view/viewOverlays.dart` | pending |
 | 75 | editor | `editor/browser/view/viewPart.ts` | `lib/src/monaco/editor/browser/view/viewPart.dart` | pending |
-| 76 | editor | `editor/browser/view/viewUserInputEvents.ts` | `lib/src/monaco/editor/browser/view/viewUserInputEvents.dart` | pending |
+| 76 | editor | `editor/browser/view/viewUserInputEvents.ts` | `lib/src/monaco/editor/browser/view/viewUserInputEvents.dart` | tested |
 | 77 | editor | `editor/browser/view.ts` | `lib/src/monaco/editor/browser/view.dart` | pending |
 | 78 | editor | `editor/browser/viewParts/blockDecorations/blockDecorations.ts` | `lib/src/monaco/editor/browser/viewParts/blockDecorations/blockDecorations.dart` | pending |
 | 79 | editor | `editor/browser/viewParts/contentWidgets/contentWidgets.ts` | `lib/src/monaco/editor/browser/viewParts/contentWidgets/contentWidgets.dart` | pending |
@@ -402,7 +402,7 @@
 | 393 | editor | `editor/contrib/codeAction/browser/codeActionCommands.ts` | `lib/src/monaco/editor/contrib/codeAction/browser/codeActionCommands.dart` | pending |
 | 394 | editor | `editor/contrib/codeAction/browser/codeActionContributions.ts` | `lib/src/monaco/editor/contrib/codeAction/browser/codeActionContributions.dart` | pending |
 | 395 | editor | `editor/contrib/codeAction/browser/codeActionController.ts` | `lib/src/monaco/editor/contrib/codeAction/browser/codeActionController.dart` | pending |
-| 396 | editor | `editor/contrib/codeAction/browser/codeActionKeybindingResolver.ts` | `lib/src/monaco/editor/contrib/codeAction/browser/codeActionKeybindingResolver.dart` | pending |
+| 396 | editor | `editor/contrib/codeAction/browser/codeActionKeybindingResolver.ts` | `lib/src/monaco/editor/contrib/codeAction/browser/codeActionKeybindingResolver.dart` | tested |
 | 397 | editor | `editor/contrib/codeAction/browser/codeActionMenu.ts` | `lib/src/monaco/editor/contrib/codeAction/browser/codeActionMenu.dart` | pending |
 | 398 | editor | `editor/contrib/codeAction/browser/codeActionModel.ts` | `lib/src/monaco/editor/contrib/codeAction/browser/codeActionModel.dart` | pending |
 | 399 | editor | `editor/contrib/codeAction/browser/lightBulbWidget.ts` | `lib/src/monaco/editor/contrib/codeAction/browser/lightBulbWidget.dart` | pending |
@@ -456,7 +456,7 @@
 | 447 | editor | `editor/contrib/dropOrPasteInto/browser/defaultProviders.ts` | `lib/src/monaco/editor/contrib/dropOrPasteInto/browser/defaultProviders.dart` | pending |
 | 448 | editor | `editor/contrib/dropOrPasteInto/browser/dropIntoEditorContribution.ts` | `lib/src/monaco/editor/contrib/dropOrPasteInto/browser/dropIntoEditorContribution.dart` | pending |
 | 449 | editor | `editor/contrib/dropOrPasteInto/browser/dropIntoEditorController.ts` | `lib/src/monaco/editor/contrib/dropOrPasteInto/browser/dropIntoEditorController.dart` | pending |
-| 450 | editor | `editor/contrib/dropOrPasteInto/browser/edit.ts` | `lib/src/monaco/editor/contrib/dropOrPasteInto/browser/edit.dart` | pending |
+| 450 | editor | `editor/contrib/dropOrPasteInto/browser/edit.ts` | `lib/src/monaco/editor/contrib/dropOrPasteInto/browser/edit.dart` | tested |
 | 451 | editor | `editor/contrib/dropOrPasteInto/browser/pasteEditSession.ts` | `lib/src/monaco/editor/contrib/dropOrPasteInto/browser/pasteEditSession.dart` | pending |
 | 452 | editor | `editor/contrib/dropOrPasteInto/browser/postEditWidget.ts` | `lib/src/monaco/editor/contrib/dropOrPasteInto/browser/postEditWidget.dart` | pending |
 | 453 | editor | `editor/contrib/dropOrPasteInto/test/browser/copyPasteController.test.ts` | `lib/src/monaco/editor/contrib/dropOrPasteInto/test/browser/copyPasteController.test.dart` | pending |
@@ -577,7 +577,7 @@
 | 568 | editor | `editor/contrib/inlineCompletions/browser/model/typingSpeed.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/model/typingSpeed.dart` | pending |
 | 569 | editor | `editor/contrib/inlineCompletions/browser/structuredLogger.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/structuredLogger.dart` | tested |
 | 570 | editor | `editor/contrib/inlineCompletions/browser/telemetry.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/telemetry.dart` | tested |
-| 571 | editor | `editor/contrib/inlineCompletions/browser/utils.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/utils.dart` | pending |
+| 571 | editor | `editor/contrib/inlineCompletions/browser/utils.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/utils.dart` | tested |
 | 572 | editor | `editor/contrib/inlineCompletions/browser/view/ghostText/ghostTextView.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/view/ghostText/ghostTextView.dart` | pending |
 | 573 | editor | `editor/contrib/inlineCompletions/browser/view/inlineEdits/components/gutterIndicatorMenu.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/view/inlineEdits/components/gutterIndicatorMenu.dart` | pending |
 | 574 | editor | `editor/contrib/inlineCompletions/browser/view/inlineEdits/components/gutterIndicatorView.ts` | `lib/src/monaco/editor/contrib/inlineCompletions/browser/view/inlineEdits/components/gutterIndicatorView.dart` | pending |

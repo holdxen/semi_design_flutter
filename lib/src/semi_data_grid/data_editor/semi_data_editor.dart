@@ -142,6 +142,8 @@ class SemiDataEditorProps {
     this.headerIcons,
     this.onHeaderMenuClick,
     this.onHeaderIndicatorClick,
+    this.validateCell,
+    this.provideEditor,
   });
 
   static bool _alwaysTrue(int col) => true;
@@ -411,6 +413,24 @@ class SemiDataEditorProps {
   /// to the grid. The editor owns that merge because it is the "all renderers"
   /// entry point of this port, exactly as `DataEditorAll` is upstream.
   final Map<String, SemiSpriteFn>? headerIcons;
+
+  /// `validateCell` (`data-editor.tsx:277-281`): runs when the overlay editor
+  /// opens and on every proposed value. Return `false` to reject the value
+  /// (the editor is marked invalid and commits nothing), a cell to replace
+  /// it with a coerced value, or anything else to accept. [cell] is in
+  /// business coordinates, without the row-marker column.
+  final Object? Function(
+    SemiItem cell,
+    SemiGridCell newValue,
+    SemiGridCell prevValue,
+  )?
+  validateCell;
+
+  /// `provideEditor` (`data-editor.tsx:478`): overrides the renderer's editor
+  /// for every cell. Return null to fall back to the renderer. [location] is
+  /// in business coordinates, without the row-marker column.
+  final SemiEditorProvider? Function(SemiGridCell cell, SemiItem location)?
+  provideEditor;
 }
 
 /// `SemiDataEditor`: `DataGrid` + selection + overlay editor + clipboard.
@@ -3497,10 +3517,22 @@ class _SemiDataEditorState extends State<SemiDataEditor>
       getCellRenderer: _renderers.forCell,
       initialValue: overlay.initialValue,
       bloom: widget.props.editorBloom,
-      validateCell: null,
-      activation: overlay.activation is SemiKeyboardCellActivation
+      // The overlay cell is mangled (marker-inclusive); callbacks handed to
+      // the caller are marker-free (`data-editor.tsx:987-993`).
+      validateCell: widget.props.validateCell == null
           ? null
-          : null,
+          : (cell, newValue, prevValue) => widget.props.validateCell!(
+              SemiItem(cell.col - _markerOffset, cell.row),
+              newValue,
+              prevValue,
+            ),
+      provideEditor: widget.props.provideEditor == null
+          ? null
+          : (cell, location) => widget.props.provideEditor!(
+              cell,
+              SemiItem(location.col - _markerOffset, location.row),
+            ),
+      activation: overlay.activation,
     );
   }
 }

@@ -9,10 +9,12 @@ import 'package:flutter/widgets.dart';
 
 import '../common/semi_image_window_loader.dart';
 import '../common/semi_data_grid_theme.dart';
+import '../internal/data_grid/semi_event_args.dart';
 import '../internal/data_grid/semi_geometry.dart';
 import '../internal/data_grid/semi_types.dart';
 
 export '../internal/data_grid/semi_types.dart';
+export '../internal/data_grid/semi_event_args.dart' show SemiCellActivation;
 export '../internal/data_grid/semi_geometry.dart';
 export '../common/semi_data_grid_theme.dart';
 
@@ -387,7 +389,11 @@ class SemiEditorProps {
   final void Function(SemiGridCell? newValue, SemiEditorMovement? movement)
   onFinishedEditing;
   final bool isValid;
-  final SemiCellActivationBehavior? activation;
+
+  /// `activation` (`data-grid-overlay-editor.tsx:44`): how the cell was
+  /// activated, so a custom editor can react differently to keyboard and
+  /// pointer entry.
+  final SemiCellActivation? activation;
 }
 
 /// `movement?: readonly [-1 | 0 | 1, -1 | 0 | 1]`

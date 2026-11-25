@@ -57,7 +57,6 @@ class SemiDataGridOverlayEditor extends StatefulWidget {
     this.validateCell,
     this.activation,
   });
-
   /// Bounds of the cell being edited, in grid coordinates.
   final SemiRectangle target;
   final SemiItem cell;
@@ -69,8 +68,11 @@ class SemiDataGridOverlayEditor extends StatefulWidget {
   final bool highlight;
   final SemiGetCellRenderer getCellRenderer;
 
-  /// `provideEditor` prop — takes precedence over the renderer's.
-  final SemiEditorBuilder? provideEditor;
+  /// `provideEditor` prop (`data-grid-overlay-editor.tsx:43`): takes
+  /// precedence over the renderer's editor. [location] uses business
+  /// coordinates, without the row-marker column.
+  final SemiEditorProvider? Function(SemiGridCell cell, SemiItem location)?
+  provideEditor;
   final String? initialValue;
 
   /// `bloom` (`[x, y]`): extra pixels of chrome around the target.
@@ -85,7 +87,7 @@ class SemiDataGridOverlayEditor extends StatefulWidget {
   )?
   validateCell;
 
-  final SemiCellActivationBehavior? activation;
+  final SemiCellActivation? activation;
 
   @override
   State<SemiDataGridOverlayEditor> createState() =>
@@ -201,16 +203,14 @@ class _SemiDataGridOverlayEditorState
     SemiThemeOverride? styleOverride,
   })?
   _resolveEditor() {
-    final external = widget.provideEditor;
-    if (external != null) {
-      return (builder: external, pad: true, style: true, styleOverride: null);
-    }
-
-    // `editorProvider === undefined` leaves the clip region empty upstream
-    // (`data-grid-overlay-editor.tsx:164-173`), so a cell without an editor
-    // still opens a styled box rather than failing.
-    final renderer = widget.getCellRenderer(widget.content);
-    final provider = renderer?.provideEditor(widget.content, widget.cell);
+    // `provideEditor?.(cellWithLocation)` takes precedence over the renderer
+    // (`data-grid-overlay-editor.tsx:170-172`).
+    final external = widget.provideEditor?.call(widget.content, widget.cell);
+    final provider = external ??
+        widget.getCellRenderer(widget.content)?.provideEditor(
+          widget.content,
+          widget.cell,
+        );
     if (provider == null) return null;
 
     final builder = provider is SemiObjectEditor

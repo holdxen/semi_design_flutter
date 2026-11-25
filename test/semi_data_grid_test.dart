@@ -1869,6 +1869,10 @@ void main() {
       SemiDrawCellCallback? drawCell,
       SemiDrawHeaderCallback? drawHeader,
       SemiRendererLookup? rendererLookup,
+      Object? Function(SemiItem cell, SemiGridCell newValue, SemiGridCell prevValue)?
+      validateCell,
+      SemiEditorProvider? Function(SemiGridCell cell, SemiItem location)?
+      provideEditor,
     }) {
       edits = [];
       selectionLog = [];
@@ -1910,6 +1914,8 @@ void main() {
             strict: strict,
             freezeTrailingRows: freezeTrailingRows,
             rendererLookup: rendererLookup,
+            validateCell: validateCell,
+            provideEditor: provideEditor,
             drawCell: drawCell,
             drawHeader: drawHeader,
             keybindings: keybindingsOverride ?? keybindings,
@@ -2876,6 +2882,151 @@ void main() {
       expect(edits, hasLength(1));
       final value = edits.single.value as SemiTextCell;
       expect(value.data, 'z');
+    });
+
+    testWidgets('validateCell rejects the edit and sees business coordinates', (
+      tester,
+    ) async {
+      final validations = <(SemiItem, SemiGridCell)>[];
+      final finished = <SemiGridCell?>[];
+      await tester.pumpWidget(
+        buildEditor(
+          rowMarkers: const SemiRowMarkerOptions(width: 40),
+          onFinishedEditing: (value, _) => finished.add(value),
+          validateCell: (cell, newValue, prev) {
+            validations.add((cell, newValue));
+            return false;
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // x=90 is mangled column 1 (the marker owns 0..40), i.e. business col 0.
+      final gesture = await tester.startGesture(
+        const Offset(90, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyZ);
+      await tester.pumpAndSettle();
+
+      expect(validations, isNotEmpty);
+      expect(validations.first.$1, const SemiItem(0, 0));
+      expect(
+        validations.every((entry) => entry.$1 == const SemiItem(0, 0)),
+        isTrue,
+      );
+
+      await tester.enterText(find.byType(EditableText), 'rejected');
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+
+      expect(finished, [null]);
+      expect(edits, isEmpty);
+      expect(find.byType(EditableText), findsNothing);
+    });
+
+    testWidgets('validateCell can rewrite the value before it commits', (
+      tester,
+    ) async {
+      final rewritten = const SemiTextCell(data: 'rewritten', displayData: 'rewritten');
+      await tester.pumpWidget(
+        buildEditor(
+          rowMarkers: const SemiRowMarkerOptions(width: 40),
+          validateCell: (cell, newValue, prev) => rewritten,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final gesture = await tester.startGesture(
+        const Offset(90, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyZ);
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(EditableText), 'typed');
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+
+      expect(edits, hasLength(1));
+      // `_onCellsEdited` strips the marker column for the caller.
+      expect(edits.single.location, const SemiItem(0, 0));
+      expect(edits.single.value, rewritten);
+    });
+
+    testWidgets('provideEditor overrides the renderer with business coords', (
+      tester,
+    ) async {
+      final provided = <SemiItem>[];
+      await tester.pumpWidget(
+        buildEditor(
+          rowMarkers: const SemiRowMarkerOptions(width: 40),
+          provideEditor: (cell, location) {
+            provided.add(location);
+            return SemiComponentEditor((_) => const Text('custom-editor'));
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final gesture = await tester.startGesture(
+        const Offset(90, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyZ);
+      await tester.pumpAndSettle();
+
+      // The editor resolves its provider on every build, so only the
+      // coordinates matter here.
+      expect(provided, isNotEmpty);
+      expect(provided, everyElement(const SemiItem(0, 0)));
+      expect(find.text('custom-editor'), findsOneWidget);
+      expect(find.byType(EditableText), findsNothing);
+    });
+
+    testWidgets('the overlay hands the activation source to custom editors', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildEditor(
+          provideEditor: (cell, location) => SemiComponentEditor(
+            (props) => Text('${props.activation.runtimeType}'),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final gesture = await tester.startGesture(
+        const Offset(150, 45),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyZ);
+      await tester.pumpAndSettle();
+      expect(find.text('SemiKeyboardCellActivation'), findsOneWidget);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      expect(find.byType(SemiDataGridOverlayEditor), findsNothing);
+
+      for (var i = 0; i < 2; i++) {
+        final click = await tester.startGesture(
+          const Offset(150, 45),
+          kind: PointerDeviceKind.mouse,
+        );
+        await click.up();
+        await tester.pumpAndSettle();
+      }
+      expect(find.text('SemiPointerCellActivation'), findsOneWidget);
     });
 
     testWidgets('navigating to a far cell scrolls it into view', (
