@@ -269,7 +269,7 @@
 | 260 | editor | `editor/common/languages/supports/tokenization.ts` | `lib/src/monaco/editor/common/languages/supports/tokenization.dart` | tested |
 | 261 | editor | `editor/common/languages/supports.ts` | `lib/src/monaco/editor/common/languages/supports.dart` | pending |
 | 262 | editor | `editor/common/languages/textToHtmlTokenizer.ts` | `lib/src/monaco/editor/common/languages/textToHtmlTokenizer.dart` | pending |
-| 263 | editor | `editor/common/languages.ts` | `lib/src/monaco/editor/common/languages.dart` | pending |
+| 263 | editor | `editor/common/languages.ts` | `lib/src/monaco/editor/common/languages.dart` | tested |
 | 264 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsImpl.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsImpl.dart` | pending |
 | 265 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/ast.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/ast.dart` | pending |
 | 266 | editor | `editor/common/model/bracketPairsTextModelPart/bracketPairsTree/beforeEditPositionMapper.ts` | `lib/src/monaco/editor/common/model/bracketPairsTextModelPart/bracketPairsTree/beforeEditPositionMapper.dart` | tested |
@@ -313,7 +313,7 @@
 | 304 | editor | `editor/common/model/tokens/treeSitter/treeSitterTokenizationImpl.ts` | `lib/src/monaco/editor/common/model/tokens/treeSitter/treeSitterTokenizationImpl.dart` | pending |
 | 305 | editor | `editor/common/model/tokens/treeSitter/treeSitterTree.ts` | `lib/src/monaco/editor/common/model/tokens/treeSitter/treeSitterTree.dart` | pending |
 | 306 | editor | `editor/common/model/utils.ts` | `lib/src/monaco/editor/common/model/utils.dart` | tested |
-| 307 | editor | `editor/common/model.ts` | `lib/src/monaco/editor/common/model.dart` | pending |
+| 307 | editor | `editor/common/model.ts` | `lib/src/monaco/editor/common/model.dart` | tested |
 | 308 | editor | `editor/common/modelLineProjectionData.ts` | `lib/src/monaco/editor/common/modelLineProjectionData.dart` | pending |
 | 309 | editor | `editor/common/multiDiffEditor.ts` | `lib/src/monaco/editor/common/multiDiffEditor.dart` | tested |
 | 310 | editor | `editor/common/services/completionsEnablement.ts` | `lib/src/monaco/editor/common/services/completionsEnablement.dart` | tested |
