@@ -106,6 +106,10 @@ class _SemiScrollBarState extends State<SemiScrollBar> {
     final theme = SemiScrollBarTheme.resolve(context);
     final visible =
         (widget.thumbVisibility ?? false) || (widget.showOnHover && _hovered);
+    // On desktop the ambient ScrollBehavior already wraps every Scrollable in
+    // its own RawScrollbar; suppress it or two thumbs would be painted.
+    final scrollBehavior = ScrollConfiguration.of(context)
+        .copyWith(scrollbars: false);
 
     final bar = _SemiRawScrollbar(
       controller: widget.controller,
@@ -122,7 +126,7 @@ class _SemiScrollBarState extends State<SemiScrollBar> {
       padding: widget.padding,
       interactive: widget.interactive,
       notificationPredicate: widget.notificationPredicate,
-      child: widget.child,
+      child: ScrollConfiguration(behavior: scrollBehavior, child: widget.child),
     );
 
     if (!widget.showOnHover) return bar;

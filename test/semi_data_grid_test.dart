@@ -5805,9 +5805,11 @@ void main() {
       expect(find.bySemanticsLabel('C0'), findsNothing);
       expect(find.bySemanticsLabel('C2'), findsOneWidget);
 
-      // The node sits on the cell instead of collapsing to 1x1 at the origin.
+      // The node has the cell's box instead of collapsing to 1x1.
       final cell = tester.getSemantics(find.bySemanticsLabel('r0 c2'));
-      expect(cell.rect, const Rect.fromLTWH(0, 32, 100, 32));
+      expect(cell.rect.size, const Size(100, 32));
+      final row = tester.getSemantics(find.bySemanticsLabel('Row 1'));
+      expect(row.rect.size, const Size(400, 32));
       handle.dispose();
     });
 
@@ -5848,7 +5850,9 @@ void main() {
       );
       // The marker column is chrome with an empty title; no header node is
       // emitted for it, so the tree's headers are exactly the data columns.
-      final headers = tester.getSemantics(find.bySemanticsLabel('Column headers'));
+      final headers = tester.getSemantics(
+        find.bySemanticsLabel('Column headers'),
+      );
       final titles = [
         for (final child
             in headers.debugListChildrenInOrder(

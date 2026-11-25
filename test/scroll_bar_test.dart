@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -204,5 +205,43 @@ void main() {
     expect(bar.thickness, 4);
     expect(bar.radius, const Radius.circular(2));
     expect(bar.thumbColor, const SemiThemeData.dark().colors.colorFill2);
+  });
+
+  testWidgets('suppresses the platform default scrollbar on desktop', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+    final controller = ScrollController();
+    try {
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Center(
+            child: SizedBox(
+              width: 200,
+              height: 200,
+              child: SemiScrollBar(
+                controller: controller,
+                child: ListView.builder(
+                  controller: controller,
+                  itemCount: 30,
+                  itemBuilder: (_, index) =>
+                      SizedBox(height: 40, child: Text('$index')),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.byWidgetPredicate((widget) => widget is RawScrollbar),
+        findsOneWidget,
+      );
+    } finally {
+      await tester.pumpWidget(const SizedBox.shrink());
+      debugDefaultTargetPlatformOverride = null;
+      controller.dispose();
+    }
   });
 }
