@@ -262,7 +262,7 @@
 | 253 | editor | `editor/common/languages/supports/electricCharacter.ts` | `lib/src/monaco/editor/common/languages/supports/electricCharacter.dart` | tested |
 | 254 | editor | `editor/common/languages/supports/indentRules.ts` | `lib/src/monaco/editor/common/languages/supports/indentRules.dart` | pending |
 | 255 | editor | `editor/common/languages/supports/indentationLineProcessor.ts` | `lib/src/monaco/editor/common/languages/supports/indentationLineProcessor.dart` | pending |
-| 256 | editor | `editor/common/languages/supports/inplaceReplaceSupport.ts` | `lib/src/monaco/editor/common/languages/supports/inplaceReplaceSupport.dart` | pending |
+| 256 | editor | `editor/common/languages/supports/inplaceReplaceSupport.ts` | `lib/src/monaco/editor/common/languages/supports/inplaceReplaceSupport.dart` | tested |
 | 257 | editor | `editor/common/languages/supports/languageBracketsConfiguration.ts` | `lib/src/monaco/editor/common/languages/supports/languageBracketsConfiguration.dart` | pending |
 | 258 | editor | `editor/common/languages/supports/onEnter.ts` | `lib/src/monaco/editor/common/languages/supports/onEnter.dart` | tested |
 | 259 | editor | `editor/common/languages/supports/richEditBrackets.ts` | `lib/src/monaco/editor/common/languages/supports/richEditBrackets.dart` | pending |
