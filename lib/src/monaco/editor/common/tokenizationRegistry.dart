@@ -76,7 +76,10 @@ class TokenizationRegistry<TSupport extends Object> {
   late final Event<TokenizationSupportChangedEvent> onDidChange =
       _onDidChange.event;
 
-  List<Color>? _colorMap;
+  // TS types this as `Color[]`, but `ColorMap.getColorMap()` leaves holes
+  // (index 0 is always undefined), so the runtime array is `(Color | null)[]`.
+  // The Dart carrier must be nullable to reproduce `setColorMap` verbatim.
+  List<Color?>? _colorMap;
 
   TokenizationRegistry() : _colorMap = null;
 
@@ -161,7 +164,7 @@ class TokenizationRegistry<TSupport extends Object> {
   }
 
   /// 1:1: `public setColorMap(colorMap: Color[]): void`
-  void setColorMap(List<Color> colorMap) {
+  void setColorMap(List<Color?> colorMap) {
     _colorMap = colorMap;
     _onDidChange.fire(TokenizationSupportChangedEvent(
       changedLanguages: _tokenizationSupports.keys.toList(),
@@ -170,11 +173,11 @@ class TokenizationRegistry<TSupport extends Object> {
   }
 
   /// 1:1: `public getColorMap(): Color[] | null`
-  List<Color>? getColorMap() => _colorMap;
+  List<Color?>? getColorMap() => _colorMap;
 
   /// 1:1: `public getDefaultBackground(): Color | null`
   Color? getDefaultBackground() {
-    final List<Color>? colorMap = _colorMap;
+    final List<Color?>? colorMap = _colorMap;
     if (colorMap != null && colorMap.length > ColorId.defaultBackground) {
       return colorMap[ColorId.defaultBackground];
     }

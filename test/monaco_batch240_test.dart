@@ -81,7 +81,7 @@ Map<String, Object?> _replayInitialState(Map<String, Object?> inputs) {
   final reg.TokenizationRegistry<Object> registry =
       reg.TokenizationRegistry<Object>();
   final String probeId = inputs['probeLanguageId'] as String;
-  final List<Color>? colorMap = registry.getColorMap();
+  final List<Color?>? colorMap = registry.getColorMap();
   final Color? background = registry.getDefaultBackground();
   return <String, Object?>{
     'getColorMap': colorMap,
@@ -149,11 +149,11 @@ Map<String, Object?> _replaySetColorMap(Map<String, Object?> inputs) {
       .map((Object? hex) => Color.fromHex(hex as String))
       .toList();
   registry.setColorMap(colorMap);
-  final List<Color>? actual = registry.getColorMap();
+  final List<Color?>? actual = registry.getColorMap();
   final Color? background = registry.getDefaultBackground();
   final Map<String, Object?> results = <String, Object?>{
     'getColorMap_hex':
-        actual?.map<Object?>((Color c) => c.toString()).toList(),
+        actual?.map<Object?>((Color? c) => c.toString()).toList(),
     'getColorMap_deepEqual': actual != null &&
         actual.length == colorMap.length &&
         List<bool>.generate(
@@ -171,7 +171,7 @@ Map<String, Object?> _replaySetColorMap(Map<String, Object?> inputs) {
   registry.setColorMap(shortColorMap);
   results['getColorMap_short_hex'] = registry
       .getColorMap()
-      ?.map<Object?>((Color c) => c.toString())
+      ?.map<Object?>((Color? c) => c.toString())
       .toList();
   results['getDefaultBackground_short'] = registry.getDefaultBackground();
   results['events'] = List<Map<String, Object?>>.from(events);

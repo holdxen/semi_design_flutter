@@ -308,12 +308,20 @@ void _ensureRegistered() {
 
 /// 1:1: `export function registerColor(...)`
 ColorIdentifier registerColor(String id, Object? defaults, String description,
-        [bool? needsTransparency, String? deprecationMessage]) =>
-    _colorRegistry.registerColor(
-        id, defaults, description, needsTransparency ?? false, deprecationMessage);
+    [bool? needsTransparency, String? deprecationMessage]) {
+  // TS registers the registry at module load; the Dart port registers lazily,
+  // so every entry point must make sure `Extensions.ColorContribution` exists
+  // before anything reads it via `Registry.as`.
+  _ensureRegistered();
+  return _colorRegistry.registerColor(
+      id, defaults, description, needsTransparency ?? false, deprecationMessage);
+}
 
 /// 1:1: `export function getColorRegistry()`
-IColorRegistry getColorRegistry() => _colorRegistry;
+IColorRegistry getColorRegistry() {
+  _ensureRegistered();
+  return _colorRegistry;
+}
 
 // ----- color functions
 

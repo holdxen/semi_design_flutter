@@ -499,7 +499,7 @@
 | 490 | editor | `editor/contrib/format/browser/formattingEdit.ts` | `lib/src/monaco/editor/contrib/format/browser/formattingEdit.dart` | pending |
 | 491 | editor | `editor/contrib/gotoError/browser/gotoError.ts` | `lib/src/monaco/editor/contrib/gotoError/browser/gotoError.dart` | pending |
 | 492 | editor | `editor/contrib/gotoError/browser/gotoErrorWidget.ts` | `lib/src/monaco/editor/contrib/gotoError/browser/gotoErrorWidget.dart` | pending |
-| 493 | editor | `editor/contrib/gotoError/browser/markerNavigationService.ts` | `lib/src/monaco/editor/contrib/gotoError/browser/markerNavigationService.dart` | pending |
+| 493 | editor | `editor/contrib/gotoError/browser/markerNavigationService.ts` | `lib/src/monaco/editor/contrib/gotoError/browser/markerNavigationService.dart` | tested |
 | 494 | editor | `editor/contrib/gotoError/browser/markerSelectionStatus.ts` | `lib/src/monaco/editor/contrib/gotoError/browser/markerSelectionStatus.dart` | pending |
 | 495 | editor | `editor/contrib/gotoSymbol/browser/goToCommands.ts` | `lib/src/monaco/editor/contrib/gotoSymbol/browser/goToCommands.dart` | pending |
 | 496 | editor | `editor/contrib/gotoSymbol/browser/goToSymbol.ts` | `lib/src/monaco/editor/contrib/gotoSymbol/browser/goToSymbol.dart` | pending |
@@ -752,7 +752,7 @@
 | 743 | editor | `editor/standalone/browser/standaloneLanguages.ts` | `lib/src/monaco/editor/standalone/browser/standaloneLanguages.dart` | pending |
 | 744 | editor | `editor/standalone/browser/standaloneLayoutService.ts` | `lib/src/monaco/editor/standalone/browser/standaloneLayoutService.dart` | pending |
 | 745 | editor | `editor/standalone/browser/standaloneServices.ts` | `lib/src/monaco/editor/standalone/browser/standaloneServices.dart` | pending |
-| 746 | editor | `editor/standalone/browser/standaloneThemeService.ts` | `lib/src/monaco/editor/standalone/browser/standaloneThemeService.dart` | pending |
+| 746 | editor | `editor/standalone/browser/standaloneThemeService.ts` | `lib/src/monaco/editor/standalone/browser/standaloneThemeService.dart` | tested |
 | 747 | editor | `editor/standalone/browser/standaloneTreeSitterLibraryService.ts` | `lib/src/monaco/editor/standalone/browser/standaloneTreeSitterLibraryService.dart` | tested |
 | 748 | editor | `editor/standalone/browser/standaloneWebWorker.ts` | `lib/src/monaco/editor/standalone/browser/standaloneWebWorker.dart` | pending |
 | 749 | editor | `editor/standalone/browser/toggleHighContrast/toggleHighContrast.ts` | `lib/src/monaco/editor/standalone/browser/toggleHighContrast/toggleHighContrast.dart` | pending |
