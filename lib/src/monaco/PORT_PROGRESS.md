@@ -88,7 +88,7 @@
 | 79 | editor | `editor/browser/viewParts/contentWidgets/contentWidgets.ts` | `lib/src/monaco/editor/browser/viewParts/contentWidgets/contentWidgets.dart` | pending |
 | 80 | editor | `editor/browser/viewParts/currentLineHighlight/currentLineHighlight.ts` | `lib/src/monaco/editor/browser/viewParts/currentLineHighlight/currentLineHighlight.dart` | tested |
 | 81 | editor | `editor/browser/viewParts/decorations/decorations.ts` | `lib/src/monaco/editor/browser/viewParts/decorations/decorations.dart` | tested |
-| 82 | editor | `editor/browser/viewParts/editorScrollbar/editorScrollbar.ts` | `lib/src/monaco/editor/browser/viewParts/editorScrollbar/editorScrollbar.dart` | pending |
+| 82 | editor | `editor/browser/viewParts/editorScrollbar/editorScrollbar.ts` | `lib/src/monaco/editor/browser/viewParts/editorScrollbar/editorScrollbar.dart` | tested |
 | 83 | editor | `editor/browser/viewParts/glyphMargin/glyphMargin.ts` | `lib/src/monaco/editor/browser/viewParts/glyphMargin/glyphMargin.dart` | pending |
 | 84 | editor | `editor/browser/viewParts/gpuMark/gpuMark.ts` | `lib/src/monaco/editor/browser/viewParts/gpuMark/gpuMark.dart` | tested |
 | 85 | editor | `editor/browser/viewParts/indentGuides/indentGuides.ts` | `lib/src/monaco/editor/browser/viewParts/indentGuides/indentGuides.dart` | pending |
@@ -108,14 +108,14 @@
 | 99 | editor | `editor/browser/viewParts/rulers/rulers.ts` | `lib/src/monaco/editor/browser/viewParts/rulers/rulers.dart` | tested |
 | 100 | editor | `editor/browser/viewParts/rulersGpu/rulersGpu.ts` | `lib/src/monaco/editor/browser/viewParts/rulersGpu/rulersGpu.dart` | pending |
 | 101 | editor | `editor/browser/viewParts/scrollDecoration/scrollDecoration.ts` | `lib/src/monaco/editor/browser/viewParts/scrollDecoration/scrollDecoration.dart` | tested |
-| 102 | editor | `editor/browser/viewParts/selections/selections.ts` | `lib/src/monaco/editor/browser/viewParts/selections/selections.dart` | pending |
-| 103 | editor | `editor/browser/viewParts/viewCursors/viewCursor.ts` | `lib/src/monaco/editor/browser/viewParts/viewCursors/viewCursor.dart` | pending |
-| 104 | editor | `editor/browser/viewParts/viewCursors/viewCursors.ts` | `lib/src/monaco/editor/browser/viewParts/viewCursors/viewCursors.dart` | pending |
+| 102 | editor | `editor/browser/viewParts/selections/selections.ts` | `lib/src/monaco/editor/browser/viewParts/selections/selections.dart` | tested |
+| 103 | editor | `editor/browser/viewParts/viewCursors/viewCursor.ts` | `lib/src/monaco/editor/browser/viewParts/viewCursors/viewCursor.dart` | tested |
+| 104 | editor | `editor/browser/viewParts/viewCursors/viewCursors.ts` | `lib/src/monaco/editor/browser/viewParts/viewCursors/viewCursors.dart` | tested |
 | 105 | editor | `editor/browser/viewParts/viewLines/domReadingContext.ts` | `lib/src/monaco/editor/browser/viewParts/viewLines/domReadingContext.dart` | tested |
 | 106 | editor | `editor/browser/viewParts/viewLines/rangeUtil.ts` | `lib/src/monaco/editor/browser/viewParts/viewLines/rangeUtil.dart` | tested |
-| 107 | editor | `editor/browser/viewParts/viewLines/viewLine.ts` | `lib/src/monaco/editor/browser/viewParts/viewLines/viewLine.dart` | pending |
+| 107 | editor | `editor/browser/viewParts/viewLines/viewLine.ts` | `lib/src/monaco/editor/browser/viewParts/viewLines/viewLine.dart` | tested |
 | 108 | editor | `editor/browser/viewParts/viewLines/viewLineOptions.ts` | `lib/src/monaco/editor/browser/viewParts/viewLines/viewLineOptions.dart` | tested |
-| 109 | editor | `editor/browser/viewParts/viewLines/viewLines.ts` | `lib/src/monaco/editor/browser/viewParts/viewLines/viewLines.dart` | pending |
+| 109 | editor | `editor/browser/viewParts/viewLines/viewLines.ts` | `lib/src/monaco/editor/browser/viewParts/viewLines/viewLines.dart` | tested |
 | 110 | editor | `editor/browser/viewParts/viewLinesGpu/viewLinesGpu.ts` | `lib/src/monaco/editor/browser/viewParts/viewLinesGpu/viewLinesGpu.dart` | pending |
 | 111 | editor | `editor/browser/viewParts/viewZones/viewZones.ts` | `lib/src/monaco/editor/browser/viewParts/viewZones/viewZones.dart` | pending |
 | 112 | editor | `editor/browser/viewParts/whitespace/whitespace.ts` | `lib/src/monaco/editor/browser/viewParts/whitespace/whitespace.dart` | tested |
@@ -373,7 +373,7 @@
 | 364 | editor | `editor/common/viewLayout/lineHeights.ts` | `lib/src/monaco/editor/common/viewLayout/lineHeights.dart` | tested |
 | 365 | editor | `editor/common/viewLayout/linePart.ts` | `lib/src/monaco/editor/common/viewLayout/linePart.dart` | tested |
 | 366 | editor | `editor/common/viewLayout/linesLayout.ts` | `lib/src/monaco/editor/common/viewLayout/linesLayout.dart` | tested |
-| 367 | editor | `editor/common/viewLayout/viewLayout.ts` | `lib/src/monaco/editor/common/viewLayout/viewLayout.dart` | pending |
+| 367 | editor | `editor/common/viewLayout/viewLayout.ts` | `lib/src/monaco/editor/common/viewLayout/viewLayout.dart` | tested |
 | 368 | editor | `editor/common/viewLayout/viewLineRenderer.ts` | `lib/src/monaco/editor/common/viewLayout/viewLineRenderer.dart` | pending |
 | 369 | editor | `editor/common/viewLayout/viewLinesViewportData.ts` | `lib/src/monaco/editor/common/viewLayout/viewLinesViewportData.dart` | tested |
 | 370 | editor | `editor/common/viewModel/glyphLanesModel.ts` | `lib/src/monaco/editor/common/viewModel/glyphLanesModel.dart` | tested |
