@@ -94,7 +94,7 @@
 | 85 | editor | `editor/browser/viewParts/indentGuides/indentGuides.ts` | `lib/src/monaco/editor/browser/viewParts/indentGuides/indentGuides.dart` | pending |
 | 86 | editor | `editor/browser/viewParts/lineNumbers/lineNumbers.ts` | `lib/src/monaco/editor/browser/viewParts/lineNumbers/lineNumbers.dart` | pending |
 | 87 | editor | `editor/browser/viewParts/linesDecorations/linesDecorations.ts` | `lib/src/monaco/editor/browser/viewParts/linesDecorations/linesDecorations.dart` | tested |
-| 88 | editor | `editor/browser/viewParts/margin/margin.ts` | `lib/src/monaco/editor/browser/viewParts/margin/margin.dart` | pending |
+| 88 | editor | `editor/browser/viewParts/margin/margin.ts` | `lib/src/monaco/editor/browser/viewParts/margin/margin.dart` | tested |
 | 89 | editor | `editor/browser/viewParts/marginDecorations/marginDecorations.ts` | `lib/src/monaco/editor/browser/viewParts/marginDecorations/marginDecorations.dart` | pending |
 | 90 | editor | `editor/browser/viewParts/minimap/minimap.ts` | `lib/src/monaco/editor/browser/viewParts/minimap/minimap.dart` | pending |
 | 91 | editor | `editor/browser/viewParts/minimap/minimapCharRenderer.ts` | `lib/src/monaco/editor/browser/viewParts/minimap/minimapCharRenderer.dart` | tested |
@@ -107,7 +107,7 @@
 | 98 | editor | `editor/browser/viewParts/overviewRuler/overviewRuler.ts` | `lib/src/monaco/editor/browser/viewParts/overviewRuler/overviewRuler.dart` | pending |
 | 99 | editor | `editor/browser/viewParts/rulers/rulers.ts` | `lib/src/monaco/editor/browser/viewParts/rulers/rulers.dart` | tested |
 | 100 | editor | `editor/browser/viewParts/rulersGpu/rulersGpu.ts` | `lib/src/monaco/editor/browser/viewParts/rulersGpu/rulersGpu.dart` | pending |
-| 101 | editor | `editor/browser/viewParts/scrollDecoration/scrollDecoration.ts` | `lib/src/monaco/editor/browser/viewParts/scrollDecoration/scrollDecoration.dart` | pending |
+| 101 | editor | `editor/browser/viewParts/scrollDecoration/scrollDecoration.ts` | `lib/src/monaco/editor/browser/viewParts/scrollDecoration/scrollDecoration.dart` | tested |
 | 102 | editor | `editor/browser/viewParts/selections/selections.ts` | `lib/src/monaco/editor/browser/viewParts/selections/selections.dart` | pending |
 | 103 | editor | `editor/browser/viewParts/viewCursors/viewCursor.ts` | `lib/src/monaco/editor/browser/viewParts/viewCursors/viewCursor.dart` | pending |
 | 104 | editor | `editor/browser/viewParts/viewCursors/viewCursors.ts` | `lib/src/monaco/editor/browser/viewParts/viewCursors/viewCursors.dart` | pending |
@@ -161,10 +161,10 @@
 | 152 | editor | `editor/browser/widget/multiDiffEditor/utils.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/utils.dart` | tested |
 | 153 | editor | `editor/browser/widget/multiDiffEditor/virtualizedItemManager.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/virtualizedItemManager.dart` | pending |
 | 154 | editor | `editor/browser/widget/multiDiffEditor/workbenchUIElementFactory.ts` | `lib/src/monaco/editor/browser/widget/multiDiffEditor/workbenchUIElementFactory.dart` | pending |
-| 155 | editor | `editor/common/commands/columnSelectionPasteCommand.ts` | `lib/src/monaco/editor/common/commands/columnSelectionPasteCommand.dart` | pending |
-| 156 | editor | `editor/common/commands/replaceCommand.ts` | `lib/src/monaco/editor/common/commands/replaceCommand.dart` | pending |
+| 155 | editor | `editor/common/commands/columnSelectionPasteCommand.ts` | `lib/src/monaco/editor/common/commands/columnSelectionPasteCommand.dart` | tested |
+| 156 | editor | `editor/common/commands/replaceCommand.ts` | `lib/src/monaco/editor/common/commands/replaceCommand.dart` | tested |
 | 157 | editor | `editor/common/commands/shiftCommand.ts` | `lib/src/monaco/editor/common/commands/shiftCommand.dart` | pending |
-| 158 | editor | `editor/common/commands/surroundSelectionCommand.ts` | `lib/src/monaco/editor/common/commands/surroundSelectionCommand.dart` | pending |
+| 158 | editor | `editor/common/commands/surroundSelectionCommand.ts` | `lib/src/monaco/editor/common/commands/surroundSelectionCommand.dart` | tested |
 | 159 | editor | `editor/common/commands/trimTrailingWhitespaceCommand.ts` | `lib/src/monaco/editor/common/commands/trimTrailingWhitespaceCommand.dart` | tested |
 | 160 | editor | `editor/common/config/diffEditor.ts` | `lib/src/monaco/editor/common/config/diffEditor.dart` | tested |
 | 161 | editor | `editor/common/config/editorConfiguration.ts` | `lib/src/monaco/editor/common/config/editorConfiguration.dart` | tested |
@@ -323,7 +323,7 @@
 | 314 | editor | `editor/common/services/editorWorker.ts` | `lib/src/monaco/editor/common/services/editorWorker.dart` | pending |
 | 315 | editor | `editor/common/services/editorWorkerHost.ts` | `lib/src/monaco/editor/common/services/editorWorkerHost.dart` | tested |
 | 316 | editor | `editor/common/services/findSectionHeaders.ts` | `lib/src/monaco/editor/common/services/findSectionHeaders.dart` | pending |
-| 317 | editor | `editor/common/services/getIconClasses.ts` | `lib/src/monaco/editor/common/services/getIconClasses.dart` | pending |
+| 317 | editor | `editor/common/services/getIconClasses.ts` | `lib/src/monaco/editor/common/services/getIconClasses.dart` | tested |
 | 318 | editor | `editor/common/services/inMemoryTextModelService.ts` | `lib/src/monaco/editor/common/services/inMemoryTextModelService.dart` | tested |
 | 319 | editor | `editor/common/services/languageFeatureDebounce.ts` | `lib/src/monaco/editor/common/services/languageFeatureDebounce.dart` | tested |
 | 320 | editor | `editor/common/services/languageFeatures.ts` | `lib/src/monaco/editor/common/services/languageFeatures.dart` | tested |
@@ -410,7 +410,7 @@
 | 401 | editor | `editor/contrib/codeAction/test/browser/codeAction.test.ts` | `lib/src/monaco/editor/contrib/codeAction/test/browser/codeAction.test.dart` | pending |
 | 402 | editor | `editor/contrib/codeAction/test/browser/codeActionKeybindingResolver.test.ts` | `lib/src/monaco/editor/contrib/codeAction/test/browser/codeActionKeybindingResolver.test.dart` | pending |
 | 403 | editor | `editor/contrib/codeAction/test/browser/codeActionModel.test.ts` | `lib/src/monaco/editor/contrib/codeAction/test/browser/codeActionModel.test.dart` | pending |
-| 404 | editor | `editor/contrib/codelens/browser/codeLensCache.ts` | `lib/src/monaco/editor/contrib/codelens/browser/codeLensCache.dart` | pending |
+| 404 | editor | `editor/contrib/codelens/browser/codeLensCache.ts` | `lib/src/monaco/editor/contrib/codelens/browser/codeLensCache.dart` | tested |
 | 405 | editor | `editor/contrib/codelens/browser/codelens.ts` | `lib/src/monaco/editor/contrib/codelens/browser/codelens.dart` | tested |
 | 406 | editor | `editor/contrib/codelens/browser/codelensController.ts` | `lib/src/monaco/editor/contrib/codelens/browser/codelensController.dart` | pending |
 | 407 | editor | `editor/contrib/codelens/browser/codelensWidget.ts` | `lib/src/monaco/editor/contrib/codelens/browser/codelensWidget.dart` | pending |
@@ -447,7 +447,7 @@
 | 438 | editor | `editor/contrib/cursorUndo/test/browser/cursorUndo.test.ts` | `lib/src/monaco/editor/contrib/cursorUndo/test/browser/cursorUndo.test.dart` | pending |
 | 439 | editor | `editor/contrib/diffEditorBreadcrumbs/browser/contribution.ts` | `lib/src/monaco/editor/contrib/diffEditorBreadcrumbs/browser/contribution.dart` | pending |
 | 440 | editor | `editor/contrib/dnd/browser/dnd.ts` | `lib/src/monaco/editor/contrib/dnd/browser/dnd.dart` | pending |
-| 441 | editor | `editor/contrib/dnd/browser/dragAndDropCommand.ts` | `lib/src/monaco/editor/contrib/dnd/browser/dragAndDropCommand.dart` | pending |
+| 441 | editor | `editor/contrib/dnd/browser/dragAndDropCommand.ts` | `lib/src/monaco/editor/contrib/dnd/browser/dragAndDropCommand.dart` | tested |
 | 442 | editor | `editor/contrib/documentSymbols/browser/documentSymbols.ts` | `lib/src/monaco/editor/contrib/documentSymbols/browser/documentSymbols.dart` | tested |
 | 443 | editor | `editor/contrib/documentSymbols/browser/outlineModel.ts` | `lib/src/monaco/editor/contrib/documentSymbols/browser/outlineModel.dart` | tested |
 | 444 | editor | `editor/contrib/documentSymbols/test/browser/outlineModel.test.ts` | `lib/src/monaco/editor/contrib/documentSymbols/test/browser/outlineModel.test.dart` | pending |
@@ -471,7 +471,7 @@
 | 462 | editor | `editor/contrib/find/browser/findState.ts` | `lib/src/monaco/editor/contrib/find/browser/findState.dart` | pending |
 | 463 | editor | `editor/contrib/find/browser/findWidget.ts` | `lib/src/monaco/editor/contrib/find/browser/findWidget.dart` | pending |
 | 464 | editor | `editor/contrib/find/browser/findWidgetSearchHistory.ts` | `lib/src/monaco/editor/contrib/find/browser/findWidgetSearchHistory.dart` | tested |
-| 465 | editor | `editor/contrib/find/browser/replaceAllCommand.ts` | `lib/src/monaco/editor/contrib/find/browser/replaceAllCommand.dart` | pending |
+| 465 | editor | `editor/contrib/find/browser/replaceAllCommand.ts` | `lib/src/monaco/editor/contrib/find/browser/replaceAllCommand.dart` | tested |
 | 466 | editor | `editor/contrib/find/browser/replacePattern.ts` | `lib/src/monaco/editor/contrib/find/browser/replacePattern.dart` | tested |
 | 467 | editor | `editor/contrib/find/browser/replaceWidgetHistory.ts` | `lib/src/monaco/editor/contrib/find/browser/replaceWidgetHistory.dart` | tested |
 | 468 | editor | `editor/contrib/find/test/browser/find.test.ts` | `lib/src/monaco/editor/contrib/find/test/browser/find.test.dart` | pending |
@@ -750,7 +750,7 @@
 | 741 | editor | `editor/standalone/browser/standaloneCodeEditorService.ts` | `lib/src/monaco/editor/standalone/browser/standaloneCodeEditorService.dart` | pending |
 | 742 | editor | `editor/standalone/browser/standaloneEditor.ts` | `lib/src/monaco/editor/standalone/browser/standaloneEditor.dart` | pending |
 | 743 | editor | `editor/standalone/browser/standaloneLanguages.ts` | `lib/src/monaco/editor/standalone/browser/standaloneLanguages.dart` | pending |
-| 744 | editor | `editor/standalone/browser/standaloneLayoutService.ts` | `lib/src/monaco/editor/standalone/browser/standaloneLayoutService.dart` | pending |
+| 744 | editor | `editor/standalone/browser/standaloneLayoutService.ts` | `lib/src/monaco/editor/standalone/browser/standaloneLayoutService.dart` | tested |
 | 745 | editor | `editor/standalone/browser/standaloneServices.ts` | `lib/src/monaco/editor/standalone/browser/standaloneServices.dart` | pending |
 | 746 | editor | `editor/standalone/browser/standaloneThemeService.ts` | `lib/src/monaco/editor/standalone/browser/standaloneThemeService.dart` | tested |
 | 747 | editor | `editor/standalone/browser/standaloneTreeSitterLibraryService.ts` | `lib/src/monaco/editor/standalone/browser/standaloneTreeSitterLibraryService.dart` | tested |
@@ -872,7 +872,7 @@
 | 863 | editor | `editor/test/common/modes/supports/tokenization.test.ts` | `lib/src/monaco/editor/test/common/modes/supports/tokenization.test.dart` | tested |
 | 864 | editor | `editor/test/common/modes/testLanguageConfigurationService.ts` | `lib/src/monaco/editor/test/common/modes/testLanguageConfigurationService.dart` | pending |
 | 865 | editor | `editor/test/common/modes/textToHtmlTokenizer.test.ts` | `lib/src/monaco/editor/test/common/modes/textToHtmlTokenizer.test.dart` | pending |
-| 866 | editor | `editor/test/common/modesTestUtils.ts` | `lib/src/monaco/editor/test/common/modesTestUtils.dart` | pending |
+| 866 | editor | `editor/test/common/modesTestUtils.ts` | `lib/src/monaco/editor/test/common/modesTestUtils.dart` | tested |
 | 867 | editor | `editor/test/common/services/editorWebWorker.test.ts` | `lib/src/monaco/editor/test/common/services/editorWebWorker.test.dart` | pending |
 | 868 | editor | `editor/test/common/services/findSectionHeaders.test.ts` | `lib/src/monaco/editor/test/common/services/findSectionHeaders.test.dart` | pending |
 | 869 | editor | `editor/test/common/services/languageService.test.ts` | `lib/src/monaco/editor/test/common/services/languageService.test.dart` | pending |
