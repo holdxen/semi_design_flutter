@@ -90,7 +90,7 @@
 | 81 | editor | `editor/browser/viewParts/decorations/decorations.ts` | `lib/src/monaco/editor/browser/viewParts/decorations/decorations.dart` | tested |
 | 82 | editor | `editor/browser/viewParts/editorScrollbar/editorScrollbar.ts` | `lib/src/monaco/editor/browser/viewParts/editorScrollbar/editorScrollbar.dart` | pending |
 | 83 | editor | `editor/browser/viewParts/glyphMargin/glyphMargin.ts` | `lib/src/monaco/editor/browser/viewParts/glyphMargin/glyphMargin.dart` | pending |
-| 84 | editor | `editor/browser/viewParts/gpuMark/gpuMark.ts` | `lib/src/monaco/editor/browser/viewParts/gpuMark/gpuMark.dart` | pending |
+| 84 | editor | `editor/browser/viewParts/gpuMark/gpuMark.ts` | `lib/src/monaco/editor/browser/viewParts/gpuMark/gpuMark.dart` | tested |
 | 85 | editor | `editor/browser/viewParts/indentGuides/indentGuides.ts` | `lib/src/monaco/editor/browser/viewParts/indentGuides/indentGuides.dart` | pending |
 | 86 | editor | `editor/browser/viewParts/lineNumbers/lineNumbers.ts` | `lib/src/monaco/editor/browser/viewParts/lineNumbers/lineNumbers.dart` | tested |
 | 87 | editor | `editor/browser/viewParts/linesDecorations/linesDecorations.ts` | `lib/src/monaco/editor/browser/viewParts/linesDecorations/linesDecorations.dart` | tested |
