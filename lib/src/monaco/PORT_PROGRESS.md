@@ -460,7 +460,7 @@
 | 451 | editor | `editor/contrib/dropOrPasteInto/browser/pasteEditSession.ts` | `lib/src/monaco/editor/contrib/dropOrPasteInto/browser/pasteEditSession.dart` | tested |
 | 452 | editor | `editor/contrib/dropOrPasteInto/browser/postEditWidget.ts` | `lib/src/monaco/editor/contrib/dropOrPasteInto/browser/postEditWidget.dart` | pending |
 | 453 | editor | `editor/contrib/dropOrPasteInto/test/browser/copyPasteController.test.ts` | `lib/src/monaco/editor/contrib/dropOrPasteInto/test/browser/copyPasteController.test.dart` | pending |
-| 454 | editor | `editor/contrib/dropOrPasteInto/test/browser/editSort.test.ts` | `lib/src/monaco/editor/contrib/dropOrPasteInto/test/browser/editSort.test.dart` | pending |
+| 454 | editor | `editor/contrib/dropOrPasteInto/test/browser/editSort.test.ts` | `lib/src/monaco/editor/contrib/dropOrPasteInto/test/browser/editSort.test.dart` | tested |
 | 455 | editor | `editor/contrib/editorState/browser/editorState.ts` | `lib/src/monaco/editor/contrib/editorState/browser/editorState.dart` | tested |
 | 456 | editor | `editor/contrib/editorState/browser/keybindingCancellation.ts` | `lib/src/monaco/editor/contrib/editorState/browser/keybindingCancellation.dart` | pending |
 | 457 | editor | `editor/contrib/editorState/test/browser/editorState.test.ts` | `lib/src/monaco/editor/contrib/editorState/test/browser/editorState.test.dart` | pending |
