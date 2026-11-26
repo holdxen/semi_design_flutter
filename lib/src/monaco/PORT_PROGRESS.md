@@ -59,7 +59,7 @@
 | 50 | editor | `editor/browser/gpu/rectangleRenderer.wgsl.ts` | `lib/src/monaco/editor/browser/gpu/rectangleRenderer.wgsl.dart` | tested |
 | 51 | editor | `editor/browser/gpu/renderStrategy/baseRenderStrategy.ts` | `lib/src/monaco/editor/browser/gpu/renderStrategy/baseRenderStrategy.dart` | pending |
 | 52 | editor | `editor/browser/gpu/renderStrategy/fullFileRenderStrategy.ts` | `lib/src/monaco/editor/browser/gpu/renderStrategy/fullFileRenderStrategy.dart` | pending |
-| 53 | editor | `editor/browser/gpu/renderStrategy/fullFileRenderStrategy.wgsl.ts` | `lib/src/monaco/editor/browser/gpu/renderStrategy/fullFileRenderStrategy.wgsl.dart` | pending |
+| 53 | editor | `editor/browser/gpu/renderStrategy/fullFileRenderStrategy.wgsl.ts` | `lib/src/monaco/editor/browser/gpu/renderStrategy/fullFileRenderStrategy.wgsl.dart` | tested |
 | 54 | editor | `editor/browser/gpu/renderStrategy/viewportRenderStrategy.ts` | `lib/src/monaco/editor/browser/gpu/renderStrategy/viewportRenderStrategy.dart` | pending |
 | 55 | editor | `editor/browser/gpu/taskQueue.ts` | `lib/src/monaco/editor/browser/gpu/taskQueue.dart` | tested |
 | 56 | editor | `editor/browser/gpu/viewGpuContext.ts` | `lib/src/monaco/editor/browser/gpu/viewGpuContext.dart` | pending |
@@ -510,7 +510,7 @@
 | 501 | editor | `editor/contrib/gotoSymbol/browser/peek/referencesWidget.ts` | `lib/src/monaco/editor/contrib/gotoSymbol/browser/peek/referencesWidget.dart` | pending |
 | 502 | editor | `editor/contrib/gotoSymbol/browser/referencesModel.ts` | `lib/src/monaco/editor/contrib/gotoSymbol/browser/referencesModel.dart` | tested |
 | 503 | editor | `editor/contrib/gotoSymbol/browser/symbolNavigation.ts` | `lib/src/monaco/editor/contrib/gotoSymbol/browser/symbolNavigation.dart` | pending |
-| 504 | editor | `editor/contrib/gotoSymbol/test/browser/referencesModel.test.ts` | `lib/src/monaco/editor/contrib/gotoSymbol/test/browser/referencesModel.test.dart` | pending |
+| 504 | editor | `editor/contrib/gotoSymbol/test/browser/referencesModel.test.ts` | `lib/src/monaco/editor/contrib/gotoSymbol/test/browser/referencesModel.test.dart` | tested |
 | 505 | editor | `editor/contrib/gpu/browser/gpuActions.ts` | `lib/src/monaco/editor/contrib/gpu/browser/gpuActions.dart` | pending |
 | 506 | editor | `editor/contrib/hover/browser/contentHoverComputer.ts` | `lib/src/monaco/editor/contrib/hover/browser/contentHoverComputer.dart` | pending |
 | 507 | editor | `editor/contrib/hover/browser/contentHoverController.ts` | `lib/src/monaco/editor/contrib/hover/browser/contentHoverController.dart` | pending |
