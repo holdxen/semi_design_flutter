@@ -116,11 +116,11 @@
 | 107 | editor | `editor/browser/viewParts/viewLines/viewLine.ts` | `lib/src/monaco/editor/browser/viewParts/viewLines/viewLine.dart` | tested |
 | 108 | editor | `editor/browser/viewParts/viewLines/viewLineOptions.ts` | `lib/src/monaco/editor/browser/viewParts/viewLines/viewLineOptions.dart` | tested |
 | 109 | editor | `editor/browser/viewParts/viewLines/viewLines.ts` | `lib/src/monaco/editor/browser/viewParts/viewLines/viewLines.dart` | tested |
-| 110 | editor | `editor/browser/viewParts/viewLinesGpu/viewLinesGpu.ts` | `lib/src/monaco/editor/browser/viewParts/viewLinesGpu/viewLinesGpu.dart` | pending |
-| 111 | editor | `editor/browser/viewParts/viewZones/viewZones.ts` | `lib/src/monaco/editor/browser/viewParts/viewZones/viewZones.dart` | pending |
+| 110 | editor | `editor/browser/viewParts/viewLinesGpu/viewLinesGpu.ts` | `lib/src/monaco/editor/browser/viewParts/viewLinesGpu/viewLinesGpu.dart` | tested |
+| 111 | editor | `editor/browser/viewParts/viewZones/viewZones.ts` | `lib/src/monaco/editor/browser/viewParts/viewZones/viewZones.dart` | tested |
 | 112 | editor | `editor/browser/viewParts/whitespace/whitespace.ts` | `lib/src/monaco/editor/browser/viewParts/whitespace/whitespace.dart` | tested |
 | 113 | editor | `editor/browser/viewParts/wordWrapIndicator/wordWrapIndicator.ts` | `lib/src/monaco/editor/browser/viewParts/wordWrapIndicator/wordWrapIndicator.dart` | tested |
-| 114 | editor | `editor/browser/widget/codeEditor/codeEditorContributions.ts` | `lib/src/monaco/editor/browser/widget/codeEditor/codeEditorContributions.dart` | pending |
+| 114 | editor | `editor/browser/widget/codeEditor/codeEditorContributions.ts` | `lib/src/monaco/editor/browser/widget/codeEditor/codeEditorContributions.dart` | tested |
 | 115 | editor | `editor/browser/widget/codeEditor/codeEditorWidget.ts` | `lib/src/monaco/editor/browser/widget/codeEditor/codeEditorWidget.dart` | pending |
 | 116 | editor | `editor/browser/widget/codeEditor/embeddedCodeEditorWidget.ts` | `lib/src/monaco/editor/browser/widget/codeEditor/embeddedCodeEditorWidget.dart` | pending |
 | 117 | editor | `editor/browser/widget/diffEditor/commands.ts` | `lib/src/monaco/editor/browser/widget/diffEditor/commands.dart` | pending |

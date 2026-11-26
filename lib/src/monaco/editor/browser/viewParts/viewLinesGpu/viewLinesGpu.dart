@@ -305,7 +305,7 @@ class ViewLinesGpu extends ViewPart implements IViewLines {
       'colorAttachments': <Object?>[_renderPassColorAttachment],
     };
 
-    final Map<int, num> layoutBufferValues = List<num>.filled(6, 0).asMap();
+    final List<num> layoutBufferValues = List<num>.filled(6, 0);
     num updateLayout([num? width, num? height]) {
       final dynamic canvas = _canvas;
       final num w = width ?? canvas.width;
@@ -320,9 +320,9 @@ class ViewLinesGpu extends ViewPart implements IViewLines {
           (_devicePixelRatioForReplay?.call() ?? 1);
       layoutBufferValues[2] = contentLeft.ceil();
       layoutBufferValues[3] = 0;
-      layoutBufferValues[4] = layoutBufferValues[0]! - layoutBufferValues[2]!;
-      layoutBufferValues[5] = layoutBufferValues[1]! - layoutBufferValues[3]!;
-      return layoutBufferValues[0]!;
+      layoutBufferValues[4] = layoutBufferValues[0] - layoutBufferValues[2];
+      layoutBufferValues[5] = layoutBufferValues[1] - layoutBufferValues[3];
+      return layoutBufferValues[0];
     }
 
     final _ViewGpuResource layoutInfoUniformBuffer = register(_createBuffer(
@@ -344,20 +344,22 @@ class ViewLinesGpu extends ViewPart implements IViewLines {
         })).call(_viewGpuContext.canvasDevicePixelDimensions, (dynamic value) {
       final dynamic dims = value;
       final dynamic dpr = _devicePixelRatioForReplay?.call() ?? 1;
+      updateLayout(dims['width'] ?? dpr, dims['height'] ?? dpr);
       (device as dynamic).queue.writeBuffer(
         layoutInfoUniformBuffer.object,
         0,
-        updateLayout(dims['width'] ?? dpr, dims['height'] ?? dpr),
+        layoutBufferValues,
       );
     }) as IDisposable);
     register((_runOnChangeForReplay ?? ((Object o, void Function(dynamic v) h) {
           h((o as IViewLinesGpuObservable).get());
           return _ViewGpuResource(Object());
         })).call(_viewGpuContext.contentLeft, (dynamic _) {
+      updateLayout();
       (device as dynamic).queue.writeBuffer(
         layoutInfoUniformBuffer.object,
         0,
-        updateLayout(),
+        layoutBufferValues,
       );
     }) as IDisposable);
 
